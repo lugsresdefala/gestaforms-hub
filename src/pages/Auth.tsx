@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from 'sonner';
 import { Copy, Check, UserPlus } from 'lucide-react';
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
+import logo from '@/assets/hapvida-logo.png';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -192,7 +193,7 @@ const Auth = () => {
         <Card className="flex-1">
           <CardHeader className="text-center">
             <img 
-              src="/src/assets/hapvida-logo.png" 
+              src={logo} 
               alt="Logo" 
               className="h-16 mx-auto mb-4"
             />
