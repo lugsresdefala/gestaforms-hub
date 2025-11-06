@@ -1,4 +1,4 @@
 project_id = "uoyzfzzjzhvcxfmpmufz"
 
 [functions.create-default-users]
-verify_jwt = false
+verify_jwt = true
