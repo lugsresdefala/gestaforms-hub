@@ -171,9 +171,14 @@ const Index = () => {
           <div className="flex items-center gap-2">
             {isAdmin() && <NotificationBell />}
             {isAdmin() && (
-              <Button onClick={() => navigate('/aprovacoes')} variant="outline">
-                Aprovações
-              </Button>
+              <>
+                <Button onClick={() => navigate('/aprovacoes')} variant="outline">
+                  Aprovações
+                </Button>
+                <Button onClick={() => navigate('/gerenciar-usuarios')} variant="outline">
+                  Usuários
+                </Button>
+              </>
             )}
             {isMedicoUnidade() && (
               <Button onClick={() => navigate('/meus-agendamentos')} variant="outline">

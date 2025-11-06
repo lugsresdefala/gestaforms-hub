@@ -186,25 +186,82 @@ export type Database = {
       }
       profiles: {
         Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
           created_at: string | null
           email: string
           id: string
+          maternidade_solicitada: string | null
           nome_completo: string
+          status_aprovacao: string
+          tipo_acesso_solicitado: string | null
           updated_at: string | null
         }
         Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           created_at?: string | null
           email: string
           id: string
+          maternidade_solicitada?: string | null
           nome_completo: string
+          status_aprovacao?: string
+          tipo_acesso_solicitado?: string | null
           updated_at?: string | null
         }
         Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           created_at?: string | null
           email?: string
           id?: string
+          maternidade_solicitada?: string | null
           nome_completo?: string
+          status_aprovacao?: string
+          tipo_acesso_solicitado?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      solicitacoes_acesso: {
+        Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
+          created_at: string | null
+          id: string
+          justificativa: string | null
+          maternidade: string | null
+          observacoes_aprovacao: string | null
+          status: string
+          tipo_acesso: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string | null
+          id?: string
+          justificativa?: string | null
+          maternidade?: string | null
+          observacoes_aprovacao?: string | null
+          status?: string
+          tipo_acesso: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          created_at?: string | null
+          id?: string
+          justificativa?: string | null
+          maternidade?: string | null
+          observacoes_aprovacao?: string | null
+          status?: string
+          tipo_acesso?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

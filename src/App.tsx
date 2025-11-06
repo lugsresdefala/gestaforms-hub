@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Aprovacoes from "./pages/Aprovacoes";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
+import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import NotFound from "./pages/NotFound";
 
@@ -76,6 +77,14 @@ const App = () => (
               element={
                 <ProtectedRoute requireMedicoUnidade>
                   <MeusAgendamentos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/gerenciar-usuarios" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <GerenciarUsuarios />
                 </ProtectedRoute>
               } 
             />
