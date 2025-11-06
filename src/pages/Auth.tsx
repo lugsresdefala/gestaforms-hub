@@ -313,26 +313,10 @@ const Auth = () => {
           <CardHeader>
             <CardTitle className="text-lg">Credenciais de Teste</CardTitle>
             <CardDescription className="text-xs">
-              Clique no botão abaixo para criar estes usuários
+              Use estas credenciais para acessar o sistema
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button 
-              onClick={criarUsuariosPadrao} 
-              disabled={creatingUsers}
-              className="w-full"
-              variant="default"
-            >
-              {creatingUsers ? (
-                <>Criando usuários...</>
-              ) : (
-                <>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Criar Usuários de Teste
-                </>
-              )}
-            </Button>
-            
             {credenciaisPadrao.map((cred, idx) => (
               <div key={idx} className={`border-2 rounded-lg p-3 ${cred.cor}`}>
                 <div className="flex items-center justify-between mb-2">
