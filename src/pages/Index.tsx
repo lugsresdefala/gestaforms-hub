@@ -14,9 +14,12 @@ import { FormStep4 } from "@/components/form-steps/FormStep4";
 import { FormStep5 } from "@/components/form-steps/FormStep5";
 import { FormStep6 } from "@/components/form-steps/FormStep6";
 import { formSchema } from "@/lib/formSchema";
+import { supabase } from "@/integrations/supabase/client";
+import { addDays, differenceInDays } from "date-fns";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 6;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -53,9 +56,124 @@ const Index = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values);
-    toast.success("Formulário enviado com sucesso!");
+  // Função para calcular idade gestacional e data de agendamento
+  const calcularAgendamento = (values: z.infer<typeof formSchema>) => {
+    try {
+      const dataUsg = new Date(values.dataPrimeiroUsg);
+      const semanasUsg = parseInt(values.semanasUsg) || 0;
+      const diasUsg = parseInt(values.diasUsg) || 0;
+      
+      // Calcular quantos dias se passaram desde o USG
+      const hoje = new Date();
+      const diasDesdeUsg = differenceInDays(hoje, dataUsg);
+      
+      // Calcular idade gestacional atual
+      const igAtualDias = (semanasUsg * 7) + diasUsg + diasDesdeUsg;
+      const igAtualSemanas = Math.floor(igAtualDias / 7);
+      const igAtualDiasRestantes = igAtualDias % 7;
+      
+      const igCalculada = `${igAtualSemanas} semanas e ${igAtualDiasRestantes} dias`;
+      
+      // Lógica básica de agendamento baseada na IG pretendida
+      let dataAgendamento = new Date();
+      let observacoes = "";
+      
+      // Extrair semanas da IG pretendida (ex: "39 semanas" -> 39)
+      const igPretendidaMatch = values.igPretendida.match(/\d+/);
+      if (igPretendidaMatch) {
+        const semanasAlvo = parseInt(igPretendidaMatch[0]);
+        const diasParaAlvo = (semanasAlvo * 7) - igAtualDias;
+        
+        if (diasParaAlvo > 0) {
+          dataAgendamento = addDays(hoje, diasParaAlvo);
+          observacoes = `Agendamento calculado para ${semanasAlvo} semanas de gestação`;
+        } else {
+          observacoes = `Paciente já passou da IG pretendida. Avaliar com urgência.`;
+        }
+      }
+      
+      return {
+        dataAgendamento,
+        igCalculada,
+        observacoes
+      };
+    } catch (error) {
+      console.error("Erro ao calcular agendamento:", error);
+      return {
+        dataAgendamento: new Date(),
+        igCalculada: "Não calculada",
+        observacoes: "Erro no cálculo. Verificar dados manualmente."
+      };
+    }
+  };
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Calcular dados de agendamento
+      const { dataAgendamento, igCalculada, observacoes } = calcularAgendamento(values);
+      
+      // Preparar dados para inserção
+      const agendamentoData = {
+        carteirinha: values.carteirinha,
+        nome_completo: values.nomeCompleto,
+        data_nascimento: values.dataNascimento,
+        numero_gestacoes: parseInt(values.numeroGestacoes),
+        numero_partos_cesareas: parseInt(values.numeroPartosCesareas),
+        numero_partos_normais: parseInt(values.numeroPartosNormais),
+        numero_abortos: parseInt(values.numeroAbortos),
+        telefones: values.telefones,
+        procedimentos: values.procedimento,
+        dum_status: values.dum,
+        data_dum: values.dataDum || null,
+        data_primeiro_usg: values.dataPrimeiroUsg,
+        semanas_usg: parseInt(values.semanasUsg),
+        dias_usg: parseInt(values.diasUsg),
+        usg_recente: values.usgRecente,
+        ig_pretendida: values.igPretendida,
+        indicacao_procedimento: values.indicacaoProcedimento,
+        medicacao: values.medicacao || null,
+        diagnosticos_maternos: values.diagnosticosMaternos || null,
+        placenta_previa: values.placentaPrevia || null,
+        diagnosticos_fetais: values.diagnosticosFetais || null,
+        historia_obstetrica: values.historiaObstetrica || null,
+        necessidade_uti_materna: values.necessidadeUtiMaterna,
+        necessidade_reserva_sangue: values.necessidadeReservaSangue,
+        maternidade: values.maternidade,
+        medico_responsavel: values.medicoResponsavel,
+        centro_clinico: values.centroClinico,
+        email_paciente: values.email,
+        data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
+        idade_gestacional_calculada: igCalculada,
+        observacoes_agendamento: observacoes
+      };
+      
+      // Inserir no banco de dados
+      const { error } = await supabase
+        .from('agendamentos_obst')
+        .insert([agendamentoData]);
+      
+      if (error) {
+        console.error("Erro ao salvar agendamento:", error);
+        toast.error("Não foi possível salvar o agendamento. Por favor, tente novamente.");
+        return;
+      }
+      
+      toast.success(
+        `Agendamento salvo! Paciente: ${values.nomeCompleto}\nIG calculada: ${igCalculada}\nData sugerida: ${dataAgendamento.toLocaleDateString('pt-BR')}`
+      );
+      
+      // Resetar formulário
+      form.reset();
+      setCurrentStep(1);
+      
+    } catch (error) {
+      console.error("Erro inesperado:", error);
+      toast.error("Ocorreu um erro ao processar o formulário.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextStep = async () => {
@@ -92,8 +210,12 @@ const Index = () => {
   return (
     <div className="min-h-screen gradient-subtle">
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 flex items-center gap-4">
           <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
+          <div className="border-l border-border pl-4">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
+            <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
+          </div>
         </div>
       </header>
 
@@ -148,10 +270,11 @@ const Index = () => {
                   </Button>
                 ) : (
                   <Button 
-                    type="submit" 
+                    type="submit"
+                    disabled={isSubmitting}
                     className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold gradient-primary transition-smooth hover:scale-105 shadow-md hover:shadow-xl"
                   >
-                    Enviar Formulário ✓
+                    {isSubmitting ? "Salvando..." : "Enviar Formulário ✓"}
                   </Button>
                 )}
               </div>

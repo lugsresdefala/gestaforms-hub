@@ -14,7 +14,117 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agendamentos_obst: {
+        Row: {
+          carteirinha: string
+          centro_clinico: string
+          created_at: string
+          data_agendamento_calculada: string | null
+          data_dum: string | null
+          data_nascimento: string
+          data_primeiro_usg: string
+          diagnosticos_fetais: string | null
+          diagnosticos_maternos: string | null
+          dias_usg: number
+          dum_status: string
+          email_paciente: string
+          historia_obstetrica: string | null
+          id: string
+          idade_gestacional_calculada: string | null
+          ig_pretendida: string
+          indicacao_procedimento: string
+          maternidade: string
+          medicacao: string | null
+          medico_responsavel: string
+          necessidade_reserva_sangue: string | null
+          necessidade_uti_materna: string | null
+          nome_completo: string
+          numero_abortos: number
+          numero_gestacoes: number
+          numero_partos_cesareas: number
+          numero_partos_normais: number
+          observacoes_agendamento: string | null
+          placenta_previa: string | null
+          procedimentos: string[]
+          semanas_usg: number
+          telefones: string
+          updated_at: string
+          usg_recente: string
+        }
+        Insert: {
+          carteirinha: string
+          centro_clinico: string
+          created_at?: string
+          data_agendamento_calculada?: string | null
+          data_dum?: string | null
+          data_nascimento: string
+          data_primeiro_usg: string
+          diagnosticos_fetais?: string | null
+          diagnosticos_maternos?: string | null
+          dias_usg: number
+          dum_status: string
+          email_paciente: string
+          historia_obstetrica?: string | null
+          id?: string
+          idade_gestacional_calculada?: string | null
+          ig_pretendida: string
+          indicacao_procedimento: string
+          maternidade: string
+          medicacao?: string | null
+          medico_responsavel: string
+          necessidade_reserva_sangue?: string | null
+          necessidade_uti_materna?: string | null
+          nome_completo: string
+          numero_abortos: number
+          numero_gestacoes: number
+          numero_partos_cesareas: number
+          numero_partos_normais: number
+          observacoes_agendamento?: string | null
+          placenta_previa?: string | null
+          procedimentos: string[]
+          semanas_usg: number
+          telefones: string
+          updated_at?: string
+          usg_recente: string
+        }
+        Update: {
+          carteirinha?: string
+          centro_clinico?: string
+          created_at?: string
+          data_agendamento_calculada?: string | null
+          data_dum?: string | null
+          data_nascimento?: string
+          data_primeiro_usg?: string
+          diagnosticos_fetais?: string | null
+          diagnosticos_maternos?: string | null
+          dias_usg?: number
+          dum_status?: string
+          email_paciente?: string
+          historia_obstetrica?: string | null
+          id?: string
+          idade_gestacional_calculada?: string | null
+          ig_pretendida?: string
+          indicacao_procedimento?: string
+          maternidade?: string
+          medicacao?: string | null
+          medico_responsavel?: string
+          necessidade_reserva_sangue?: string | null
+          necessidade_uti_materna?: string | null
+          nome_completo?: string
+          numero_abortos?: number
+          numero_gestacoes?: number
+          numero_partos_cesareas?: number
+          numero_partos_normais?: number
+          observacoes_agendamento?: string | null
+          placenta_previa?: string | null
+          procedimentos?: string[]
+          semanas_usg?: number
+          telefones?: string
+          updated_at?: string
+          usg_recente?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
