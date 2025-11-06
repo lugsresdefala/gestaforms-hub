@@ -24,6 +24,7 @@ export type Database = {
           data_nascimento: string
           data_primeiro_usg: string
           diagnosticos_fetais: string | null
+          diagnosticos_fetais_outros: string | null
           diagnosticos_maternos: string | null
           dias_usg: number
           dum_status: string
@@ -60,6 +61,7 @@ export type Database = {
           data_nascimento: string
           data_primeiro_usg: string
           diagnosticos_fetais?: string | null
+          diagnosticos_fetais_outros?: string | null
           diagnosticos_maternos?: string | null
           dias_usg: number
           dum_status: string
@@ -96,6 +98,7 @@ export type Database = {
           data_nascimento?: string
           data_primeiro_usg?: string
           diagnosticos_fetais?: string | null
+          diagnosticos_fetais_outros?: string | null
           diagnosticos_maternos?: string | null
           dias_usg?: number
           dum_status?: string
