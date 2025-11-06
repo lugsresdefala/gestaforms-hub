@@ -18,12 +18,18 @@ import { FormStep6 } from "@/components/form-steps/FormStep6";
 import { formSchema } from "@/lib/formSchema";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
+import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertCircle } from "lucide-react";
 
 const NovoAgendamento = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showProtocolAlert, setShowProtocolAlert] = useState(false);
+  const [protocoloValidacao, setProtocoloValidacao] = useState<ValidacaoProtocolo | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<z.infer<typeof formSchema> | null>(null);
   const totalSteps = 6;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -62,6 +68,42 @@ const NovoAgendamento = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    // Calcular dados de agendamento
+    const resultado = calcularAgendamentoCompleto({
+      dumStatus: values.dum,
+      dataDum: values.dataDum,
+      dataPrimeiroUsg: values.dataPrimeiroUsg,
+      semanasUsg: values.semanasUsg,
+      diasUsg: values.diasUsg,
+      procedimentos: values.procedimento,
+      diagnosticosMaternos: values.diagnosticosMaternos,
+      diagnosticosFetais: values.diagnosticosFetais,
+      placentaPrevia: values.placentaPrevia
+    });
+
+    // Validar protocolo
+    const validacao = validarProtocolo({
+      procedimentos: values.procedimento,
+      diagnosticosMaternos: values.diagnosticosMaternos,
+      diagnosticosFetais: values.diagnosticosFetais,
+      placentaPrevia: values.placentaPrevia,
+      igSemanas: resultado.igFinal.weeks,
+      igDias: resultado.igFinal.days
+    });
+
+    // Se não for compatível ou houver alertas, mostrar diálogo
+    if (!validacao.compativel || validacao.alertas.length > 0 || validacao.recomendacoes.length > 0) {
+      setProtocoloValidacao(validacao);
+      setPendingFormData(values);
+      setShowProtocolAlert(true);
+      return;
+    }
+
+    // Se passou na validação, salvar direto
+    await salvarAgendamento(values);
+  };
+
+  const salvarAgendamento = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     
     try {
@@ -142,12 +184,21 @@ const NovoAgendamento = () => {
       // Resetar formulário
       form.reset();
       setCurrentStep(1);
+      setShowProtocolAlert(false);
+      setPendingFormData(null);
       
     } catch (error) {
       console.error("Erro inesperado:", error);
       toast.error("Ocorreu um erro ao processar o formulário.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmarComAlertas = async () => {
+    if (pendingFormData) {
+      setShowProtocolAlert(false);
+      await salvarAgendamento(pendingFormData);
     }
   };
 
@@ -267,6 +318,88 @@ const NovoAgendamento = () => {
           </Form>
         </div>
       </main>
+
+      {/* Alert Dialog para validação de protocolo */}
+      <AlertDialog open={showProtocolAlert} onOpenChange={setShowProtocolAlert}>
+        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-6 w-6 text-orange-500" />
+              <AlertDialogTitle>Validação de Protocolo Obstétrico</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-base">
+              O sistema detectou pontos que requerem atenção conforme o protocolo obstétrico:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {protocoloValidacao && (
+            <div className="space-y-4 my-4">
+              {/* Alertas */}
+              {protocoloValidacao.alertas.length > 0 && (
+                <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-800 dark:text-orange-200 mb-2">
+                    Alertas de Protocolo:
+                  </h4>
+                  <ul className="space-y-2">
+                    {protocoloValidacao.alertas.map((alerta, idx) => (
+                      <li key={idx} className="text-sm text-orange-700 dark:text-orange-300 flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>{alerta}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recomendações */}
+              {protocoloValidacao.recomendacoes.length > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                    Recomendações:
+                  </h4>
+                  <ul className="space-y-2">
+                    {protocoloValidacao.recomendacoes.map((rec, idx) => (
+                      <li key={idx} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                        <span className="mt-0.5">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Status de compatibilidade */}
+              <div className={`border rounded-lg p-4 ${
+                protocoloValidacao.compativel 
+                  ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+                  : 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  protocoloValidacao.compativel
+                    ? 'text-green-800 dark:text-green-200'
+                    : 'text-red-800 dark:text-red-200'
+                }`}>
+                  {protocoloValidacao.compativel
+                    ? '✓ O agendamento está dentro das diretrizes do protocolo, mas requer atenção aos pontos acima.'
+                    : '⚠️ O agendamento apresenta divergências significativas com o protocolo. Você pode continuar, mas é recomendado revisar os dados ou documentar a justificativa clínica.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowProtocolAlert(false);
+              setPendingFormData(null);
+            }}>
+              Voltar e Revisar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmarComAlertas} disabled={isSubmitting}>
+              {isSubmitting ? 'Salvando...' : 'Confirmar e Salvar Mesmo Assim'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
