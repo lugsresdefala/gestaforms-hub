@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import logo from "@/assets/hapvida-logo.png";
+import { useNavigate } from "react-router-dom";
 import { FormStep1 } from "@/components/form-steps/FormStep1";
 import { FormStep2 } from "@/components/form-steps/FormStep2";
 import { FormStep3 } from "@/components/form-steps/FormStep3";
@@ -18,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 6;
@@ -180,12 +182,17 @@ const Index = () => {
   return (
     <div className="min-h-screen gradient-subtle">
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center gap-4">
-          <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
-          <div className="border-l border-border pl-4">
-            <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
-            <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
+            <div className="border-l border-border pl-4">
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
+              <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
+            </div>
           </div>
+          <Button onClick={() => navigate('/dashboard')} variant="outline">
+            Ver Dashboard
+          </Button>
         </div>
       </header>
 
