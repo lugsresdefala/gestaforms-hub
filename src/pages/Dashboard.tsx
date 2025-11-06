@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, User, FileText, Filter, Download } from "lucide-react";
+import { Loader2, Calendar, User, FileText, Filter, Download, Plus } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
@@ -190,9 +190,15 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/')} variant="outline">
-            Novo Agendamento
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/')} variant="outline">
+              ← Dashboard
+            </Button>
+            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Agendamento
+            </Button>
+          </div>
         </div>
       </header>
 

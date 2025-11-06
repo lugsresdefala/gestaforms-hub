@@ -1,183 +1,139 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Form } from "@/components/ui/form";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby } from "lucide-react";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
 import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
-import { FormStep1 } from "@/components/form-steps/FormStep1";
-import { FormStep2 } from "@/components/form-steps/FormStep2";
-import { FormStep3 } from "@/components/form-steps/FormStep3";
-import { FormStep4 } from "@/components/form-steps/FormStep4";
-import { FormStep5 } from "@/components/form-steps/FormStep5";
-import { FormStep6 } from "@/components/form-steps/FormStep6";
-import { formSchema } from "@/lib/formSchema";
-import { supabase } from "@/integrations/supabase/client";
-import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+interface Agendamento {
+  id: string;
+  centro_clinico: string;
+  maternidade: string;
+  procedimentos: string[];
+  diagnosticos_maternos: string;
+  diagnosticos_fetais: string;
+  idade_gestacional_calculada: string;
+  data_agendamento_calculada: string;
+}
 
 const Index = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const totalSteps = 6;
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      carteirinha: "",
-      nomeCompleto: "",
-      dataNascimento: "",
-      numeroGestacoes: "",
-      numeroPartosCesareas: "",
-      numeroPartosNormais: "",
-      numeroAbortos: "",
-      telefones: "",
-      procedimento: [],
-      dum: "",
-      dataDum: "",
-      dataPrimeiroUsg: "",
-      semanasUsg: "",
-      diasUsg: "",
-      usgRecente: "",
-      igPretendida: "",
-      indicacaoProcedimento: "",
-      medicacao: "",
-      diagnosticosMaternos: [],
-      placentaPrevia: "",
-      diagnosticosFetais: [],
-      diagnosticosFetaisOutros: "",
-      historiaObstetrica: "",
-      necessidadeUtiMaterna: "",
-      necessidadeReservaSangue: "",
-      maternidade: "",
-      medicoResponsavel: "",
-      centroClinico: "",
-      email: "",
-    },
-  });
+  useEffect(() => {
+    fetchAgendamentos();
+  }, []);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    
+  const fetchAgendamentos = async () => {
+    setLoading(true);
     try {
-      // Calcular dados de agendamento usando o sistema completo
-      const resultado = calcularAgendamentoCompleto({
-        dumStatus: values.dum,
-        dataDum: values.dataDum,
-        dataPrimeiroUsg: values.dataPrimeiroUsg,
-        semanasUsg: values.semanasUsg,
-        diasUsg: values.diasUsg,
-        procedimentos: values.procedimento,
-        diagnosticosMaternos: values.diagnosticosMaternos,
-        diagnosticosFetais: values.diagnosticosFetais,
-        placentaPrevia: values.placentaPrevia
-      });
-      
-      // Preparar dados para inserção
-      const agendamentoData = {
-        carteirinha: values.carteirinha,
-        nome_completo: values.nomeCompleto,
-        data_nascimento: values.dataNascimento,
-        numero_gestacoes: parseInt(values.numeroGestacoes),
-        numero_partos_cesareas: parseInt(values.numeroPartosCesareas),
-        numero_partos_normais: parseInt(values.numeroPartosNormais),
-        numero_abortos: parseInt(values.numeroAbortos),
-        telefones: values.telefones,
-        procedimentos: values.procedimento,
-        dum_status: values.dum,
-        data_dum: values.dataDum || null,
-        data_primeiro_usg: values.dataPrimeiroUsg,
-        semanas_usg: parseInt(values.semanasUsg),
-        dias_usg: parseInt(values.diasUsg),
-        usg_recente: values.usgRecente,
-        ig_pretendida: values.igPretendida,
-        indicacao_procedimento: values.indicacaoProcedimento,
-        medicacao: values.medicacao || null,
-        diagnosticos_maternos: JSON.stringify(values.diagnosticosMaternos) || null,
-        placenta_previa: values.placentaPrevia || null,
-        diagnosticos_fetais: JSON.stringify(values.diagnosticosFetais) || null,
-        diagnosticos_fetais_outros: values.diagnosticosFetaisOutros || null,
-        historia_obstetrica: values.historiaObstetrica || null,
-        necessidade_uti_materna: values.necessidadeUtiMaterna,
-        necessidade_reserva_sangue: values.necessidadeReservaSangue,
-        maternidade: values.maternidade,
-        medico_responsavel: values.medicoResponsavel,
-        centro_clinico: values.centroClinico,
-        email_paciente: values.email,
-        data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
-        idade_gestacional_calculada: resultado.igFinal.displayText,
-        observacoes_agendamento: `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` +
-          `IG pela DUM: ${resultado.igByDum?.displayText || 'N/A'}\n` +
-          `IG pelo USG: ${resultado.igByUsg.displayText}\n` +
-          `IG FINAL (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n\n` +
-          `IG para agendamento: ${resultado.igAgendamento}\n\n` +
-          resultado.observacoes
-      };
-      
-      // Inserir no banco de dados
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('agendamentos_obst')
-        .insert([agendamentoData]);
-      
-      if (error) {
-        console.error("Erro ao salvar agendamento:", error);
-        toast.error("Não foi possível salvar o agendamento. Por favor, tente novamente.");
-        return;
-      }
-      
-      toast.success(
-        `Agendamento salvo com sucesso!\n\n` +
-        `Paciente: ${values.nomeCompleto}\n` +
-        `IG Atual (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n` +
-        `Data sugerida: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')} (${resultado.igAgendamento})\n\n` +
-        `Verifique as observações no backend para mais detalhes.`
-      );
-      
-      // Resetar formulário
-      form.reset();
-      setCurrentStep(1);
-      
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAgendamentos(data || []);
     } catch (error) {
-      console.error("Erro inesperado:", error);
-      toast.error("Ocorreu um erro ao processar o formulário.");
+      console.error("Erro ao buscar agendamentos:", error);
+      toast.error("Não foi possível carregar os agendamentos");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const nextStep = async () => {
-    const fieldsToValidate = getFieldsForStep(currentStep);
-    const isValid = await form.trigger(fieldsToValidate);
-    
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
-    }
+  // Processar dados para gráficos
+  const dadosPorUnidade = () => {
+    const contagem = agendamentos.reduce((acc, a) => {
+      acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(contagem).map(([name, value]) => ({ name, value }));
   };
 
-  const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const dadosPorMaternidade = () => {
+    const contagem = agendamentos.reduce((acc, a) => {
+      acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(contagem).map(([name, value]) => ({ name, value }));
   };
 
-  const getFieldsForStep = (step: number) => {
-    const fieldMap: Record<number, (keyof z.infer<typeof formSchema>)[]> = {
-      1: ["carteirinha", "nomeCompleto", "dataNascimento", "numeroGestacoes", "numeroPartosCesareas", "numeroPartosNormais", "numeroAbortos", "telefones"],
-      2: ["procedimento", "dum", "dataDum"],
-      3: ["dataPrimeiroUsg", "semanasUsg", "diasUsg", "usgRecente", "igPretendida", "indicacaoProcedimento"],
-      4: ["medicacao", "diagnosticosMaternos", "placentaPrevia", "diagnosticosFetais", "historiaObstetrica"],
-      5: ["necessidadeUtiMaterna", "necessidadeReservaSangue"],
-      6: ["maternidade", "medicoResponsavel", "centroClinico", "email"],
+  const dadosPorPatologia = () => {
+    const contagem: Record<string, number> = {};
+    agendamentos.forEach(a => {
+      const diagsMat = JSON.parse(a.diagnosticos_maternos || '[]');
+      const diagsFet = JSON.parse(a.diagnosticos_fetais || '[]');
+      [...diagsMat, ...diagsFet].forEach(diag => {
+        contagem[diag] = (contagem[diag] || 0) + 1;
+      });
+    });
+    return Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, value]) => ({ name, value }));
+  };
+
+  const dadosPorProcedimento = () => {
+    const contagem: Record<string, number> = {};
+    agendamentos.forEach(a => {
+      a.procedimentos.forEach(proc => {
+        contagem[proc] = (contagem[proc] || 0) + 1;
+      });
+    });
+    return Object.entries(contagem).map(([name, value]) => ({ name, value }));
+  };
+
+  const dadosPorIG = () => {
+    const faixas = {
+      '< 28 semanas': 0,
+      '28-32 semanas': 0,
+      '33-36 semanas': 0,
+      '37-40 semanas': 0,
+      '> 40 semanas': 0
     };
-    return fieldMap[step] || [];
+    
+    agendamentos.forEach(a => {
+      const match = a.idade_gestacional_calculada.match(/(\d+)s/);
+      if (match) {
+        const semanas = parseInt(match[1]);
+        if (semanas < 28) faixas['< 28 semanas']++;
+        else if (semanas <= 32) faixas['28-32 semanas']++;
+        else if (semanas <= 36) faixas['33-36 semanas']++;
+        else if (semanas <= 40) faixas['37-40 semanas']++;
+        else faixas['> 40 semanas']++;
+      }
+    });
+    
+    return Object.entries(faixas).map(([name, value]) => ({ name, value }));
   };
 
-  const progress = (currentStep / totalSteps) * 100;
+  const COLORS = ['hsl(208 90% 48%)', 'hsl(172 65% 48%)', 'hsl(280 70% 50%)', 'hsl(30 80% 55%)', 'hsl(150 60% 50%)'];
+
+  const totalAgendamentos = agendamentos.length;
+  const agendamentosHoje = agendamentos.filter(a => {
+    const hoje = new Date().toISOString().split('T')[0];
+    return a.data_agendamento_calculada === hoje;
+  }).length;
+
+  const proximosAgendamentos = agendamentos.filter(a => {
+    const hoje = new Date();
+    const dataAgend = new Date(a.data_agendamento_calculada);
+    const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDias >= 0 && diffDias <= 7;
+  }).length;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen gradient-subtle flex items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-subtle">
@@ -187,77 +143,265 @@ const Index = () => {
             <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
-              <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
+              <p className="text-sm text-muted-foreground">Dashboard de Agendamentos Obstétricos</p>
             </div>
           </div>
-          <Button onClick={() => navigate('/dashboard')} variant="outline">
-            Ver Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Agendamento
+            </Button>
+            <Button onClick={() => navigate('/dashboard')} variant="outline">
+              Ver Listagem
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="bg-card rounded-2xl shadow-elegant p-8 md:p-12 animate-fade-in border border-border/50">
-          <div className="mb-10">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-              Formulário de Agendamento de Parto
-            </h1>
-            <p className="text-lg text-muted-foreground font-medium">Fluxo novo 2025</p>
-          </div>
+      <main className="container mx-auto px-4 py-8">
+        {/* Cards de Resumo */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total de Agendamentos</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{totalAgendamentos}</div>
+              <p className="text-xs text-muted-foreground mt-1">Todos os registros</p>
+            </CardContent>
+          </Card>
 
-          <div className="mb-10">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                Etapa {currentStep} de {totalSteps}
-              </span>
-              <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                {Math.round(progress)}%
-              </span>
-            </div>
-            <Progress value={progress} className="h-2.5" />
-          </div>
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Próximos 7 Dias</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-accent">{proximosAgendamentos}</div>
+              <p className="text-xs text-muted-foreground mt-1">Agendamentos próximos</p>
+            </CardContent>
+          </Card>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {currentStep === 1 && <FormStep1 form={form} />}
-              {currentStep === 2 && <FormStep2 form={form} />}
-              {currentStep === 3 && <FormStep3 form={form} />}
-              {currentStep === 4 && <FormStep4 form={form} />}
-              {currentStep === 5 && <FormStep5 form={form} />}
-              {currentStep === 6 && <FormStep6 form={form} />}
-
-              <div className="flex justify-between gap-4 pt-8 mt-8 border-t border-border/50">
-                {currentStep > 1 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    className="w-full md:w-auto px-8 py-6 text-base font-medium transition-smooth hover:scale-105"
-                  >
-                    ← Anterior
-                  </Button>
-                )}
-                {currentStep < totalSteps ? (
-                  <Button
-                    type="button"
-                    onClick={nextStep}
-                    className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold transition-smooth hover:scale-105 shadow-md hover:shadow-lg"
-                  >
-                    Próxima →
-                  </Button>
-                ) : (
-                  <Button 
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold gradient-primary transition-smooth hover:scale-105 shadow-md hover:shadow-xl"
-                  >
-                    {isSubmitting ? "Salvando..." : "Enviar Formulário ✓"}
-                  </Button>
-                )}
-              </div>
-            </form>
-          </Form>
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Hoje</CardTitle>
+              <Baby className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-destructive">{agendamentosHoje}</div>
+              <p className="text-xs text-muted-foreground mt-1">Agendamentos para hoje</p>
+            </CardContent>
+          </Card>
         </div>
+
+        {agendamentos.length === 0 ? (
+          <Card className="shadow-elegant">
+            <CardContent className="py-16 text-center">
+              <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum agendamento cadastrado</h3>
+              <p className="text-muted-foreground mb-6">
+                Comece criando o primeiro agendamento para visualizar estatísticas e dados aqui.
+              </p>
+              <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+                <Plus className="h-4 w-4 mr-2" />
+                Criar Primeiro Agendamento
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Agendamentos por Unidade */}
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" />
+                  Agendamentos por Unidade
+                </CardTitle>
+                <CardDescription>Distribuição por Centro Clínico</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dadosPorUnidade().length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dadosPorUnidade()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Dados insuficientes
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Agendamentos por Maternidade */}
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-accent" />
+                  Agendamentos por Maternidade
+                </CardTitle>
+                <CardDescription>Distribuição por Maternidade</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dadosPorMaternidade().length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={dadosPorMaternidade()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                      >
+                        {dadosPorMaternidade().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Dados insuficientes
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Top 10 Patologias */}
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-destructive" />
+                  Top 10 Patologias
+                </CardTitle>
+                <CardDescription>Diagnósticos mais frequentes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dadosPorPatologia().length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dadosPorPatologia()} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis dataKey="name" type="category" width={150} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="value" fill="hsl(var(--destructive))" radius={[0, 8, 8, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Dados insuficientes
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Procedimentos (Tipo de Parto) */}
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-accent" />
+                  Distribuição por Procedimento
+                </CardTitle>
+                <CardDescription>Tipos de parto/procedimento</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dadosPorProcedimento().length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={dadosPorProcedimento()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="hsl(var(--accent))"
+                        dataKey="value"
+                      >
+                        {dadosPorProcedimento().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Dados insuficientes
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Distribuição por IG */}
+            <Card className="shadow-elegant lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Baby className="h-5 w-5 text-primary" />
+                  Distribuição por Idade Gestacional
+                </CardTitle>
+                <CardDescription>Faixas de IG dos agendamentos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {dadosPorIG().length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={dadosPorIG()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Dados insuficientes
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </main>
     </div>
   );
