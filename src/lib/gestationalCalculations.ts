@@ -125,13 +125,20 @@ interface PatologiaConfig {
  * Baseado nos protocolos PGS analisados
  */
 export const protocolosResolucao: Record<string, PatologiaConfig> = {
-  // Cesáreas eletivas programadas
-  'gestacao_gemelar': {
+  // Cesáreas eletivas programadas - Gemelar
+  'gestacao_gemelar_dicorionica': {
     igIdeal: 37,
     igMinima: 37,
     igMaxima: 38,
     prioridade: 'alta',
-    observacao: 'Gestação gemelar - resolução entre 37-38 semanas'
+    observacao: 'Gestação gemelar dicoriônica não complicada - resolução entre 37-38 semanas'
+  },
+  'gestacao_gemelar_monocorionica': {
+    igIdeal: 36,
+    igMinima: 36,
+    igMaxima: 37,
+    prioridade: 'alta',
+    observacao: 'Gestação gemelar monocoriônica - resolução entre 36-37 semanas (maior risco de complicações)'
   },
   'placenta_previa_acretismo': {
     igIdeal: 37,
@@ -214,8 +221,8 @@ export const protocolosResolucao: Record<string, PatologiaConfig> = {
  */
 export const identificarPatologias = (dados: {
   procedimentos: string[];
-  diagnosticosMaternos?: string;
-  diagnosticosFetais?: string;
+  diagnosticosMaternos?: string[];
+  diagnosticosFetais?: string[];
   placentaPrevia?: string;
 }): string[] => {
   const patologias: string[] = [];
@@ -226,59 +233,28 @@ export const identificarPatologias = (dados: {
     patologias.push('laqueadura');
   }
   
-  if (dados.procedimentos.includes('Cesárea')) {
-    // Verificar se é gemelar
-    if (dados.diagnosticosFetais?.toLowerCase().includes('gemelar') ||
-        dados.diagnosticosFetais?.toLowerCase().includes('gêmeos')) {
-      patologias.push('gestacao_gemelar');
-    }
-  }
-  
   // Placenta prévia/acretismo
   if (dados.placentaPrevia === 'Sim') {
     patologias.push('placenta_previa_acretismo');
   }
   
-  // Diagnósticos maternos
-  const diagnosticosMaternos = dados.diagnosticosMaternos?.toLowerCase() || '';
+  // Diagnósticos maternos (agora são arrays de IDs)
+  const diagnosticosMaternos = dados.diagnosticosMaternos || [];
   
-  if (diagnosticosMaternos.includes('dmg') || diagnosticosMaternos.includes('diabetes')) {
-    if (diagnosticosMaternos.includes('insulina')) {
-      patologias.push('dmg_insulina');
-    } else {
-      patologias.push('dmg_sem_insulina');
+  diagnosticosMaternos.forEach(diagnostico => {
+    if (protocolosResolucao[diagnostico]) {
+      patologias.push(diagnostico);
     }
-  }
+  });
   
-  if (diagnosticosMaternos.includes('pré-eclâmpsia') || 
-      diagnosticosMaternos.includes('pre-eclampsia') ||
-      diagnosticosMaternos.includes('hellp')) {
-    patologias.push('pre_eclampsia_grave');
-  }
+  // Diagnósticos fetais (agora são arrays de IDs)
+  const diagnosticosFetais = dados.diagnosticosFetais || [];
   
-  if (diagnosticosMaternos.includes('hipertensão') || 
-      diagnosticosMaternos.includes('hipertensao')) {
-    patologias.push('hipertensao_gestacional');
-  }
-  
-  // Diagnósticos fetais
-  const diagnosticosFetais = dados.diagnosticosFetais?.toLowerCase() || '';
-  
-  if (diagnosticosFetais.includes('rcf') || 
-      diagnosticosFetais.includes('restrição') ||
-      diagnosticosFetais.includes('restricao')) {
-    patologias.push('rcf');
-  }
-  
-  if (diagnosticosFetais.includes('oligoâmnio') || 
-      diagnosticosFetais.includes('oligoamnio') ||
-      diagnosticosFetais.includes('oligo')) {
-    patologias.push('oligoamnio');
-  }
-  
-  if (diagnosticosFetais.includes('macrossomia')) {
-    patologias.push('macrossomia');
-  }
+  diagnosticosFetais.forEach(diagnostico => {
+    if (protocolosResolucao[diagnostico]) {
+      patologias.push(diagnostico);
+    }
+  });
   
   // Se não houver patologias, considerar baixo risco
   if (patologias.length === 0) {
@@ -359,8 +335,8 @@ export const calcularAgendamentoCompleto = (dados: {
   semanasUsg: string;
   diasUsg: string;
   procedimentos: string[];
-  diagnosticosMaternos?: string;
-  diagnosticosFetais?: string;
+  diagnosticosMaternos?: string[];
+  diagnosticosFetais?: string[];
   placentaPrevia?: string;
 }): CalculationResult => {
   const hoje = new Date();

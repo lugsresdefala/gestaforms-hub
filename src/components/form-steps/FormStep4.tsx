@@ -2,6 +2,7 @@ import { UseFormReturn } from "react-hook-form";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface FormStep4Props {
   form: UseFormReturn<any>;
@@ -36,14 +37,86 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
       <FormField
         control={form.control}
         name="diagnosticosMaternos"
+        render={() => (
+          <FormItem>
+            <div className="mb-4">
+              <FormLabel className="text-base">Diagnósticos Obstétricos Maternos ATUAIS</FormLabel>
+            </div>
+            <div className="space-y-3">
+              {[
+                { id: "dmg_insulina", label: "DMG com insulina" },
+                { id: "dmg_sem_insulina", label: "DMG sem insulina" },
+                { id: "pre_eclampsia_grave", label: "Pré-eclâmpsia grave / HELLP" },
+                { id: "hipertensao_gestacional", label: "Hipertensão gestacional" },
+                { id: "hac", label: "HAC - Hipertensão arterial crônica" },
+                { id: "tpp", label: "TPP - Trabalho de parto prematuro na gestação atual" },
+                { id: "rpmo", label: "RPMO - Rotura prematura de membranas ovulares" },
+                { id: "hipotireoidismo", label: "Hipotireoidismo gestacional" },
+                { id: "dm_pregestacional", label: "DM pré-gestacional (tipo 1/2/MODY)" },
+                { id: "cardiopatia_materna", label: "Cardiopatia materna" },
+                { id: "trombofilias", label: "Trombofilias" },
+                { id: "obesidade", label: "Obesidade (IMC >30)" },
+                { id: "les", label: "LES - Lúpus eritematoso sistêmico" },
+                { id: "saaf", label: "SAAF - Síndrome antifosfolípide" },
+              ].map((item) => (
+                <FormField
+                  key={item.id}
+                  control={form.control}
+                  name="diagnosticosMaternos"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={item.id}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(item.id)}
+                            onCheckedChange={(checked) => {
+                              return checked
+                                ? field.onChange([...field.value, item.id])
+                                : field.onChange(
+                                    field.value?.filter(
+                                      (value: string) => value !== item.id
+                                    )
+                                  )
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          {item.label}
+                        </FormLabel>
+                      </FormItem>
+                    )
+                  }}
+                />
+              ))}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="diagnosticosMaternos"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Diagnósticos Obstétricos Maternos ATUAIS</FormLabel>
+            <FormLabel>Outros diagnósticos maternos</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Ex: DMG com/sem insulina, Pre-eclampsia, Hipertensão gestacional, TPP na gestação atual, RPMO na gestação atual, hipotireoidismo gestacional, etc" 
-                className="min-h-[100px]"
-                {...field} 
+                placeholder="Especifique outros diagnósticos maternos não listados acima" 
+                className="min-h-[60px]"
+                value={typeof field.value === 'string' ? field.value : ''}
+                onChange={(e) => {
+                  const currentArray = Array.isArray(field.value) ? field.value : [];
+                  const otherText = e.target.value;
+                  if (otherText) {
+                    field.onChange([...currentArray.filter(v => typeof v !== 'string' || !v.startsWith('outro_')), `outro_${otherText}`]);
+                  } else {
+                    field.onChange(currentArray.filter(v => typeof v !== 'string' || !v.startsWith('outro_')));
+                  }
+                }}
               />
             </FormControl>
             <FormMessage />
@@ -89,13 +162,71 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
       <FormField
         control={form.control}
         name="diagnosticosFetais"
+        render={() => (
+          <FormItem>
+            <div className="mb-4">
+              <FormLabel className="text-base">Diagnósticos Fetais</FormLabel>
+            </div>
+            <div className="space-y-3">
+              {[
+                { id: "gestacao_gemelar_dicorionica", label: "Gestação gemelar dicoriônica" },
+                { id: "gestacao_gemelar_monocorionica", label: "Gestação gemelar monocoriônica" },
+                { id: "rcf", label: "RCF - Restrição de crescimento fetal" },
+                { id: "oligoamnio", label: "Oligoâmnio" },
+                { id: "polidramnio", label: "Polidrâmnio" },
+                { id: "macrossomia", label: "Macrossomia fetal (>4000g)" },
+                { id: "malformacao_fetal", label: "Malformação fetal" },
+                { id: "cardiopatia_fetal", label: "Cardiopatia fetal" },
+                { id: "obito_fetal", label: "Óbito fetal" },
+              ].map((item) => (
+                <FormField
+                  key={item.id}
+                  control={form.control}
+                  name="diagnosticosFetais"
+                  render={({ field }) => {
+                    return (
+                      <FormItem
+                        key={item.id}
+                        className="flex flex-row items-start space-x-3 space-y-0"
+                      >
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value?.includes(item.id)}
+                            onCheckedChange={(checked) => {
+                              return checked
+                                ? field.onChange([...field.value, item.id])
+                                : field.onChange(
+                                    field.value?.filter(
+                                      (value: string) => value !== item.id
+                                    )
+                                  )
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal cursor-pointer">
+                          {item.label}
+                        </FormLabel>
+                      </FormItem>
+                    )
+                  }}
+                />
+              ))}
+            </div>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="diagnosticosFetaisOutros"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Diagnósticos Fetais</FormLabel>
+            <FormLabel>Outros diagnósticos fetais / Especificações</FormLabel>
             <FormControl>
               <Textarea 
-                placeholder="Ex: RCF, Oligo/Polidramnio, Macrossomia, malformação fetal - especificar, cardiopatia fetal - especificar, etc" 
-                className="min-h-[100px]"
+                placeholder="Especifique malformações, cardiopatias ou outros diagnósticos fetais não listados" 
+                className="min-h-[60px]"
                 {...field} 
               />
             </FormControl>
