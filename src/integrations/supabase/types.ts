@@ -21,7 +21,7 @@ export type Database = {
           carteirinha: string
           centro_clinico: string
           created_at: string
-          created_by: string | null
+          created_by: string
           data_agendamento_calculada: string | null
           data_dum: string | null
           data_nascimento: string
@@ -63,7 +63,7 @@ export type Database = {
           carteirinha: string
           centro_clinico: string
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           data_agendamento_calculada?: string | null
           data_dum?: string | null
           data_nascimento: string
@@ -105,7 +105,7 @@ export type Database = {
           carteirinha?: string
           centro_clinico?: string
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           data_agendamento_calculada?: string | null
           data_dum?: string | null
           data_nascimento?: string
