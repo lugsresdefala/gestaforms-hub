@@ -16,9 +16,12 @@ export type Database = {
     Tables: {
       agendamentos_obst: {
         Row: {
+          aprovado_em: string | null
+          aprovado_por: string | null
           carteirinha: string
           centro_clinico: string
           created_at: string
+          created_by: string | null
           data_agendamento_calculada: string | null
           data_dum: string | null
           data_nascimento: string
@@ -45,17 +48,22 @@ export type Database = {
           numero_partos_cesareas: number
           numero_partos_normais: number
           observacoes_agendamento: string | null
+          observacoes_aprovacao: string | null
           placenta_previa: string | null
           procedimentos: string[]
           semanas_usg: number
+          status: string
           telefones: string
           updated_at: string
           usg_recente: string
         }
         Insert: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           carteirinha: string
           centro_clinico: string
           created_at?: string
+          created_by?: string | null
           data_agendamento_calculada?: string | null
           data_dum?: string | null
           data_nascimento: string
@@ -82,17 +90,22 @@ export type Database = {
           numero_partos_cesareas: number
           numero_partos_normais: number
           observacoes_agendamento?: string | null
+          observacoes_aprovacao?: string | null
           placenta_previa?: string | null
           procedimentos: string[]
           semanas_usg: number
+          status?: string
           telefones: string
           updated_at?: string
           usg_recente: string
         }
         Update: {
+          aprovado_em?: string | null
+          aprovado_por?: string | null
           carteirinha?: string
           centro_clinico?: string
           created_at?: string
+          created_by?: string | null
           data_agendamento_calculada?: string | null
           data_dum?: string | null
           data_nascimento?: string
@@ -119,12 +132,103 @@ export type Database = {
           numero_partos_cesareas?: number
           numero_partos_normais?: number
           observacoes_agendamento?: string | null
+          observacoes_aprovacao?: string | null
           placenta_previa?: string | null
           procedimentos?: string[]
           semanas_usg?: number
+          status?: string
           telefones?: string
           updated_at?: string
           usg_recente?: string
+        }
+        Relationships: []
+      }
+      notificacoes: {
+        Row: {
+          agendamento_id: string
+          created_at: string | null
+          id: string
+          lida: boolean | null
+          lida_em: string | null
+          lida_por: string | null
+          mensagem: string
+          tipo: string
+        }
+        Insert: {
+          agendamento_id: string
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          lida_em?: string | null
+          lida_por?: string | null
+          mensagem: string
+          tipo: string
+        }
+        Update: {
+          agendamento_id?: string
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          lida_em?: string | null
+          lida_por?: string | null
+          mensagem?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_obst"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          nome_completo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+          nome_completo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome_completo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          maternidade: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          maternidade?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          maternidade?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -133,10 +237,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_maternidade_access: {
+        Args: { _maternidade: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "medico_unidade" | "medico_maternidade"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -263,6 +377,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "medico_unidade", "medico_maternidade"],
+    },
   },
 } as const
