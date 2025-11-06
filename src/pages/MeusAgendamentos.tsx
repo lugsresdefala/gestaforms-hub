@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, ArrowLeft, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -116,7 +115,7 @@ const MeusAgendamentos = () => {
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16" />
+            <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16" />
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">Meus Agendamentos</h1>
               <p className="text-sm text-muted-foreground">Agendamentos que você solicitou</p>

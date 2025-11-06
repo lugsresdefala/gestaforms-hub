@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, LogOut, Bell } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import NotificationBell from "@/components/NotificationBell";
@@ -162,7 +161,7 @@ const Index = () => {
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
+            <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
               <p className="text-sm text-muted-foreground">Dashboard de Agendamentos Obstétricos</p>

@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
-import logo from '@/assets/hapvida-logo.png';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -61,8 +60,8 @@ const ResetPassword = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <img 
-            src={logo} 
-            alt="Logo" 
+            src="/hapvida-logo.png" 
+            alt="Logo Hapvida NotreDame" 
             className="h-16 mx-auto mb-4"
           />
           <CardTitle>Redefinir Senha</CardTitle>
