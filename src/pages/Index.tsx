@@ -15,7 +15,7 @@ import { FormStep5 } from "@/components/form-steps/FormStep5";
 import { FormStep6 } from "@/components/form-steps/FormStep6";
 import { formSchema } from "@/lib/formSchema";
 import { supabase } from "@/integrations/supabase/client";
-import { addDays, differenceInDays } from "date-fns";
+import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -56,63 +56,22 @@ const Index = () => {
     },
   });
 
-  // Função para calcular idade gestacional e data de agendamento
-  const calcularAgendamento = (values: z.infer<typeof formSchema>) => {
-    try {
-      const dataUsg = new Date(values.dataPrimeiroUsg);
-      const semanasUsg = parseInt(values.semanasUsg) || 0;
-      const diasUsg = parseInt(values.diasUsg) || 0;
-      
-      // Calcular quantos dias se passaram desde o USG
-      const hoje = new Date();
-      const diasDesdeUsg = differenceInDays(hoje, dataUsg);
-      
-      // Calcular idade gestacional atual
-      const igAtualDias = (semanasUsg * 7) + diasUsg + diasDesdeUsg;
-      const igAtualSemanas = Math.floor(igAtualDias / 7);
-      const igAtualDiasRestantes = igAtualDias % 7;
-      
-      const igCalculada = `${igAtualSemanas} semanas e ${igAtualDiasRestantes} dias`;
-      
-      // Lógica básica de agendamento baseada na IG pretendida
-      let dataAgendamento = new Date();
-      let observacoes = "";
-      
-      // Extrair semanas da IG pretendida (ex: "39 semanas" -> 39)
-      const igPretendidaMatch = values.igPretendida.match(/\d+/);
-      if (igPretendidaMatch) {
-        const semanasAlvo = parseInt(igPretendidaMatch[0]);
-        const diasParaAlvo = (semanasAlvo * 7) - igAtualDias;
-        
-        if (diasParaAlvo > 0) {
-          dataAgendamento = addDays(hoje, diasParaAlvo);
-          observacoes = `Agendamento calculado para ${semanasAlvo} semanas de gestação`;
-        } else {
-          observacoes = `Paciente já passou da IG pretendida. Avaliar com urgência.`;
-        }
-      }
-      
-      return {
-        dataAgendamento,
-        igCalculada,
-        observacoes
-      };
-    } catch (error) {
-      console.error("Erro ao calcular agendamento:", error);
-      return {
-        dataAgendamento: new Date(),
-        igCalculada: "Não calculada",
-        observacoes: "Erro no cálculo. Verificar dados manualmente."
-      };
-    }
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     
     try {
-      // Calcular dados de agendamento
-      const { dataAgendamento, igCalculada, observacoes } = calcularAgendamento(values);
+      // Calcular dados de agendamento usando o sistema completo
+      const resultado = calcularAgendamentoCompleto({
+        dumStatus: values.dum,
+        dataDum: values.dataDum,
+        dataPrimeiroUsg: values.dataPrimeiroUsg,
+        semanasUsg: values.semanasUsg,
+        diasUsg: values.diasUsg,
+        procedimentos: values.procedimento,
+        diagnosticosMaternos: values.diagnosticosMaternos,
+        diagnosticosFetais: values.diagnosticosFetais,
+        placentaPrevia: values.placentaPrevia
+      });
       
       // Preparar dados para inserção
       const agendamentoData = {
@@ -144,9 +103,14 @@ const Index = () => {
         medico_responsavel: values.medicoResponsavel,
         centro_clinico: values.centroClinico,
         email_paciente: values.email,
-        data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
-        idade_gestacional_calculada: igCalculada,
-        observacoes_agendamento: observacoes
+        data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
+        idade_gestacional_calculada: resultado.igFinal.displayText,
+        observacoes_agendamento: `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` +
+          `IG pela DUM: ${resultado.igByDum?.displayText || 'N/A'}\n` +
+          `IG pelo USG: ${resultado.igByUsg.displayText}\n` +
+          `IG FINAL (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n\n` +
+          `IG para agendamento: ${resultado.igAgendamento}\n\n` +
+          resultado.observacoes
       };
       
       // Inserir no banco de dados
@@ -161,7 +125,11 @@ const Index = () => {
       }
       
       toast.success(
-        `Agendamento salvo! Paciente: ${values.nomeCompleto}\nIG calculada: ${igCalculada}\nData sugerida: ${dataAgendamento.toLocaleDateString('pt-BR')}`
+        `Agendamento salvo com sucesso!\n\n` +
+        `Paciente: ${values.nomeCompleto}\n` +
+        `IG Atual (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n` +
+        `Data sugerida: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')} (${resultado.igAgendamento})\n\n` +
+        `Verifique as observações no backend para mais detalhes.`
       );
       
       // Resetar formulário
