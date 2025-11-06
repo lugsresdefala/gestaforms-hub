@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Aprovacoes from "./pages/Aprovacoes";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
 import GerenciarUsuarios from "./pages/GerenciarUsuarios";
@@ -40,6 +41,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthRedirect />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route 
               path="/" 
               element={

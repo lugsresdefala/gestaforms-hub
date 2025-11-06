@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Copy, Check, UserPlus } from 'lucide-react';
 
@@ -17,6 +18,8 @@ const Auth = () => {
   const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [creatingUsers, setCreatingUsers] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -77,6 +80,27 @@ const Auth = () => {
       toast.error("Erro ao criar usuários: " + error.message);
     } finally {
       setCreatingUsers(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast.success('Email de recuperação enviado! Verifique sua caixa de entrada.');
+      setResetPasswordOpen(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast.error('Erro ao enviar email: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,6 +231,38 @@ const Auth = () => {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Entrando...' : 'Entrar'}
                   </Button>
+
+                  <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="link" className="w-full text-sm">
+                        Esqueceu a senha?
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Recuperar Senha</DialogTitle>
+                        <DialogDescription>
+                          Digite seu email para receber um link de recuperação de senha.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleResetPassword} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="reset-email">Email</Label>
+                          <Input
+                            id="reset-email"
+                            type="email"
+                            placeholder="seu@email.com"
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                          {loading ? 'Enviando...' : 'Enviar Link de Recuperação'}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </form>
               </TabsContent>
               
