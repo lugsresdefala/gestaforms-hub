@@ -10,6 +10,8 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import Aprovacoes from "./pages/Aprovacoes";
+import MeusAgendamentos from "./pages/MeusAgendamentos";
+import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +71,15 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/meus-agendamentos" 
+              element={
+                <ProtectedRoute requireMedicoUnidade>
+                  <MeusAgendamentos />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

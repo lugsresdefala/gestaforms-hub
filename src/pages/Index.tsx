@@ -175,6 +175,11 @@ const Index = () => {
                 Aprovações
               </Button>
             )}
+            {isMedicoUnidade() && (
+              <Button onClick={() => navigate('/meus-agendamentos')} variant="outline">
+                Meus Agendamentos
+              </Button>
+            )}
             {(isMedicoUnidade() || isAdmin()) && (
               <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
                 <Plus className="h-4 w-4 mr-2" />
