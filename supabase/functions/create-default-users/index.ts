@@ -12,56 +12,77 @@ serve(async (req) => {
   }
 
   try {
-    // SERVER-SIDE SECURITY: Extract and verify JWT token
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized: Missing authorization header" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    
     // Create client with service role for admin operations
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // SERVER-SIDE SECURITY: Verify user identity from JWT
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.error("Authentication error:", userError);
-      return new Response(
-        JSON.stringify({ error: "Unauthorized: Invalid token" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-      );
-    }
+    // Check if there are any users in the system
+    const { data: usersData, error: countError } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1
+    });
 
-    // SERVER-SIDE SECURITY: Verify admin role using database function
-    // Never trust client-side role claims - always verify server-side
-    const { data: hasAdminRole, error: roleError } = await supabaseAdmin
-      .rpc("has_role", { _user_id: user.id, _role: "admin" });
-
-    if (roleError) {
-      console.error("Role check error:", roleError);
+    if (countError) {
+      console.error("Error checking user count:", countError);
       return new Response(
-        JSON.stringify({ error: "Error verifying permissions" }),
+        JSON.stringify({ error: "Error checking system state" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
       );
     }
 
-    if (!hasAdminRole) {
-      console.warn(`Unauthorized access attempt by user ${user.id}`);
-      return new Response(
-        JSON.stringify({ error: "Forbidden: Admin role required" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
+    // If there are no users, allow initial setup without authentication
+    const isInitialSetup = !usersData.users || usersData.users.length === 0;
 
-    console.log(`Admin user ${user.email} creating default users`);
+    if (!isInitialSetup) {
+      // SERVER-SIDE SECURITY: Extract and verify JWT token
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: Missing authorization header" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+
+      // SERVER-SIDE SECURITY: Verify user identity from JWT
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+      
+      if (userError || !user) {
+        console.error("Authentication error:", userError);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: Invalid token" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+
+      // SERVER-SIDE SECURITY: Verify admin role using database function
+      // Never trust client-side role claims - always verify server-side
+      const { data: hasAdminRole, error: roleError } = await supabaseAdmin
+        .rpc("has_role", { _user_id: user.id, _role: "admin" });
+
+      if (roleError) {
+        console.error("Role check error:", roleError);
+        return new Response(
+          JSON.stringify({ error: "Error verifying permissions" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
+
+      if (!hasAdminRole) {
+        console.warn(`Unauthorized access attempt by user ${user.id}`);
+        return new Response(
+          JSON.stringify({ error: "Forbidden: Admin role required" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+        );
+      }
+
+      console.log(`Admin user ${user.email} creating default users`);
+    } else {
+      console.log("Initial system setup - creating first users");
+    }
 
     const defaultUsers = [
       {
