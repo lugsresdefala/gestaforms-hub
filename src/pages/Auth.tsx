@@ -10,12 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, UserPlus } from 'lucide-react';
 
 const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [creatingUsers, setCreatingUsers] = useState(false);
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -59,6 +60,24 @@ const Auth = () => {
     setCopiedCredential(credential);
     setTimeout(() => setCopiedCredential(null), 2000);
     toast.success('Copiado!');
+  };
+
+  const criarUsuariosPadrao = async () => {
+    setCreatingUsers(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-default-users');
+
+      if (error) throw error;
+
+      const successCount = data.results.filter((r: any) => r.success).length;
+      
+      toast.success(`${successCount} usuário(s) criado(s) com sucesso! Agora você pode fazer login.`);
+    } catch (error: any) {
+      console.error("Erro ao criar usuários:", error);
+      toast.error("Erro ao criar usuários: " + error.message);
+    } finally {
+      setCreatingUsers(false);
+    }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -294,10 +313,26 @@ const Auth = () => {
           <CardHeader>
             <CardTitle className="text-lg">Credenciais de Teste</CardTitle>
             <CardDescription className="text-xs">
-              Use estas credenciais para acessar o sistema
+              Clique no botão abaixo para criar estes usuários
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
+            <Button 
+              onClick={criarUsuariosPadrao} 
+              disabled={creatingUsers}
+              className="w-full"
+              variant="default"
+            >
+              {creatingUsers ? (
+                <>Criando usuários...</>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Criar Usuários de Teste
+                </>
+              )}
+            </Button>
+            
             {credenciaisPadrao.map((cred, idx) => (
               <div key={idx} className={`border-2 rounded-lg p-3 ${cred.cor}`}>
                 <div className="flex items-center justify-between mb-2">
