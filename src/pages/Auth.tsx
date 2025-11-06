@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Copy, Check, UserPlus } from 'lucide-react';
+import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -119,6 +120,11 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validatePasswordStrength(signupData.password)) {
+      toast.error('A senha não atende aos requisitos mínimos de segurança');
+      return;
+    }
     
     if (!signupData.tipoAcesso) {
       toast.error('Por favor, selecione o tipo de acesso desejado');
@@ -301,8 +307,9 @@ const Auth = () => {
                       value={signupData.password}
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                       required
-                      minLength={6}
+                      minLength={8}
                     />
+                    <PasswordStrengthIndicator password={signupData.password} />
                   </div>
 
                   <div className="space-y-2">

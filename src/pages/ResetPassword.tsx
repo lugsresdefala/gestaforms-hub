@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -31,8 +32,8 @@ const ResetPassword = () => {
       return;
     }
 
-    if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+    if (!validatePasswordStrength(password)) {
+      toast.error('A senha não atende aos requisitos mínimos de segurança');
       return;
     }
 
@@ -79,8 +80,9 @@ const ResetPassword = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
               />
+              <PasswordStrengthIndicator password={password} />
             </div>
             
             <div className="space-y-2">
@@ -92,7 +94,7 @@ const ResetPassword = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
             
