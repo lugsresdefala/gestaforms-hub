@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { FormStep1 } from "@/components/form-steps/FormStep1";
 import { FormStep2 } from "@/components/form-steps/FormStep2";
 import { FormStep3 } from "@/components/form-steps/FormStep3";
@@ -20,6 +21,7 @@ import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 
 const NovoAgendamento = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 6;
@@ -109,6 +111,7 @@ const NovoAgendamento = () => {
         email_paciente: values.email,
         data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
         idade_gestacional_calculada: resultado.igFinal.displayText,
+        created_by: user?.id,
         observacoes_agendamento: `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` +
           `IG pela DUM: ${resultado.igByDum?.displayText || 'N/A'}\n` +
           `IG pelo USG: ${resultado.igByUsg.displayText}\n` +

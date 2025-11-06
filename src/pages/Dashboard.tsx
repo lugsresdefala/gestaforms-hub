@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, User, FileText, Filter, Download, Plus } from "lucide-react";
+import { Loader2, Calendar, User, FileText, Filter, Download, Plus, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "@/components/NotificationBell";
 
 interface Agendamento {
   id: string;
@@ -31,6 +33,7 @@ interface Agendamento {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { signOut, isAdmin, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,10 +57,19 @@ const Dashboard = () => {
   const fetchAgendamentos = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('agendamentos_obst')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      // Aplicar filtros baseados nas permissões
+      if (isMedicoMaternidade() && !isAdmin()) {
+        const maternidades = getMaternidadesAcesso();
+        query = query.in('maternidade', maternidades).eq('status', 'aprovado');
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -68,6 +80,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   const applyFilters = () => {
@@ -190,13 +207,17 @@ const Dashboard = () => {
               <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {isAdmin() && <NotificationBell />}
             <Button onClick={() => navigate('/')} variant="outline">
               ← Dashboard
             </Button>
             <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
               <Plus className="h-4 w-4 mr-2" />
               Novo Agendamento
+            </Button>
+            <Button onClick={handleLogout} variant="ghost" size="icon">
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>

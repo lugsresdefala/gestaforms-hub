@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, LogOut, Bell } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/hapvida-logo.png";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import NotificationBell from "@/components/NotificationBell";
 
 interface Agendamento {
   id: string;
@@ -21,6 +23,7 @@ interface Agendamento {
 
 const Index = () => {
   const navigate = useNavigate();
+  const { signOut, isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,10 +34,24 @@ const Index = () => {
   const fetchAgendamentos = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('agendamentos_obst')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*');
+
+      // Aplicar filtros baseados nas permissões
+      if (isMedicoMaternidade() && !isAdmin()) {
+        const maternidades = getMaternidadesAcesso();
+        query = query.in('maternidade', maternidades).eq('status', 'aprovado');
+      } else if (!isAdmin() && !isMedicoUnidade()) {
+        // Se não é admin nem médico, não mostra nada
+        setAgendamentos([]);
+        setLoading(false);
+        return;
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setAgendamentos(data || []);
@@ -44,6 +61,11 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   // Processar dados para gráficos
@@ -146,13 +168,24 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">Dashboard de Agendamentos Obstétricos</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Agendamento
-            </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin() && <NotificationBell />}
+            {isAdmin() && (
+              <Button onClick={() => navigate('/aprovacoes')} variant="outline">
+                Aprovações
+              </Button>
+            )}
+            {(isMedicoUnidade() || isAdmin()) && (
+              <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Agendamento
+              </Button>
+            )}
             <Button onClick={() => navigate('/dashboard')} variant="outline">
               Ver Listagem
+            </Button>
+            <Button onClick={handleLogout} variant="ghost" size="icon">
+              <LogOut className="h-5 w-5" />
             </Button>
           </div>
         </div>
