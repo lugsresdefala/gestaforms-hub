@@ -9,9 +9,9 @@ interface FormStep3Props {
 
 export const FormStep3 = ({ form }: FormStep3Props) => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Detalhes da Gestação</h2>
+    <div className="space-y-6 animate-slide-in">
+      <div className="pb-4 border-b border-border/30">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Detalhes da Gestação</h2>
         <p className="text-sm text-muted-foreground">Informações sobre USG e idade gestacional</p>
       </div>
 

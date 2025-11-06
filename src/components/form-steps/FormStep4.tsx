@@ -9,9 +9,9 @@ interface FormStep4Props {
 
 export const FormStep4 = ({ form }: FormStep4Props) => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Histórico Médico</h2>
+    <div className="space-y-6 animate-slide-in">
+      <div className="pb-4 border-b border-border/30">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Histórico Médico</h2>
         <p className="text-sm text-muted-foreground">Diagnósticos e medicações atuais</p>
       </div>
 

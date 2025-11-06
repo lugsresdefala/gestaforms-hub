@@ -90,32 +90,32 @@ const Index = () => {
   const progress = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border py-6 shadow-sm">
+    <div className="min-h-screen gradient-subtle">
+      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16" />
+          <img src={logo} alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-card rounded-lg shadow-lg p-6 md:p-8">
-          <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+      <main className="container mx-auto px-4 py-12 max-w-4xl">
+        <div className="bg-card rounded-2xl shadow-elegant p-8 md:p-12 animate-fade-in border border-border/50">
+          <div className="mb-10">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
               Formulário de Agendamento de Parto
             </h1>
-            <p className="text-muted-foreground">Fluxo novo 2025</p>
+            <p className="text-lg text-muted-foreground font-medium">Fluxo novo 2025</p>
           </div>
 
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-foreground">
+          <div className="mb-10">
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-semibold text-foreground uppercase tracking-wide">
                 Etapa {currentStep} de {totalSteps}
               </span>
-              <span className="text-sm font-medium text-primary">
+              <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
                 {Math.round(progress)}%
               </span>
             </div>
-            <Progress value={progress} className="h-2" />
+            <Progress value={progress} className="h-2.5" />
           </div>
 
           <Form {...form}>
@@ -127,28 +127,31 @@ const Index = () => {
               {currentStep === 5 && <FormStep5 form={form} />}
               {currentStep === 6 && <FormStep6 form={form} />}
 
-              <div className="flex justify-between gap-4 pt-6 border-t border-border">
+              <div className="flex justify-between gap-4 pt-8 mt-8 border-t border-border/50">
                 {currentStep > 1 && (
                   <Button
                     type="button"
                     variant="outline"
                     onClick={prevStep}
-                    className="w-full md:w-auto"
+                    className="w-full md:w-auto px-8 py-6 text-base font-medium transition-smooth hover:scale-105"
                   >
-                    Anterior
+                    ← Anterior
                   </Button>
                 )}
                 {currentStep < totalSteps ? (
                   <Button
                     type="button"
                     onClick={nextStep}
-                    className="w-full md:w-auto ml-auto"
+                    className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold transition-smooth hover:scale-105 shadow-md hover:shadow-lg"
                   >
-                    Próxima
+                    Próxima →
                   </Button>
                 ) : (
-                  <Button type="submit" className="w-full md:w-auto ml-auto">
-                    Enviar Formulário
+                  <Button 
+                    type="submit" 
+                    className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold gradient-primary transition-smooth hover:scale-105 shadow-md hover:shadow-xl"
+                  >
+                    Enviar Formulário ✓
                   </Button>
                 )}
               </div>
@@ -158,18 +161,6 @@ const Index = () => {
       </main>
     </div>
   );
-};
-
-const getFieldsForStep = (step: number) => {
-  const fieldMap: Record<number, string[]> = {
-    1: ["carteirinha", "nomeCompleto", "dataNascimento", "numeroGestacoes", "numeroPartosCesareas", "numeroPartosNormais", "numeroAbortos", "telefones"],
-    2: ["procedimento", "dum", "dataDum"],
-    3: ["dataPrimeiroUsg", "semanasUsg", "diasUsg", "usgRecente", "igPretendida", "indicacaoProcedimento"],
-    4: ["medicacao", "diagnosticosMaternos", "placentaPrevia", "diagnosticosFetais", "historiaObstetrica"],
-    5: ["necessidadeUtiMaterna", "necessidadeReservaSangue"],
-    6: ["maternidade", "medicoResponsavel", "centroClinico", "email"],
-  };
-  return fieldMap[step] || [];
 };
 
 export default Index;

@@ -8,9 +8,9 @@ interface FormStep1Props {
 
 export const FormStep1 = ({ form }: FormStep1Props) => {
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-1">Informações da Paciente</h2>
+    <div className="space-y-6 animate-slide-in">
+      <div className="pb-4 border-b border-border/30">
+        <h2 className="text-2xl font-bold text-foreground mb-2">Informações da Paciente</h2>
         <p className="text-sm text-muted-foreground">Dados básicos e histórico obstétrico</p>
       </div>
 
