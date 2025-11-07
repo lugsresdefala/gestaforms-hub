@@ -43,16 +43,26 @@ const OcupacaoMaternidades = () => {
       setCapacidades(caps);
     }
 
-    // Buscar ocupações da semana
+    // Buscar ocupações da semana (NOVOS + EXISTENTES)
     const inicioSemana = startOfWeek(selectedDate, { weekStartsOn: 0 });
     const fimSemana = endOfWeek(selectedDate, { weekStartsOn: 0 });
+    const inicioStr = format(inicioSemana, 'yyyy-MM-dd');
+    const fimStr = format(fimSemana, 'yyyy-MM-dd');
 
-    const { data: agendamentos } = await supabase
+    // Buscar agendamentos novos
+    const { data: agendamentosNovos } = await supabase
       .from('agendamentos_obst')
       .select('maternidade, data_agendamento_calculada, created_at')
-      .gte('data_agendamento_calculada', format(inicioSemana, 'yyyy-MM-dd'))
-      .lte('data_agendamento_calculada', format(fimSemana, 'yyyy-MM-dd'))
+      .gte('data_agendamento_calculada', inicioStr)
+      .lte('data_agendamento_calculada', fimStr)
       .neq('status', 'rejeitado');
+
+    // Buscar agendamentos existentes
+    const { data: agendamentosExistentes } = await supabase
+      .from('agenda_existente')
+      .select('maternidade, data_agendamento, created_at')
+      .gte('data_agendamento', inicioStr)
+      .lte('data_agendamento', fimStr);
 
     // Agrupar por maternidade e data
     const ocupacoesPorMaternidade: Record<string, OcupacaoDia[]> = {};
@@ -61,7 +71,8 @@ const OcupacaoMaternidades = () => {
       ocupacoesPorMaternidade[cap.maternidade] = [];
     });
 
-    agendamentos?.forEach(ag => {
+    // Processar agendamentos novos
+    agendamentosNovos?.forEach(ag => {
       if (!ocupacoesPorMaternidade[ag.maternidade]) {
         ocupacoesPorMaternidade[ag.maternidade] = [];
       }
@@ -70,7 +81,6 @@ const OcupacaoMaternidades = () => {
         o => o.data === ag.data_agendamento_calculada
       );
 
-      // Verifica se é urgente (criado há menos de 7 dias da data)
       const diasAteAgendamento = Math.floor(
         (parseISO(ag.data_agendamento_calculada as string).getTime() - new Date(ag.created_at).getTime()) / 
         (1000 * 60 * 60 * 24)
@@ -85,6 +95,27 @@ const OcupacaoMaternidades = () => {
           data: ag.data_agendamento_calculada as string,
           total: 1,
           urgentes: isUrgente ? 1 : 0,
+        });
+      }
+    });
+
+    // Processar agendamentos existentes
+    agendamentosExistentes?.forEach(ag => {
+      if (!ocupacoesPorMaternidade[ag.maternidade]) {
+        ocupacoesPorMaternidade[ag.maternidade] = [];
+      }
+
+      const existente = ocupacoesPorMaternidade[ag.maternidade].find(
+        o => o.data === ag.data_agendamento
+      );
+
+      if (existente) {
+        existente.total += 1;
+      } else {
+        ocupacoesPorMaternidade[ag.maternidade].push({
+          data: ag.data_agendamento as string,
+          total: 1,
+          urgentes: 0,
         });
       }
     });

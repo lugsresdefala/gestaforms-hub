@@ -9,6 +9,7 @@ import {
   Users,
   Building2,
   LogOut,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -61,6 +62,12 @@ const AppSidebar = () => {
       title: "Ocupação",
       url: "/ocupacao",
       icon: Building2,
+      show: isAdmin(),
+    },
+    {
+      title: "Importar Agenda",
+      url: "/importar-agenda",
+      icon: Upload,
       show: isAdmin(),
     },
     {

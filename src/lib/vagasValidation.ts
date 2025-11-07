@@ -41,29 +41,46 @@ export const verificarDisponibilidade = async (
 
     const cap = capacidade as CapacidadeMaternidade;
 
-    // Contar agendamentos no mesmo dia
-    const { data: agendamentosDia, error: errorDia } = await supabase
+    // Contar agendamentos no mesmo dia (NOVOS + EXISTENTES)
+    const dataFormatada = format(dataAgendamento, 'yyyy-MM-dd');
+    
+    const { data: agendamentosDiaNovos, error: errorDia1 } = await supabase
       .from('agendamentos_obst')
       .select('id')
       .eq('maternidade', maternidade)
-      .eq('data_agendamento_calculada', format(dataAgendamento, 'yyyy-MM-dd'))
+      .eq('data_agendamento_calculada', dataFormatada)
       .neq('status', 'rejeitado');
 
-    const vagasUsadasDia = agendamentosDia?.length || 0;
+    const { data: agendamentosDiaExistentes, error: errorDia2 } = await supabase
+      .from('agenda_existente')
+      .select('id')
+      .eq('maternidade', maternidade)
+      .eq('data_agendamento', dataFormatada);
 
-    // Contar agendamentos na mesma semana
+    const vagasUsadasDia = (agendamentosDiaNovos?.length || 0) + (agendamentosDiaExistentes?.length || 0);
+
+    // Contar agendamentos na mesma semana (NOVOS + EXISTENTES)
     const inicioSemana = startOfWeek(dataAgendamento, { weekStartsOn: 0 });
     const fimSemana = endOfWeek(dataAgendamento, { weekStartsOn: 0 });
+    const inicioSemanaStr = format(inicioSemana, 'yyyy-MM-dd');
+    const fimSemanaStr = format(fimSemana, 'yyyy-MM-dd');
 
-    const { data: agendamentosSemana, error: errorSemana } = await supabase
+    const { data: agendamentosSemanaNovos, error: errorSemana1 } = await supabase
       .from('agendamentos_obst')
       .select('id')
       .eq('maternidade', maternidade)
-      .gte('data_agendamento_calculada', format(inicioSemana, 'yyyy-MM-dd'))
-      .lte('data_agendamento_calculada', format(fimSemana, 'yyyy-MM-dd'))
+      .gte('data_agendamento_calculada', inicioSemanaStr)
+      .lte('data_agendamento_calculada', fimSemanaStr)
       .neq('status', 'rejeitado');
 
-    const vagasUsadasSemana = agendamentosSemana?.length || 0;
+    const { data: agendamentosSemanaExistentes, error: errorSemana2 } = await supabase
+      .from('agenda_existente')
+      .select('id')
+      .eq('maternidade', maternidade)
+      .gte('data_agendamento', inicioSemanaStr)
+      .lte('data_agendamento', fimSemanaStr);
+
+    const vagasUsadasSemana = (agendamentosSemanaNovos?.length || 0) + (agendamentosSemanaExistentes?.length || 0);
 
     // Verificar disponibilidade
     const vagasDisponiveisDia = cap.vagas_dia_max - vagasUsadasDia;
