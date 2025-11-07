@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 
 interface Agendamento {
   id: string;
@@ -26,6 +27,8 @@ interface Agendamento {
   created_at: string;
   aprovado_em: string | null;
   observacoes_aprovacao: string | null;
+  diagnosticos_maternos?: string;
+  diagnosticos_fetais?: string;
 }
 
 const MeusAgendamentos = () => {
@@ -196,6 +199,21 @@ const MeusAgendamentos = () => {
                       {agendamento.procedimentos.map((proc, idx) => (
                         <Badge key={idx} variant="outline">{proc}</Badge>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium">Diagnósticos Maternos</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDiagnosticos(agendamento.diagnosticos_maternos || '[]')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Diagnósticos Fetais</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDiagnosticos(agendamento.diagnosticos_fetais || '[]')}
+                      </p>
                     </div>
                   </div>
 

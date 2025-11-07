@@ -1,4 +1,5 @@
 // Validação de protocolo para agendamentos obstétricos
+import { PROTOCOLS } from "./obstetricProtocols";
 
 export interface ValidacaoProtocolo {
   compativel: boolean;
@@ -19,6 +20,32 @@ export const validarProtocolo = (dados: {
   let compativel = true;
 
   const igTotal = dados.igSemanas + (dados.igDias / 7);
+  
+  // Validar protocolos específicos dos diagnósticos
+  [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].forEach(diagnostico => {
+    if (diagnostico === 'nenhum_materno' || diagnostico === 'nenhum_fetal') return;
+    
+    const protocolo = PROTOCOLS[diagnostico];
+    if (protocolo) {
+      const igIdealParts = protocolo.igIdeal.split('-');
+      const igMin = parseInt(igIdealParts[0]);
+      const igMax = igIdealParts.length > 1 ? parseInt(igIdealParts[1]) : igMin;
+      const margemMax = igMax + (protocolo.margemDias / 7);
+      
+      if (igTotal < igMin) {
+        if (protocolo.prioridade === 1) {
+          alertas.push(`🚨 CRÍTICO: ${diagnostico.replace(/_/g, ' ')} - IG atual (${dados.igSemanas}+${dados.igDias}) abaixo do mínimo (${igMin} semanas)`);
+          compativel = false;
+        } else {
+          recomendacoes.push(`⚠️ ${diagnostico.replace(/_/g, ' ')}: IG recomendada ${protocolo.igIdeal} semanas (${protocolo.observacoes})`);
+        }
+      } else if (igTotal > margemMax) {
+        alertas.push(`⚠️ ATENÇÃO: ${diagnostico.replace(/_/g, ' ')} - IG atual ultrapassou janela ideal + margem (${protocolo.igIdeal} + ${protocolo.margemDias}d)`);
+      } else if (igTotal >= igMin && igTotal <= margemMax) {
+        recomendacoes.push(`✓ ${diagnostico.replace(/_/g, ' ')}: IG dentro da janela recomendada (${protocolo.igIdeal} ±${protocolo.margemDias}d)`);
+      }
+    }
+  });
 
   // Validação para Cesárea Eletiva
   if (dados.procedimentos.includes('Cesárea Eletiva')) {

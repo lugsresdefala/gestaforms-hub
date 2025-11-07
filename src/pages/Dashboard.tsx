@@ -11,6 +11,7 @@ import { Loader2, Calendar, User, FileText, Filter, Download, Plus, LogOut } fro
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
+import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 
 interface Agendamento {
   id: string;
@@ -435,25 +436,29 @@ const Dashboard = () => {
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium">Diagnósticos:</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {JSON.parse(agendamento.diagnosticos_maternos || '[]').map((diag: string, idx: number) => (
-                          <Badge key={`mat-${idx}`} variant="secondary">{diag}</Badge>
-                        ))}
-                        {JSON.parse(agendamento.diagnosticos_fetais || '[]').map((diag: string, idx: number) => (
-                          <Badge key={`fet-${idx}`} variant="secondary">{diag}</Badge>
-                        ))}
-                      </div>
+                      <p className="text-sm font-medium">Diagnósticos Maternos:</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formatDiagnosticos(agendamento.diagnosticos_maternos)}
+                      </p>
                     </div>
 
-                    <details className="mt-2">
-                      <summary className="text-sm font-medium cursor-pointer hover:text-primary">
-                        Ver observações completas
-                      </summary>
-                      <pre className="text-xs bg-muted p-3 rounded mt-2 whitespace-pre-wrap">
-                        {agendamento.observacoes_agendamento}
-                      </pre>
-                    </details>
+                    <div>
+                      <p className="text-sm font-medium">Diagnósticos Fetais:</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formatDiagnosticos(agendamento.diagnosticos_fetais)}
+                      </p>
+                    </div>
+
+                    {agendamento.observacoes_agendamento && (
+                      <details className="mt-2">
+                        <summary className="text-sm font-medium cursor-pointer hover:text-primary">
+                          Ver observações completas
+                        </summary>
+                        <pre className="text-xs bg-muted p-3 rounded mt-2 whitespace-pre-wrap">
+                          {agendamento.observacoes_agendamento}
+                        </pre>
+                      </details>
+                    )}
                   </div>
                 </CardContent>
               </Card>

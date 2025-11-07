@@ -1,4 +1,5 @@
 import { differenceInDays, addDays, addWeeks } from "date-fns";
+import { PROTOCOLS, type ProtocolConfig } from "./obstetricProtocols";
 
 export interface GestationalAge {
   weeks: number;
@@ -15,6 +16,7 @@ export interface CalculationResult {
   observacoes: string;
   dataAgendamento: Date;
   igAgendamento: string;
+  protocoloAplicado?: string;
 }
 
 /**
@@ -112,112 +114,20 @@ export const determinarIgFinal = (
   }
 };
 
-interface PatologiaConfig {
-  igIdeal: number; // em semanas
-  igMinima?: number;
-  igMaxima?: number;
-  prioridade: 'alta' | 'media' | 'baixa';
-  observacao: string;
-}
-
 /**
- * Protocolo de resolução baseado em patologias obstétricas
- * Baseado nos protocolos PGS analisados
+ * Converte string de IG ideal para semanas (suporta "37" ou "37-38")
  */
-export const protocolosResolucao: Record<string, PatologiaConfig> = {
-  // Cesáreas eletivas programadas - Gemelar
-  'gestacao_gemelar_dicorionica': {
-    igIdeal: 37,
-    igMinima: 37,
-    igMaxima: 38,
-    prioridade: 'alta',
-    observacao: 'Gestação gemelar dicoriônica não complicada - resolução entre 37-38 semanas'
-  },
-  'gestacao_gemelar_monocorionica': {
-    igIdeal: 36,
-    igMinima: 36,
-    igMaxima: 37,
-    prioridade: 'alta',
-    observacao: 'Gestação gemelar monocoriônica - resolução entre 36-37 semanas (maior risco de complicações)'
-  },
-  'placenta_previa_acretismo': {
-    igIdeal: 37,
-    igMinima: 36,
-    igMaxima: 37,
-    prioridade: 'alta',
-    observacao: 'Placenta prévia/acretismo - resolução programada 36-37 semanas'
-  },
-  'macrossomia': {
-    igIdeal: 38,
-    igMinima: 38,
-    igMaxima: 39,
-    prioridade: 'media',
-    observacao: 'Macrossomia fetal (>4000g) - resolução 38-39 semanas'
-  },
-  
-  // Patologias clínicas
-  'dmg_insulina': {
-    igIdeal: 38,
-    igMinima: 38,
-    igMaxima: 39,
-    prioridade: 'media',
-    observacao: 'DMG com insulina - resolução 38-39 semanas'
-  },
-  'dmg_sem_insulina': {
-    igIdeal: 39,
-    igMinima: 39,
-    igMaxima: 40,
-    prioridade: 'media',
-    observacao: 'DMG controlada sem insulina - até 39-40 semanas'
-  },
-  'pre_eclampsia_grave': {
-    igIdeal: 37,
-    igMinima: 34,
-    prioridade: 'alta',
-    observacao: 'Pré-eclâmpsia grave - resolução conforme gravidade (mínimo 34 semanas se possível)'
-  },
-  'hipertensao_gestacional': {
-    igIdeal: 38,
-    igMinima: 37,
-    igMaxima: 39,
-    prioridade: 'media',
-    observacao: 'Hipertensão gestacional - monitorar e resolver 37-39 semanas'
-  },
-  'rcf': {
-    igIdeal: 37,
-    igMinima: 37,
-    igMaxima: 38,
-    prioridade: 'alta',
-    observacao: 'Restrição de crescimento fetal - resolução 37-38 semanas'
-  },
-  'oligoamnio': {
-    igIdeal: 37,
-    igMinima: 37,
-    igMaxima: 38,
-    prioridade: 'alta',
-    observacao: 'Oligoâmnio - resolução 37-38 semanas'
-  },
-  
-  // Laqueadura pós-parto
-  'laqueadura': {
-    igIdeal: 39,
-    igMinima: 39,
-    prioridade: 'media',
-    observacao: 'Laqueadura - aguardar 60 dias após assinatura do termo + 39 semanas mínimo'
-  },
-  
-  // Gestação de baixo risco
-  'baixo_risco': {
-    igIdeal: 39,
-    igMinima: 39,
-    igMaxima: 40,
-    prioridade: 'baixa',
-    observacao: 'Gestação de baixo risco - termo 39-40 semanas'
+const parseIgIdeal = (igIdeal: string): { min: number; max: number } => {
+  if (igIdeal.includes('-')) {
+    const [min, max] = igIdeal.split('-').map(s => parseInt(s));
+    return { min, max };
   }
+  const value = parseInt(igIdeal);
+  return { min: value, max: value };
 };
 
 /**
- * Identifica patologias baseado nos dados do formulário
+ * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
  */
 export const identificarPatologias = (dados: {
   procedimentos: string[];
@@ -227,101 +137,140 @@ export const identificarPatologias = (dados: {
 }): string[] => {
   const patologias: string[] = [];
   
-  // Procedimentos
+  // Verificar procedimentos especiais
   if (dados.procedimentos.includes('Cesárea + Laqueadura') || 
       dados.procedimentos.includes('Laqueadura Pós-parto Normal')) {
     patologias.push('laqueadura');
   }
   
-  // Placenta prévia/acretismo
-  if (dados.placentaPrevia === 'Sim') {
-    patologias.push('placenta_previa_acretismo');
+  if (dados.procedimentos.includes('Cesárea Eletiva') && 
+      !dados.diagnosticosMaternos?.length && 
+      !dados.diagnosticosFetais?.length) {
+    patologias.push('desejo_materno');
   }
   
-  // Diagnósticos maternos (agora são arrays de IDs)
+  // Placenta prévia
+  if (dados.placentaPrevia && dados.placentaPrevia !== 'Não') {
+    const temAcretismo = dados.diagnosticosMaternos?.includes('placenta_previa_acretismo');
+    patologias.push(temAcretismo ? 'placenta_previa_acretismo' : 'placenta_previa_sem_acretismo');
+  }
+  
+  // Diagnósticos maternos
   const diagnosticosMaternos = dados.diagnosticosMaternos || [];
-  
   diagnosticosMaternos.forEach(diagnostico => {
-    if (protocolosResolucao[diagnostico]) {
+    if (diagnostico !== 'nenhum_materno' && PROTOCOLS[diagnostico]) {
       patologias.push(diagnostico);
     }
   });
   
-  // Diagnósticos fetais (agora são arrays de IDs)
+  // Diagnósticos fetais
   const diagnosticosFetais = dados.diagnosticosFetais || [];
-  
   diagnosticosFetais.forEach(diagnostico => {
-    if (protocolosResolucao[diagnostico]) {
+    if (diagnostico !== 'nenhum_fetal' && PROTOCOLS[diagnostico]) {
       patologias.push(diagnostico);
     }
   });
-  
-  // Se não houver patologias, considerar baixo risco
-  if (patologias.length === 0) {
-    patologias.push('baixo_risco');
-  }
   
   return patologias;
 };
 
 /**
- * Calcula data de agendamento baseada em patologias e protocolos
+ * Calcula data de agendamento baseada em protocolos obstétricos
+ * Aplica margem de +7 dias conforme protocolo
  */
 export const calcularDataAgendamento = (
   igAtual: GestationalAge,
   patologias: string[]
-): { data: Date; igAgendamento: string; observacoes: string } => {
-  // Encontrar a patologia de maior prioridade
-  let protocoloMaisRestritivo: PatologiaConfig | null = null;
-  let patologiaPrincipal = '';
+): { data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string } => {
+  // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
+  if (patologias.length === 0) {
+    const igAlvo = 39;
+    const diasParaAlvo = (igAlvo * 7) - igAtual.totalDays;
+    
+    return {
+      data: diasParaAlvo > 0 ? addDays(new Date(), diasParaAlvo) : new Date(),
+      igAgendamento: `${igAlvo} semanas`,
+      observacoes: 'Gestação de baixo risco - resolução às 39 semanas',
+      protocoloAplicado: 'baixo_risco'
+    };
+  }
   
-  const prioridadeOrdem = { 'alta': 3, 'media': 2, 'baixa': 1 };
+  // Encontrar o protocolo mais restritivo (maior prioridade e menor IG)
+  let protocoloSelecionado: ProtocolConfig | null = null;
+  let patologiaSelecionada = '';
   
   for (const patologia of patologias) {
-    const protocolo = protocolosResolucao[patologia];
-    if (protocolo) {
-      if (!protocoloMaisRestritivo || 
-          prioridadeOrdem[protocolo.prioridade] > prioridadeOrdem[protocoloMaisRestritivo.prioridade] ||
-          (prioridadeOrdem[protocolo.prioridade] === prioridadeOrdem[protocoloMaisRestritivo.prioridade] &&
-           protocolo.igIdeal < protocoloMaisRestritivo.igIdeal)) {
-        protocoloMaisRestritivo = protocolo;
-        patologiaPrincipal = patologia;
-      }
+    const protocolo = PROTOCOLS[patologia];
+    if (!protocolo) continue;
+    
+    if (!protocoloSelecionado || 
+        protocolo.prioridade < protocoloSelecionado.prioridade ||
+        (protocolo.prioridade === protocoloSelecionado.prioridade && 
+         parseIgIdeal(protocolo.igIdeal).min < parseIgIdeal(protocoloSelecionado.igIdeal).min)) {
+      protocoloSelecionado = protocolo;
+      patologiaSelecionada = patologia;
     }
   }
   
-  // Usar protocolo de baixo risco se não encontrar nada
-  if (!protocoloMaisRestritivo) {
-    protocoloMaisRestritivo = protocolosResolucao['baixo_risco'];
-    patologiaPrincipal = 'baixo_risco';
+  if (!protocoloSelecionado) {
+    // Fallback
+    return {
+      data: new Date(),
+      igAgendamento: `${igAtual.weeks} semanas`,
+      observacoes: 'Não foi possível determinar protocolo específico',
+      protocoloAplicado: 'indefinido'
+    };
   }
   
-  const semanasAlvo = protocoloMaisRestritivo.igIdeal;
-  const diasParaAlvo = (semanasAlvo * 7) - igAtual.totalDays;
+  // Calcular IG alvo (usar o mínimo da faixa)
+  const igRange = parseIgIdeal(protocoloSelecionado.igIdeal);
+  const igAlvo = igRange.min;
+  const margemDias = protocoloSelecionado.margemDias;
+  
+  // Calcular dias até a IG alvo
+  const diasParaAlvo = (igAlvo * 7) - igAtual.totalDays;
   
   let dataAgendamento: Date;
-  let observacoes = protocoloMaisRestritivo.observacao;
+  let observacoes = `${protocoloSelecionado.observacoes}\nVia preferencial: ${protocoloSelecionado.viaPreferencial}`;
   
   if (diasParaAlvo > 0) {
+    // Paciente ainda não atingiu a IG ideal
     dataAgendamento = addDays(new Date(), diasParaAlvo);
-    observacoes += `\nAgendamento calculado para ${semanasAlvo} semanas.`;
+    
+    if (margemDias > 0) {
+      observacoes += `\n📅 IG ideal: ${protocoloSelecionado.igIdeal} semanas (margem de até +${margemDias} dias permitida)`;
+      observacoes += `\nData calculada: ${igAlvo} semanas completas`;
+    } else {
+      observacoes += `\n📅 IG recomendada: Exatamente ${protocoloSelecionado.igIdeal} semanas`;
+    }
+  } else if (diasParaAlvo >= -margemDias) {
+    // Paciente está dentro da margem permitida
+    dataAgendamento = addDays(new Date(), 1); // Agendar para o próximo dia útil
+    observacoes += `\n✓ Paciente está com ${igAtual.displayText} - dentro da janela de agendamento`;
+    observacoes += `\nIG ideal: ${protocoloSelecionado.igIdeal} semanas (margem: +${margemDias} dias)`;
   } else {
-    // Paciente já passou da IG ideal
+    // Paciente passou da margem
     dataAgendamento = new Date();
-    const semanasPassadas = Math.abs(Math.floor(diasParaAlvo / 7));
-    observacoes += `\n⚠️ URGENTE: Paciente já está com ${igAtual.displayText}, passou ${semanasPassadas} semana(s) da IG ideal de ${semanasAlvo} semanas. Avaliar resolução imediata.`;
+    const diasAtrasados = Math.abs(diasParaAlvo) - margemDias;
+    observacoes += `\n⚠️ URGENTE: Paciente com ${igAtual.displayText}, ultrapassou ${diasAtrasados} dias além da margem permitida`;
+    observacoes += `\nIG recomendada era: ${protocoloSelecionado.igIdeal} semanas + ${margemDias} dias`;
+    observacoes += `\n🚨 AVALIAÇÃO IMEDIATA NECESSÁRIA`;
   }
   
-  // Adicionar informações sobre outras patologias
+  // Adicionar informações de outras patologias
   if (patologias.length > 1) {
-    const outrasPatologias = patologias.filter(p => p !== patologiaPrincipal);
-    observacoes += `\n\nOutras condições identificadas: ${outrasPatologias.map(p => protocolosResolucao[p]?.observacao || p).join('; ')}`;
+    const outras = patologias.filter(p => p !== patologiaSelecionada);
+    observacoes += `\n\n📋 Outras condições: ${outras.map(p => {
+      const proto = PROTOCOLS[p];
+      return proto ? `${p.replace(/_/g, ' ')} (IG: ${proto.igIdeal}sem)` : p;
+    }).join(', ')}`;
   }
   
   return {
     data: dataAgendamento,
-    igAgendamento: `${semanasAlvo} semanas`,
-    observacoes
+    igAgendamento: `${igAlvo} semanas`,
+    observacoes,
+    protocoloAplicado: patologiaSelecionada
   };
 };
 
@@ -364,16 +313,28 @@ export const calcularAgendamentoCompleto = (dados: {
   const patologias = identificarPatologias(dados);
   
   // Calcular data de agendamento
-  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento } = 
+  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado } = 
     calcularDataAgendamento(igFinal, patologias);
+  
+  let observacoesFinais = `METODOLOGIA: ${obsMetodologia}\n\n`;
+  
+  if (patologias.length > 0) {
+    observacoesFinais += `PROTOCOLOS APLICÁVEIS:\n${patologias.map(p => {
+      const proto = PROTOCOLS[p];
+      return proto ? `• ${p.replace(/_/g, ' ')}: ${proto.observacoes}` : `• ${p}`;
+    }).join('\n')}\n\n`;
+  }
+  
+  observacoesFinais += `RECOMENDAÇÃO DE AGENDAMENTO:\n${obsAgendamento}`;
   
   return {
     igByDum: igDum,
     igByUsg: igUsg,
     igFinal,
     metodologiaUtilizada: metodologia,
-    observacoes: `${obsMetodologia}\n\nPATOLOGIAS IDENTIFICADAS:\n${patologias.map(p => `- ${p}`).join('\n')}\n\n${obsAgendamento}`,
+    observacoes: observacoesFinais,
     dataAgendamento,
-    igAgendamento
+    igAgendamento,
+    protocoloAplicado
   };
 };
