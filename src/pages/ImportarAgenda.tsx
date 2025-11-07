@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from 'xlsx';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { z } from "zod";
 
 interface AgendamentoExcel {
   maternidade: string;
@@ -17,10 +18,26 @@ interface AgendamentoExcel {
   procedimentos?: string;
 }
 
+interface ValidationError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+// Validation schema for imported data
+const importSchema = z.object({
+  maternidade: z.string().trim().min(1, "Maternidade obrigatória").max(200, "Maternidade muito longa"),
+  nome_completo: z.string().trim().min(1, "Nome obrigatório").max(200, "Nome muito longo"),
+  carteirinha: z.string().trim().max(50, "Carteirinha muito longa"),
+  telefones: z.string().trim().max(50, "Telefone muito longo").regex(/^[0-9\s\-\(\)\+]*$/, "Telefone com caracteres inválidos"),
+  procedimentos: z.string().trim().max(200, "Procedimentos muito longos"),
+  data_agendamento: z.string().min(1, "Data obrigatória"),
+});
+
 const ImportarAgenda = () => {
   const navigate = useNavigate();
   const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ success: number; errors: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ success: number; errors: number; validationErrors?: ValidationError[] } | null>(null);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -44,19 +61,41 @@ const ImportarAgenda = () => {
         procedimentos: row.procedimentos || row.via_parto || row['Via Parto'] || row.procedimento || '',
       }));
 
-      // Validar e formatar para agendamentos_obst
+      // Validate and format for agendamentos_obst
+      const validationErrors: ValidationError[] = [];
       const agendamentosValidos = agendamentos
-        .filter(a => a.maternidade && a.data_agendamento && a.nome_completo)
-        .map(a => {
+        .map((a, index) => {
+          // Validate using zod schema
+          const validationResult = importSchema.safeParse({
+            maternidade: a.maternidade,
+            nome_completo: a.nome_completo,
+            carteirinha: a.carteirinha || 'IMPORTADO',
+            telefones: a.telefones || 'N/A',
+            procedimentos: a.procedimentos || 'Parto Normal',
+            data_agendamento: a.data_agendamento,
+          });
+
+          if (!validationResult.success) {
+            validationResult.error.issues.forEach(issue => {
+              validationErrors.push({
+                row: index + 2, // +2 because Excel is 1-indexed and has header row
+                field: issue.path.join('.'),
+                message: issue.message,
+              });
+            });
+            return null;
+          }
+
+          const validated = validationResult.data;
           let dataFormatada: string;
           
-          // Tentar converter diferentes formatos de data
+          // Try to convert different date formats
           if (typeof a.data_agendamento === 'number') {
             // Excel serial date
             const date = XLSX.SSF.parse_date_code(a.data_agendamento);
             dataFormatada = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
           } else if (typeof a.data_agendamento === 'string') {
-            // Tentar parsing de string
+            // Try parsing string
             const dateStr = a.data_agendamento.trim();
             if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
               dataFormatada = dateStr;
@@ -68,24 +107,34 @@ const ImportarAgenda = () => {
               if (!isNaN(parsedDate.getTime())) {
                 dataFormatada = parsedDate.toISOString().split('T')[0];
               } else {
+                validationErrors.push({
+                  row: index + 2,
+                  field: 'data_agendamento',
+                  message: 'Formato de data inválido',
+                });
                 return null;
               }
             }
           } else {
+            validationErrors.push({
+              row: index + 2,
+              field: 'data_agendamento',
+              message: 'Data em formato desconhecido',
+            });
             return null;
           }
 
-          // Formatar procedimentos como array
-          const procedimentosArray = a.procedimentos 
-            ? a.procedimentos.split(',').map(p => p.trim()).filter(Boolean)
+          // Format procedures as array (sanitize by trimming and filtering)
+          const procedimentosArray = validated.procedimentos
+            ? validated.procedimentos.split(',').map(p => p.trim()).filter(Boolean)
             : ['Parto Normal'];
 
           return {
-            maternidade: a.maternidade.trim(),
+            maternidade: validated.maternidade,
             data_agendamento_calculada: dataFormatada,
-            carteirinha: a.carteirinha?.toString().trim() || 'IMPORTADO',
-            nome_completo: a.nome_completo?.trim() || 'Paciente Importado',
-            telefones: a.telefones?.toString().trim() || 'N/A',
+            carteirinha: validated.carteirinha,
+            nome_completo: validated.nome_completo,
+            telefones: validated.telefones,
             procedimentos: procedimentosArray,
             status: 'aprovado', // Agendamentos importados já são aprovados
             centro_clinico: 'Importado',
@@ -107,9 +156,14 @@ const ImportarAgenda = () => {
         })
         .filter((a): a is NonNullable<typeof a> => a !== null);
 
+      if (validationErrors.length > 0) {
+        console.warn('Validation errors found:', validationErrors.length);
+      }
+
       if (agendamentosValidos.length === 0) {
         toast.error("Nenhum agendamento válido encontrado no arquivo");
         setImporting(false);
+        setImportResult({ success: 0, errors: agendamentos.length, validationErrors });
         return;
       }
 
@@ -125,14 +179,18 @@ const ImportarAgenda = () => {
           .insert(batch);
 
         if (error) {
-          console.error('Erro ao inserir lote:', error);
+          console.warn('Falha ao inserir lote');
           errorCount += batch.length;
         } else {
           successCount += batch.length;
         }
       }
 
-      setImportResult({ success: successCount, errors: errorCount });
+      setImportResult({ 
+        success: successCount, 
+        errors: errorCount + validationErrors.length,
+        validationErrors: validationErrors.length > 0 ? validationErrors : undefined
+      });
 
       if (successCount > 0) {
         toast.success(`${successCount} agendamentos importados com sucesso!`);
@@ -142,7 +200,7 @@ const ImportarAgenda = () => {
       }
 
     } catch (error) {
-      console.error('Erro ao processar arquivo:', error);
+      console.warn('Erro ao processar arquivo');
       toast.error("Erro ao processar arquivo Excel");
     } finally {
       setImporting(false);
@@ -254,6 +312,25 @@ const ImportarAgenda = () => {
                     <>
                       <br />
                       ❌ {importResult.errors} agendamentos falharam
+                      {importResult.validationErrors && importResult.validationErrors.length > 0 && (
+                        <>
+                          <br />
+                          <br />
+                          <strong>Erros de Validação (primeiros 5):</strong>
+                          <ul className="mt-1 ml-4 list-disc text-sm">
+                            {importResult.validationErrors.slice(0, 5).map((err, idx) => (
+                              <li key={idx}>
+                                Linha {err.row}, campo "{err.field}": {err.message}
+                              </li>
+                            ))}
+                          </ul>
+                          {importResult.validationErrors.length > 5 && (
+                            <p className="text-sm mt-1">
+                              ... e mais {importResult.validationErrors.length - 5} erro(s)
+                            </p>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </AlertDescription>
