@@ -177,6 +177,9 @@ const Index = () => {
                 <Button onClick={() => navigate('/gerenciar-usuarios')} variant="outline">
                   Usuários
                 </Button>
+                <Button onClick={() => navigate('/ocupacao')} variant="outline">
+                  Ocupação
+                </Button>
               </>
             )}
             {isMedicoUnidade() && (

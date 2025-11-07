@@ -18,6 +18,7 @@ import { formSchema } from "@/lib/formSchema";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation";
+import { verificarDisponibilidade } from "@/lib/vagasValidation";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
 
@@ -29,6 +30,7 @@ const NovoAgendamento = () => {
   const [showProtocolAlert, setShowProtocolAlert] = useState(false);
   const [protocoloValidacao, setProtocoloValidacao] = useState<ValidacaoProtocolo | null>(null);
   const [pendingFormData, setPendingFormData] = useState<z.infer<typeof formSchema> | null>(null);
+  const [alertaVagas, setAlertaVagas] = useState<string>('');
   const totalSteps = 6;
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -89,10 +91,31 @@ const NovoAgendamento = () => {
       igSemanas: resultado.igFinal.weeks,
       igDias: resultado.igFinal.days
     });
+    
+    // Verificar disponibilidade de vagas
+    const dataAgendamentoCalculada = resultado.dataAgendamento;
+    const maternidade = values.maternidade;
+    
+    // Detectar se é urgente (menos de 7 dias até o agendamento)
+    const diasAteAgendamento = Math.floor((dataAgendamentoCalculada.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    const isUrgente = diasAteAgendamento <= 7;
+    
+    const disponibilidade = await verificarDisponibilidade(
+      maternidade,
+      dataAgendamentoCalculada,
+      isUrgente
+    );
+
+    // Combinar alertas de protocolo e disponibilidade
+    const alertasCombinados = [
+      ...validacao.alertas,
+      ...(disponibilidade.disponivel ? [] : [disponibilidade.mensagem])
+    ];
 
     // Se não for compatível ou houver alertas, mostrar diálogo
-    if (!validacao.compativel || validacao.alertas.length > 0 || validacao.recomendacoes.length > 0) {
+    if (!validacao.compativel || alertasCombinados.length > 0 || validacao.recomendacoes.length > 0) {
       setProtocoloValidacao(validacao);
+      setAlertaVagas(disponibilidade.mensagem);
       setPendingFormData(values);
       setShowProtocolAlert(true);
       return;

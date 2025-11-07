@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_existente: {
+        Row: {
+          carteirinha: string | null
+          created_at: string | null
+          data_agendamento: string
+          data_nascimento: string | null
+          diagnostico: string | null
+          id: string
+          maternidade: string
+          nome_paciente: string | null
+          origem: string | null
+          telefone: string | null
+          via_parto: string | null
+        }
+        Insert: {
+          carteirinha?: string | null
+          created_at?: string | null
+          data_agendamento: string
+          data_nascimento?: string | null
+          diagnostico?: string | null
+          id?: string
+          maternidade: string
+          nome_paciente?: string | null
+          origem?: string | null
+          telefone?: string | null
+          via_parto?: string | null
+        }
+        Update: {
+          carteirinha?: string | null
+          created_at?: string | null
+          data_agendamento?: string
+          data_nascimento?: string | null
+          diagnostico?: string | null
+          id?: string
+          maternidade?: string
+          nome_paciente?: string | null
+          origem?: string | null
+          telefone?: string | null
+          via_parto?: string | null
+        }
+        Relationships: []
+      }
       agendamentos_obst: {
         Row: {
           aprovado_em: string | null
@@ -140,6 +182,36 @@ export type Database = {
           telefones?: string
           updated_at?: string
           usg_recente?: string
+        }
+        Relationships: []
+      }
+      capacidade_maternidades: {
+        Row: {
+          created_at: string | null
+          id: string
+          maternidade: string
+          updated_at: string | null
+          vagas_dia_max: number
+          vagas_emergencia: number
+          vagas_semana_max: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          maternidade: string
+          updated_at?: string | null
+          vagas_dia_max?: number
+          vagas_emergencia?: number
+          vagas_semana_max?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          maternidade?: string
+          updated_at?: string | null
+          vagas_dia_max?: number
+          vagas_emergencia?: number
+          vagas_semana_max?: number
         }
         Relationships: []
       }

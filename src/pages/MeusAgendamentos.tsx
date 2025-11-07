@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRealtimeAgendamentos } from "@/hooks/useRealtimeAgendamentos";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -36,10 +37,11 @@ const MeusAgendamentos = () => {
   const { user, signOut } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const { refreshKey } = useRealtimeAgendamentos(user?.id);
 
   useEffect(() => {
     fetchMeusAgendamentos();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const fetchMeusAgendamentos = async () => {
     if (!user) return;

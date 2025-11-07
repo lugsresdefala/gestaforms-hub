@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
@@ -24,59 +25,17 @@ interface Notificacao {
 
 const NotificationBell = () => {
   const navigate = useNavigate();
-  const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
-  const [naoLidas, setNaoLidas] = useState(0);
+  const { isAdmin } = useAuth();
+  const { notificacoes, marcarComoLida } = useRealtimeNotifications();
 
-  useEffect(() => {
-    fetchNotificacoes();
-
-    // Subscribe to realtime notifications
-    const channel = supabase
-      .channel('notificacoes-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notificacoes',
-        },
-        () => {
-          fetchNotificacoes();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchNotificacoes = async () => {
-    const { data, error } = await supabase
-      .from('notificacoes')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (!error && data) {
-      setNotificacoes(data);
-      setNaoLidas(data.filter(n => !n.lida).length);
-    }
-  };
-
-  const marcarComoLida = async (id: string) => {
-    await supabase
-      .from('notificacoes')
-      .update({ lida: true })
-      .eq('id', id);
-
-    fetchNotificacoes();
-  };
+  if (!isAdmin()) return null;
 
   const handleNotificationClick = (notificacao: Notificacao) => {
     marcarComoLida(notificacao.id);
     navigate('/aprovacoes');
   };
+
+  const naoLidas = notificacoes.filter(n => !n.lida).length;
 
   return (
     <Popover>

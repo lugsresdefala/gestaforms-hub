@@ -14,6 +14,7 @@ import Aprovacoes from "./pages/Aprovacoes";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
 import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
+import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -91,6 +92,14 @@ const App = () => (
               } 
             />
             <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
+            <Route 
+              path="/ocupacao" 
+              element={
+                <ProtectedRoute>
+                  <OcupacaoMaternidades />
+                </ProtectedRoute>
+              } 
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
