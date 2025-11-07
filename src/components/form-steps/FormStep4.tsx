@@ -44,6 +44,7 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
             </div>
             <div className="space-y-3">
               {[
+                { id: "nenhum_materno", label: "Nenhum" },
                 { id: "dmg_insulina", label: "DMG com insulina" },
                 { id: "dmg_sem_insulina", label: "DMG sem insulina" },
                 { id: "pre_eclampsia_grave", label: "Pré-eclâmpsia grave / HELLP" },
@@ -169,6 +170,7 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
             </div>
             <div className="space-y-3">
               {[
+                { id: "nenhum_fetal", label: "Nenhum" },
                 { id: "gestacao_gemelar_dicorionica", label: "Gestação gemelar dicoriônica" },
                 { id: "gestacao_gemelar_monocorionica", label: "Gestação gemelar monocoriônica" },
                 { id: "rcf", label: "RCF - Restrição de crescimento fetal" },
