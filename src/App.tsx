@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import Dashboard from "./pages/Dashboard";
@@ -43,11 +44,14 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthRedirect />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <Index />
+                  <AppLayout>
+                    <Index />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
@@ -55,7 +59,9 @@ const App = () => (
               path="/novo-agendamento" 
               element={
                 <ProtectedRoute requireMedicoUnidade>
-                  <NovoAgendamento />
+                  <AppLayout>
+                    <NovoAgendamento />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
@@ -63,7 +69,9 @@ const App = () => (
               path="/dashboard" 
               element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <AppLayout>
+                    <Dashboard />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
@@ -71,7 +79,9 @@ const App = () => (
               path="/aprovacoes" 
               element={
                 <ProtectedRoute requireAdmin>
-                  <Aprovacoes />
+                  <AppLayout>
+                    <Aprovacoes />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
@@ -79,7 +89,9 @@ const App = () => (
               path="/meus-agendamentos" 
               element={
                 <ProtectedRoute requireMedicoUnidade>
-                  <MeusAgendamentos />
+                  <AppLayout>
+                    <MeusAgendamentos />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
@@ -87,16 +99,19 @@ const App = () => (
               path="/gerenciar-usuarios" 
               element={
                 <ProtectedRoute requireAdmin>
-                  <GerenciarUsuarios />
+                  <AppLayout>
+                    <GerenciarUsuarios />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />
-            <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
             <Route 
               path="/ocupacao" 
               element={
                 <ProtectedRoute>
-                  <OcupacaoMaternidades />
+                  <AppLayout>
+                    <OcupacaoMaternidades />
+                  </AppLayout>
                 </ProtectedRoute>
               } 
             />

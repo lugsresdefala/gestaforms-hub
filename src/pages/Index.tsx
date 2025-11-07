@@ -3,11 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, LogOut, Bell } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import NotificationBell from "@/components/NotificationBell";
 
 interface Agendamento {
   id: string;
@@ -22,7 +21,7 @@ interface Agendamento {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { signOut, isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const { isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,11 +59,6 @@ const Index = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
   };
 
   // Processar dados para gráficos
@@ -158,51 +152,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen gradient-subtle">
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
-            <div className="border-l border-border pl-4">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
-              <p className="text-sm text-muted-foreground">Dashboard de Agendamentos Obstétricos</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin() && <NotificationBell />}
-            {isAdmin() && (
-              <>
-                <Button onClick={() => navigate('/aprovacoes')} variant="outline">
-                  Aprovações
-                </Button>
-                <Button onClick={() => navigate('/gerenciar-usuarios')} variant="outline">
-                  Usuários
-                </Button>
-                <Button onClick={() => navigate('/ocupacao')} variant="outline">
-                  Ocupação
-                </Button>
-              </>
-            )}
-            {isMedicoUnidade() && (
-              <Button onClick={() => navigate('/meus-agendamentos')} variant="outline">
-                Meus Agendamentos
-              </Button>
-            )}
-            {(isMedicoUnidade() || isAdmin()) && (
-              <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Novo Agendamento
-              </Button>
-            )}
-            <Button onClick={() => navigate('/dashboard')} variant="outline">
-              Ver Listagem
-            </Button>
-            <Button onClick={handleLogout} variant="ghost" size="icon">
-              <LogOut className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </header>
-
       <main className="container mx-auto px-4 py-8">
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -244,14 +193,22 @@ const Index = () => {
           <Card className="shadow-elegant">
             <CardContent className="py-16 text-center">
               <Calendar className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum agendamento cadastrado</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">Nenhum agendamento visível</h3>
               <p className="text-muted-foreground mb-6">
-                Comece criando o primeiro agendamento para visualizar estatísticas e dados aqui.
+                {isAdmin() 
+                  ? "Não há agendamentos cadastrados no sistema." 
+                  : isMedicoUnidade() 
+                  ? "Você ainda não criou nenhum agendamento. Clique abaixo para criar o primeiro."
+                  : isMedicoMaternidade()
+                  ? "Não há agendamentos aprovados para sua maternidade no momento."
+                  : "Você não tem permissões para visualizar agendamentos. Entre em contato com o administrador."}
               </p>
-              <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Criar Primeiro Agendamento
-              </Button>
+              {(isMedicoUnidade() || isAdmin()) && (
+                <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Primeiro Agendamento
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
