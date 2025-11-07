@@ -12,11 +12,9 @@ interface AgendamentoExcel {
   maternidade: string;
   data_agendamento: string;
   carteirinha?: string;
-  nome_paciente?: string;
-  data_nascimento?: string;
-  diagnostico?: string;
-  via_parto?: string;
-  telefone?: string;
+  nome_completo?: string;
+  telefones?: string;
+  procedimentos?: string;
 }
 
 const ImportarAgenda = () => {
@@ -41,16 +39,14 @@ const ImportarAgenda = () => {
         maternidade: row.maternidade || row.Maternidade || '',
         data_agendamento: row.data_agendamento || row['Data Agendamento'] || row.data || '',
         carteirinha: row.carteirinha || row.Carteirinha || '',
-        nome_paciente: row.nome_paciente || row['Nome Paciente'] || row.nome || '',
-        data_nascimento: row.data_nascimento || row['Data Nascimento'] || '',
-        diagnostico: row.diagnostico || row.Diagnostico || '',
-        via_parto: row.via_parto || row['Via Parto'] || row.procedimento || '',
-        telefone: row.telefone || row.Telefone || '',
+        nome_completo: row.nome_completo || row.nome_paciente || row['Nome Paciente'] || row.nome || '',
+        telefones: row.telefones || row.telefone || row.Telefone || '',
+        procedimentos: row.procedimentos || row.via_parto || row['Via Parto'] || row.procedimento || '',
       }));
 
-      // Validar e formatar datas
+      // Validar e formatar para agendamentos_obst
       const agendamentosValidos = agendamentos
-        .filter(a => a.maternidade && a.data_agendamento)
+        .filter(a => a.maternidade && a.data_agendamento && a.nome_completo)
         .map(a => {
           let dataFormatada: string;
           
@@ -79,32 +75,34 @@ const ImportarAgenda = () => {
             return null;
           }
 
-          let dataNascimentoFormatada: string | null = null;
-          if (a.data_nascimento) {
-            if (typeof a.data_nascimento === 'number') {
-              const date = XLSX.SSF.parse_date_code(a.data_nascimento);
-              dataNascimentoFormatada = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
-            } else if (typeof a.data_nascimento === 'string') {
-              const dateStr = a.data_nascimento.trim();
-              if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                dataNascimentoFormatada = dateStr;
-              } else if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
-                const [dia, mes, ano] = dateStr.split('/');
-                dataNascimentoFormatada = `${ano}-${mes}-${dia}`;
-              }
-            }
-          }
+          // Formatar procedimentos como array
+          const procedimentosArray = a.procedimentos 
+            ? a.procedimentos.split(',').map(p => p.trim()).filter(Boolean)
+            : ['Parto Normal'];
 
           return {
             maternidade: a.maternidade.trim(),
-            data_agendamento: dataFormatada,
-            carteirinha: a.carteirinha?.toString().trim() || null,
-            nome_paciente: a.nome_paciente?.trim() || null,
-            data_nascimento: dataNascimentoFormatada,
-            diagnostico: a.diagnostico?.trim() || null,
-            via_parto: a.via_parto?.trim() || null,
-            telefone: a.telefone?.toString().trim() || null,
-            origem: 'importado',
+            data_agendamento_calculada: dataFormatada,
+            carteirinha: a.carteirinha?.toString().trim() || 'IMPORTADO',
+            nome_completo: a.nome_completo?.trim() || 'Paciente Importado',
+            telefones: a.telefones?.toString().trim() || 'N/A',
+            procedimentos: procedimentosArray,
+            status: 'aprovado', // Agendamentos importados já são aprovados
+            centro_clinico: 'Importado',
+            medico_responsavel: 'Sistema',
+            email_paciente: 'importado@sistema.com',
+            data_nascimento: '1990-01-01', // Data padrão
+            numero_gestacoes: 0,
+            numero_partos_cesareas: 0,
+            numero_partos_normais: 0,
+            numero_abortos: 0,
+            data_primeiro_usg: dataFormatada,
+            semanas_usg: 0,
+            dias_usg: 0,
+            dum_status: 'nao_sabe',
+            usg_recente: 'nao',
+            ig_pretendida: '37-40 semanas',
+            indicacao_procedimento: 'Agendamento importado de sistema anterior',
           };
         })
         .filter((a): a is NonNullable<typeof a> => a !== null);
@@ -115,15 +113,15 @@ const ImportarAgenda = () => {
         return;
       }
 
-      // Inserir em lotes de 100
+      // Inserir em lotes de 50
       let successCount = 0;
       let errorCount = 0;
-      const batchSize = 100;
+      const batchSize = 50;
 
       for (let i = 0; i < agendamentosValidos.length; i += batchSize) {
         const batch = agendamentosValidos.slice(i, i + batchSize);
         const { error } = await supabase
-          .from('agenda_existente')
+          .from('agendamentos_obst')
           .insert(batch);
 
         if (error) {
@@ -158,28 +156,24 @@ const ImportarAgenda = () => {
         maternidade: "Rosário",
         data_agendamento: "2025-01-15",
         carteirinha: "12345678",
-        nome_paciente: "Maria Silva",
-        data_nascimento: "1990-05-20",
-        diagnostico: "Gestação de baixo risco",
-        via_parto: "Parto Normal",
-        telefone: "85999887766",
+        nome_completo: "Maria Silva",
+        telefones: "85999887766",
+        procedimentos: "Parto Normal",
       },
       {
         maternidade: "Salvalus",
         data_agendamento: "2025-01-20",
         carteirinha: "87654321",
-        nome_paciente: "Ana Costa",
-        data_nascimento: "1985-08-15",
-        diagnostico: "DMG",
-        via_parto: "Cesárea",
-        telefone: "85988776655",
+        nome_completo: "Ana Costa",
+        telefones: "85988776655",
+        procedimentos: "Cesárea",
       },
     ];
 
     const ws = XLSX.utils.json_to_sheet(template);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
-    XLSX.writeFile(wb, "template_agenda_existente.xlsx");
+    XLSX.writeFile(wb, "template_agenda_importacao.xlsx");
     
     toast.success("Template baixado com sucesso!");
   };
@@ -190,18 +184,18 @@ const ImportarAgenda = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-6 w-6 text-primary" />
-            Importar Agenda Existente
+            Importar Agendamentos Históricos
           </CardTitle>
           <CardDescription>
-            Importe agendamentos existentes de planilhas Excel para calcular a ocupação real das maternidades
+            Importe agendamentos de planilhas Excel. Os agendamentos serão inseridos com status "aprovado" automaticamente.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Importante:</strong> A planilha deve conter as colunas: maternidade, data_agendamento (obrigatórios) 
-              e opcionalmente: carteirinha, nome_paciente, data_nascimento, diagnostico, via_parto, telefone
+              <strong>Importante:</strong> A planilha deve conter as colunas obrigatórias: maternidade, data_agendamento, nome_completo. 
+              Opcionais: carteirinha, telefones, procedimentos
             </AlertDescription>
           </Alert>
 

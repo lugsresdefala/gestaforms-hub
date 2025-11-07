@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      agenda_existente: {
-        Row: {
-          carteirinha: string | null
-          created_at: string | null
-          data_agendamento: string
-          data_nascimento: string | null
-          diagnostico: string | null
-          id: string
-          maternidade: string
-          nome_paciente: string | null
-          origem: string | null
-          telefone: string | null
-          via_parto: string | null
-        }
-        Insert: {
-          carteirinha?: string | null
-          created_at?: string | null
-          data_agendamento: string
-          data_nascimento?: string | null
-          diagnostico?: string | null
-          id?: string
-          maternidade: string
-          nome_paciente?: string | null
-          origem?: string | null
-          telefone?: string | null
-          via_parto?: string | null
-        }
-        Update: {
-          carteirinha?: string | null
-          created_at?: string | null
-          data_agendamento?: string
-          data_nascimento?: string | null
-          diagnostico?: string | null
-          id?: string
-          maternidade?: string
-          nome_paciente?: string | null
-          origem?: string | null
-          telefone?: string | null
-          via_parto?: string | null
-        }
-        Relationships: []
-      }
       agendamentos_obst: {
         Row: {
           aprovado_em: string | null
