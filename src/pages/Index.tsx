@@ -3,10 +3,12 @@ import { supabase } from "@/integrations/supabase/client-config";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Agendamento {
   id: string;
@@ -17,6 +19,7 @@ interface Agendamento {
   diagnosticos_fetais: string;
   idade_gestacional_calculada: string;
   data_agendamento_calculada: string;
+  status: string;
 }
 
 const Index = () => {
@@ -24,6 +27,7 @@ const Index = () => {
   const { isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
 
   useEffect(() => {
     fetchAgendamentos();
@@ -129,7 +133,16 @@ const Index = () => {
 
   const COLORS = ['hsl(208 90% 48%)', 'hsl(172 65% 48%)', 'hsl(280 70% 50%)', 'hsl(30 80% 55%)', 'hsl(150 60% 50%)'];
 
+  // Filtrar agendamentos baseado no status selecionado
+  const agendamentosFiltrados = filtroStatus === "todos" 
+    ? agendamentos 
+    : agendamentos.filter(a => a.status === filtroStatus);
+
   const totalAgendamentos = agendamentos.length;
+  const agendamentosPendentes = agendamentos.filter(a => a.status === 'pendente').length;
+  const agendamentosAprovados = agendamentos.filter(a => a.status === 'aprovado').length;
+  const agendamentosRejeitados = agendamentos.filter(a => a.status === 'rejeitado').length;
+
   const agendamentosHoje = agendamentos.filter(a => {
     const hoje = new Date().toISOString().split('T')[0];
     return a.data_agendamento_calculada === hoje;
@@ -142,6 +155,14 @@ const Index = () => {
     return diffDias >= 0 && diffDias <= 7;
   }).length;
 
+  const dadosPorStatus = () => {
+    return [
+      { name: 'Pendente', value: agendamentosPendentes, color: 'hsl(var(--warning))' },
+      { name: 'Aprovado', value: agendamentosAprovados, color: 'hsl(var(--success))' },
+      { name: 'Rejeitado', value: agendamentosRejeitados, color: 'hsl(var(--destructive))' }
+    ];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen gradient-subtle flex items-center justify-center">
@@ -153,11 +174,44 @@ const Index = () => {
   return (
     <div className="min-h-screen gradient-subtle">
       <main className="container mx-auto px-4 py-8">
-        {/* Cards de Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Cards de Resumo - Status */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-elegant hover:shadow-xl transition-smooth">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total de Agendamentos</CardTitle>
+              <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+              <Clock className="h-4 w-4 text-warning" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-warning">{agendamentosPendentes}</div>
+              <p className="text-xs text-muted-foreground mt-1">Aguardando aprovação</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Aprovados</CardTitle>
+              <CheckCircle className="h-4 w-4 text-success" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-success">{agendamentosAprovados}</div>
+              <p className="text-xs text-muted-foreground mt-1">Confirmados</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Rejeitados</CardTitle>
+              <XCircle className="h-4 w-4 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-destructive">{agendamentosRejeitados}</div>
+              <p className="text-xs text-muted-foreground mt-1">Não aprovados</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -165,29 +219,28 @@ const Index = () => {
               <p className="text-xs text-muted-foreground mt-1">Todos os registros</p>
             </CardContent>
           </Card>
-
-          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Próximos 7 Dias</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-accent">{proximosAgendamentos}</div>
-              <p className="text-xs text-muted-foreground mt-1">Agendamentos próximos</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-elegant hover:shadow-xl transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Hoje</CardTitle>
-              <Baby className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-destructive">{agendamentosHoje}</div>
-              <p className="text-xs text-muted-foreground mt-1">Agendamentos para hoje</p>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Filtro por Status */}
+        {agendamentos.length > 0 && (
+          <div className="mb-6 flex items-center gap-4">
+            <Filter className="h-5 w-5 text-muted-foreground" />
+            <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os Status</SelectItem>
+                <SelectItem value="pendente">Pendentes</SelectItem>
+                <SelectItem value="aprovado">Aprovados</SelectItem>
+                <SelectItem value="rejeitado">Rejeitados</SelectItem>
+              </SelectContent>
+            </Select>
+            <Badge variant="outline" className="ml-2">
+              {agendamentosFiltrados.length} agendamento(s)
+            </Badge>
+          </div>
+        )}
 
         {agendamentos.length === 0 ? (
           <Card className="shadow-elegant">
@@ -213,6 +266,44 @@ const Index = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Distribuição por Status */}
+            <Card className="shadow-elegant">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Distribuição por Status
+                </CardTitle>
+                <CardDescription>Situação dos agendamentos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={dadosPorStatus()}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={100}
+                      fill="hsl(var(--primary))"
+                      dataKey="value"
+                    >
+                      {dadosPorStatus().map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
             {/* Agendamentos por Unidade */}
             <Card className="shadow-elegant">
               <CardHeader>
