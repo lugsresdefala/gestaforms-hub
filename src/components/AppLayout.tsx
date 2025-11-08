@@ -10,6 +10,7 @@ import {
   Building2,
   LogOut,
   Upload,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +41,12 @@ const AppSidebar = () => {
   const menuItems = [
     { title: "Dashboard", url: "/", icon: LayoutDashboard, show: true },
     { title: "Listagem", url: "/dashboard", icon: Calendar, show: true },
+    {
+      title: "Guia do Sistema",
+      url: "/guia",
+      icon: BookOpen,
+      show: true,
+    },
     {
       title: "Novo Agendamento",
       url: "/novo-agendamento",

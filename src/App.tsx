@@ -17,6 +17,7 @@ import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import ImportarAgenda from "./pages/ImportarAgenda";
+import GuiaSistema from "./pages/GuiaSistema";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -122,6 +123,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ImportarAgenda />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/guia" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <GuiaSistema />
                   </AppLayout>
                 </ProtectedRoute>
               } 
