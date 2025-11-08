@@ -85,11 +85,15 @@ const Index = () => {
   const dadosPorPatologia = () => {
     const contagem: Record<string, number> = {};
     agendamentos.forEach(a => {
-      const diagsMat = JSON.parse(a.diagnosticos_maternos || '[]');
-      const diagsFet = JSON.parse(a.diagnosticos_fetais || '[]');
-      [...diagsMat, ...diagsFet].forEach(diag => {
-        contagem[diag] = (contagem[diag] || 0) + 1;
-      });
+      try {
+        const diagsMat = a.diagnosticos_maternos ? JSON.parse(a.diagnosticos_maternos) : [];
+        const diagsFet = a.diagnosticos_fetais ? JSON.parse(a.diagnosticos_fetais) : [];
+        [...diagsMat, ...diagsFet].forEach(diag => {
+          contagem[diag] = (contagem[diag] || 0) + 1;
+        });
+      } catch (e) {
+        // Se não for JSON válido, ignora
+      }
     });
     return Object.entries(contagem)
       .sort((a, b) => b[1] - a[1])
