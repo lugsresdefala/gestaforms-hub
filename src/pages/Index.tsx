@@ -31,7 +31,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchAgendamentos();
-  }, []);
+  }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
 
   const fetchAgendamentos = async () => {
     setLoading(true);
