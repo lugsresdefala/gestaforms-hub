@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Check, X, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { ProtocolosModal } from '@/components/ProtocolosModal';
 
 interface Agendamento {
   id: string;
@@ -161,6 +162,7 @@ const Aprovacoes = () => {
               </p>
             </div>
           </div>
+          <ProtocolosModal />
         </div>
 
         {agendamentos.length === 0 ? (

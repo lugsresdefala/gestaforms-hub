@@ -21,6 +21,7 @@ import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation"
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
+import { ProtocolosModal } from "@/components/ProtocolosModal";
 
 const NovoAgendamento = () => {
   const navigate = useNavigate();
@@ -267,6 +268,7 @@ const NovoAgendamento = () => {
             </div>
           </div>
           <div className="flex gap-2">
+            <ProtocolosModal />
             <Button onClick={() => navigate('/')} variant="outline">
               ← Dashboard
             </Button>
