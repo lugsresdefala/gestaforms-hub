@@ -185,16 +185,38 @@ const NovoAgendamento = () => {
           resultado.observacoes
       };
       
+      // LOG COMPLETO DOS DADOS
+      console.log("=== INICIANDO SALVAMENTO ===");
+      console.log("Dados do agendamento:", JSON.stringify(agendamentoData, null, 2));
+      console.log("User ID:", user?.id);
+      console.log("Timestamp:", new Date().toISOString());
+      
       // Inserir no banco de dados
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('agendamentos_obst')
-        .insert([agendamentoData]);
+        .insert([agendamentoData])
+        .select();
       
       if (error) {
-        console.error("Erro ao salvar agendamento:", error);
-        toast.error("Não foi possível salvar o agendamento. Por favor, tente novamente.");
+        console.error("=== ERRO AO SALVAR ===");
+        console.error("Erro completo:", JSON.stringify(error, null, 2));
+        console.error("Code:", error.code);
+        console.error("Message:", error.message);
+        console.error("Details:", error.details);
+        console.error("Hint:", error.hint);
+        
+        toast.error(
+          `ERRO AO SALVAR AGENDAMENTO:\n\n` +
+          `${error.message}\n\n` +
+          `Código: ${error.code}\n` +
+          `Por favor, copie esta mensagem e reporte o erro.`,
+          { duration: 10000 }
+        );
         return;
       }
+      
+      console.log("=== SUCESSO NO SALVAMENTO ===");
+      console.log("Dados inseridos:", JSON.stringify(insertedData, null, 2));
       
       toast.success(
         `Agendamento salvo com sucesso!\n\n` +
