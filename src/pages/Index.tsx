@@ -121,14 +121,16 @@ const Index = () => {
     };
     
     agendamentos.forEach(a => {
-      const match = a.idade_gestacional_calculada.match(/(\d+)s/);
-      if (match) {
-        const semanas = parseInt(match[1]);
-        if (semanas < 28) faixas['< 28 semanas']++;
-        else if (semanas <= 32) faixas['28-32 semanas']++;
-        else if (semanas <= 36) faixas['33-36 semanas']++;
-        else if (semanas <= 40) faixas['37-40 semanas']++;
-        else faixas['> 40 semanas']++;
+      if (a.idade_gestacional_calculada) {
+        const match = a.idade_gestacional_calculada.match(/(\d+)s/);
+        if (match) {
+          const semanas = parseInt(match[1]);
+          if (semanas < 28) faixas['< 28 semanas']++;
+          else if (semanas <= 32) faixas['28-32 semanas']++;
+          else if (semanas <= 36) faixas['33-36 semanas']++;
+          else if (semanas <= 40) faixas['37-40 semanas']++;
+          else faixas['> 40 semanas']++;
+        }
       }
     });
     
