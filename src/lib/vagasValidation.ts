@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client-config';
 import { startOfWeek, endOfWeek, format } from 'date-fns';
 
 interface CapacidadeMaternidade {

@@ -15,7 +15,7 @@ import { FormStep4 } from "@/components/form-steps/FormStep4";
 import { FormStep5 } from "@/components/form-steps/FormStep5";
 import { FormStep6 } from "@/components/form-steps/FormStep6";
 import { formSchema } from "@/lib/formSchema";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client-config";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
