@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { importCalendarToAgendamentos } from '@/utils/importCalendar';
+import { supabase } from '@/integrations/supabase/client';
+import { importConsolidadoCSV } from '@/utils/importConsolidado';
 import { Upload, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -30,25 +31,25 @@ export default function ImportarCalendario() {
 
     try {
       // Fetch the CSV file
-      const response = await fetch('/calendars/Calendario_Nov_Dez.csv');
+      const response = await fetch('/calendars/Consolidado_Novembro_Dezembro.csv');
       const csvContent = await response.text();
 
-      // Import the data
-      const importResults = await importCalendarToAgendamentos(csvContent, user.id);
+      // Import data
+      const importResults = await importConsolidadoCSV(csvContent, user.id);
       
       setResults(importResults);
       
       if (importResults.success > 0) {
         toast({
           title: 'Importação Concluída',
-          description: `${importResults.success} agendamentos importados com sucesso!`,
+          description: `${importResults.success} agendamentos importados!`
         });
       }
       
       if (importResults.failed > 0) {
         toast({
           title: 'Atenção',
-          description: `${importResults.failed} registros falharam na importação.`,
+          description: `${importResults.failed} registros falharam.`,
           variant: 'destructive'
         });
       }

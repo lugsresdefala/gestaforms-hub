@@ -72,6 +72,12 @@ const AppSidebar = () => {
       show: isAdmin(),
     },
     {
+      title: "Calendário",
+      url: "/calendario-ocupacao",
+      icon: Calendar,
+      show: true,
+    },
+    {
       title: "Usuários",
       url: "/gerenciar-usuarios",
       icon: Users,
