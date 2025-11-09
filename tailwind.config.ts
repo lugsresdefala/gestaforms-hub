@@ -113,18 +113,20 @@ export default {
         },
         "float": {
           "0%, 100%": {
-            transform: "translateY(0px) scale(1)",
+            transform: "translateY(0px)",
+            opacity: "1"
           },
           "50%": {
-            transform: "translateY(-10px) scale(1.02)",
+            transform: "translateY(-4px)",
+            opacity: "0.95"
           }
         },
         "glow": {
           "0%, 100%": {
-            opacity: "0.5",
+            opacity: "0.6",
           },
           "50%": {
-            opacity: "1",
+            opacity: "0.85",
           }
         },
       },
