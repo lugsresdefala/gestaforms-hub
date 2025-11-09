@@ -21,6 +21,7 @@ import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CompararCSVs from "./pages/CompararCSVs";
 import Onboarding from "./pages/Onboarding";
+import AtualizarIG from "./pages/AtualizarIG";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -157,6 +158,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <CompararCSVs />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/atualizar-ig" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <AtualizarIG />
                   </AppLayout>
                 </ProtectedRoute>
               } 
