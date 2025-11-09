@@ -72,12 +72,6 @@ const AppSidebar = () => {
       show: isAdmin(),
     },
     {
-      title: "Importar Agenda",
-      url: "/importar-agenda",
-      icon: Upload,
-      show: isAdmin(),
-    },
-    {
       title: "Usuários",
       url: "/gerenciar-usuarios",
       icon: Users,
