@@ -7,45 +7,61 @@ import {
   CheckCircle, 
   Calendar, 
   Building2, 
-  Upload, 
   Users,
   ArrowRight,
   Shield,
   Stethoscope,
-  Baby
+  Baby,
+  Sparkles
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const GuiaSistema = () => {
   return (
-    <div className="min-h-screen gradient-subtle p-8">
-      <div className="container mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-3">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10 animate-pulse" style={{ animationDuration: '8s' }} />
+      
+      {/* 3D floating orbs */}
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-float" style={{ animationDuration: '10s' }} />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDuration: '15s', animationDelay: '2s' }} />
+      
+      <div className="container mx-auto max-w-7xl p-8 relative z-10">
+        {/* Header with glassmorphism */}
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20">
+            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+            <span className="text-sm font-medium text-primary">Sistema Inteligente</span>
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4 animate-fade-in">
             Guia do Sistema PGS
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Entenda como funciona o Programa Gestação Segura e as permissões de cada usuário
           </p>
         </div>
 
-        {/* Workflow Geral */}
-        <Card className="mb-8 shadow-elegant">
+        {/* Workflow Geral with glassmorphism */}
+        <Card className="mb-12 bg-background/40 backdrop-blur-xl border-primary/20 shadow-elegant hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:border-primary/40">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Baby className="h-6 w-6 text-primary" />
-              Fluxo do Sistema
+            <CardTitle className="flex items-center gap-3 text-3xl">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+                <Baby className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Fluxo do Sistema</span>
             </CardTitle>
-            <CardDescription>Como funciona o processo de agendamento obstétrico</CardDescription>
+            <CardDescription className="text-base">Como funciona o processo de agendamento obstétrico</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold">1</div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Médico da Unidade PGS cria o agendamento</h3>
-                  <p className="text-muted-foreground">
+            <div className="space-y-8">
+              <div className="flex items-start gap-4 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300 relative">
+                  <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-xl group-hover:blur-2xl transition-all" />
+                  <span className="relative">1</span>
+                </div>
+                <div className="flex-1 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-transparent backdrop-blur-sm border border-primary/10 hover:border-primary/30 transition-all duration-300">
+                  <h3 className="font-semibold text-lg mb-2">Médico da Unidade PGS cria o agendamento</h3>
+                  <p className="text-muted-foreground text-sm">
                     O médico da unidade de pré-natal preenche o formulário completo com dados da gestante, 
                     incluindo histórico obstétrico, diagnósticos, idade gestacional e dados do parto planejado.
                   </p>
@@ -53,14 +69,17 @@ const GuiaSistema = () => {
               </div>
 
               <div className="flex justify-center">
-                <ArrowRight className="h-8 w-8 text-muted-foreground" />
+                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" />
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-white font-bold">2</div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Agendamento fica pendente de aprovação</h3>
-                  <p className="text-muted-foreground">
+              <div className="flex items-start gap-4 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-400 text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300 relative">
+                  <div className="absolute inset-0 rounded-2xl bg-orange-500/20 blur-xl group-hover:blur-2xl transition-all" />
+                  <span className="relative">2</span>
+                </div>
+                <div className="flex-1 p-4 rounded-lg bg-gradient-to-r from-orange-500/5 to-transparent backdrop-blur-sm border border-orange-500/10 hover:border-orange-500/30 transition-all duration-300">
+                  <h3 className="font-semibold text-lg mb-2">Agendamento fica pendente de aprovação</h3>
+                  <p className="text-muted-foreground text-sm">
                     O sistema valida automaticamente os protocolos obstétricos, calcula a idade gestacional ideal 
                     e verifica disponibilidade de vagas. O agendamento aguarda revisão administrativa.
                   </p>
@@ -68,14 +87,17 @@ const GuiaSistema = () => {
               </div>
 
               <div className="flex justify-center">
-                <ArrowRight className="h-8 w-8 text-muted-foreground" />
+                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{ animationDelay: '0.5s' }} />
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white font-bold">3</div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Administrador aprova ou rejeita</h3>
-                  <p className="text-muted-foreground">
+              <div className="flex items-start gap-4 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-green-400 text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300 relative">
+                  <div className="absolute inset-0 rounded-2xl bg-green-500/20 blur-xl group-hover:blur-2xl transition-all" />
+                  <span className="relative">3</span>
+                </div>
+                <div className="flex-1 p-4 rounded-lg bg-gradient-to-r from-green-500/5 to-transparent backdrop-blur-sm border border-green-500/10 hover:border-green-500/30 transition-all duration-300">
+                  <h3 className="font-semibold text-lg mb-2">Administrador aprova ou rejeita</h3>
+                  <p className="text-muted-foreground text-sm">
                     O administrador revisa o agendamento, verifica conformidade com protocolos e capacidade da maternidade. 
                     Pode aprovar, rejeitar com observações ou solicitar mais informações.
                   </p>
@@ -83,14 +105,17 @@ const GuiaSistema = () => {
               </div>
 
               <div className="flex justify-center">
-                <ArrowRight className="h-8 w-8 text-muted-foreground" />
+                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{ animationDelay: '1s' }} />
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-white font-bold">4</div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-1">Médico da Maternidade visualiza agendamentos aprovados</h3>
-                  <p className="text-muted-foreground">
+              <div className="flex items-start gap-4 group">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-400 text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300 relative">
+                  <div className="absolute inset-0 rounded-2xl bg-blue-500/20 blur-xl group-hover:blur-2xl transition-all" />
+                  <span className="relative">4</span>
+                </div>
+                <div className="flex-1 p-4 rounded-lg bg-gradient-to-r from-blue-500/5 to-transparent backdrop-blur-sm border border-blue-500/10 hover:border-blue-500/30 transition-all duration-300">
+                  <h3 className="font-semibold text-lg mb-2">Médico da Maternidade visualiza agendamentos aprovados</h3>
+                  <p className="text-muted-foreground text-sm">
                     Os médicos de cada maternidade têm acesso apenas aos agendamentos aprovados da sua unidade, 
                     podendo se preparar com antecedência para receber as gestantes.
                   </p>
@@ -100,19 +125,22 @@ const GuiaSistema = () => {
           </CardContent>
         </Card>
 
-        {/* Tipos de Usuário */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Tipos de Usuário with 3D effects */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Admin */}
-          <Card className="shadow-elegant border-2 border-primary/20">
-            <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                <Shield className="h-10 w-10 text-primary" />
-                <Badge className="bg-primary text-primary-foreground">ADMIN</Badge>
+          <Card className="bg-background/60 backdrop-blur-xl border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary to-primary/60 shadow-lg">
+                  <Shield className="h-10 w-10 text-primary-foreground" />
+                </div>
+                <Badge className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg px-4 py-1">ADMIN</Badge>
               </div>
-              <CardTitle className="text-xl">Administrador</CardTitle>
+              <CardTitle className="text-2xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Administrador</CardTitle>
               <CardDescription>Gerencia todo o sistema e aprova agendamentos</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 relative z-10">
               <div>
                 <h4 className="font-semibold mb-2 text-sm uppercase text-muted-foreground">Acesso Completo</h4>
                 <ul className="space-y-2">
@@ -127,10 +155,6 @@ const GuiaSistema = () => {
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                     <span className="text-sm">Gerenciar usuários e permissões</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-sm">Importar agendas em lote (Excel/Word)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
@@ -165,10 +189,6 @@ const GuiaSistema = () => {
                     <span>Ocupação de Maternidades</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Upload className="h-3 w-3" />
-                    <span>Importar Agenda</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
                     <Users className="h-3 w-3" />
                     <span>Gerenciar Usuários</span>
                   </div>
@@ -178,16 +198,19 @@ const GuiaSistema = () => {
           </Card>
 
           {/* Médico Unidade */}
-          <Card className="shadow-elegant border-2 border-blue-500/20">
-            <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                <Stethoscope className="h-10 w-10 text-blue-500" />
-                <Badge className="bg-blue-500 text-white">UNIDADE PGS</Badge>
+          <Card className="bg-background/60 backdrop-blur-xl border-2 border-blue-500/30 shadow-2xl hover:shadow-blue-500/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 shadow-lg">
+                  <Stethoscope className="h-10 w-10 text-white" />
+                </div>
+                <Badge className="bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg px-4 py-1">UNIDADE PGS</Badge>
               </div>
-              <CardTitle className="text-xl">Médico da Unidade</CardTitle>
+              <CardTitle className="text-2xl bg-gradient-to-r from-blue-500 to-blue-400 bg-clip-text text-transparent">Médico da Unidade</CardTitle>
               <CardDescription>Cria e acompanha agendamentos de parto</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 relative z-10">
               <div>
                 <h4 className="font-semibold mb-2 text-sm uppercase text-muted-foreground">Permissões</h4>
                 <ul className="space-y-2">
@@ -247,16 +270,19 @@ const GuiaSistema = () => {
           </Card>
 
           {/* Médico Maternidade */}
-          <Card className="shadow-elegant border-2 border-green-500/20">
-            <CardHeader>
-              <div className="flex items-center justify-between mb-2">
-                <Building2 className="h-10 w-10 text-green-500" />
-                <Badge className="bg-green-500 text-white">MATERNIDADE</Badge>
+          <Card className="bg-background/60 backdrop-blur-xl border-2 border-green-500/30 shadow-2xl hover:shadow-green-500/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 via-transparent to-green-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-green-400 shadow-lg">
+                  <Building2 className="h-10 w-10 text-white" />
+                </div>
+                <Badge className="bg-gradient-to-r from-green-500 to-green-400 text-white shadow-lg px-4 py-1">MATERNIDADE</Badge>
               </div>
-              <CardTitle className="text-xl">Médico da Maternidade</CardTitle>
+              <CardTitle className="text-2xl bg-gradient-to-r from-green-500 to-green-400 bg-clip-text text-transparent">Médico da Maternidade</CardTitle>
               <CardDescription>Visualiza partos agendados na sua unidade</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 relative z-10">
               <div>
                 <h4 className="font-semibold mb-2 text-sm uppercase text-muted-foreground">Permissões</h4>
                 <ul className="space-y-2">
@@ -309,96 +335,70 @@ const GuiaSistema = () => {
         </div>
 
         {/* Funcionalidades Especiais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="shadow-elegant">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-primary" />
-                Importação em Lote
+        <div className="grid grid-cols-1 gap-8 mb-12">
+          <Card className="bg-background/60 backdrop-blur-xl border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:scale-[1.02] relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
+              <CardTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+                  <Building2 className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Gestão de Ocupação</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
-                Administradores podem importar múltiplos agendamentos de uma vez usando arquivos Excel ou Word.
-              </p>
-              <ul className="space-y-1.5 text-sm">
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Suporte para .xlsx, .xls, .csv, .docx, .doc</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Parser inteligente de dados obstétricos</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Prévia antes da importação definitiva</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Agendamentos importados já entram como aprovados</span>
-                </li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-elegant">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                Gestão de Ocupação
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-3">
+            <CardContent className="relative z-10">
+              <p className="text-base text-muted-foreground mb-6">
                 Controle inteligente da capacidade de cada maternidade para evitar sobrecarga.
               </p>
-              <ul className="space-y-1.5 text-sm">
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Limites diários e semanais por maternidade</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Vagas reservadas para casos urgentes</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Alertas automáticos quando próximo do limite</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-primary">•</span>
-                  <span>Visão semanal da ocupação por unidade</span>
-                </li>
-              </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex gap-3 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-transparent border border-primary/10 hover:border-primary/30 transition-all duration-300">
+                  <span className="text-2xl">📊</span>
+                  <span className="text-sm">Limites diários e semanais por maternidade</span>
+                </div>
+                <div className="flex gap-3 p-4 rounded-lg bg-gradient-to-r from-accent/5 to-transparent border border-accent/10 hover:border-accent/30 transition-all duration-300">
+                  <span className="text-2xl">🚨</span>
+                  <span className="text-sm">Vagas reservadas para casos urgentes</span>
+                </div>
+                <div className="flex gap-3 p-4 rounded-lg bg-gradient-to-r from-primary/5 to-transparent border border-primary/10 hover:border-primary/30 transition-all duration-300">
+                  <span className="text-2xl">⚡</span>
+                  <span className="text-sm">Alertas automáticos quando próximo do limite</span>
+                </div>
+                <div className="flex gap-3 p-4 rounded-lg bg-gradient-to-r from-accent/5 to-transparent border border-accent/10 hover:border-accent/30 transition-all duration-300">
+                  <span className="text-2xl">📅</span>
+                  <span className="text-sm">Visão semanal da ocupação por unidade</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Credenciais de Teste */}
-        <Card className="shadow-elegant bg-muted/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserCircle className="h-5 w-5" />
-              Credenciais de Teste
+        <Card className="bg-background/60 backdrop-blur-xl border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-500 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
+          <CardHeader className="relative z-10">
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
+                <UserCircle className="h-6 w-6 text-primary-foreground" />
+              </div>
+              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Credenciais de Teste</span>
             </CardTitle>
-            <CardDescription>Use estas credenciais para testar o sistema</CardDescription>
+            <CardDescription className="text-base">Use estas credenciais para testar o sistema com diferentes perfis</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-card p-4 rounded-lg border">
-                <Badge className="mb-2 bg-primary">Admin</Badge>
-                <p className="text-sm font-mono mb-1">admin@hapvida.com.br</p>
+          <CardContent className="relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 rounded-xl border-2 border-primary/20 backdrop-blur-sm hover:scale-105 hover:border-primary/40 transition-all duration-300 shadow-lg">
+                <Badge className="mb-3 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg">Admin</Badge>
+                <p className="text-sm font-mono mb-2 font-semibold">admin@hapvida.com.br</p>
                 <p className="text-sm font-mono text-muted-foreground">Admin@2024</p>
               </div>
-              <div className="bg-card p-4 rounded-lg border">
-                <Badge className="mb-2 bg-blue-500">Médico Unidade</Badge>
-                <p className="text-sm font-mono mb-1">medico.unidade@hapvida.com.br</p>
+              <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-6 rounded-xl border-2 border-blue-500/20 backdrop-blur-sm hover:scale-105 hover:border-blue-500/40 transition-all duration-300 shadow-lg">
+                <Badge className="mb-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg">Médico Unidade</Badge>
+                <p className="text-sm font-mono mb-2 font-semibold">medico.unidade@hapvida.com.br</p>
                 <p className="text-sm font-mono text-muted-foreground">Medico@2024</p>
               </div>
-              <div className="bg-card p-4 rounded-lg border">
-                <Badge className="mb-2 bg-green-500">Médico Maternidade</Badge>
-                <p className="text-sm font-mono mb-1">medico.maternidade@hapvida.com.br</p>
+              <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 p-6 rounded-xl border-2 border-green-500/20 backdrop-blur-sm hover:scale-105 hover:border-green-500/40 transition-all duration-300 shadow-lg">
+                <Badge className="mb-3 bg-gradient-to-r from-green-500 to-green-400 text-white shadow-lg">Médico Maternidade</Badge>
+                <p className="text-sm font-mono mb-2 font-semibold">medico.maternidade@hapvida.com.br</p>
                 <p className="text-sm font-mono text-muted-foreground">Medico@2024</p>
               </div>
             </div>
