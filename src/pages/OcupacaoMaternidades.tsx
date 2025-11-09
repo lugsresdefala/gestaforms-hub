@@ -16,6 +16,9 @@ interface OcupacaoDia {
 interface CapacidadeMaternidade {
   maternidade: string;
   vagas_dia_max: number;
+  vagas_dia_util: number;
+  vagas_sabado: number;
+  vagas_domingo: number;
   vagas_semana_max: number;
   vagas_emergencia: number;
 }
@@ -92,6 +95,13 @@ const OcupacaoMaternidades = () => {
 
     setOcupacoes(ocupacoesPorMaternidade);
     setLoading(false);
+  };
+
+  const getCapacidadeDia = (cap: CapacidadeMaternidade, dia: Date) => {
+    const diaSemana = dia.getDay(); // 0 = domingo, 6 = sábado
+    if (diaSemana === 0) return cap.vagas_domingo;
+    if (diaSemana === 6) return cap.vagas_sabado;
+    return cap.vagas_dia_util;
   };
 
   const getOcupacaoStatus = (total: number, max: number) => {
@@ -182,7 +192,8 @@ const OcupacaoMaternidades = () => {
                       const dataStr = format(dia, 'yyyy-MM-dd');
                       const ocupacaoDia = ocupacoes[cap.maternidade]?.find(o => o.data === dataStr);
                       const total = ocupacaoDia?.total || 0;
-                      const status = getOcupacaoStatus(total, cap.vagas_dia_max);
+                      const capacidadeDia = getCapacidadeDia(cap, dia);
+                      const status = getOcupacaoStatus(total, capacidadeDia);
 
                       return (
                         <div key={i} className="text-center space-y-1">
@@ -198,7 +209,7 @@ const OcupacaoMaternidades = () => {
                                 : 'bg-muted'
                             }`}
                           >
-                            {total}/{cap.vagas_dia_max}
+                            {total}/{capacidadeDia}
                           </div>
                           {ocupacaoDia && ocupacaoDia.urgentes > 0 && (
                             <p className="text-xs text-destructive">⚠️ {ocupacaoDia.urgentes} urgente(s)</p>
