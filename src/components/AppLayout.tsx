@@ -72,6 +72,12 @@ const AppSidebar = () => {
       show: isAdmin(),
     },
     {
+      title: "Importar Planilha",
+      url: "/importar-planilha",
+      icon: Upload,
+      show: isAdmin(),
+    },
+    {
       title: "Usuários",
       url: "/gerenciar-usuarios",
       icon: Users,
