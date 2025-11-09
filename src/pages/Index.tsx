@@ -946,7 +946,7 @@ const Index = () => {
         {/* Enhanced Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
           <div className="space-y-2">
-            <h1 className="gradient-text-animated text-4xl text-left font-normal">Dashboard Obstétrico</h1>
+            <h1 className="gradient-text-animated text-4xl text-left font-bold">Dashboard Obstétrico</h1>
             <p className="text-muted-foreground text-base font-medium flex items-center gap-2">
               <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
               Análise em tempo real • {agendamentos.length} registros
