@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import NotificationBell from "@/components/NotificationBell";
+import { Footer } from "@/components/Footer";
 interface AppLayoutProps {
   children: ReactNode;
 }
@@ -127,7 +128,10 @@ export const AppLayout = ({
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto">{children}</main>
+          <main className="flex-1 overflow-auto flex flex-col">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </main>
         </div>
       </div>
     </SidebarProvider>;
