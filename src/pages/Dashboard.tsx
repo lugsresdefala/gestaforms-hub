@@ -7,11 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, User, FileText, Filter, Download, Plus, LogOut } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Loader2, Calendar as CalendarIcon, User, FileText, Filter, Download, Plus, LogOut, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Agendamento {
   id: string;
@@ -45,6 +49,7 @@ const Dashboard = () => {
   const [filterDataInicio, setFilterDataInicio] = useState("");
   const [filterDataFim, setFilterDataFim] = useState("");
   const [filterPatologia, setFilterPatologia] = useState("all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     fetchAgendamentos();
@@ -52,7 +57,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia]);
+  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
 
   const fetchAgendamentos = async () => {
     setLoading(true);
@@ -90,6 +95,12 @@ const Dashboard = () => {
   const applyFilters = () => {
     let filtered = [...agendamentos];
 
+    // Filtro por data selecionada no calendário
+    if (selectedDate) {
+      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+      filtered = filtered.filter(a => a.data_agendamento_calculada === selectedDateStr);
+    }
+
     // Filtro por nome
     if (searchNome) {
       filtered = filtered.filter(a => 
@@ -108,7 +119,7 @@ const Dashboard = () => {
       filtered = filtered.filter(a => a.maternidade === filterMaternidade);
     }
 
-    // Filtro por data
+    // Filtro por data range
     if (filterDataInicio) {
       filtered = filtered.filter(a => a.data_agendamento_calculada >= filterDataInicio);
     }
@@ -179,6 +190,11 @@ const Dashboard = () => {
     setFilterDataInicio("");
     setFilterDataFim("");
     setFilterPatologia("all");
+    setSelectedDate(undefined);
+  };
+
+  const getDatesWithAgendamentos = () => {
+    return agendamentos.map(a => new Date(a.data_agendamento_calculada));
   };
 
   const getStatusBadge = (dataAgendamento: string) => {
@@ -225,6 +241,91 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Calendário */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CalendarIcon className="h-5 w-5" />
+                Selecione uma Data
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                locale={ptBR}
+                className="rounded-md border pointer-events-auto"
+                modifiers={{
+                  hasAgendamento: getDatesWithAgendamentos()
+                }}
+                modifiersStyles={{
+                  hasAgendamento: {
+                    fontWeight: 'bold',
+                    textDecoration: 'underline'
+                  }
+                }}
+              />
+            </CardContent>
+            {selectedDate && (
+              <CardContent className="pt-0">
+                <p className="text-sm text-center text-muted-foreground">
+                  Exibindo agendamentos de {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full mt-2"
+                  onClick={() => setSelectedDate(undefined)}
+                >
+                  Limpar data
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Estatísticas */}
+          <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold">{filteredAgendamentos.length}</div>
+                <p className="text-sm text-muted-foreground">Total</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-orange-500">
+                  {filteredAgendamentos.filter(a => {
+                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return diff <= 7 && diff >= 0;
+                  }).length}
+                </div>
+                <p className="text-sm text-muted-foreground">Urgentes</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-destructive">
+                  {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) < new Date()).length}
+                </div>
+                <p className="text-sm text-muted-foreground">Vencidos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-2xl font-bold text-green-500">
+                  {filteredAgendamentos.filter(a => {
+                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                    return diff > 7;
+                  }).length}
+                </div>
+                <p className="text-sm text-muted-foreground">Agendados</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         {/* Filtros */}
         <Card className="mb-6">
           <CardHeader>
@@ -329,47 +430,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold">{filteredAgendamentos.length}</div>
-              <p className="text-sm text-muted-foreground">Total de Agendamentos</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-orange-500">
-                {filteredAgendamentos.filter(a => {
-                  const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  return diff <= 7 && diff >= 0;
-                }).length}
-              </div>
-              <p className="text-sm text-muted-foreground">Urgentes (7 dias)</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-destructive">
-                {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) < new Date()).length}
-              </div>
-              <p className="text-sm text-muted-foreground">Vencidos</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-green-500">
-                {filteredAgendamentos.filter(a => {
-                  const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  return diff > 7;
-                }).length}
-              </div>
-              <p className="text-sm text-muted-foreground">Agendados</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Lista de Agendamentos */}
+        {/* Lista de Agendamentos como Accordions */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -381,92 +442,107 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-2">
             {filteredAgendamentos.map((agendamento) => (
-              <Card key={agendamento.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold">{agendamento.nome_completo}</h3>
-                      <p className="text-sm text-muted-foreground">Carteirinha: {agendamento.carteirinha}</p>
-                    </div>
-                    {getStatusBadge(agendamento.data_agendamento_calculada)}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                    <div className="flex items-start gap-2">
-                      <Calendar className="h-4 w-4 mt-1 text-muted-foreground" />
+              <AccordionItem 
+                key={agendamento.id} 
+                value={agendamento.id}
+                className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-card"
+              >
+                <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center gap-4 text-left">
                       <div>
-                        <p className="text-sm font-medium">Data Agendamento</p>
+                        <h3 className="text-lg font-semibold">{agendamento.nome_completo}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {new Date(agendamento.data_agendamento_calculada).toLocaleDateString('pt-BR')}
+                          {format(new Date(agendamento.data_agendamento_calculada), "dd/MM/yyyy", { locale: ptBR })} • {agendamento.maternidade}
                         </p>
                       </div>
                     </div>
-
-                    <div className="flex items-start gap-2">
-                      <User className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">Médico</p>
-                        <p className="text-sm text-muted-foreground">{agendamento.medico_responsavel}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <FileText className="h-4 w-4 mt-1 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">Maternidade</p>
-                        <p className="text-sm text-muted-foreground">{agendamento.maternidade}</p>
-                      </div>
+                    <div className="flex gap-2">
+                      {getStatusBadge(agendamento.data_agendamento_calculada)}
                     </div>
                   </div>
+                </AccordionTrigger>
+                
+                <AccordionContent className="px-6 pb-4">
+                  <div className="space-y-4 pt-2">
+                    {/* Informações de contato */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Telefone</p>
+                          <p className="text-sm font-medium">{agendamento.telefones}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Carteirinha</p>
+                          <p className="text-sm font-medium">{agendamento.carteirinha}</p>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-sm font-medium">IG Calculada:</p>
-                      <p className="text-sm text-muted-foreground">
-                        {agendamento.idade_gestacional_calculada || 'Não calculado'}
-                      </p>
+                    {/* Informações do agendamento */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Data Nascimento</p>
+                        <p className="text-sm">{format(new Date(agendamento.data_nascimento), 'dd/MM/yyyy')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">IG Calculada</p>
+                        <p className="text-sm">{agendamento.idade_gestacional_calculada || 'Não calculado'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Centro Clínico</p>
+                        <p className="text-sm">{agendamento.centro_clinico}</p>
+                      </div>
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium">Procedimentos:</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Médico Responsável</p>
+                      <p className="text-sm">{agendamento.medico_responsavel}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Procedimentos</p>
+                      <div className="flex flex-wrap gap-2">
                         {agendamento.procedimentos.map((proc, idx) => (
-                          <Badge key={idx} variant="outline">{proc}</Badge>
+                          <Badge key={idx} variant="secondary">{proc}</Badge>
                         ))}
                       </div>
                     </div>
 
-                    <div>
-                      <p className="text-sm font-medium">Diagnósticos Maternos:</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {agendamento.diagnosticos_maternos || 'Não informado'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-medium">Diagnósticos Fetais:</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {agendamento.diagnosticos_fetais || 'Não informado'}
-                      </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Diagnósticos Maternos</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {agendamento.diagnosticos_maternos || 'Não informado'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Diagnósticos Fetais</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {agendamento.diagnosticos_fetais || 'Não informado'}
+                        </p>
+                      </div>
                     </div>
 
                     {agendamento.observacoes_agendamento && (
-                      <details className="mt-2">
-                        <summary className="text-sm font-medium cursor-pointer hover:text-primary">
-                          Ver observações completas
-                        </summary>
-                        <pre className="text-xs bg-muted p-3 rounded mt-2 whitespace-pre-wrap">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground mb-2">Observações</p>
+                        <p className="text-sm whitespace-pre-wrap bg-muted/50 p-3 rounded">
                           {agendamento.observacoes_agendamento}
-                        </pre>
-                      </details>
+                        </p>
+                      </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         )}
       </main>
     </div>
