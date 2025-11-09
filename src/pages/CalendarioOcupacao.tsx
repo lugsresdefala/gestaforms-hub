@@ -15,7 +15,9 @@ interface DayOccupation {
 }
 
 interface MaternityCapacity {
-  vagas_dia_max: number;
+  vagas_dia_util: number;
+  vagas_sabado: number;
+  vagas_domingo: number;
   vagas_emergencia: number;
 }
 
@@ -44,7 +46,7 @@ export default function CalendarioOcupacao() {
       // Load capacity
       const { data: capacityData } = await supabase
         .from('capacidade_maternidades')
-        .select('vagas_dia_max, vagas_emergencia')
+        .select('vagas_dia_util, vagas_sabado, vagas_domingo, vagas_emergencia')
         .eq('maternidade', selectedMaternidade)
         .single();
 
@@ -81,7 +83,19 @@ export default function CalendarioOcupacao() {
         const dateStr = date.toISOString().split('T')[0];
         const weekDayIndex = date.getDay();
         const total = appointmentCounts[dateStr] || 0;
-        const maxVagas = capacityData?.vagas_dia_max || 10;
+        
+        // Determine capacity based on day of week
+        let maxVagas = 10; // default fallback
+        if (capacityData) {
+          if (weekDayIndex === 0) { // Sunday
+            maxVagas = capacityData.vagas_domingo;
+          } else if (weekDayIndex === 6) { // Saturday
+            maxVagas = capacityData.vagas_sabado;
+          } else { // Weekday
+            maxVagas = capacityData.vagas_dia_util;
+          }
+        }
+        
         const available = Math.max(0, maxVagas - total);
         const percentage = (total / maxVagas) * 100;
 
@@ -169,14 +183,18 @@ export default function CalendarioOcupacao() {
               Capacidade da Maternidade
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
+          <CardContent className="grid gap-4 md:grid-cols-3">
             <div>
-              <p className="text-sm text-muted-foreground">Vagas por dia</p>
-              <p className="text-2xl font-bold">{capacity.vagas_dia_max}</p>
+              <p className="text-sm text-muted-foreground">Dias úteis</p>
+              <p className="text-2xl font-bold">{capacity.vagas_dia_util}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Vagas de emergência</p>
-              <p className="text-2xl font-bold">{capacity.vagas_emergencia}</p>
+              <p className="text-sm text-muted-foreground">Sábados</p>
+              <p className="text-2xl font-bold">{capacity.vagas_sabado}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Domingos</p>
+              <p className="text-2xl font-bold">{capacity.vagas_domingo}</p>
             </div>
           </CardContent>
         </Card>

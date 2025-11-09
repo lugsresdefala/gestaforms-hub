@@ -165,7 +165,7 @@ export const AppLayout = ({
           <header className="h-14 flex items-center justify-between border-b border-border/50 glass-surface px-4 sticky top-0 z-40">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="h-8 w-8 hover:bg-accent/20 transition-all rounded-lg" />
-              <h1 className="font-bold text-lg text-foreground tracking-tight hidden sm:block">
+              <h1 className="font-bold text-xl text-primary tracking-tight hidden sm:block">
                 PGS - Programa Gestação Segura
               </h1>
             </div>
