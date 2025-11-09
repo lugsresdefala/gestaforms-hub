@@ -30,8 +30,8 @@ export default function CalendarioOcupacao() {
 
   const maternidades = ['Cruzeiro', 'Guarulhos', 'Notrecare', 'Salvalus', 'Rosário'];
   const months = [
-    { value: '11', label: 'Novembro 2024' },
-    { value: '12', label: 'Dezembro 2024' }
+    { value: '11', label: 'Novembro 2026' },
+    { value: '12', label: 'Dezembro 2026' }
   ];
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -54,7 +54,7 @@ export default function CalendarioOcupacao() {
 
       // Load appointments
       const monthInt = parseInt(selectedMonth);
-      const year = 2024;
+      const year = 2026;
       const startDate = new Date(year, monthInt, 1);
       const endDate = new Date(year, monthInt + 1, 0);
 
