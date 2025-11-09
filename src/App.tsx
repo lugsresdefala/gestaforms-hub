@@ -19,6 +19,7 @@ import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import GuiaSistema from "./pages/GuiaSistema";
 import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
+import CompararCSVs from "./pages/CompararCSVs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -144,6 +145,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <CalendarioOcupacao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/comparar-csvs" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <CompararCSVs />
                   </AppLayout>
                 </ProtectedRoute>
               } 

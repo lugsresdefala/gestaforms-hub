@@ -11,6 +11,7 @@ import {
   LogOut,
   Upload,
   BookOpen,
+  GitCompare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,6 +88,12 @@ const AppSidebar = () => {
       title: "Importar Calendário",
       url: "/importar-calendario",
       icon: Upload,
+      show: isAdmin(),
+    },
+    {
+      title: "Comparar CSVs",
+      url: "/comparar-csvs",
+      icon: GitCompare,
       show: isAdmin(),
     },
   ].filter((item) => item.show);
