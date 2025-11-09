@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { toast } from 'sonner';
 import { Copy, Check, UserPlus } from 'lucide-react';
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
+import { Footer } from '@/components/Footer';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -186,8 +187,9 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
-      <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-6">
         {/* Card principal de login/cadastro */}
         <Card className="flex-1">
           <CardHeader className="text-center">
@@ -421,7 +423,9 @@ const Auth = () => {
             ))}
           </CardContent>
         </Card>
+        </div>
       </div>
+      <Footer />
     </div>
   );
 };
