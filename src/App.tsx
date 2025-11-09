@@ -16,7 +16,6 @@ import MeusAgendamentos from "./pages/MeusAgendamentos";
 import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
-import ImportarPlanilha from "./pages/ImportarPlanilha";
 import GuiaSistema from "./pages/GuiaSistema";
 import NotFound from "./pages/NotFound";
 
@@ -113,16 +112,6 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <OcupacaoMaternidades />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/importar-planilha" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ImportarPlanilha />
                   </AppLayout>
                 </ProtectedRoute>
               } 
