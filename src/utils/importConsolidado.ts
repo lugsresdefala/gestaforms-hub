@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
 
 interface CSVRow {
   maternidade: string;
@@ -163,6 +164,19 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
       
       const procedimentos = extractProcedimentos(row.viaParto);
       
+      // Calcular idade gestacional usando os dados disponíveis
+      const resultado = calcularAgendamentoCompleto({
+        dumStatus: 'Sim - Confiavel',
+        dataDum: dataNascimento.toISOString().split('T')[0],
+        dataPrimeiroUsg: dataNascimento.toISOString().split('T')[0],
+        semanasUsg: '0',
+        diasUsg: '0',
+        procedimentos: procedimentos,
+        diagnosticosMaternos: [row.diagnostico || 'Não informado'],
+        diagnosticosFetais: ['Sem alterações'],
+        placentaPrevia: 'Não'
+      });
+      
       const agendamento = {
         carteirinha: row.carteirinha,
         nome_completo: row.nome,
@@ -171,6 +185,7 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         procedimentos: procedimentos,
         maternidade: row.maternidade,
         data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
+        idade_gestacional_calculada: resultado.igFinal.displayText,
         diagnosticos_maternos: row.diagnostico || 'Não informado',
         historia_obstetrica: '',
         
