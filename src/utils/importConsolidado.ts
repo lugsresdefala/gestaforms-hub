@@ -121,6 +121,21 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
     skipped: 0
   };
   
+  // Buscar capacidades das maternidades
+  const { data: capacidades } = await supabase
+    .from('capacidade_maternidades')
+    .select('*');
+  
+  if (!capacidades) {
+    results.errors.push('Erro ao buscar capacidades das maternidades');
+    return results;
+  }
+  
+  const capacidadeMap = new Map(capacidades.map(c => [c.maternidade, c]));
+  
+  // Contar agendamentos por data e maternidade
+  const agendamentosPorDia = new Map<string, number>();
+  
   const processedKeys = new Set<string>();
   const agendamentosToInsert: any[] = [];
   
@@ -160,6 +175,39 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
       }
       
       processedKeys.add(uniqueKey);
+      
+      // Verificar capacidade da maternidade para este dia
+      const capacidade = capacidadeMap.get(row.maternidade);
+      if (!capacidade) {
+        results.failed++;
+        results.errors.push(`Linha ${i + 1}: Maternidade ${row.maternidade} não encontrada no sistema`);
+        continue;
+      }
+      
+      const diaSemana = dataAgendamento.getDay();
+      let vagasMaxDia: number;
+      
+      if (diaSemana === 0) {
+        vagasMaxDia = capacidade.vagas_domingo;
+      } else if (diaSemana === 6) {
+        vagasMaxDia = capacidade.vagas_sabado;
+      } else {
+        vagasMaxDia = capacidade.vagas_dia_util;
+      }
+      
+      // Chave única para o dia e maternidade
+      const diaKey = `${row.maternidade}-${dataAgendamento.toISOString().split('T')[0]}`;
+      const agendamentosNesteDia = agendamentosPorDia.get(diaKey) || 0;
+      
+      // Se já atingiu a capacidade, pula
+      if (agendamentosNesteDia >= vagasMaxDia) {
+        results.skipped++;
+        results.errors.push(`Linha ${i + 1}: Capacidade do dia ${dataAgendamento.toLocaleDateString('pt-BR')} esgotada para ${row.maternidade} (limite: ${vagasMaxDia} vagas)`);
+        continue;
+      }
+      
+      // Incrementar contador
+      agendamentosPorDia.set(diaKey, agendamentosNesteDia + 1);
       
       const procedimentos = extractProcedimentos(row.viaParto);
       
