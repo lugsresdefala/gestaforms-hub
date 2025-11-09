@@ -3,39 +3,10 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import {
-  Loader2,
-  Plus,
-  Calendar,
-  Building2,
-  Activity,
-  Stethoscope,
-  Baby,
-  Filter,
-  CheckCircle,
-  Clock,
-  XCircle,
-  TrendingUp,
-  AlertCircle,
-  ArrowUpRight,
-} from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, TrendingUp, AlertCircle, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import {
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -753,39 +724,37 @@ const DESIGN_SYSTEM_STYLES = `
 // CUSTOM TOOLTIP COMPONENT
 // ==========================================
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label
+}: any) => {
   if (active && payload && payload.length) {
-    return (
-      <div
-        style={{
-          background: "rgba(255, 255, 255, 0.98)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: "2px solid hsl(var(--border))",
-          borderRadius: "var(--radius-lg)",
-          padding: "var(--spacing-md)",
-          boxShadow: "var(--shadow-2xl)",
-        }}
-      >
+    return <div style={{
+      background: "rgba(255, 255, 255, 0.98)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "2px solid hsl(var(--border))",
+      borderRadius: "var(--radius-lg)",
+      padding: "var(--spacing-md)",
+      boxShadow: "var(--shadow-2xl)"
+    }}>
         <p className="font-semibold text-foreground mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm flex items-center gap-2">
-            <span
-              style={{
-                width: "12px",
-                height: "12px",
-                borderRadius: "50%",
-                background: entry.color,
-                display: "inline-block",
-              }}
-            />
-            <span style={{ color: entry.color }}>
+        {payload.map((entry: any, index: number) => <p key={index} className="text-sm flex items-center gap-2">
+            <span style={{
+          width: "12px",
+          height: "12px",
+          borderRadius: "50%",
+          background: entry.color,
+          display: "inline-block"
+        }} />
+            <span style={{
+          color: entry.color
+        }}>
               {entry.name}: <span className="font-bold">{entry.value}</span>
             </span>
-          </p>
-        ))}
-      </div>
-    );
+          </p>)}
+      </div>;
   }
   return null;
 };
@@ -796,7 +765,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const {
+    isAdmin,
+    isMedicoUnidade,
+    isMedicoMaternidade,
+    getMaternidadesAcesso
+  } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -811,16 +785,13 @@ const Index = () => {
       document.head.removeChild(styleElement);
     };
   }, []);
-
   useEffect(() => {
     fetchAgendamentos();
   }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
-
   const fetchAgendamentos = async () => {
     setLoading(true);
     try {
       let query = supabase.from("agendamentos_obst").select("*");
-
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in("maternidade", maternidades).eq("status", "aprovado");
@@ -829,11 +800,13 @@ const Index = () => {
         setLoading(false);
         return;
       }
-
-      query = query.order("created_at", { ascending: false });
-
-      const { data, error } = await query;
-
+      query = query.order("created_at", {
+        ascending: false
+      });
+      const {
+        data,
+        error
+      } = await query;
       if (error) throw error;
       setAgendamentos(data || []);
     } catch (error) {
@@ -848,50 +821,42 @@ const Index = () => {
   const metrics = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const todayDate = new Date();
-
     return {
       total: agendamentos.length,
-      pendentes: agendamentos.filter((a) => a.status === "pendente").length,
-      aprovados: agendamentos.filter((a) => a.status === "aprovado").length,
-      rejeitados: agendamentos.filter((a) => a.status === "rejeitado").length,
-      hoje: agendamentos.filter((a) => a.data_agendamento_calculada === today).length,
-      proximos: agendamentos.filter((a) => {
+      pendentes: agendamentos.filter(a => a.status === "pendente").length,
+      aprovados: agendamentos.filter(a => a.status === "aprovado").length,
+      rejeitados: agendamentos.filter(a => a.status === "rejeitado").length,
+      hoje: agendamentos.filter(a => a.data_agendamento_calculada === today).length,
+      proximos: agendamentos.filter(a => {
         const dataAgend = new Date(a.data_agendamento_calculada);
         const diffDias = Math.ceil((dataAgend.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
         return diffDias >= 0 && diffDias <= 7;
-      }).length,
+      }).length
     };
   }, [agendamentos]);
-
   const dadosPorUnidade = useMemo(() => {
-    const contagem = agendamentos.reduce(
-      (acc, a) => {
-        acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    return Object.entries(contagem)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce((acc, a) => {
+      acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(contagem).map(([name, value]) => ({
+      name,
+      value
+    })).sort((a, b) => b.value - a.value);
   }, [agendamentos]);
-
   const dadosPorMaternidade = useMemo(() => {
-    const contagem = agendamentos.reduce(
-      (acc, a) => {
-        acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
-        return acc;
-      },
-      {} as Record<string, number>,
-    );
-    return Object.entries(contagem)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce((acc, a) => {
+      acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(contagem).map(([name, value]) => ({
+      name,
+      value
+    })).sort((a, b) => b.value - a.value);
   }, [agendamentos]);
-
   const dadosPorPatologia = useMemo(() => {
     const contagem: Record<string, number> = {};
-    agendamentos.forEach((a) => {
+    agendamentos.forEach(a => {
       try {
         const diagsMat = a.diagnosticos_maternos ? JSON.parse(a.diagnosticos_maternos) : [];
         const diagsFet = a.diagnosticos_fetais ? JSON.parse(a.diagnosticos_fetais) : [];
@@ -902,86 +867,68 @@ const Index = () => {
         // Ignore
       }
     });
-    return Object.entries(contagem)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([name, value]) => ({ name, value }));
+    return Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({
+      name,
+      value
+    }));
   }, [agendamentos]);
-
   const dadosPorProcedimento = useMemo(() => {
     const contagem: Record<string, number> = {};
-    agendamentos.forEach((a) => {
-      a.procedimentos.forEach((proc) => {
+    agendamentos.forEach(a => {
+      a.procedimentos.forEach(proc => {
         contagem[proc] = (contagem[proc] || 0) + 1;
       });
     });
-    return Object.entries(contagem)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    return Object.entries(contagem).map(([name, value]) => ({
+      name,
+      value
+    })).sort((a, b) => b.value - a.value);
   }, [agendamentos]);
-
   const dadosPorIG = useMemo(() => {
     const faixas: Record<string, number> = {
       "< 28 semanas": 0,
       "28-32 semanas": 0,
       "33-36 semanas": 0,
       "37-40 semanas": 0,
-      "> 40 semanas": 0,
+      "> 40 semanas": 0
     };
-
-    agendamentos.forEach((a) => {
+    agendamentos.forEach(a => {
       if (a.idade_gestacional_calculada) {
         const match = a.idade_gestacional_calculada.match(/(\d+)s/);
         if (match) {
           const semanas = parseInt(match[1]);
-          if (semanas < 28) faixas["< 28 semanas"]++;
-          else if (semanas <= 32) faixas["28-32 semanas"]++;
-          else if (semanas <= 36) faixas["33-36 semanas"]++;
-          else if (semanas <= 40) faixas["37-40 semanas"]++;
-          else faixas["> 40 semanas"]++;
+          if (semanas < 28) faixas["< 28 semanas"]++;else if (semanas <= 32) faixas["28-32 semanas"]++;else if (semanas <= 36) faixas["33-36 semanas"]++;else if (semanas <= 40) faixas["37-40 semanas"]++;else faixas["> 40 semanas"]++;
         }
       }
     });
-
-    return Object.entries(faixas).map(([name, value]) => ({ name, value }));
+    return Object.entries(faixas).map(([name, value]) => ({
+      name,
+      value
+    }));
   }, [agendamentos]);
-
-  const dadosPorStatus = useMemo(
-    () => [
-      { name: "Pendente", value: metrics.pendentes, color: "var(--color-status-warning)" },
-      { name: "Aprovado", value: metrics.aprovados, color: "var(--color-status-success)" },
-      { name: "Rejeitado", value: metrics.rejeitados, color: "var(--color-status-destructive)" },
-    ],
-    [metrics],
-  );
-
-  const COLORS = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
-    "var(--chart-6)",
-    "var(--chart-7)",
-    "var(--chart-8)",
-  ];
-
-  const agendamentosFiltrados = useMemo(
-    () => (filtroStatus === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtroStatus)),
-    [agendamentos, filtroStatus],
-  );
-
+  const dadosPorStatus = useMemo(() => [{
+    name: "Pendente",
+    value: metrics.pendentes,
+    color: "var(--color-status-warning)"
+  }, {
+    name: "Aprovado",
+    value: metrics.aprovados,
+    color: "var(--color-status-success)"
+  }, {
+    name: "Rejeitado",
+    value: metrics.rejeitados,
+    color: "var(--color-status-destructive)"
+  }], [metrics]);
+  const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"];
+  const agendamentosFiltrados = useMemo(() => filtroStatus === "todos" ? agendamentos : agendamentos.filter(a => a.status === filtroStatus), [agendamentos, filtroStatus]);
   const handleChartHover = useCallback((chartId: string) => {
     setHoveredChart(chartId);
   }, []);
-
   const handleChartLeave = useCallback(() => {
     setHoveredChart(null);
   }, []);
-
   if (loading) {
-    return (
-      <div className="min-h-screen gradient-subtle flex items-center justify-center">
+    return <div className="min-h-screen gradient-subtle flex items-center justify-center">
         <div className="loading-state-advanced">
           <div className="loading-spinner-wrapper">
             <Loader2 className="loading-spinner h-16 w-16 text-primary" />
@@ -992,41 +939,32 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Processando dados em tempo real...</p>
           </div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen gradient-subtle">
+  return <div className="min-h-screen gradient-subtle">
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Enhanced Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold gradient-text-animated">Dashboard Obstétrico</h1>
+            <h1 className="gradient-text-animated text-4xl text-left font-normal">Dashboard Obstétrico</h1>
             <p className="text-muted-foreground text-base font-medium flex items-center gap-2">
               <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
               Análise em tempo real • {agendamentos.length} registros
             </p>
           </div>
-          {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && (
-            <Button
-              onClick={() => navigate("/novo-agendamento")}
-              className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group"
-              size="lg"
-            >
+          {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && <Button onClick={() => navigate("/novo-agendamento")} className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group" size="lg">
               <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
               Novo Agendamento
               <ArrowUpRight className="h-4 w-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Button>
-          )}
+            </Button>}
         </div>
 
         {/* Enhanced Metrics Grid */}
         <div className="dashboard-grid dashboard-grid--metrics">
-          <Card
-            className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
-            style={{ animationDelay: "0ms", opacity: 0 }}
-          >
+          <Card className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up" style={{
+          animationDelay: "0ms",
+          opacity: 0
+        }}>
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--warning">
@@ -1035,7 +973,9 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "var(--color-status-warning)" }}>
+                <div className="metric-value" style={{
+                color: "var(--color-status-warning)"
+              }}>
                   {metrics.pendentes}
                 </div>
               </div>
@@ -1043,10 +983,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card
-            className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
-            style={{ animationDelay: "100ms", opacity: 0 }}
-          >
+          <Card className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up" style={{
+          animationDelay: "100ms",
+          opacity: 0
+        }}>
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--success">
@@ -1055,7 +995,9 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "var(--color-status-success)" }}>
+                <div className="metric-value" style={{
+                color: "var(--color-status-success)"
+              }}>
                   {metrics.aprovados}
                 </div>
               </div>
@@ -1063,10 +1005,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card
-            className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
-            style={{ animationDelay: "200ms", opacity: 0 }}
-          >
+          <Card className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up" style={{
+          animationDelay: "200ms",
+          opacity: 0
+        }}>
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--destructive">
@@ -1075,7 +1017,9 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "var(--color-status-destructive)" }}>
+                <div className="metric-value" style={{
+                color: "var(--color-status-destructive)"
+              }}>
                   {metrics.rejeitados}
                 </div>
               </div>
@@ -1083,10 +1027,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card
-            className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
-            style={{ animationDelay: "300ms", opacity: 0 }}
-          >
+          <Card className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up" style={{
+          animationDelay: "300ms",
+          opacity: 0
+        }}>
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--primary">
@@ -1095,7 +1039,9 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "var(--color-status-primary)" }}>
+                <div className="metric-value" style={{
+                color: "var(--color-status-primary)"
+              }}>
                   {metrics.total}
                 </div>
               </div>
@@ -1105,8 +1051,7 @@ const Index = () => {
         </div>
 
         {/* Enhanced Filter Section */}
-        {agendamentos.length > 0 && (
-          <Card className="filter-bar-advanced shadow-elegant">
+        {agendamentos.length > 0 && <Card className="filter-bar-advanced shadow-elegant">
             <CardContent className="py-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3 flex-1">
@@ -1135,12 +1080,10 @@ const Index = () => {
                 </Badge>
               </div>
             </CardContent>
-          </Card>
-        )}
+          </Card>}
 
         {/* Empty State or Charts */}
-        {agendamentos.length === 0 ? (
-          <Card className="shadow-elegant border-2">
+        {agendamentos.length === 0 ? <Card className="shadow-elegant border-2">
             <CardContent className="empty-state-advanced">
               <div className="empty-state-icon-wrapper">
                 <Calendar className="empty-state-icon" />
@@ -1149,35 +1092,17 @@ const Index = () => {
               <div className="space-y-3">
                 <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
                 <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
-                  {isAdmin()
-                    ? "Não há agendamentos cadastrados no sistema."
-                    : isMedicoUnidade()
-                      ? "Você ainda não criou nenhum agendamento."
-                      : isMedicoMaternidade()
-                        ? "Não há agendamentos aprovados para sua maternidade no momento."
-                        : "Você não tem permissões para visualizar agendamentos."}
+                  {isAdmin() ? "Não há agendamentos cadastrados no sistema." : isMedicoUnidade() ? "Você ainda não criou nenhum agendamento." : isMedicoMaternidade() ? "Não há agendamentos aprovados para sua maternidade no momento." : "Você não tem permissões para visualizar agendamentos."}
                 </p>
               </div>
-              {(isMedicoUnidade() || isAdmin()) && (
-                <Button
-                  onClick={() => navigate("/novo-agendamento")}
-                  className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group"
-                  size="lg"
-                >
+              {(isMedicoUnidade() || isAdmin()) && <Button onClick={() => navigate("/novo-agendamento")} className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group" size="lg">
                   <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                   Criar Primeiro Agendamento
-                </Button>
-              )}
+                </Button>}
             </CardContent>
-          </Card>
-        ) : (
-          <div className="dashboard-grid dashboard-grid--charts">
+          </Card> : <div className="dashboard-grid dashboard-grid--charts">
             {/* Status Distribution */}
-            <Card
-              className={`chart-card-advanced shadow-elegant ${hoveredChart === "status" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("status")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "status" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("status")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1192,28 +1117,12 @@ const Index = () => {
               <CardContent>
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
-                    <Pie
-                      data={dadosPorStatus}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={110}
-                      innerRadius={60}
-                      fill="hsl(var(--primary))"
-                      dataKey="value"
-                      animationBegin={0}
-                      animationDuration={1000}
-                      animationEasing="ease-out"
-                    >
-                      {dadosPorStatus.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.color}
-                          stroke="hsl(var(--background))"
-                          strokeWidth={3}
-                        />
-                      ))}
+                    <Pie data={dadosPorStatus} cx="50%" cy="50%" labelLine={false} label={({
+                  name,
+                  percent,
+                  value
+                }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`} outerRadius={110} innerRadius={60} fill="hsl(var(--primary))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
+                      {dadosPorStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="hsl(var(--background))" strokeWidth={3} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -1222,11 +1131,7 @@ const Index = () => {
             </Card>
 
             {/* Unit Distribution */}
-            <Card
-              className={`chart-card-advanced shadow-elegant ${hoveredChart === "unidade" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("unidade")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "unidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("unidade")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1239,8 +1144,7 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorUnidade.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                {dadosPorUnidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorUnidade}>
                       <defs>
                         <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
@@ -1249,41 +1153,29 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
-                      <YAxis
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
+                      <XAxis dataKey="name" tick={{
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 12
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
+                      <YAxis tick={{
+                  fill: "hsl(var(--muted-foreground))"
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar
-                        dataKey="value"
-                        fill="url(#colorUnidade)"
-                        radius={[12, 12, 0, 0]}
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      />
+                      <Bar dataKey="value" fill="url(#colorUnidade)" radius={[12, 12, 0, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
                     </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Maternity Distribution */}
-            <Card
-              className={`chart-card-advanced shadow-elegant ${hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("maternidade")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("maternidade")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--accent">
@@ -1296,50 +1188,25 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorMaternidade.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                {dadosPorMaternidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
-                      <Pie
-                        data={dadosPorMaternidade}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={110}
-                        innerRadius={60}
-                        fill="hsl(var(--primary))"
-                        dataKey="value"
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      >
-                        {dadosPorMaternidade.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            stroke="hsl(var(--background))"
-                            strokeWidth={3}
-                          />
-                        ))}
+                      <Pie data={dadosPorMaternidade} cx="50%" cy="50%" labelLine={false} label={({
+                  name,
+                  percent
+                }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={110} innerRadius={60} fill="hsl(var(--primary))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
+                        {dadosPorMaternidade.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" strokeWidth={3} />)}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Top Pathologies */}
-            <Card
-              className={`chart-card-advanced shadow-elegant ${hoveredChart === "patologia" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("patologia")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "patologia" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("patologia")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--destructive">
@@ -1352,8 +1219,7 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorPatologia.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                {dadosPorPatologia.length > 0 ? <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorPatologia} layout="vertical">
                       <defs>
                         <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
@@ -1362,44 +1228,29 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis
-                        type="number"
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
-                      <YAxis
-                        dataKey="name"
-                        type="category"
-                        width={160}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
+                      <XAxis type="number" tick={{
+                  fill: "hsl(var(--muted-foreground))"
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
+                      <YAxis dataKey="name" type="category" width={160} tick={{
+                  fill: "hsl(var(--muted-foreground))",
+                  fontSize: 11
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar
-                        dataKey="value"
-                        fill="url(#colorPatologia)"
-                        radius={[0, 12, 12, 0]}
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      />
+                      <Bar dataKey="value" fill="url(#colorPatologia)" radius={[0, 12, 12, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
                     </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Procedure Distribution */}
-            <Card
-              className={`chart-card-advanced shadow-elegant ${hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("procedimento")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("procedimento")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--accent">
@@ -1412,50 +1263,25 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorProcedimento.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                {dadosPorProcedimento.length > 0 ? <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
-                      <Pie
-                        data={dadosPorProcedimento}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={110}
-                        innerRadius={60}
-                        fill="hsl(var(--accent))"
-                        dataKey="value"
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      >
-                        {dadosPorProcedimento.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            stroke="hsl(var(--background))"
-                            strokeWidth={3}
-                          />
-                        ))}
+                      <Pie data={dadosPorProcedimento} cx="50%" cy="50%" labelLine={false} label={({
+                  name,
+                  percent
+                }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={110} innerRadius={60} fill="hsl(var(--accent))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
+                        {dadosPorProcedimento.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" strokeWidth={3} />)}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Gestational Age Distribution */}
-            <Card
-              className={`chart-card-advanced shadow-elegant lg:col-span-2 ${hoveredChart === "ig" ? "chart-card-advanced--active" : ""}`}
-              onMouseEnter={() => handleChartHover("ig")}
-              onMouseLeave={handleChartLeave}
-            >
+            <Card className={`chart-card-advanced shadow-elegant lg:col-span-2 ${hoveredChart === "ig" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("ig")} onMouseLeave={handleChartLeave}>
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1468,8 +1294,7 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorIG.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={320}>
+                {dadosPorIG.length > 0 ? <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorIG}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
@@ -1478,39 +1303,27 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis
-                        dataKey="name"
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
-                      <YAxis
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
-                      />
+                      <XAxis dataKey="name" tick={{
+                  fill: "hsl(var(--muted-foreground))"
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
+                      <YAxis tick={{
+                  fill: "hsl(var(--muted-foreground))"
+                }} axisLine={{
+                  stroke: "hsl(var(--border))"
+                }} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar
-                        dataKey="value"
-                        fill="url(#colorIG)"
-                        radius={[12, 12, 0, 0]}
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      />
+                      <Bar dataKey="value" fill="url(#colorIG)" radius={[12, 12, 0, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
                     </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
-          </div>
-        )}
+          </div>}
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
