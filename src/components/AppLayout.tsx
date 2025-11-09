@@ -77,6 +77,12 @@ const AppSidebar = () => {
       icon: Users,
       show: isAdmin(),
     },
+    {
+      title: "Importar Calendário",
+      url: "/importar-calendario",
+      icon: Upload,
+      show: isAdmin(),
+    },
   ].filter((item) => item.show);
 
   return (

@@ -17,6 +17,7 @@ import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import GuiaSistema from "./pages/GuiaSistema";
+import ImportarCalendario from "./pages/ImportarCalendario";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -122,6 +123,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <GuiaSistema />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-calendario" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ImportarCalendario />
                   </AppLayout>
                 </ProtectedRoute>
               } 
