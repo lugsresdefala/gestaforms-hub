@@ -16,7 +16,7 @@ export const Footer = () => {
               </span>
             </div>
             <p className="text-xs text-muted-foreground/70">
-              © {new Date().getFullYear()} Tiago José de Oliveira Gomes · Todos os direitos reservados
+              © {new Date().getFullYear()} · Todos os direitos reservados
             </p>
           </div>
           
