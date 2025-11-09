@@ -51,9 +51,17 @@ All colors MUST be HSL.
     --input: 214 28% 90%;
     --ring: 208 90% 48%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(208 90% 48%) 0%, hsl(208 85% 55%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(172 65% 48%) 0%, hsl(172 60% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(208 90% 48%) 0%, hsl(172 65% 48%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(172 65% 48%) 0%, hsl(208 90% 48%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(210 40% 99%) 0%, hsl(210 30% 97%) 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, hsl(208 90% 48% / 0.15) 0px, transparent 50%),
+                     radial-gradient(at 100% 100%, hsl(172 65% 48% / 0.15) 0px, transparent 50%);
+    --gradient-glass: linear-gradient(135deg, hsl(210 40% 99% / 0.6) 0%, hsl(210 30% 97% / 0.4) 100%);
+    
+    --glass-bg: hsl(0 0% 100% / 0.6);
+    --glass-border: hsl(210 40% 96% / 0.8);
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+    --backdrop-blur: blur(12px);
     
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
@@ -61,7 +69,8 @@ All colors MUST be HSL.
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
     --shadow-elegant: 0 8px 24px -4px rgba(0, 0, 0, 0.1), 0 4px 8px -2px rgba(0, 0, 0, 0.05);
     
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-subtle: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
     --radius: 0.5rem;
 
@@ -116,6 +125,17 @@ All colors MUST be HSL.
     --border: 215 25% 25%;
     --input: 215 25% 25%;
     --ring: 208 85% 55%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(208 85% 55%) 0%, hsl(172 60% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(172 60% 50%) 0%, hsl(208 85% 55%) 100%);
+    --gradient-mesh: radial-gradient(at 0% 0%, hsl(208 85% 55% / 0.15) 0px, transparent 50%),
+                     radial-gradient(at 100% 100%, hsl(172 60% 50% / 0.15) 0px, transparent 50%);
+    --gradient-glass: linear-gradient(135deg, hsl(215 25% 15% / 0.6) 0%, hsl(215 25% 18% / 0.4) 100%);
+    
+    --glass-bg: hsl(215 25% 15% / 0.6);
+    --glass-border: hsl(215 25% 25% / 0.8);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+    --backdrop-blur: blur(12px);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -154,6 +174,24 @@ All colors MUST be HSL.
     background: var(--gradient-subtle);
   }
   
+  .gradient-mesh {
+    background: var(--gradient-mesh);
+  }
+  
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+  }
+  
+  .glass-surface {
+    background: var(--gradient-glass);
+    backdrop-filter: var(--backdrop-blur);
+    -webkit-backdrop-filter: var(--backdrop-blur);
+  }
+  
   .shadow-elegant {
     box-shadow: var(--shadow-lg);
   }
@@ -162,7 +200,15 @@ All colors MUST be HSL.
     transition: var(--transition-smooth);
   }
   
+  .transition-subtle {
+    transition: var(--transition-subtle);
+  }
+  
   .input-focus {
     @apply focus:ring-2 focus:ring-primary/20 focus:border-primary transition-smooth;
+  }
+  
+  .hover-lift {
+    @apply transition-subtle hover:translate-y-[-2px];
   }
 }

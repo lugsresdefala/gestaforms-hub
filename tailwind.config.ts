@@ -116,7 +116,15 @@ export default {
             transform: "translateY(0px) scale(1)",
           },
           "50%": {
-            transform: "translateY(-20px) scale(1.05)",
+            transform: "translateY(-10px) scale(1.02)",
+          }
+        },
+        "glow": {
+          "0%, 100%": {
+            opacity: "0.5",
+          },
+          "50%": {
+            opacity: "1",
           }
         },
       },
@@ -125,7 +133,8 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in": "slide-in 0.4s ease-out",
-        "float": "float 6s ease-in-out infinite",
+        "float": "float 8s ease-in-out infinite",
+        "glow": "glow 3s ease-in-out infinite",
       },
     },
   },
