@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';
@@ -30,9 +31,22 @@ const NotificationBell = () => {
 
   if (!isAdmin()) return null;
 
-  const handleNotificationClick = (notificacao: Notificacao) => {
+  const handleNotificationClick = async (notificacao: Notificacao) => {
     marcarComoLida(notificacao.id);
-    navigate('/aprovacoes');
+    
+    // Buscar o agendamento para ver seu status
+    const { data: agendamento } = await supabase
+      .from('agendamentos_obst')
+      .select('status')
+      .eq('id', notificacao.agendamento_id)
+      .single();
+    
+    // Se está aprovado, vai para Meus Agendamentos, senão vai para Aprovações
+    if (agendamento?.status === 'aprovado') {
+      navigate('/meus-agendamentos');
+    } else {
+      navigate('/aprovacoes');
+    }
   };
 
   const naoLidas = notificacoes.filter(n => !n.lida).length;
