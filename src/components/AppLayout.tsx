@@ -1,152 +1,112 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Calendar,
-  LayoutDashboard,
-  PlusCircle,
-  CheckCircle,
-  Users,
-  Building2,
-  LogOut,
-  BookOpen,
-} from "lucide-react";
+import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import NotificationBell from "@/components/NotificationBell";
-
 interface AppLayoutProps {
   children: ReactNode;
 }
-
 const AppSidebar = () => {
-  const { state } = useSidebar();
-  const { isAdmin, isMedicoUnidade } = useAuth();
+  const {
+    state
+  } = useSidebar();
+  const {
+    isAdmin,
+    isMedicoUnidade
+  } = useAuth();
   const collapsed = state === "collapsed";
-
-  const menuItems = [
-    { title: "Dashboard", url: "/", icon: LayoutDashboard, show: true },
-    { title: "Listagem", url: "/dashboard", icon: Calendar, show: true },
-    {
-      title: "Guia do Sistema",
-      url: "/guia",
-      icon: BookOpen,
-      show: true,
-    },
-    {
-      title: "Novo Agendamento",
-      url: "/novo-agendamento",
-      icon: PlusCircle,
-      show: isMedicoUnidade() || isAdmin(),
-    },
-    {
-      title: "Meus Agendamentos",
-      url: "/meus-agendamentos",
-      icon: Calendar,
-      show: isMedicoUnidade(),
-    },
-    {
-      title: "Aprovações",
-      url: "/aprovacoes",
-      icon: CheckCircle,
-      show: isAdmin(),
-    },
-    {
-      title: "Ocupação",
-      url: "/ocupacao",
-      icon: Building2,
-      show: isAdmin(),
-    },
-    {
-      title: "Calendário",
-      url: "/calendario-ocupacao",
-      icon: Calendar,
-      show: true,
-    },
-    {
-      title: "Usuários",
-      url: "/gerenciar-usuarios",
-      icon: Users,
-      show: isAdmin(),
-    },
-  ].filter((item) => item.show);
-
-  return (
-    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+  const menuItems = [{
+    title: "Dashboard",
+    url: "/",
+    icon: LayoutDashboard,
+    show: true
+  }, {
+    title: "Listagem",
+    url: "/dashboard",
+    icon: Calendar,
+    show: true
+  }, {
+    title: "Guia do Sistema",
+    url: "/guia",
+    icon: BookOpen,
+    show: true
+  }, {
+    title: "Novo Agendamento",
+    url: "/novo-agendamento",
+    icon: PlusCircle,
+    show: isMedicoUnidade() || isAdmin()
+  }, {
+    title: "Meus Agendamentos",
+    url: "/meus-agendamentos",
+    icon: Calendar,
+    show: isMedicoUnidade()
+  }, {
+    title: "Aprovações",
+    url: "/aprovacoes",
+    icon: CheckCircle,
+    show: isAdmin()
+  }, {
+    title: "Ocupação",
+    url: "/ocupacao",
+    icon: Building2,
+    show: isAdmin()
+  }, {
+    title: "Calendário",
+    url: "/calendario-ocupacao",
+    icon: Calendar,
+    show: true
+  }, {
+    title: "Usuários",
+    url: "/gerenciar-usuarios",
+    icon: Users,
+    show: isAdmin()
+  }].filter(item => item.show);
+  return <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
         <div className="p-4 border-b border-border">
-          {!collapsed && (
-            <div className="flex flex-col gap-1">
-              <img
-                src="/hapvida-logo.png"
-                alt="Hapvida"
-                className="h-10 object-contain"
-              />
+          {!collapsed && <div className="flex flex-col gap-1">
+              <img src="/hapvida-logo.png" alt="Hapvida" className="h-28 object-contain" />
               <span className="text-xs text-muted-foreground font-medium">
                 Gestação Segura
               </span>
-            </div>
-          )}
-          {collapsed && (
-            <img
-              src="/hapvida-logo.png"
-              alt="Hapvida"
-              className="h-8 object-contain"
-            />
-          )}
+            </div>}
+          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain" />}
         </div>
 
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {menuItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className="hover:bg-muted/50"
-                      activeClassName="bg-primary/10 text-primary font-medium"
-                    >
+                    <NavLink to={item.url} end className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                </SidebarMenuItem>)}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-    </Sidebar>
-  );
+    </Sidebar>;
 };
-
-export const AppLayout = ({ children }: AppLayoutProps) => {
+export const AppLayout = ({
+  children
+}: AppLayoutProps) => {
   const navigate = useNavigate();
-  const { signOut, isAdmin } = useAuth();
-
+  const {
+    signOut,
+    isAdmin
+  } = useAuth();
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
   };
-
-  return (
-    <SidebarProvider>
+  return <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
 
@@ -161,12 +121,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
 
             <div className="flex items-center gap-2">
               {isAdmin() && <NotificationBell />}
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="icon"
-                title="Sair"
-              >
+              <Button onClick={handleLogout} variant="ghost" size="icon" title="Sair">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
@@ -175,6 +130,5 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
