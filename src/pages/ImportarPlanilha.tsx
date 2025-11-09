@@ -28,37 +28,38 @@ export default function ImportarPlanilha() {
 
       let successCount = 0;
       let errorCount = 0;
-
       const agendamentosParaInserir = [];
 
       for (const row of jsonData as any[]) {
-        const carteirinha = String(row['CARTEIRINHA'] || row['Carteirinha'] || '').trim();
-        const nome = String(row['NOME'] || row['Nome'] || row['NOME '] || '').trim();
+        const carteirinha = String(row['CARTEIRINHA'] || '').trim();
+        const nome = String(row['NOME'] || '').trim();
         const maternidade = String(row['Maternidade'] || '').trim();
         
-        if (!carteirinha && !nome) continue;
+        if ((!carteirinha || carteirinha === '') && (!nome || nome === '')) continue;
         if (!maternidade || maternidade === '') continue;
 
         try {
-          let dataNascimento = new Date('1990-01-01').toISOString().split('T')[0];
-          if (row['DATA NASCIMENTO'] || row['DATA DE NASCIMENTO'] || row['DATA DE NASCIMENTO ']) {
-            const dataNasc = row['DATA NASCIMENTO'] || row['DATA DE NASCIMENTO'] || row['DATA DE NASCIMENTO '];
-            if (dataNasc) {
-              const parsed = new Date(dataNasc);
-              if (!isNaN(parsed.getTime())) {
-                dataNascimento = parsed.toISOString().split('T')[0];
-              }
+          let dataNascimento = '1990-01-01';
+          const dataNascField = row['DATA NASCIMENTO'];
+          if (dataNascField) {
+            const parsed = new Date(dataNascField);
+            if (!isNaN(parsed.getTime())) {
+              dataNascimento = parsed.toISOString().split('T')[0];
             }
           }
 
           let dataAgendamento = null;
-          const dia = parseInt(row['DIA'] || row['DATA']) || 0;
-          const mes = row['Mês'] || row['M�s'];
+          const dia = parseInt(String(row['DIA'] || '')) || 0;
+          const mes = String(row['Mês'] || '');
           
           if (dia > 0 && mes) {
             const mesNum = mes.toLowerCase().includes('nov') ? 10 : 11;
             dataAgendamento = new Date(2024, mesNum, dia).toISOString().split('T')[0];
           }
+
+          const diagnostico = String(row['DIAGNÓSTICO'] || 'Não informado').substring(0, 500);
+          const viaParto = String(row['VIA DE PARTO'] || 'Parto normal');
+          const contato = String(row['CONTATO'] || row['TELEFONE'] || 'Não informado').trim();
 
           const agendamento = {
             carteirinha: carteirinha || 'Sem carteirinha',
@@ -68,16 +69,16 @@ export default function ImportarPlanilha() {
             numero_partos_cesareas: 0,
             numero_partos_normais: 0,
             numero_abortos: 0,
-            telefones: String(row['CONTATO'] || row['TELEFONE'] || row['Telefone'] || 'Não informado').trim(),
-            procedimentos: [String(row['VIA DE PARTO'] || row['VIA DE PARTO '] || 'Parto normal')],
+            telefones: contato,
+            procedimentos: [viaParto],
             dum_status: 'Confiável',
             data_dum: new Date().toISOString().split('T')[0],
             data_primeiro_usg: new Date().toISOString().split('T')[0],
             semanas_usg: 0,
             dias_usg: 0,
-            usg_recente: String(row['DIAGNÓSTICO'] || row['DIAGN�STICO'] || row['DIAGN�STICO '] || 'Não informado').substring(0, 500),
+            usg_recente: diagnostico,
             ig_pretendida: '37-39 semanas',
-            indicacao_procedimento: String(row['DIAGNÓSTICO'] || row['DIAGN�STICO'] || row['DIAGN�STICO '] || 'Não informado').substring(0, 500),
+            indicacao_procedimento: diagnostico,
             medicacao: 'Não informado',
             diagnosticos_maternos: 'Não informado',
             placenta_previa: 'Não',
@@ -85,7 +86,7 @@ export default function ImportarPlanilha() {
             historia_obstetrica: 'Não informado',
             necessidade_uti_materna: 'Não',
             necessidade_reserva_sangue: 'Não',
-            maternidade: maternidade,
+            maternidade,
             medico_responsavel: 'Não informado',
             centro_clinico: 'Não informado',
             email_paciente: 'nao-informado@sistema.com',
@@ -100,8 +101,8 @@ export default function ImportarPlanilha() {
         }
       }
 
-      for (let i = 0; i < agendamentosParaInserir.length; i += 50) {
-        const batch = agendamentosParaInserir.slice(i, i + 50);
+      for (let i = 0; i < agendamentosParaInserir.length; i += 100) {
+        const batch = agendamentosParaInserir.slice(i, i + 100);
         try {
           const { error } = await supabase
             .from('agendamentos_obst')
