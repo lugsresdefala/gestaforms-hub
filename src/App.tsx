@@ -20,6 +20,7 @@ import GuiaSistema from "./pages/GuiaSistema";
 import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CompararCSVs from "./pages/CompararCSVs";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/auth" element={<AuthRedirect />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route 
               path="/" 
               element={
