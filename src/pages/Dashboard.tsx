@@ -119,9 +119,10 @@ const Dashboard = () => {
     // Filtro por patologia
     if (filterPatologia !== "all") {
       filtered = filtered.filter(a => {
-        const diagnosticosMat = JSON.parse(a.diagnosticos_maternos || '[]');
-        const diagnosticosFet = JSON.parse(a.diagnosticos_fetais || '[]');
-        return diagnosticosMat.includes(filterPatologia) || diagnosticosFet.includes(filterPatologia);
+        const diagMat = a.diagnosticos_maternos || '';
+        const diagFet = a.diagnosticos_fetais || '';
+        return diagMat.toLowerCase().includes(filterPatologia.toLowerCase()) || 
+               diagFet.toLowerCase().includes(filterPatologia.toLowerCase());
       });
     }
 
@@ -153,10 +154,10 @@ const Dashboard = () => {
       a.maternidade,
       a.centro_clinico,
       a.data_agendamento_calculada,
-      a.idade_gestacional_calculada,
-      JSON.parse(a.diagnosticos_maternos || '[]').join('; '),
-      JSON.parse(a.diagnosticos_fetais || '[]').join('; '),
-      a.observacoes_agendamento.replace(/\n/g, ' ')
+      a.idade_gestacional_calculada || 'Não calculado',
+      a.diagnosticos_maternos || 'Não informado',
+      a.diagnosticos_fetais || 'Não informado',
+      a.observacoes_agendamento?.replace(/\n/g, ' ') || ''
     ]);
 
     const csvContent = [
@@ -423,7 +424,9 @@ const Dashboard = () => {
                   <div className="space-y-2">
                     <div>
                       <p className="text-sm font-medium">IG Calculada:</p>
-                      <p className="text-sm text-muted-foreground">{agendamento.idade_gestacional_calculada}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {agendamento.idade_gestacional_calculada || 'Não calculado'}
+                      </p>
                     </div>
 
                     <div>
@@ -438,14 +441,14 @@ const Dashboard = () => {
                     <div>
                       <p className="text-sm font-medium">Diagnósticos Maternos:</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {formatDiagnosticos(agendamento.diagnosticos_maternos)}
+                        {agendamento.diagnosticos_maternos || 'Não informado'}
                       </p>
                     </div>
 
                     <div>
                       <p className="text-sm font-medium">Diagnósticos Fetais:</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {formatDiagnosticos(agendamento.diagnosticos_fetais)}
+                        {agendamento.diagnosticos_fetais || 'Não informado'}
                       </p>
                     </div>
 

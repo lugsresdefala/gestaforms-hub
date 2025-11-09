@@ -60,6 +60,11 @@ const AppSidebar = () => {
     icon: Calendar,
     show: true
   }, {
+    title: "Atualizar IG",
+    url: "/atualizar-ig",
+    icon: Calendar,
+    show: isAdmin()
+  }, {
     title: "Usuários",
     url: "/gerenciar-usuarios",
     icon: Users,
