@@ -5,6 +5,9 @@ interface CapacidadeMaternidade {
   vagas_dia_max: number;
   vagas_semana_max: number;
   vagas_emergencia: number;
+  vagas_dia_util: number;
+  vagas_sabado: number;
+  vagas_domingo: number;
 }
 
 interface ResultadoValidacao {
@@ -41,6 +44,18 @@ export const verificarDisponibilidade = async (
 
     const cap = capacidade as CapacidadeMaternidade;
 
+    // Determinar capacidade máxima baseada no dia da semana
+    const diaSemana = dataAgendamento.getDay(); // 0 = domingo, 6 = sábado
+    let vagasMaxDia: number;
+    
+    if (diaSemana === 0) {
+      vagasMaxDia = cap.vagas_domingo;
+    } else if (diaSemana === 6) {
+      vagasMaxDia = cap.vagas_sabado;
+    } else {
+      vagasMaxDia = cap.vagas_dia_util;
+    }
+
     // Contar agendamentos no mesmo dia
     const dataFormatada = format(dataAgendamento, 'yyyy-MM-dd');
     
@@ -70,12 +85,12 @@ export const verificarDisponibilidade = async (
     const vagasUsadasSemana = agendamentosSemana?.length || 0;
 
     // Verificar disponibilidade
-    const vagasDisponiveisDia = cap.vagas_dia_max - vagasUsadasDia;
+    const vagasDisponiveisDia = vagasMaxDia - vagasUsadasDia;
     const vagasDisponiveisSemana = cap.vagas_semana_max - vagasUsadasSemana;
 
     // Se for urgente, verificar se há vagas de emergência
     if (isUrgente && vagasDisponiveisDia <= 0) {
-      const temVagaEmergencia = vagasUsadasDia < (cap.vagas_dia_max + cap.vagas_emergencia);
+      const temVagaEmergencia = vagasUsadasDia < (vagasMaxDia + cap.vagas_emergencia);
       
       if (temVagaEmergencia) {
         return {
@@ -83,7 +98,7 @@ export const verificarDisponibilidade = async (
           vagasUsadas: vagasUsadasDia,
           vagasDisponiveis: cap.vagas_emergencia,
           vagasSemanais: vagasUsadasSemana,
-          mensagem: `⚠️ Usando vaga de emergência (${vagasUsadasDia}/${cap.vagas_dia_max + cap.vagas_emergencia})`,
+          mensagem: `⚠️ Usando vaga de emergência (${vagasUsadasDia}/${vagasMaxDia + cap.vagas_emergencia})`,
         };
       }
     }
@@ -94,7 +109,7 @@ export const verificarDisponibilidade = async (
     let mensagem = '';
     if (!disponivel) {
       if (vagasDisponiveisDia <= 0) {
-        mensagem = `❌ Sem vagas no dia ${format(dataAgendamento, 'dd/MM/yyyy')} (${vagasUsadasDia}/${cap.vagas_dia_max} ocupadas)`;
+        mensagem = `❌ Sem vagas no dia ${format(dataAgendamento, 'dd/MM/yyyy')} (${vagasUsadasDia}/${vagasMaxDia} ocupadas)`;
       } else if (vagasDisponiveisSemana <= 0) {
         mensagem = `❌ Sem vagas na semana (${vagasUsadasSemana}/${cap.vagas_semana_max} ocupadas)`;
       }
