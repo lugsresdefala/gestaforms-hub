@@ -190,15 +190,15 @@ const COMPLETE_DESIGN_SYSTEM = `
     
     --texture-grid: repeating-linear-gradient(
       0deg,
-      rgba(15, 23, 42, 0.02) 0px,
-      rgba(15, 23, 42, 0.02) 1px,
+      rgba(15, 23, 42, 0.005) 0px,
+      rgba(15, 23, 42, 0.005) 1px,
       transparent 1px,
       transparent 40px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(15, 23, 42, 0.02) 0px,
-      rgba(15, 23, 42, 0.02) 1px,
+      rgba(15, 23, 42, 0.005) 0px,
+      rgba(15, 23, 42, 0.005) 1px,
       transparent 1px,
       transparent 40px
     );
@@ -955,8 +955,8 @@ const COMPLETE_DESIGN_SYSTEM = `
       linear-gradient(
         135deg,
         #ffffff 0%,
-        var(--color-slate-50) 50%,
-        var(--color-indigo-50) 100%
+        #fafbfc 50%,
+        #f8f9fb 100%
       );
     background-size: 
       40px 40px,
