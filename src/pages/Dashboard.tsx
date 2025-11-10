@@ -210,9 +210,9 @@ const Dashboard = () => {
     if (diffDias < 0) {
       return <Badge variant="destructive">Vencido</Badge>;
     } else if (diffDias <= 7) {
-      return <Badge className="bg-orange-500">Urgente</Badge>;
+      return <Badge className="bg-warning text-warning-foreground">Urgente</Badge>;
     } else if (diffDias <= 14) {
-      return <Badge className="bg-yellow-500">Próximo</Badge>;
+      return <Badge className="bg-warning/70 text-warning-foreground">Próximo</Badge>;
     } else {
       return <Badge variant="secondary">Agendado</Badge>;
     }
@@ -220,7 +220,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen gradient-subtle">
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
+      <header className="bg-card/95 backdrop-blur-sm border-b border-border py-6 shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
@@ -300,7 +300,7 @@ const Dashboard = () => {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-orange-500">
+                <div className="text-2xl font-bold text-warning">
                   {filteredAgendamentos.filter(a => {
                     const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                     return diff <= 7 && diff >= 0;
@@ -319,7 +319,7 @@ const Dashboard = () => {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold text-success">
                   {filteredAgendamentos.filter(a => {
                     const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                     return diff > 7;
