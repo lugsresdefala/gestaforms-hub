@@ -22,7 +22,6 @@ import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CompararCSVs from "./pages/CompararCSVs";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
-import AtualizarParidade from "./pages/AtualizarParidade";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -169,16 +168,6 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <AtualizarIG />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/atualizar-paridade" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <AtualizarParidade />
                   </AppLayout>
                 </ProtectedRoute>
               } 
