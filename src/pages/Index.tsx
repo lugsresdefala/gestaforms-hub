@@ -3,10 +3,36 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, TrendingUp, AlertCircle, ArrowUpRight } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  Calendar,
+  Building2,
+  Activity,
+  Stethoscope,
+  Baby,
+  Filter,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  ArrowUpRight,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -28,121 +54,306 @@ interface Agendamento {
 }
 
 // ==========================================
-// DESIGN SYSTEM & ADVANCED CSS
+// COMPLETE ADVANCED DESIGN SYSTEM
 // ==========================================
 
-const DESIGN_SYSTEM_STYLES = `
+const COMPLETE_DESIGN_SYSTEM = `
   /* ==========================================
-     DESIGN SYSTEM - CSS CUSTOM PROPERTIES
+     COMPLETE DESIGN SYSTEM - COLD PALETTE & GLASS EFFECTS
      ========================================== */
   
   :root {
-    /* Enhanced Color Palette with Semantic Meaning */
-    --color-status-warning: hsl(38 92% 50%);
-    --color-status-warning-light: hsl(38 92% 97%);
-    --color-status-warning-border: hsl(38 92% 85%);
+    /* Cold Color Palette - Dark & Sophisticated */
+    --color-emerald-50: #ecfdf5;
+    --color-emerald-100: #d1fae5;
+    --color-emerald-200: #a7f3d0;
+    --color-emerald-300: #6ee7b7;
+    --color-emerald-400: #34d399;
+    --color-emerald-500: #10b981;
+    --color-emerald-600: #059669;
+    --color-emerald-700: #047857;
+    --color-emerald-800: #065f46;
+    --color-emerald-900: #064e3b;
     
-    --color-status-success: hsl(142 71% 45%);
-    --color-status-success-light: hsl(142 71% 97%);
-    --color-status-success-border: hsl(142 71% 85%);
+    --color-amber-50: #fffbeb;
+    --color-amber-100: #fef3c7;
+    --color-amber-200: #fde68a;
+    --color-amber-300: #fcd34d;
+    --color-amber-400: #fbbf24;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
+    --color-amber-700: #b45309;
+    --color-amber-800: #92400e;
+    --color-amber-900: #78350f;
     
-    --color-status-destructive: hsl(0 84% 60%);
-    --color-status-destructive-light: hsl(0 84% 97%);
-    --color-status-destructive-border: hsl(0 84% 85%);
+    --color-indigo-50: #eef2ff;
+    --color-indigo-100: #e0e7ff;
+    --color-indigo-200: #c7d2fe;
+    --color-indigo-300: #a5b4fc;
+    --color-indigo-400: #818cf8;
+    --color-indigo-500: #6366f1;
+    --color-indigo-600: #4f46e5;
+    --color-indigo-700: #4338ca;
+    --color-indigo-800: #3730a3;
+    --color-indigo-900: #312e81;
     
-    --color-status-primary: hsl(208 90% 48%);
-    --color-status-primary-light: hsl(208 90% 97%);
-    --color-status-primary-border: hsl(208 90% 85%);
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-200: #e2e8f0;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #64748b;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    --color-slate-900: #0f172a;
     
-    /* Advanced Chart Colors - Extended Palette */
-    --chart-1: hsl(208 90% 48%);
-    --chart-2: hsl(172 65% 48%);
-    --chart-3: hsl(280 70% 50%);
-    --chart-4: hsl(30 80% 55%);
-    --chart-5: hsl(150 60% 50%);
-    --chart-6: hsl(340 75% 55%);
-    --chart-7: hsl(45 90% 60%);
-    --chart-8: hsl(200 70% 45%);
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    --color-red-800: #991b1b;
+    --color-red-900: #7f1d1d;
     
-    /* Sophisticated Spacing System - 4px base grid */
-    --spacing-base: 0.25rem;
-    --spacing-xs: calc(var(--spacing-base) * 2);    /* 8px */
-    --spacing-sm: calc(var(--spacing-base) * 3);    /* 12px */
-    --spacing-md: calc(var(--spacing-base) * 4);    /* 16px */
-    --spacing-lg: calc(var(--spacing-base) * 6);    /* 24px */
-    --spacing-xl: calc(var(--spacing-base) * 8);    /* 32px */
-    --spacing-2xl: calc(var(--spacing-base) * 12);  /* 48px */
-    --spacing-3xl: calc(var(--spacing-base) * 16);  /* 64px */
+    /* Semantic Status Colors - Cold Variants */
+    --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+    --status-pending-light: #fffbeb;
+    --status-pending-border: #b45309;
+    --status-pending-glow: rgba(180, 83, 9, 0.35);
     
-    /* Advanced Animation System */
+    --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 100%);
+    --status-success-light: #ecfdf5;
+    --status-success-border: #059669;
+    --status-success-glow: rgba(5, 150, 105, 0.35);
+    
+    --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    --status-destructive-light: #fef2f2;
+    --status-destructive-border: #dc2626;
+    --status-destructive-glow: rgba(220, 38, 38, 0.35);
+    
+    --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    --status-primary-light: #eef2ff;
+    --status-primary-border: #4f46e5;
+    --status-primary-glow: rgba(79, 70, 229, 0.35);
+    
+    /* Advanced Glassmorphism System */
+    --glass-bg-white: rgba(255, 255, 255, 0.75);
+    --glass-bg-light: rgba(248, 250, 252, 0.85);
+    --glass-bg-medium: rgba(241, 245, 249, 0.90);
+    --glass-bg-dark: rgba(15, 23, 42, 0.85);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.25);
+    --glass-border-strong: 2px solid rgba(255, 255, 255, 0.4);
+    --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+    --glass-blur: blur(24px);
+    --glass-blur-heavy: blur(40px);
+    --glass-blur-light: blur(12px);
+    
+    /* Multi-layer 3D Shadow System */
+    --shadow-3d-xs: 
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 2px 4px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    
+    --shadow-3d-sm: 
+      0 2px 4px -1px rgba(15, 23, 42, 0.08),
+      0 4px 8px -2px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    
+    --shadow-3d-md: 
+      0 4px 8px -2px rgba(15, 23, 42, 0.1),
+      0 8px 16px -4px rgba(15, 23, 42, 0.08),
+      0 16px 32px -8px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    
+    --shadow-3d-lg: 
+      0 8px 16px -4px rgba(15, 23, 42, 0.12),
+      0 16px 32px -8px rgba(15, 23, 42, 0.1),
+      0 24px 48px -12px rgba(15, 23, 42, 0.08),
+      inset 0 2px 0 0 rgba(255, 255, 255, 0.95);
+    
+    --shadow-3d-xl: 
+      0 12px 24px -6px rgba(15, 23, 42, 0.15),
+      0 24px 48px -12px rgba(15, 23, 42, 0.12),
+      0 36px 72px -18px rgba(15, 23, 42, 0.1),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
+    --shadow-3d-2xl: 
+      0 16px 32px -8px rgba(15, 23, 42, 0.18),
+      0 32px 64px -16px rgba(15, 23, 42, 0.15),
+      0 48px 96px -24px rgba(15, 23, 42, 0.12),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
+    /* Texture & Noise Patterns */
+    --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    
+    --texture-grid: repeating-linear-gradient(
+      0deg,
+      rgba(15, 23, 42, 0.02) 0px,
+      rgba(15, 23, 42, 0.02) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.02) 0px,
+      rgba(15, 23, 42, 0.02) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+    
+    --texture-dots: radial-gradient(
+      circle at center,
+      rgba(15, 23, 42, 0.03) 1px,
+      transparent 1px
+    );
+    
+    /* Advanced Chart Colors - Cold Palette */
+    --chart-emerald: #059669;
+    --chart-amber: #d97706;
+    --chart-indigo: #4f46e5;
+    --chart-teal: #0d9488;
+    --chart-cyan: #0891b2;
+    --chart-sky: #0284c7;
+    --chart-violet: #7c3aed;
+    --chart-fuchsia: #c026d3;
+    
+    /* Spacing System - 4px base grid */
+    --spacing-0: 0;
+    --spacing-px: 1px;
+    --spacing-0-5: 0.125rem;
+    --spacing-1: 0.25rem;
+    --spacing-1-5: 0.375rem;
+    --spacing-2: 0.5rem;
+    --spacing-2-5: 0.625rem;
+    --spacing-3: 0.75rem;
+    --spacing-3-5: 0.875rem;
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-7: 1.75rem;
+    --spacing-8: 2rem;
+    --spacing-9: 2.25rem;
+    --spacing-10: 2.5rem;
+    --spacing-11: 2.75rem;
+    --spacing-12: 3rem;
+    --spacing-14: 3.5rem;
+    --spacing-16: 4rem;
+    --spacing-20: 5rem;
+    --spacing-24: 6rem;
+    --spacing-28: 7rem;
+    --spacing-32: 8rem;
+    
+    /* Enhanced Animation Curves */
+    --ease-linear: linear;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-in-cubic: cubic-bezier(0.32, 0, 0.67, 0);
+    --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+    --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    
+    /* Duration System */
     --duration-instant: 0ms;
     --duration-fast: 150ms;
-    --duration-normal: 300ms;
-    --duration-slow: 500ms;
+    --duration-normal: 250ms;
+    --duration-medium: 400ms;
+    --duration-slow: 600ms;
     --duration-slower: 800ms;
     --duration-slowest: 1200ms;
     
-    --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
-    --easing-decelerate: cubic-bezier(0, 0, 0.2, 1);
-    --easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
-    --easing-sharp: cubic-bezier(0.4, 0, 0.6, 1);
-    --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    --easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    --easing-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
-    
-    /* Sophisticated Shadow System */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
-    --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
-    
-    /* Glassmorphism Effects */
-    --glass-blur: blur(16px);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.18);
-    --glass-bg: rgba(255, 255, 255, 0.1);
-    
-    /* Advanced Border Radius */
+    /* Border Radius System */
+    --radius-none: 0;
     --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
+    --radius-base: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
     --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
     --radius-full: 9999px;
+    
+    /* Z-Index System */
+    --z-0: 0;
+    --z-10: 10;
+    --z-20: 20;
+    --z-30: 30;
+    --z-40: 40;
+    --z-50: 50;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
   }
   
   /* ==========================================
      ADVANCED KEYFRAME ANIMATIONS
      ========================================== */
   
-  @keyframes fadeInUp {
-    from {
-      opacity: 0;
-      transform: translate3d(0, 24px, 0);
+  @keyframes float-3d {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) rotateX(0deg);
     }
-    to {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
+    50% {
+      transform: translate3d(0, -12px, 8px) rotateX(2deg);
     }
   }
   
-  @keyframes fadeInScale {
-    from {
-      opacity: 0;
+  @keyframes shimmer-glass {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% {
+      opacity: 0.5;
+      filter: blur(20px);
       transform: scale3d(0.95, 0.95, 1);
     }
-    to {
+    50% {
       opacity: 1;
-      transform: scale3d(1, 1, 1);
+      filter: blur(30px);
+      transform: scale3d(1.1, 1.1, 1);
     }
   }
   
-  @keyframes slideInRight {
+  @keyframes slide-in-3d {
     from {
       opacity: 0;
-      transform: translate3d(20px, 0, 0);
+      transform: translate3d(-30px, 0, -20px) rotateY(-15deg);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotateY(0deg);
+    }
+  }
+  
+  @keyframes scale-in-3d {
+    from {
+      opacity: 0;
+      transform: scale3d(0.9, 0.9, 0.9) translateZ(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale3d(1, 1, 1) translateZ(0);
+    }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 20px, 0);
     }
     to {
       opacity: 1;
@@ -150,365 +361,13 @@ const DESIGN_SYSTEM_STYLES = `
     }
   }
   
-  @keyframes shimmer {
-    0% {
-      background-position: -1000px 0;
-    }
-    100% {
-      background-position: 1000px 0;
-    }
-  }
-  
-  @keyframes pulse-glow {
+  @keyframes texture-shift {
     0%, 100% {
-      opacity: 0.4;
-      transform: scale3d(1, 1, 1);
+      background-position: 0% 0%;
     }
     50% {
-      opacity: 0.8;
-      transform: scale3d(1.05, 1.05, 1);
+      background-position: 100% 100%;
     }
-  }
-  
-  @keyframes float {
-    0%, 100% {
-      transform: translate3d(0, 0, 0);
-    }
-    50% {
-      transform: translate3d(0, -8px, 0);
-    }
-  }
-  
-  @keyframes rotate-gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-  
-  @keyframes morph {
-    0%, 100% {
-      border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    }
-    50% {
-      border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    }
-  }
-  
-  /* ==========================================
-     ADVANCED METRIC CARD STYLES
-     ========================================== */
-  
-  .metric-card-advanced {
-    position: relative;
-    overflow: hidden;
-    border-width: 2px;
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-lg);
-    transition: all var(--duration-slow) var(--easing-spring);
-    background: linear-gradient(135deg, transparent 0%, transparent 100%);
-    will-change: transform, box-shadow, border-color;
-  }
-  
-  .metric-card-advanced::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity var(--duration-slow) var(--easing-standard);
-    pointer-events: none;
-    z-index: 0;
-  }
-  
-  .metric-card-advanced::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-      45deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.1) 50%,
-      transparent 70%
-    );
-    transform: rotate(45deg);
-    transition: all var(--duration-slower) var(--easing-standard);
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .metric-card-advanced:hover {
-    transform: translateY(-6px) scale3d(1.02, 1.02, 1);
-    box-shadow: var(--shadow-2xl);
-  }
-  
-  .metric-card-advanced:hover::before {
-    opacity: 1;
-  }
-  
-  .metric-card-advanced:hover::after {
-    opacity: 1;
-    transform: rotate(45deg) translate(50%, 50%);
-  }
-  
-  /* Warning Variant */
-  .metric-card-advanced--warning {
-    border-color: var(--color-status-warning-border);
-  }
-  
-  .metric-card-advanced--warning::before {
-    background: linear-gradient(
-      135deg,
-      var(--color-status-warning-light) 0%,
-      transparent 100%
-    );
-  }
-  
-  .metric-card-advanced--warning:hover {
-    border-color: var(--color-status-warning);
-    box-shadow: 0 20px 40px -12px var(--color-status-warning-border);
-  }
-  
-  /* Success Variant */
-  .metric-card-advanced--success {
-    border-color: var(--color-status-success-border);
-  }
-  
-  .metric-card-advanced--success::before {
-    background: linear-gradient(
-      135deg,
-      var(--color-status-success-light) 0%,
-      transparent 100%
-    );
-  }
-  
-  .metric-card-advanced--success:hover {
-    border-color: var(--color-status-success);
-    box-shadow: 0 20px 40px -12px var(--color-status-success-border);
-  }
-  
-  /* Destructive Variant */
-  .metric-card-advanced--destructive {
-    border-color: var(--color-status-destructive-border);
-  }
-  
-  .metric-card-advanced--destructive::before {
-    background: linear-gradient(
-      135deg,
-      var(--color-status-destructive-light) 0%,
-      transparent 100%
-    );
-  }
-  
-  .metric-card-advanced--destructive:hover {
-    border-color: var(--color-status-destructive);
-    box-shadow: 0 20px 40px -12px var(--color-status-destructive-border);
-  }
-  
-  /* Primary Variant */
-  .metric-card-advanced--primary {
-    border-color: var(--color-status-primary-border);
-  }
-  
-  .metric-card-advanced--primary::before {
-    background: linear-gradient(
-      135deg,
-      var(--color-status-primary-light) 0%,
-      transparent 100%
-    );
-  }
-  
-  .metric-card-advanced--primary:hover {
-    border-color: var(--color-status-primary);
-    box-shadow: 0 20px 40px -12px var(--color-status-primary-border);
-  }
-  
-  /* Icon Badge with Advanced Effects */
-  .metric-icon-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-xl);
-    position: relative;
-    transition: all var(--duration-normal) var(--easing-spring);
-    will-change: transform;
-  }
-  
-  .metric-icon-badge::before {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: var(--radius-xl);
-    opacity: 0;
-    transition: opacity var(--duration-normal) var(--easing-standard);
-    animation: pulse-glow 2s ease-in-out infinite;
-    animation-play-state: paused;
-  }
-  
-  .metric-card-advanced:hover .metric-icon-badge {
-    transform: scale3d(1.15, 1.15, 1) rotate3d(0, 0, 1, 5deg);
-  }
-  
-  .metric-card-advanced:hover .metric-icon-badge::before {
-    opacity: 0.3;
-    animation-play-state: running;
-  }
-  
-  .metric-icon-badge--warning {
-    background: var(--color-status-warning-light);
-    color: var(--color-status-warning);
-  }
-  
-  .metric-icon-badge--warning::before {
-    background: var(--color-status-warning);
-  }
-  
-  .metric-icon-badge--success {
-    background: var(--color-status-success-light);
-    color: var(--color-status-success);
-  }
-  
-  .metric-icon-badge--success::before {
-    background: var(--color-status-success);
-  }
-  
-  .metric-icon-badge--destructive {
-    background: var(--color-status-destructive-light);
-    color: var(--color-status-destructive);
-  }
-  
-  .metric-icon-badge--destructive::before {
-    background: var(--color-status-destructive);
-  }
-  
-  .metric-icon-badge--primary {
-    background: var(--color-status-primary-light);
-    color: var(--color-status-primary);
-  }
-  
-  .metric-icon-badge--primary::before {
-    background: var(--color-status-primary);
-  }
-  
-  /* Metric Value with Advanced Typography */
-  .metric-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-    letter-spacing: -0.025em;
-    font-variant-numeric: tabular-nums;
-    transition: all var(--duration-normal) var(--easing-spring);
-    position: relative;
-    display: inline-block;
-  }
-  
-  .metric-card-advanced:hover .metric-value {
-    transform: scale3d(1.05, 1.05, 1);
-  }
-  
-  /* ==========================================
-     ADVANCED CHART CARD STYLES
-     ========================================== */
-  
-  .chart-card-advanced {
-    position: relative;
-    border-width: 2px;
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    transition: all var(--duration-slow) var(--easing-spring);
-    will-change: transform, box-shadow, border-color;
-    background: linear-gradient(135deg, transparent 0%, transparent 100%);
-  }
-  
-  .chart-card-advanced::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.05) 0%,
-      transparent 100%
-    );
-    transition: opacity var(--duration-slow) var(--easing-standard);
-    pointer-events: none;
-  }
-  
-  .chart-card-advanced:hover {
-    transform: translateY(-4px) scale3d(1.01, 1.01, 1);
-    box-shadow: var(--shadow-2xl);
-    border-color: hsl(var(--primary) / 0.3);
-  }
-  
-  .chart-card-advanced:hover::before {
-    opacity: 1;
-  }
-  
-  .chart-card-advanced--active {
-    border-color: hsl(var(--primary) / 0.5);
-    box-shadow: var(--shadow-xl);
-  }
-  
-  /* Chart Icon Badge */
-  .chart-icon-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-lg);
-    transition: all var(--duration-normal) var(--easing-spring);
-  }
-  
-  .chart-card-advanced:hover .chart-icon-badge {
-    transform: scale3d(1.1, 1.1, 1) rotate3d(0, 0, 1, 3deg);
-  }
-  
-  .chart-icon-badge--primary {
-    background: var(--color-status-primary-light);
-    color: var(--color-status-primary);
-  }
-  
-  .chart-icon-badge--accent {
-    background: var(--color-status-warning-light);
-    color: var(--color-status-warning);
-  }
-  
-  .chart-icon-badge--destructive {
-    background: var(--color-status-destructive-light);
-    color: var(--color-status-destructive);
-  }
-  
-  /* ==========================================
-     LOADING STATE WITH ADVANCED EFFECTS
-     ========================================== */
-  
-  .loading-state-advanced {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    gap: var(--spacing-xl);
-  }
-  
-  .loading-spinner-wrapper {
-    position: relative;
-    width: 4rem;
-    height: 4rem;
-  }
-  
-  .loading-spinner {
-    animation: spin 1s linear infinite;
   }
   
   @keyframes spin {
@@ -520,12 +379,444 @@ const DESIGN_SYSTEM_STYLES = `
     }
   }
   
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC METRIC CARDS - 3D ENHANCED
+     ========================================== */
+  
+  .metric-card-advanced {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow, border-color;
+    transform-style: preserve-3d;
+  }
+  
+  .metric-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 400ms var(--ease-smooth);
+  }
+  
+  .metric-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: -100%;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 65%
+    );
+    opacity: 0;
+    transition: all 800ms var(--ease-smooth);
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .metric-card-advanced:hover {
+    transform: translateY(-8px) translateZ(12px) rotateX(2deg);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .metric-card-advanced:hover::before {
+    opacity: 0.2;
+  }
+  
+  .metric-card-advanced:hover::after {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+  
+  .metric-card-advanced--warning {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 251, 235, 0.9) 0%,
+      rgba(254, 243, 199, 0.85) 100%
+    );
+    border-color: var(--status-pending-border);
+  }
+  
+  .metric-card-advanced--warning:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-pending-glow);
+  }
+  
+  .metric-card-advanced--success {
+    background: linear-gradient(
+      135deg,
+      rgba(236, 253, 245, 0.9) 0%,
+      rgba(209, 250, 229, 0.85) 100%
+    );
+    border-color: var(--status-success-border);
+  }
+  
+  .metric-card-advanced--success:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-success-glow);
+  }
+  
+  .metric-card-advanced--destructive {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 242, 242, 0.9) 0%,
+      rgba(254, 226, 226, 0.85) 100%
+    );
+    border-color: var(--status-destructive-border);
+  }
+  
+  .metric-card-advanced--destructive:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-destructive-glow);
+  }
+  
+  .metric-card-advanced--primary {
+    background: linear-gradient(
+      135deg,
+      rgba(238, 242, 255, 0.9) 0%,
+      rgba(224, 231, 255, 0.85) 100%
+    );
+    border-color: var(--status-primary-border);
+  }
+  
+  .metric-card-advanced--primary:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-primary-glow);
+  }
+  
+  /* ==========================================
+     3D ICON BADGES WITH GLASS EFFECTS
+     ========================================== */
+  
+  .metric-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-xl);
+    position: relative;
+    transition: all 500ms var(--ease-elastic);
+    will-change: transform;
+    transform-style: preserve-3d;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-3d-sm);
+  }
+  
+  .metric-icon-badge::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-xl);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    animation: glow-pulse 3s ease-in-out infinite;
+    animation-play-state: paused;
+    filter: blur(20px);
+    z-index: -1;
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge {
+    transform: scale3d(1.2, 1.2, 1.2) translateZ(8px) rotateZ(8deg);
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.6;
+    animation-play-state: running;
+  }
+  
+  .metric-icon-badge--warning {
+    background: var(--status-pending-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--warning::before {
+    background: var(--status-pending-bg);
+  }
+  
+  .metric-icon-badge--success {
+    background: var(--status-success-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--success::before {
+    background: var(--status-success-bg);
+  }
+  
+  .metric-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--destructive::before {
+    background: var(--status-destructive-bg);
+  }
+  
+  .metric-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--primary::before {
+    background: var(--status-primary-bg);
+  }
+  
+  /* ==========================================
+     ENHANCED METRIC VALUES WITH 3D DEPTH
+     ========================================== */
+  
+  .metric-value {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    transition: all 500ms var(--ease-elastic);
+    position: relative;
+    display: inline-block;
+    text-shadow: 
+      0 2px 4px rgba(15, 23, 42, 0.1),
+      0 4px 8px rgba(15, 23, 42, 0.05);
+    z-index: 10;
+  }
+  
+  .metric-card-advanced:hover .metric-value {
+    transform: scale3d(1.08, 1.08, 1) translateZ(4px);
+    text-shadow: 
+      0 4px 8px rgba(15, 23, 42, 0.15),
+      0 8px 16px rgba(15, 23, 42, 0.1);
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC CHART CARDS WITH 3D
+     ========================================== */
+  
+  .chart-card-advanced {
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow;
+    transform-style: preserve-3d;
+  }
+  
+  .chart-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-grid);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .chart-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .chart-card-advanced:hover {
+    transform: translateY(-6px) translateZ(8px);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .chart-card-advanced:hover::after {
+    opacity: 1;
+  }
+  
+  .chart-card-advanced--active {
+    border-color: var(--color-indigo-400);
+    box-shadow: 
+      var(--shadow-3d-lg),
+      0 0 30px rgba(79, 70, 229, 0.2);
+  }
+  
+  /* ==========================================
+     CHART ICON BADGES
+     ========================================== */
+  
+  .chart-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    transition: all 400ms var(--ease-elastic);
+    transform-style: preserve-3d;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .chart-card-advanced:hover .chart-icon-badge {
+    transform: scale3d(1.15, 1.15, 1) translateZ(4px) rotateZ(5deg);
+  }
+  
+  .chart-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--accent {
+    background: var(--status-pending-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+  }
+  
+  /* ==========================================
+     ENHANCED FILTER BAR WITH GLASS
+     ========================================== */
+  
+  .filter-bar-advanced {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 400ms var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .filter-bar-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.2;
+    pointer-events: none;
+  }
+  
+  .filter-bar-advanced:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-3d-lg);
+    transform: translateY(-2px);
+  }
+  
+  .filter-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--status-primary-bg);
+    color: white;
+    transition: all 400ms var(--ease-elastic);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .filter-bar-advanced:hover .filter-icon-badge {
+    transform: scale3d(1.12, 1.12, 1) rotateZ(5deg);
+  }
+  
+  /* ==========================================
+     ENHANCED LOADING STATES
+     ========================================== */
+  
+  .loading-state-advanced {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: var(--spacing-8);
+    background: linear-gradient(
+      135deg,
+      var(--color-slate-50) 0%,
+      rgba(238, 242, 255, 0.5) 50%,
+      var(--color-slate-50) 100%
+    );
+  }
+  
+  .loading-spinner-wrapper {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+  }
+  
+  .loading-spinner {
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    filter: drop-shadow(0 4px 12px rgba(79, 70, 229, 0.3));
+  }
+  
   .loading-glow {
     position: absolute;
-    inset: -20px;
-    filter: blur(40px);
-    opacity: 0.3;
-    animation: pulse-glow var(--duration-slowest) ease-in-out infinite;
+    inset: -30px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.4) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 2s ease-in-out infinite;
   }
   
   /* ==========================================
@@ -533,122 +824,99 @@ const DESIGN_SYSTEM_STYLES = `
      ========================================== */
   
   .empty-state-advanced {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--spacing-3xl) var(--spacing-md);
+    padding: var(--spacing-16) var(--spacing-4);
     text-align: center;
   }
   
   .empty-state-icon-wrapper {
     position: relative;
-    width: 6rem;
-    height: 6rem;
-    margin-bottom: var(--spacing-xl);
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto var(--spacing-8);
   }
   
   .empty-state-icon {
     width: 100%;
     height: 100%;
-    opacity: 0.3;
-    animation: float 3s ease-in-out infinite;
+    opacity: 0.25;
+    animation: float-3d 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.1));
   }
   
   .empty-state-glow {
     position: absolute;
-    inset: -30px;
-    filter: blur(60px);
-    opacity: 0.2;
-    animation: pulse-glow 3s ease-in-out infinite;
+    inset: -40px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.2) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 4s ease-in-out infinite;
   }
   
   /* ==========================================
-     GLASSMORPHISM COMPONENTS
-     ========================================== */
-  
-  .glass-card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    border: var(--glass-border);
-    box-shadow: var(--shadow-lg);
-  }
-  
-  /* ==========================================
-     ADVANCED FILTER BAR
-     ========================================== */
-  
-  .filter-bar-advanced {
-    border-width: 2px;
-    border-radius: var(--radius-xl);
-    padding: var(--spacing-lg);
-    transition: all var(--duration-normal) var(--easing-standard);
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.02), transparent);
-  }
-  
-  .filter-bar-advanced:hover {
-    border-color: hsl(var(--primary) / 0.3);
-    box-shadow: var(--shadow-lg);
-  }
-  
-  .filter-icon-badge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-lg);
-    background: hsl(var(--primary) / 0.1);
-    color: hsl(var(--primary));
-    transition: all var(--duration-normal) var(--easing-spring);
-  }
-  
-  .filter-bar-advanced:hover .filter-icon-badge {
-    transform: scale3d(1.1, 1.1, 1);
-    background: hsl(var(--primary) / 0.15);
-  }
-  
-  /* ==========================================
-     ADVANCED BADGE DESIGN
+     ENHANCED BADGE WITH GLASS EFFECT
      ========================================== */
   
   .badge-advanced {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-md);
-    border-width: 2px;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: var(--radius-full);
     font-size: 0.875rem;
-    font-weight: 600;
-    background: hsl(var(--primary) / 0.05);
-    border-color: hsl(var(--primary) / 0.2);
-    transition: all var(--duration-normal) var(--easing-standard);
+    font-weight: 700;
+    background: var(--glass-bg-white);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-3d-sm);
+    transition: all 300ms var(--ease-smooth);
   }
   
   .badge-advanced:hover {
-    background: hsl(var(--primary) / 0.1);
-    border-color: hsl(var(--primary) / 0.3);
     transform: scale3d(1.05, 1.05, 1);
+    box-shadow: var(--shadow-3d-md);
   }
   
   /* ==========================================
-     GRADIENT TEXT EFFECTS
+     GRADIENT TEXT WITH COLD COLORS
      ========================================== */
   
   .gradient-text-animated {
     background: linear-gradient(
       90deg,
-      hsl(var(--primary)),
-      hsl(var(--accent)),
-      hsl(var(--primary))
+      var(--color-indigo-600),
+      var(--color-emerald-600),
+      var(--color-indigo-600)
     );
     background-size: 200% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: rotate-gradient 3s linear infinite;
+    animation: shimmer-glass 4s linear infinite;
+    font-weight: 800;
+  }
+  
+  /* ==========================================
+     ANIMATION UTILITIES
+     ========================================== */
+  
+  .animate-fade-in-up {
+    animation: scale-in-3d 800ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-fade-in-scale {
+    animation: scale-in-3d 600ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-3d 700ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-with-delay {
+    opacity: 0;
+    animation-fill-mode: forwards;
   }
   
   /* ==========================================
@@ -658,7 +926,7 @@ const DESIGN_SYSTEM_STYLES = `
   .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(1, minmax(0, 1fr));
-    gap: var(--spacing-lg);
+    gap: var(--spacing-6);
   }
   
   @media (min-width: 640px) {
@@ -678,33 +946,54 @@ const DESIGN_SYSTEM_STYLES = `
   }
   
   /* ==========================================
-     ANIMATION UTILITIES
+     MAIN CONTAINER WITH ENHANCED BACKGROUND
      ========================================== */
   
-  .animate-fade-in-up {
-    animation: fadeInUp var(--duration-slow) var(--easing-spring) forwards;
-  }
-  
-  .animate-fade-in-scale {
-    animation: fadeInScale var(--duration-slow) var(--easing-spring) forwards;
-  }
-  
-  .animate-slide-in-right {
-    animation: slideInRight var(--duration-slow) var(--easing-spring) forwards;
-  }
-  
-  .animate-with-delay {
-    opacity: 0;
-    animation-fill-mode: forwards;
+  .gradient-subtle {
+    background: 
+      var(--texture-grid),
+      linear-gradient(
+        135deg,
+        #ffffff 0%,
+        var(--color-slate-50) 25%,
+        var(--color-indigo-50) 50%,
+        var(--color-emerald-50) 75%,
+        #ffffff 100%
+      );
+    background-size: 
+      40px 40px,
+      400% 400%;
+    animation: texture-shift 20s ease infinite;
+    min-height: 100vh;
   }
   
   /* ==========================================
-     SCROLL EFFECTS
+     UTILITY CLASSES
      ========================================== */
   
-  @media (prefers-reduced-motion: no-preference) {
-    .parallax-element {
-      transition: transform var(--duration-normal) var(--easing-standard);
+  .shadow-elegant {
+    box-shadow: var(--shadow-3d-md);
+  }
+  
+  .glass-card {
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+  }
+  
+  /* ==========================================
+     REDUCED MOTION SUPPORT
+     ========================================== */
+  
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
   }
   
@@ -716,6 +1005,11 @@ const DESIGN_SYSTEM_STYLES = `
     .metric-card-advanced,
     .chart-card-advanced {
       break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    
+    .gradient-subtle {
+      background: white;
     }
   }
 `;
@@ -724,40 +1018,65 @@ const DESIGN_SYSTEM_STYLES = `
 // CUSTOM TOOLTIP COMPONENT
 // ==========================================
 
-const CustomTooltip = ({
-  active,
-  payload,
-  label
-}: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    return <div style={{
-      background: "rgba(255, 255, 255, 0.98)",
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      border: "2px solid hsl(var(--border))",
-      borderRadius: "var(--radius-lg)",
-      padding: "var(--spacing-md)",
-      boxShadow: "var(--shadow-2xl)"
-    }}>
-        <p className="font-semibold text-foreground mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => <p key={index} className="text-sm flex items-center gap-2">
-            <span style={{
-          width: "12px",
-          height: "12px",
-          borderRadius: "50%",
-          background: entry.color,
-          display: "inline-block"
-        }} />
-            <span style={{
-          color: entry.color
-        }}>
-              {entry.name}: <span className="font-bold">{entry.value}</span>
+    return (
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "2px solid rgba(255, 255, 255, 0.4)",
+          borderRadius: "1rem",
+          padding: "1rem 1.25rem",
+          boxShadow: `
+            0 8px 32px rgba(15, 23, 42, 0.15),
+            0 16px 64px rgba(15, 23, 42, 0.1),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.9)
+          `,
+        }}
+      >
+        <p className="font-bold text-foreground mb-3 text-base">{label}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm flex items-center gap-3 mb-1.5">
+            <span
+              style={{
+                width: "14px",
+                height: "14px",
+                borderRadius: "50%",
+                background: entry.color,
+                display: "inline-block",
+                boxShadow: `0 0 8px ${entry.color}40`,
+              }}
+            />
+            <span style={{ color: "hsl(var(--foreground))" }}>
+              {entry.name}:{" "}
+              <span className="font-bold" style={{ color: entry.color }}>
+                {entry.value}
+              </span>
             </span>
-          </p>)}
-      </div>;
+          </p>
+        ))}
+      </div>
+    );
   }
   return null;
 };
+
+// ==========================================
+// CHART COLOR PALETTE
+// ==========================================
+
+const COLORS = [
+  "#4f46e5", // indigo
+  "#059669", // emerald
+  "#d97706", // amber
+  "#0d9488", // teal
+  "#0891b2", // cyan
+  "#0284c7", // sky
+  "#7c3aed", // violet
+  "#c026d3", // fuchsia
+];
 
 // ==========================================
 // MAIN COMPONENT
@@ -765,33 +1084,30 @@ const CustomTooltip = ({
 
 const Index = () => {
   const navigate = useNavigate();
-  const {
-    isAdmin,
-    isMedicoUnidade,
-    isMedicoMaternidade,
-    getMaternidadesAcesso
-  } = useAuth();
+  const { isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [hoveredChart, setHoveredChart] = useState<string | null>(null);
 
-  // Inject design system styles
   useEffect(() => {
     const styleElement = document.createElement("style");
-    styleElement.innerHTML = DESIGN_SYSTEM_STYLES;
+    styleElement.innerHTML = COMPLETE_DESIGN_SYSTEM;
     document.head.appendChild(styleElement);
     return () => {
       document.head.removeChild(styleElement);
     };
   }, []);
+
   useEffect(() => {
     fetchAgendamentos();
   }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
+
   const fetchAgendamentos = async () => {
     setLoading(true);
     try {
       let query = supabase.from("agendamentos_obst").select("*");
+
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in("maternidade", maternidades).eq("status", "aprovado");
@@ -800,14 +1116,12 @@ const Index = () => {
         setLoading(false);
         return;
       }
-      query = query.order("created_at", {
-        ascending: false
-      });
-      const {
-        data,
-        error
-      } = await query;
+
+      query = query.order("created_at", { ascending: false });
+
+      const { data, error } = await query;
       if (error) throw error;
+
       setAgendamentos(data || []);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -817,46 +1131,56 @@ const Index = () => {
     }
   };
 
-  // Memoized calculations
   const metrics = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const todayDate = new Date();
+
     return {
       total: agendamentos.length,
-      pendentes: agendamentos.filter(a => a.status === "pendente").length,
-      aprovados: agendamentos.filter(a => a.status === "aprovado").length,
-      rejeitados: agendamentos.filter(a => a.status === "rejeitado").length,
-      hoje: agendamentos.filter(a => a.data_agendamento_calculada === today).length,
-      proximos: agendamentos.filter(a => {
+      pendentes: agendamentos.filter((a) => a.status === "pendente").length,
+      aprovados: agendamentos.filter((a) => a.status === "aprovado").length,
+      rejeitados: agendamentos.filter((a) => a.status === "rejeitado").length,
+      hoje: agendamentos.filter((a) => a.data_agendamento_calculada === today).length,
+      proximos: agendamentos.filter((a) => {
         const dataAgend = new Date(a.data_agendamento_calculada);
         const diffDias = Math.ceil((dataAgend.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
         return diffDias >= 0 && diffDias <= 7;
-      }).length
+      }).length,
     };
   }, [agendamentos]);
+
   const dadosPorUnidade = useMemo(() => {
-    const contagem = agendamentos.reduce((acc, a) => {
-      acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce(
+      (acc, a) => {
+        acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return Object.entries(contagem)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
+
   const dadosPorMaternidade = useMemo(() => {
-    const contagem = agendamentos.reduce((acc, a) => {
-      acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce(
+      (acc, a) => {
+        acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    return Object.entries(contagem)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
+
   const dadosPorPatologia = useMemo(() => {
     const contagem: Record<string, number> = {};
-    agendamentos.forEach(a => {
+
+    agendamentos.forEach((a) => {
       try {
         const diagsMat = a.diagnosticos_maternos ? JSON.parse(a.diagnosticos_maternos) : [];
         const diagsFet = a.diagnosticos_fetais ? JSON.parse(a.diagnosticos_fetais) : [];
@@ -864,71 +1188,81 @@ const Index = () => {
           contagem[diag] = (contagem[diag] || 0) + 1;
         });
       } catch (e) {
-        // Ignore
+        // Ignore parsing errors
       }
     });
-    return Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({
-      name,
-      value
-    }));
+
+    return Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, value]) => ({ name, value }));
   }, [agendamentos]);
+
   const dadosPorProcedimento = useMemo(() => {
     const contagem: Record<string, number> = {};
-    agendamentos.forEach(a => {
-      a.procedimentos.forEach(proc => {
+
+    agendamentos.forEach((a) => {
+      a.procedimentos.forEach((proc) => {
         contagem[proc] = (contagem[proc] || 0) + 1;
       });
     });
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+
+    return Object.entries(contagem)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
+
   const dadosPorIG = useMemo(() => {
     const faixas: Record<string, number> = {
       "< 28 semanas": 0,
       "28-32 semanas": 0,
       "33-36 semanas": 0,
       "37-40 semanas": 0,
-      "> 40 semanas": 0
+      "> 40 semanas": 0,
     };
-    agendamentos.forEach(a => {
+
+    agendamentos.forEach((a) => {
       if (a.idade_gestacional_calculada) {
         const match = a.idade_gestacional_calculada.match(/(\d+)s/);
         if (match) {
           const semanas = parseInt(match[1]);
-          if (semanas < 28) faixas["< 28 semanas"]++;else if (semanas <= 32) faixas["28-32 semanas"]++;else if (semanas <= 36) faixas["33-36 semanas"]++;else if (semanas <= 40) faixas["37-40 semanas"]++;else faixas["> 40 semanas"]++;
+          if (semanas < 28) faixas["< 28 semanas"]++;
+          else if (semanas <= 32) faixas["28-32 semanas"]++;
+          else if (semanas <= 36) faixas["33-36 semanas"]++;
+          else if (semanas <= 40) faixas["37-40 semanas"]++;
+          else faixas["> 40 semanas"]++;
         }
       }
     });
-    return Object.entries(faixas).map(([name, value]) => ({
-      name,
-      value
-    }));
+
+    return Object.entries(faixas).map(([name, value]) => ({ name, value }));
   }, [agendamentos]);
-  const dadosPorStatus = useMemo(() => [{
-    name: "Pendente",
-    value: metrics.pendentes,
-    color: "var(--color-status-warning)"
-  }, {
-    name: "Aprovado",
-    value: metrics.aprovados,
-    color: "var(--color-status-success)"
-  }, {
-    name: "Rejeitado",
-    value: metrics.rejeitados,
-    color: "var(--color-status-destructive)"
-  }], [metrics]);
-  const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"];
-  const agendamentosFiltrados = useMemo(() => filtroStatus === "todos" ? agendamentos : agendamentos.filter(a => a.status === filtroStatus), [agendamentos, filtroStatus]);
+
+  const dadosPorStatus = useMemo(
+    () => [
+      { name: "Pendente", value: metrics.pendentes, color: "#b45309" },
+      { name: "Aprovado", value: metrics.aprovados, color: "#059669" },
+      { name: "Rejeitado", value: metrics.rejeitados, color: "#dc2626" },
+    ],
+    [metrics],
+  );
+
+  const agendamentosFiltrados = useMemo(
+    () => (filtroStatus === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtroStatus)),
+    [agendamentos, filtroStatus],
+  );
+
   const handleChartHover = useCallback((chartId: string) => {
     setHoveredChart(chartId);
   }, []);
+
   const handleChartLeave = useCallback(() => {
     setHoveredChart(null);
   }, []);
+
   if (loading) {
-    return <div className="min-h-screen gradient-subtle flex items-center justify-center">
+    return (
+      <div className="min-h-screen gradient-subtle flex items-center justify-center">
         <div className="loading-state-advanced">
           <div className="loading-spinner-wrapper">
             <Loader2 className="loading-spinner h-16 w-16 text-primary" />
@@ -939,11 +1273,13 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Processando dados em tempo real...</p>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen gradient-subtle">
-      <main className="container mx-auto px-4 py-8 space-y-8 bg-[#f1f3ff]/[0.56]">
-        {/* Enhanced Header Section */}
+
+  return (
+    <div className="min-h-screen gradient-subtle">
+      <main className="container mx-auto px-4 py-8 space-y-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
           <div className="space-y-2">
             <h1 className="gradient-text-animated text-4xl text-left font-bold">Dashboard Obstétrico</h1>
@@ -952,19 +1288,24 @@ const Index = () => {
               Análise em tempo real • {agendamentos.length} registros
             </p>
           </div>
-          {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && <Button onClick={() => navigate("/novo-agendamento")} className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group" size="lg">
+          {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && (
+            <Button
+              onClick={() => navigate("/novo-agendamento")}
+              className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group"
+              size="lg"
+            >
               <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
               Novo Agendamento
               <ArrowUpRight className="h-4 w-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Button>}
+            </Button>
+          )}
         </div>
 
-        {/* Enhanced Metrics Grid */}
         <div className="dashboard-grid dashboard-grid--metrics">
-          <Card className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up" style={{
-          animationDelay: "0ms",
-          opacity: 0
-        }}>
+          <Card
+            className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "0ms", opacity: 0 }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--warning">
@@ -973,9 +1314,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                color: "var(--color-status-warning)"
-              }}>
+                <div className="metric-value" style={{ color: "#b45309" }}>
                   {metrics.pendentes}
                 </div>
               </div>
@@ -983,10 +1322,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up" style={{
-          animationDelay: "100ms",
-          opacity: 0
-        }}>
+          <Card
+            className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "100ms", opacity: 0 }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--success">
@@ -995,9 +1334,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                color: "var(--color-status-success)"
-              }}>
+                <div className="metric-value" style={{ color: "#059669" }}>
                   {metrics.aprovados}
                 </div>
               </div>
@@ -1005,10 +1342,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up" style={{
-          animationDelay: "200ms",
-          opacity: 0
-        }}>
+          <Card
+            className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "200ms", opacity: 0 }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--destructive">
@@ -1017,9 +1354,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                color: "var(--color-status-destructive)"
-              }}>
+                <div className="metric-value" style={{ color: "#dc2626" }}>
                   {metrics.rejeitados}
                 </div>
               </div>
@@ -1027,10 +1362,10 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          <Card className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up" style={{
-          animationDelay: "300ms",
-          opacity: 0
-        }}>
+          <Card
+            className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "300ms", opacity: 0 }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--primary">
@@ -1039,9 +1374,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                color: "var(--color-status-primary)"
-              }}>
+                <div className="metric-value" style={{ color: "#4f46e5" }}>
                   {metrics.total}
                 </div>
               </div>
@@ -1050,8 +1383,8 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Enhanced Filter Section */}
-        {agendamentos.length > 0 && <Card className="filter-bar-advanced shadow-elegant">
+        {agendamentos.length > 0 && (
+          <Card className="filter-bar-advanced shadow-elegant">
             <CardContent className="py-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3 flex-1">
@@ -1080,10 +1413,11 @@ const Index = () => {
                 </Badge>
               </div>
             </CardContent>
-          </Card>}
+          </Card>
+        )}
 
-        {/* Empty State or Charts */}
-        {agendamentos.length === 0 ? <Card className="shadow-elegant border-2">
+        {agendamentos.length === 0 ? (
+          <Card className="shadow-elegant border-2">
             <CardContent className="empty-state-advanced">
               <div className="empty-state-icon-wrapper">
                 <Calendar className="empty-state-icon" />
@@ -1092,17 +1426,36 @@ const Index = () => {
               <div className="space-y-3">
                 <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
                 <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
-                  {isAdmin() ? "Não há agendamentos cadastrados no sistema." : isMedicoUnidade() ? "Você ainda não criou nenhum agendamento." : isMedicoMaternidade() ? "Não há agendamentos aprovados para sua maternidade no momento." : "Você não tem permissões para visualizar agendamentos."}
+                  {isAdmin()
+                    ? "Não há agendamentos cadastrados no sistema."
+                    : isMedicoUnidade()
+                      ? "Você ainda não criou nenhum agendamento."
+                      : isMedicoMaternidade()
+                        ? "Não há agendamentos aprovados para sua maternidade no momento."
+                        : "Você não tem permissões para visualizar agendamentos."}
                 </p>
               </div>
-              {(isMedicoUnidade() || isAdmin()) && <Button onClick={() => navigate("/novo-agendamento")} className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group" size="lg">
+              {(isMedicoUnidade() || isAdmin()) && (
+                <Button
+                  onClick={() => navigate("/novo-agendamento")}
+                  className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group"
+                  size="lg"
+                >
                   <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                   Criar Primeiro Agendamento
-                </Button>}
+                </Button>
+              )}
             </CardContent>
-          </Card> : <div className="dashboard-grid dashboard-grid--charts">
-            {/* Status Distribution */}
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "status" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("status")} onMouseLeave={handleChartLeave}>
+          </Card>
+        ) : (
+          <div className="dashboard-grid dashboard-grid--charts">
+            <Card
+              className={`chart-card-advanced shadow-elegant ${
+                hoveredChart === "status" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("status")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1117,12 +1470,28 @@ const Index = () => {
               <CardContent>
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
-                    <Pie data={dadosPorStatus} cx="50%" cy="50%" labelLine={false} label={({
-                  name,
-                  percent,
-                  value
-                }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`} outerRadius={110} innerRadius={60} fill="hsl(var(--primary))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
-                      {dadosPorStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} stroke="hsl(var(--background))" strokeWidth={3} />)}
+                    <Pie
+                      data={dadosPorStatus}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={110}
+                      innerRadius={60}
+                      fill="hsl(var(--primary))"
+                      dataKey="value"
+                      animationBegin={0}
+                      animationDuration={1000}
+                      animationEasing="ease-out"
+                    >
+                      {dadosPorStatus.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color}
+                          stroke="hsl(var(--background))"
+                          strokeWidth={3}
+                        />
+                      ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
@@ -1130,8 +1499,13 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Unit Distribution */}
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "unidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("unidade")} onMouseLeave={handleChartLeave}>
+            <Card
+              className={`chart-card-advanced shadow-elegant ${
+                hoveredChart === "unidade" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("unidade")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1144,7 +1518,8 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorUnidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
+                {dadosPorUnidade.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorUnidade}>
                       <defs>
                         <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
@@ -1153,29 +1528,42 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis dataKey="name" tick={{
-                  fill: "hsl(var(--muted-foreground))",
-                  fontSize: 12
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
-                      <YAxis tick={{
-                  fill: "hsl(var(--muted-foreground))"
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="url(#colorUnidade)" radius={[12, 12, 0, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
+                      <Bar
+                        dataKey="value"
+                        fill="url(#colorUnidade)"
+                        radius={[12, 12, 0, 0]}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      />
                     </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Maternity Distribution */}
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("maternidade")} onMouseLeave={handleChartLeave}>
+            <Card
+              className={`chart-card-advanced shadow-elegant ${
+                hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("maternidade")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--accent">
@@ -1188,25 +1576,51 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorMaternidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
+                {dadosPorMaternidade.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
-                      <Pie data={dadosPorMaternidade} cx="50%" cy="50%" labelLine={false} label={({
-                  name,
-                  percent
-                }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={110} innerRadius={60} fill="hsl(var(--primary))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
-                        {dadosPorMaternidade.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" strokeWidth={3} />)}
+                      <Pie
+                        data={dadosPorMaternidade}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={110}
+                        innerRadius={60}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      >
+                        {dadosPorMaternidade.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                            stroke="hsl(var(--background))"
+                            strokeWidth={3}
+                          />
+                        ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Top Pathologies */}
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "patologia" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("patologia")} onMouseLeave={handleChartLeave}>
+            <Card
+              className={`chart-card-advanced shadow-elegant ${
+                hoveredChart === "patologia" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("patologia")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--destructive">
@@ -1219,7 +1633,8 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorPatologia.length > 0 ? <ResponsiveContainer width="100%" height={320}>
+                {dadosPorPatologia.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorPatologia} layout="vertical">
                       <defs>
                         <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
@@ -1228,29 +1643,45 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis type="number" tick={{
-                  fill: "hsl(var(--muted-foreground))"
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
-                      <YAxis dataKey="name" type="category" width={160} tick={{
-                  fill: "hsl(var(--muted-foreground))",
-                  fontSize: 11
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
+                      <XAxis
+                        type="number"
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis
+                        dataKey="name"
+                        type="category"
+                        width={160}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="url(#colorPatologia)" radius={[0, 12, 12, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
+                      <Bar
+                        dataKey="value"
+                        fill="url(#colorPatologia)"
+                        radius={[0, 12, 12, 0]}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      />
                     </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Procedure Distribution */}
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("procedimento")} onMouseLeave={handleChartLeave}>
+            <Card
+              className={`chart-card-advanced shadow-elegant ${
+                hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("procedimento")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--accent">
@@ -1263,25 +1694,51 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorProcedimento.length > 0 ? <ResponsiveContainer width="100%" height={320}>
+                {dadosPorProcedimento.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
-                      <Pie data={dadosPorProcedimento} cx="50%" cy="50%" labelLine={false} label={({
-                  name,
-                  percent
-                }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={110} innerRadius={60} fill="hsl(var(--accent))" dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out">
-                        {dadosPorProcedimento.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="hsl(var(--background))" strokeWidth={3} />)}
+                      <Pie
+                        data={dadosPorProcedimento}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={110}
+                        innerRadius={60}
+                        fill="hsl(var(--accent))"
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      >
+                        {dadosPorProcedimento.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                            stroke="hsl(var(--background))"
+                            strokeWidth={3}
+                          />
+                        ))}
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                     </PieChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Gestational Age Distribution */}
-            <Card className={`chart-card-advanced shadow-elegant lg:col-span-2 ${hoveredChart === "ig" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("ig")} onMouseLeave={handleChartLeave}>
+            <Card
+              className={`chart-card-advanced shadow-elegant lg:col-span-2 ${
+                hoveredChart === "ig" ? "chart-card-advanced--active" : ""
+              }`}
+              onMouseEnter={() => handleChartHover("ig")}
+              onMouseLeave={handleChartLeave}
+            >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="chart-icon-badge chart-icon-badge--primary">
@@ -1294,7 +1751,8 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorIG.length > 0 ? <ResponsiveContainer width="100%" height={320}>
+                {dadosPorIG.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
                     <BarChart data={dadosPorIG}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
@@ -1303,27 +1761,39 @@ const Index = () => {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis dataKey="name" tick={{
-                  fill: "hsl(var(--muted-foreground))"
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
-                      <YAxis tick={{
-                  fill: "hsl(var(--muted-foreground))"
-                }} axisLine={{
-                  stroke: "hsl(var(--border))"
-                }} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis
+                        tick={{ fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                      />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="url(#colorIG)" radius={[12, 12, 0, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
+                      <Bar
+                        dataKey="value"
+                        fill="url(#colorIG)"
+                        radius={[12, 12, 0, 0]}
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                      />
                     </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
                     <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </div>}
+          </div>
+        )}
       </main>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
