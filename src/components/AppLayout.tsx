@@ -16,6 +16,7 @@ const AppSidebar = () => {
   } = useSidebar();
   const {
     isAdmin,
+    isAdminMed,
     isMedicoUnidade
   } = useAuth();
   const collapsed = state === "collapsed";
@@ -47,9 +48,14 @@ const AppSidebar = () => {
     show: isMedicoUnidade()
   }].filter(item => item.show);
   const adminItems = [{
-    title: "Aprovações",
-    url: "/aprovacoes",
+    title: "Aprovações Médicas",
+    url: "/aprovacoes-agendamentos",
     icon: CheckCircle,
+    show: isAdminMed() || isAdmin()
+  }, {
+    title: "Aprovações Usuários",
+    url: "/aprovacoes-usuarios",
+    icon: Users,
     show: isAdmin()
   }, {
     title: "Atualizar IG",
@@ -62,7 +68,7 @@ const AppSidebar = () => {
     icon: FileCheck,
     show: isAdmin()
   }, {
-    title: "Usuários",
+    title: "Gerenciar Usuários",
     url: "/gerenciar-usuarios",
     icon: Users,
     show: isAdmin()

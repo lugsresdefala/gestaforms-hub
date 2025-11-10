@@ -1,0 +1,325 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Check, X, Clock, Stethoscope, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ProtocolosModal } from '@/components/ProtocolosModal';
+
+interface Agendamento {
+  id: string;
+  nome_completo: string;
+  carteirinha: string;
+  data_nascimento: string;
+  telefones: string;
+  email_paciente: string;
+  maternidade: string;
+  medico_responsavel: string;
+  centro_clinico: string;
+  procedimentos: string[];
+  data_agendamento_calculada: string;
+  idade_gestacional_calculada: string;
+  indicacao_procedimento: string;
+  diagnosticos_maternos: string;
+  diagnosticos_fetais: string;
+  status: string;
+  created_at: string;
+}
+
+const AprovacoesAgendamentos = () => {
+  const navigate = useNavigate();
+  const { user, isAdminMed } = useAuth();
+  const { toast } = useToast();
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (!isAdminMed()) {
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: "Apenas administradores médicos podem acessar esta página.",
+      });
+      navigate('/');
+      return;
+    }
+    fetchAgendamentosPendentes();
+  }, [isAdminMed, navigate]);
+
+  const fetchAgendamentosPendentes = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('agendamentos_obst')
+      .select('*')
+      .eq('status', 'pendente')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao carregar agendamentos",
+        description: error.message,
+      });
+    } else {
+      setAgendamentos(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleAprovar = async (agendamentoId: string) => {
+    const { error } = await supabase
+      .from('agendamentos_obst')
+      .update({
+        status: 'aprovado',
+        aprovado_por: user?.id,
+        aprovado_em: new Date().toISOString(),
+        observacoes_aprovacao: observacoes[agendamentoId] || null,
+      })
+      .eq('id', agendamentoId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao aprovar agendamento",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "✅ Agendamento aprovado",
+        description: "O agendamento foi aprovado com sucesso.",
+      });
+      fetchAgendamentosPendentes();
+    }
+  };
+
+  const handleRejeitar = async (agendamentoId: string) => {
+    if (!observacoes[agendamentoId]) {
+      toast({
+        variant: "destructive",
+        title: "Observação obrigatória",
+        description: "Por favor, adicione uma observação explicando o motivo da rejeição.",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('agendamentos_obst')
+      .update({
+        status: 'rejeitado',
+        aprovado_por: user?.id,
+        aprovado_em: new Date().toISOString(),
+        observacoes_aprovacao: observacoes[agendamentoId],
+      })
+      .eq('id', agendamentoId);
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao rejeitar agendamento",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: "❌ Agendamento rejeitado",
+        description: "O agendamento foi rejeitado.",
+      });
+      fetchAgendamentosPendentes();
+    }
+  };
+
+  const getUrgenciaBadge = (dataAgendamento: string, createdAt: string) => {
+    const hoje = new Date();
+    const dataCalc = new Date(dataAgendamento);
+    const diasRestantes = Math.ceil((dataCalc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diasRestantes < 0) {
+      return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Vencido</Badge>;
+    }
+    if (diasRestantes <= 7) {
+      return <Badge variant="default" className="gap-1 bg-orange-500"><Clock className="h-3 w-3" />Urgente ({diasRestantes}d)</Badge>;
+    }
+    return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />{diasRestantes} dias</Badge>;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <Stethoscope className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Aprovações Médicas de Agendamentos</h1>
+        </div>
+        <p className="text-muted-foreground">
+          Avaliar e aprovar agendamentos obstétricos pendentes
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>Agendamentos Pendentes</span>
+            <Badge variant="secondary" className="text-lg px-4 py-2">
+              {agendamentos.length} pendente{agendamentos.length !== 1 ? 's' : ''}
+            </Badge>
+          </CardTitle>
+          <CardDescription>
+            Revise os detalhes clínicos e aprove ou rejeite os agendamentos
+          </CardDescription>
+        </CardHeader>
+      </Card>
+
+      {agendamentos.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Clock className="h-16 w-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Nenhum agendamento pendente</h3>
+            <p className="text-muted-foreground">
+              Todos os agendamentos foram processados
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {agendamentos.map((agendamento) => (
+            <Card key={agendamento.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      {agendamento.nome_completo}
+                      {getUrgenciaBadge(agendamento.data_agendamento_calculada, agendamento.created_at)}
+                    </CardTitle>
+                    <CardDescription className="mt-2 space-y-1">
+                      <p>Carteirinha: {agendamento.carteirinha}</p>
+                      <p>Solicitado em: {format(new Date(agendamento.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-semibold text-muted-foreground">Data de Nascimento</p>
+                    <p className="text-sm">{format(new Date(agendamento.data_nascimento), 'dd/MM/yyyy')}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-muted-foreground">Telefone</p>
+                    <p className="text-sm">{agendamento.telefones}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-muted-foreground">Email</p>
+                    <p className="text-sm">{agendamento.email_paciente}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-muted-foreground">Centro Clínico</p>
+                    <p className="text-sm">{agendamento.centro_clinico}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">Maternidade</p>
+                    <Badge variant="outline" className="text-base">{agendamento.maternidade}</Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">Data Calculada</p>
+                    <Badge className="text-base">
+                      {format(new Date(agendamento.data_agendamento_calculada), 'dd/MM/yyyy')}
+                    </Badge>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">IG Calculada</p>
+                    <p className="text-sm">{agendamento.idade_gestacional_calculada}</p>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">Médico Responsável</p>
+                    <p className="text-sm">{agendamento.medico_responsavel}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Procedimentos</p>
+                  <div className="flex flex-wrap gap-2">
+                    {agendamento.procedimentos.map((proc, idx) => (
+                      <Badge key={idx} variant="secondary">{proc}</Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Indicação do Procedimento</p>
+                  <p className="text-sm p-3 bg-muted/50 rounded-lg">{agendamento.indicacao_procedimento}</p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold">Diagnósticos Maternos</p>
+                    <p className="text-sm p-3 bg-muted/50 rounded-lg whitespace-pre-wrap">
+                      {agendamento.diagnosticos_maternos || 'Não informado'}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold">Diagnósticos Fetais</p>
+                    <p className="text-sm p-3 bg-muted/50 rounded-lg whitespace-pre-wrap">
+                      {agendamento.diagnosticos_fetais || 'Não informado'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <ProtocolosModal />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Observações (opcional para aprovação, obrigatório para rejeição)</label>
+                  <Textarea
+                    value={observacoes[agendamento.id] || ''}
+                    onChange={(e) => setObservacoes({ ...observacoes, [agendamento.id]: e.target.value })}
+                    placeholder="Adicione observações sobre este agendamento..."
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button
+                    onClick={() => handleAprovar(agendamento.id)}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    size="lg"
+                  >
+                    <Check className="h-5 w-5 mr-2" />
+                    Aprovar Agendamento
+                  </Button>
+                  <Button
+                    onClick={() => handleRejeitar(agendamento.id)}
+                    variant="destructive"
+                    className="flex-1"
+                    size="lg"
+                  >
+                    <X className="h-5 w-5 mr-2" />
+                    Rejeitar Agendamento
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AprovacoesAgendamentos;

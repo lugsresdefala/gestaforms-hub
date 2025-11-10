@@ -3,7 +3,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
-type UserRole = 'admin' | 'medico_unidade' | 'medico_maternidade';
+type UserRole = 'admin' | 'admin_med' | 'medico_unidade' | 'medico_maternidade';
 
 interface UserRoleData {
   role: UserRole;
@@ -19,6 +19,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, nomeCompleto: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
+  isAdminMed: () => boolean;
   isMedicoUnidade: () => boolean;
   isMedicoMaternidade: () => boolean;
   getMaternidadesAcesso: () => string[];
@@ -133,6 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAdmin = () => userRoles.some(r => r.role === 'admin');
+  const isAdminMed = () => userRoles.some(r => r.role === 'admin_med');
   const isMedicoUnidade = () => userRoles.some(r => r.role === 'medico_unidade');
   const isMedicoMaternidade = () => userRoles.some(r => r.role === 'medico_maternidade');
   const getMaternidadesAcesso = () => 
@@ -151,6 +153,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signUp,
         signOut,
         isAdmin,
+        isAdminMed,
         isMedicoUnidade,
         isMedicoMaternidade,
         getMaternidadesAcesso,

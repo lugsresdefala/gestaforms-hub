@@ -5,17 +5,19 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProtectedRouteProps {
   children: ReactNode;
   requireAdmin?: boolean;
+  requireAdminMed?: boolean;
   requireMedicoUnidade?: boolean;
   requireMedicoMaternidade?: boolean;
 }
 
 const ProtectedRoute = ({ 
   children, 
-  requireAdmin, 
+  requireAdmin,
+  requireAdminMed,
   requireMedicoUnidade,
   requireMedicoMaternidade 
 }: ProtectedRouteProps) => {
-  const { user, loading, isAdmin, isMedicoUnidade, isMedicoMaternidade } = useAuth();
+  const { user, loading, isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade } = useAuth();
 
   if (loading) {
     return (
@@ -30,6 +32,10 @@ const ProtectedRoute = ({
   }
 
   if (requireAdmin && !isAdmin()) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireAdminMed && !isAdminMed() && !isAdmin()) {
     return <Navigate to="/" replace />;
   }
 

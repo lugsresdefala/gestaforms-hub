@@ -344,6 +344,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_med: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "medico_unidade" | "medico_maternidade" | "admin_med"
