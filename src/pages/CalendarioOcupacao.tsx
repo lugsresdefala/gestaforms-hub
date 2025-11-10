@@ -6,12 +6,19 @@ import { Calendar, Users, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface Appointment {
+  nome_completo: string;
+  idade_gestacional_calculada: string;
+  procedimentos: string[];
+}
+
 interface DayOccupation {
   date: string;
   weekDay: string;
   total: number;
   available: number;
   percentage: number;
+  appointments: Appointment[];
 }
 
 interface MaternityCapacity {
@@ -72,17 +79,23 @@ export default function CalendarioOcupacao() {
 
       const { data: appointments } = await supabase
         .from('agendamentos_obst')
-        .select('data_agendamento_calculada')
+        .select('data_agendamento_calculada, nome_completo, idade_gestacional_calculada, procedimentos')
         .eq('maternidade', selectedMaternidade)
         .gte('data_agendamento_calculada', startDate.toISOString().split('T')[0])
         .lte('data_agendamento_calculada', endDate.toISOString().split('T')[0]);
 
-      // Count appointments per day
-      const appointmentCounts: { [key: string]: number } = {};
+      // Group appointments per day
+      const appointmentsByDay: { [key: string]: Appointment[] } = {};
       appointments?.forEach(apt => {
         if (apt.data_agendamento_calculada) {
-          appointmentCounts[apt.data_agendamento_calculada] = 
-            (appointmentCounts[apt.data_agendamento_calculada] || 0) + 1;
+          if (!appointmentsByDay[apt.data_agendamento_calculada]) {
+            appointmentsByDay[apt.data_agendamento_calculada] = [];
+          }
+          appointmentsByDay[apt.data_agendamento_calculada].push({
+            nome_completo: apt.nome_completo,
+            idade_gestacional_calculada: apt.idade_gestacional_calculada,
+            procedimentos: apt.procedimentos
+          });
         }
       });
 
@@ -94,7 +107,8 @@ export default function CalendarioOcupacao() {
         const date = new Date(selectedYear, monthInt, day);
         const dateStr = date.toISOString().split('T')[0];
         const weekDayIndex = date.getDay();
-        const total = appointmentCounts[dateStr] || 0;
+        const dayAppointments = appointmentsByDay[dateStr] || [];
+        const total = dayAppointments.length;
         
         // Determine capacity based on day of week
         let maxVagas = 10; // default fallback
@@ -116,7 +130,8 @@ export default function CalendarioOcupacao() {
           weekDay: weekDays[weekDayIndex],
           total,
           available,
-          percentage
+          percentage,
+          appointments: dayAppointments
         });
       }
 
@@ -252,33 +267,53 @@ export default function CalendarioOcupacao() {
               {occupation.map(day => (
                 <Card key={day.date} className="hover:shadow-md transition-shadow">
                   <CardContent className="py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="text-center min-w-[60px]">
-                          <p className="text-sm text-muted-foreground">{day.weekDay}</p>
-                          <p className="text-xl font-bold">
-                            {new Date(day.date + 'T00:00:00').getDate()}
-                          </p>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center min-w-[60px]">
+                            <p className="text-sm text-muted-foreground">{day.weekDay}</p>
+                            <p className="text-xl font-bold">
+                              {new Date(day.date + 'T00:00:00').getDate()}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {day.total} agendamento{day.total !== 1 ? 's' : ''}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {day.available} vaga{day.available !== 1 ? 's' : ''} disponível
+                              {day.available !== 1 ? 'is' : ''}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">
-                            {day.total} agendamento{day.total !== 1 ? 's' : ''}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {day.available} vaga{day.available !== 1 ? 's' : ''} disponível
-                            {day.available !== 1 ? 'is' : ''}
-                          </p>
+                        <div className="flex items-center gap-4">
+                          <div className="w-32 bg-gray-200 rounded-full h-2.5">
+                            <div
+                              className={`h-2.5 rounded-full ${getOccupationColor(day.percentage)}`}
+                              style={{ width: `${Math.min(100, day.percentage)}%` }}
+                            />
+                          </div>
+                          {getOccupationBadge(day.percentage)}
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="w-32 bg-gray-200 rounded-full h-2.5">
-                          <div
-                            className={`h-2.5 rounded-full ${getOccupationColor(day.percentage)}`}
-                            style={{ width: `${Math.min(100, day.percentage)}%` }}
-                          />
+                      
+                      {day.appointments.length > 0 && (
+                        <div className="pl-[76px] space-y-2 border-t pt-2">
+                          {day.appointments.map((apt, idx) => (
+                            <div key={idx} className="text-sm flex items-center justify-between bg-muted/50 p-2 rounded">
+                              <div>
+                                <span className="font-medium">{apt.nome_completo}</span>
+                                <span className="text-muted-foreground ml-2">IG: {apt.idade_gestacional_calculada}</span>
+                              </div>
+                              <div className="flex gap-1">
+                                {apt.procedimentos.slice(0, 2).map((proc, i) => (
+                                  <Badge key={i} variant="outline" className="text-xs">{proc}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        {getOccupationBadge(day.percentage)}
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

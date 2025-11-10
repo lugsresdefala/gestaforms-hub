@@ -53,7 +53,7 @@ export const parseDate = (dateStr: string): Date | null => {
 };
 
 export const calculateAppointmentDate = (mes: string, diaNumero: string): Date | null => {
-  const year = 2024; // Assuming 2024, adjust as needed
+  const year = 2025;
   const monthMap: { [key: string]: number } = {
     'Novembro': 10, // November is month 10 (0-indexed)
     'Dezembro': 11
