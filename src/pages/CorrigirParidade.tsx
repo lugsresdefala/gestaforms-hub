@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -100,6 +100,7 @@ const parseCSVLine = (line: string): { carteirinha: string; nome: string; diagno
 
 export default function CorrigirParidade() {
   const [loading, setLoading] = useState(false);
+  const [autoExecutado, setAutoExecutado] = useState(false);
   const [resultado, setResultado] = useState<{
     total: number;
     sucesso: number;
@@ -110,6 +111,7 @@ export default function CorrigirParidade() {
   const processarCorrecao = async () => {
     setLoading(true);
     setResultado(null);
+    setAutoExecutado(true);
 
     try {
       // Buscar o CSV
@@ -202,6 +204,13 @@ export default function CorrigirParidade() {
       setLoading(false);
     }
   };
+
+  // Auto-executar na primeira vez que a página carregar
+  useEffect(() => {
+    if (!autoExecutado && !loading && !resultado) {
+      processarCorrecao();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="container mx-auto p-6">
