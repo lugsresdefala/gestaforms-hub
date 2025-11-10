@@ -25,14 +25,14 @@ const AppSidebar = () => {
     icon: LayoutDashboard,
     show: true
   }, {
-    title: "Listagem",
+    title: "Listagem de Agendamentos",
     url: "/dashboard",
     icon: Calendar,
     show: true
   }, {
-    title: "Calendário",
-    url: "/calendario-ocupacao",
-    icon: Calendar,
+    title: "Sistema de Ocupação",
+    url: "/calendario-completo",
+    icon: Building2,
     show: true
   }].filter(item => item.show);
   const agendamentoItems = [{
@@ -50,11 +50,6 @@ const AppSidebar = () => {
     title: "Aprovações",
     url: "/aprovacoes",
     icon: CheckCircle,
-    show: isAdmin()
-  }, {
-    title: "Ocupação",
-    url: "/ocupacao",
-    icon: Building2,
     show: isAdmin()
   }, {
     title: "Atualizar IG",

@@ -19,6 +19,7 @@ import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import GuiaSistema from "./pages/GuiaSistema";
 import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
+import CalendarioCompleto from "./pages/CalendarioCompleto";
 import CompararCSVs from "./pages/CompararCSVs";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
@@ -149,6 +150,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <CalendarioOcupacao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calendario-completo" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <CalendarioCompleto />
                   </AppLayout>
                 </ProtectedRoute>
               } 
