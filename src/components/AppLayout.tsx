@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen } from "lucide-react";
+import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
@@ -60,6 +60,11 @@ const AppSidebar = () => {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,
+    show: isAdmin()
+  }, {
+    title: "Corrigir Paridade",
+    url: "/corrigir-paridade",
+    icon: FileCheck,
     show: isAdmin()
   }, {
     title: "Usuários",
