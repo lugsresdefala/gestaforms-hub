@@ -58,6 +58,11 @@ const AppSidebar = () => {
     icon: Users,
     show: isAdmin()
   }, {
+    title: "Editar Usuários",
+    url: "/editar-usuarios",
+    icon: Users,
+    show: isAdminMed() || isAdmin()
+  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,
