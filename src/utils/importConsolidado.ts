@@ -113,6 +113,37 @@ const extractProcedimentos = (viaParto: string): string[] => {
   return procedimentos;
 };
 
+const extractParidade = (diagnostico: string): { gestacoes: number; partosNormais: number; cesareas: number; abortos: number } => {
+  const resultado = {
+    gestacoes: 1,
+    partosNormais: 0,
+    cesareas: 0,
+    abortos: 0
+  };
+  
+  if (!diagnostico) return resultado;
+  
+  const texto = diagnostico.toLowerCase();
+  
+  // Procura padrões como "3g", "2n", "1c", "0a"
+  const gestPattern = /(\d+)g/i;
+  const normalPattern = /(\d+)n/i;
+  const cesarPattern = /(\d+)c/i;
+  const abortoPattern = /(\d+)a/i;
+  
+  const gestMatch = texto.match(gestPattern);
+  const normalMatch = texto.match(normalPattern);
+  const cesarMatch = texto.match(cesarPattern);
+  const abortoMatch = texto.match(abortoPattern);
+  
+  if (gestMatch) resultado.gestacoes = parseInt(gestMatch[1]);
+  if (normalMatch) resultado.partosNormais = parseInt(normalMatch[1]);
+  if (cesarMatch) resultado.cesareas = parseInt(cesarMatch[1]);
+  if (abortoMatch) resultado.abortos = parseInt(abortoMatch[1]);
+  
+  return resultado;
+};
+
 export const importConsolidadoCSV = async (csvContent: string, createdBy: string) => {
   const lines = csvContent.split('\n');
   const results = {
@@ -163,6 +194,7 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
       processedKeys.add(uniqueKey);
       
       const procedimentos = extractProcedimentos(row.viaParto);
+      const paridade = extractParidade(row.diagnostico);
       
       // Calcular idade gestacional usando os dados disponíveis
       const resultado = calcularAgendamentoCompleto({
@@ -189,11 +221,11 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         diagnosticos_maternos: row.diagnostico || 'Não informado',
         historia_obstetrica: '',
         
-        // Required fields
-        numero_gestacoes: 1,
-        numero_partos_cesareas: 0,
-        numero_partos_normais: 0,
-        numero_abortos: 0,
+        // Paridade extraída do diagnóstico
+        numero_gestacoes: paridade.gestacoes,
+        numero_partos_cesareas: paridade.cesareas,
+        numero_partos_normais: paridade.partosNormais,
+        numero_abortos: paridade.abortos,
         dum_status: 'Sim - Confiavel',
         data_dum: dataNascimento.toISOString().split('T')[0],
         data_primeiro_usg: dataNascimento.toISOString().split('T')[0],
