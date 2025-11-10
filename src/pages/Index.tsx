@@ -366,7 +366,7 @@ const COMPLETE_DESIGN_SYSTEM = `
       background-position: 0% 0%;
     }
     50% {
-      background-position: 100% 100%;
+      background-position: 25% 25%;
     }
   }
   
@@ -962,8 +962,8 @@ const COMPLETE_DESIGN_SYSTEM = `
       );
     background-size: 
       40px 40px,
-      400% 400%;
-    animation: texture-shift 20s ease infinite;
+      200% 200%;
+    animation: texture-shift 60s ease infinite;
     min-height: 100vh;
   }
   
