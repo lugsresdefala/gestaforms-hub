@@ -28,7 +28,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 25%;
 
-    --primary: 215 20% 40%;
+    --primary: 213 70% 35%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 10% 94%;
@@ -37,24 +37,24 @@ All colors MUST be HSL.
     --muted: 220 10% 94%;
     --muted-foreground: 220 10% 50%;
 
-    --accent: 215 20% 50%;
+    --accent: 15 100% 60%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 50% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 30% 40%;
+    --success: 213 70% 40%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 35 60% 45%;
+    --warning: 15 100% 60%;
     --warning-foreground: 0 0% 100%;
 
     --border: 220 10% 88%;
     --input: 220 10% 88%;
     --ring: 215 20% 40%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(215 20% 40%) 0%, hsl(215 20% 35%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(215 20% 50%) 0%, hsl(215 20% 45%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(213 70% 35%) 0%, hsl(213 70% 30%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(15 100% 60%) 0%, hsl(15 100% 55%) 100%);
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 98%) 0%, hsl(220 10% 96%) 100%);
     --gradient-mesh: none;
     --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.3) 0%, hsl(0 0% 100% / 0.1) 100%);
@@ -102,7 +102,7 @@ All colors MUST be HSL.
     --popover: 220 16% 16%;
     --popover-foreground: 220 10% 88%;
 
-    --primary: 215 20% 50%;
+    --primary: 213 70% 45%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 16% 20%;
@@ -111,24 +111,24 @@ All colors MUST be HSL.
     --muted: 220 16% 20%;
     --muted-foreground: 220 10% 60%;
 
-    --accent: 215 20% 55%;
+    --accent: 15 100% 65%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 50% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 30% 45%;
+    --success: 213 70% 50%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 35 60% 50%;
+    --warning: 15 100% 65%;
     --warning-foreground: 0 0% 100%;
 
     --border: 220 16% 24%;
     --input: 220 16% 24%;
     --ring: 215 20% 50%;
     
-    --gradient-primary: linear-gradient(135deg, hsl(215 20% 50%) 0%, hsl(215 20% 45%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(215 20% 55%) 0%, hsl(215 20% 50%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(213 70% 45%) 0%, hsl(213 70% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(15 100% 65%) 0%, hsl(15 100% 60%) 100%);
     --gradient-mesh: none;
     --gradient-glass: linear-gradient(135deg, hsl(220 16% 16% / 0.3) 0%, hsl(220 16% 16% / 0.1) 100%);
     

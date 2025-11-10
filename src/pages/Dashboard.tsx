@@ -319,7 +319,7 @@ const Dashboard = () => {
             </Card>
             <Card>
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-success">
+                <div className="text-2xl font-bold text-primary">
                   {filteredAgendamentos.filter(a => {
                     const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                     return diff > 7;
