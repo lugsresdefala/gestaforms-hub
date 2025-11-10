@@ -22,23 +22,36 @@ interface MaternityCapacity {
 }
 
 export default function CalendarioOcupacao() {
+  const currentYear = new Date().getFullYear();
   const [selectedMaternidade, setSelectedMaternidade] = useState<string>('Cruzeiro');
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [selectedMonth, setSelectedMonth] = useState<string>('11'); // November
   const [occupation, setOccupation] = useState<DayOccupation[]>([]);
   const [capacity, setCapacity] = useState<MaternityCapacity | null>(null);
   const [loading, setLoading] = useState(true);
 
   const maternidades = ['Cruzeiro', 'Guarulhos', 'Notrecare', 'Salvalus', 'Rosário'];
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   const months = [
-    { value: '11', label: 'Novembro 2026' },
-    { value: '12', label: 'Dezembro 2026' }
+    { value: '1', label: 'Janeiro' },
+    { value: '2', label: 'Fevereiro' },
+    { value: '3', label: 'Março' },
+    { value: '4', label: 'Abril' },
+    { value: '5', label: 'Maio' },
+    { value: '6', label: 'Junho' },
+    { value: '7', label: 'Julho' },
+    { value: '8', label: 'Agosto' },
+    { value: '9', label: 'Setembro' },
+    { value: '10', label: 'Outubro' },
+    { value: '11', label: 'Novembro' },
+    { value: '12', label: 'Dezembro' }
   ];
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   useEffect(() => {
     loadOccupation();
-  }, [selectedMaternidade, selectedMonth]);
+  }, [selectedMaternidade, selectedMonth, selectedYear]);
 
   const loadOccupation = async () => {
     setLoading(true);
@@ -53,10 +66,9 @@ export default function CalendarioOcupacao() {
       setCapacity(capacityData);
 
       // Load appointments
-      const monthInt = parseInt(selectedMonth);
-      const year = 2026;
-      const startDate = new Date(year, monthInt, 1);
-      const endDate = new Date(year, monthInt + 1, 0);
+      const monthInt = parseInt(selectedMonth) - 1; // JS months are 0-indexed
+      const startDate = new Date(selectedYear, monthInt, 1);
+      const endDate = new Date(selectedYear, monthInt + 1, 0);
 
       const { data: appointments } = await supabase
         .from('agendamentos_obst')
@@ -79,7 +91,7 @@ export default function CalendarioOcupacao() {
       const occupationData: DayOccupation[] = [];
 
       for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, monthInt, day);
+        const date = new Date(selectedYear, monthInt, day);
         const dateStr = date.toISOString().split('T')[0];
         const weekDayIndex = date.getDay();
         const total = appointmentCounts[dateStr] || 0;
@@ -135,7 +147,7 @@ export default function CalendarioOcupacao() {
         <p className="text-muted-foreground">Visualize a ocupação das maternidades por dia</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader>
             <CardTitle>Maternidade</CardTitle>
@@ -148,6 +160,24 @@ export default function CalendarioOcupacao() {
               <SelectContent>
                 {maternidades.map(mat => (
                   <SelectItem key={mat} value={mat}>{mat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Ano</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map(year => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -207,7 +237,7 @@ export default function CalendarioOcupacao() {
             Ocupação Diária
           </CardTitle>
           <CardDescription>
-            {selectedMaternidade} - {months.find(m => m.value === selectedMonth)?.label}
+            {selectedMaternidade} - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
           </CardDescription>
         </CardHeader>
         <CardContent>
