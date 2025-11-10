@@ -27,14 +27,14 @@ interface Solicitacao {
 
 const AprovacoesUsuarios = () => {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAdminMed } = useAuth();
   const { toast } = useToast();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
-    if (!isAdmin()) {
+    if (!isAdmin() && !isAdminMed()) {
       toast({
         variant: "destructive",
         title: "Acesso negado",
@@ -44,7 +44,7 @@ const AprovacoesUsuarios = () => {
       return;
     }
     fetchSolicitacoesPendentes();
-  }, [isAdmin, navigate]);
+  }, [isAdmin, isAdminMed, navigate]);
 
   const fetchSolicitacoesPendentes = async () => {
     setLoading(true);
