@@ -20,16 +20,21 @@ const extrairParidade = (diagnostico: string): { gestacoes: number; partosNormai
     return { gestacoes: 1, partosNormais: 0, cesareas: 0, abortos: 0 };
   }
 
-  // Padrões: "3g2n", "2g1c", "4g2n1c1a", etc
+  // Nomenclatura obstétrica padrão:
+  // G = todas gestações (incluindo atual)
+  // P = partos anteriores (normais + cesáreas)
+  // A = abortos anteriores (só se explícito)
+  // Diferença G - (P + A) = gestação atual
+  
   const patterns = [
     /(\d+)g(\d+)n(\d+)c(\d+)a/i, // Completo: gestações, normais, cesáreas, abortos
-    /(\d+)g(\d+)n(\d+)c/i,       // 3 componentes: gestações, normais, cesáreas
+    /(\d+)g(\d+)n(\d+)c/i,       // gestações, normais, cesáreas
     /(\d+)g(\d+)n(\d+)a/i,       // gestações, normais, abortos
     /(\d+)g(\d+)c(\d+)a/i,       // gestações, cesáreas, abortos
     /(\d+)g(\d+)n/i,             // gestações, normais
     /(\d+)g(\d+)c/i,             // gestações, cesáreas
-    /(\d+)g(\d+)a/i,             // gestações, abortos
-    /(\d+)g/i,                   // Apenas gestações
+    /(\d+)g(\d+)a/i,             // gestações, abortos (sem partos)
+    /(\d+)g/i,                   // Apenas gestações (primigestas)
   ];
 
   for (const pattern of patterns) {
@@ -40,28 +45,38 @@ const extrairParidade = (diagnostico: string): { gestacoes: number; partosNormai
       let cesareas = 0;
       let abortos = 0;
 
-      if (pattern.source.includes('n')) {
-        const nIndex = pattern.source.indexOf('n');
-        const groupIndex = (nIndex - pattern.source.substring(0, nIndex).split('(').length) + 2;
-        partosNormais = parseInt(match[groupIndex] || '0');
+      // Extração mais robusta usando os grupos de captura
+      if (pattern.source === /(\d+)g(\d+)n(\d+)c(\d+)a/i.source) {
+        // "4g2n1c1a" → gestacoes=4, normais=2, cesareas=1, abortos=1
+        partosNormais = parseInt(match[2]);
+        cesareas = parseInt(match[3]);
+        abortos = parseInt(match[4]);
+      } else if (pattern.source === /(\d+)g(\d+)n(\d+)c/i.source) {
+        // "3g2n1c" → gestacoes=3, normais=2, cesareas=1, abortos=0
+        partosNormais = parseInt(match[2]);
+        cesareas = parseInt(match[3]);
+      } else if (pattern.source === /(\d+)g(\d+)n(\d+)a/i.source) {
+        // "4g2n1a" → gestacoes=4, normais=2, abortos=1
+        partosNormais = parseInt(match[2]);
+        abortos = parseInt(match[3]);
+      } else if (pattern.source === /(\d+)g(\d+)c(\d+)a/i.source) {
+        // "3g1c1a" → gestacoes=3, cesareas=1, abortos=1
+        cesareas = parseInt(match[2]);
+        abortos = parseInt(match[3]);
+      } else if (pattern.source === /(\d+)g(\d+)n/i.source) {
+        // "3g2n" → gestacoes=3, normais=2, abortos=0
+        partosNormais = parseInt(match[2]);
+      } else if (pattern.source === /(\d+)g(\d+)c/i.source) {
+        // "2g1c" → gestacoes=2, cesareas=1, abortos=0
+        cesareas = parseInt(match[2]);
+      } else if (pattern.source === /(\d+)g(\d+)a/i.source) {
+        // "3g2a" → gestacoes=3, abortos=2 (sem partos)
+        abortos = parseInt(match[2]);
       }
+      // Padrão /(\d+)g/i → primigesta, todos zeros exceto gestacoes=1
 
-      if (pattern.source.includes('c')) {
-        const cIndex = pattern.source.indexOf('c');
-        const groupsBefore = pattern.source.substring(0, cIndex).split('(\\d+)').length - 1;
-        cesareas = parseInt(match[groupsBefore + 1] || '0');
-      }
-
-      if (pattern.source.includes('a')) {
-        const aIndex = pattern.source.indexOf('a');
-        const groupsBefore = pattern.source.substring(0, aIndex).split('(\\d+)').length - 1;
-        abortos = parseInt(match[groupsBefore + 1] || '0');
-      }
-
-      // Se não tem abortos explícitos, calcula: gestações - (normais + cesáreas)
-      if (abortos === 0 && gestacoes > partosNormais + cesareas) {
-        abortos = gestacoes - partosNormais - cesareas;
-      }
+      // IMPORTANTE: NÃO calcular abortos automaticamente!
+      // A diferença G - (P + A) é a gestação ATUAL, não um aborto
 
       return { gestacoes, partosNormais, cesareas, abortos };
     }
