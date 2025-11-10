@@ -29,6 +29,11 @@ interface Agendamento {
   centro_clinico: string;
   data_agendamento_calculada: string;
   idade_gestacional_calculada: string;
+  ig_pretendida: string;
+  numero_gestacoes: number;
+  numero_partos_cesareas: number;
+  numero_partos_normais: number;
+  numero_abortos: number;
   diagnosticos_maternos: string;
   diagnosticos_fetais: string;
   observacoes_agendamento: string;
@@ -485,20 +490,48 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* Informações do agendamento */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* PARIDADE - INFORMAÇÃO CRÍTICA */}
+                    <div className="p-4 bg-primary/5 border-l-4 border-primary rounded">
+                      <p className="text-sm font-bold text-foreground mb-2">PARIDADE</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Gestações</p>
+                          <p className="text-lg font-bold text-primary">{agendamento.numero_gestacoes}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Partos Normais</p>
+                          <p className="text-lg font-bold text-green-600">{agendamento.numero_partos_normais}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Cesáreas</p>
+                          <p className="text-lg font-bold text-orange-600">{agendamento.numero_partos_cesareas}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Abortos</p>
+                          <p className="text-lg font-bold text-muted-foreground">{agendamento.numero_abortos}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* IDADE GESTACIONAL - INFORMAÇÃO CRÍTICA */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-secondary/10 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Data Nascimento</p>
                         <p className="text-sm">{format(new Date(agendamento.data_nascimento), 'dd/MM/yyyy')}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">IG Calculada</p>
-                        <p className="text-sm">{agendamento.idade_gestacional_calculada || 'Não calculado'}</p>
+                        <p className="text-sm font-bold text-foreground">IG ATUAL</p>
+                        <p className="text-base font-semibold text-primary">{agendamento.idade_gestacional_calculada || 'Não calculado'}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Centro Clínico</p>
-                        <p className="text-sm">{agendamento.centro_clinico}</p>
+                        <p className="text-sm font-bold text-foreground">IG DO PARTO</p>
+                        <p className="text-base font-semibold text-orange-600">{agendamento.ig_pretendida || 'Não informado'}</p>
                       </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Centro Clínico</p>
+                      <p className="text-sm">{agendamento.centro_clinico}</p>
                     </div>
 
                     <div>
@@ -515,15 +548,16 @@ const Dashboard = () => {
                       </div>
                     </div>
 
+                    {/* DIAGNÓSTICOS - INFORMAÇÃO CRÍTICA */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Diagnósticos Maternos</p>
+                      <div className="p-4 border-l-4 border-orange-500 bg-orange-50/50 rounded">
+                        <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS MATERNOS</p>
                         <p className="text-sm whitespace-pre-wrap">
                           {agendamento.diagnosticos_maternos || 'Não informado'}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-2">Diagnósticos Fetais</p>
+                      <div className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded">
+                        <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS FETAIS</p>
                         <p className="text-sm whitespace-pre-wrap">
                           {agendamento.diagnosticos_fetais || 'Não informado'}
                         </p>
