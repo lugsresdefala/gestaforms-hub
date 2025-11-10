@@ -955,15 +955,13 @@ const COMPLETE_DESIGN_SYSTEM = `
       linear-gradient(
         135deg,
         #ffffff 0%,
-        var(--color-slate-50) 25%,
-        var(--color-indigo-50) 50%,
-        var(--color-emerald-50) 75%,
-        #ffffff 100%
+        var(--color-slate-50) 50%,
+        var(--color-indigo-50) 100%
       );
     background-size: 
       40px 40px,
-      200% 200%;
-    animation: texture-shift 60s ease infinite;
+      100% 100%;
+    background-attachment: fixed;
     min-height: 100vh;
   }
   
