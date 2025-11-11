@@ -335,21 +335,14 @@ const Auth = () => {
                   {signupData.tipoAcesso === 'medico_maternidade' && (
                     <div className="space-y-2">
                       <Label htmlFor="maternidade">Maternidade*</Label>
-                      <Select 
-                        value={signupData.maternidade} 
-                        onValueChange={(value) => setSignupData({ ...signupData, maternidade: value })}
+                      <Input
+                        id="maternidade"
+                        type="text"
+                        placeholder="Nome da maternidade"
+                        value={signupData.maternidade}
+                        onChange={(e) => setSignupData({ ...signupData, maternidade: e.target.value })}
                         required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a maternidade" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Cruzeiro">Cruzeiro</SelectItem>
-                          <SelectItem value="Guarulhos">Guarulhos</SelectItem>
-                          <SelectItem value="Notrecare">Notrecare</SelectItem>
-                          <SelectItem value="Salvalus">Salvalus</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      />
                     </div>
                   )}
 

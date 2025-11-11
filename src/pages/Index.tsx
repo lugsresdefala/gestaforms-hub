@@ -54,6 +54,965 @@ interface Agendamento {
 }
 
 // ==========================================
+// COMPLETE ADVANCED DESIGN SYSTEM
+// ==========================================
+
+const COMPLETE_DESIGN_SYSTEM = `
+  /* ==========================================
+     COMPLETE DESIGN SYSTEM - COLD PALETTE & GLASS EFFECTS
+     ========================================== */
+  
+  :root {
+    /* Cold Color Palette - Dark & Sophisticated */
+    --color-emerald-50: #ecfdf5;
+    --color-emerald-100: #d1fae5;
+    --color-emerald-200: #a7f3d0;
+    --color-emerald-300: #6ee7b7;
+    --color-emerald-400: #34d399;
+    --color-emerald-500: #10b981;
+    --color-emerald-600: #059669;
+    --color-emerald-700: #047857;
+    --color-emerald-800: #065f46;
+    --color-emerald-900: #064e3b;
+    
+    --color-amber-50: #fffbeb;
+    --color-amber-100: #fef3c7;
+    --color-amber-200: #fde68a;
+    --color-amber-300: #fcd34d;
+    --color-amber-400: #fbbf24;
+    --color-amber-500: #f59e0b;
+    --color-amber-600: #d97706;
+    --color-amber-700: #b45309;
+    --color-amber-800: #92400e;
+    --color-amber-900: #78350f;
+    
+    --color-indigo-50: #eef2ff;
+    --color-indigo-100: #e0e7ff;
+    --color-indigo-200: #c7d2fe;
+    --color-indigo-300: #a5b4fc;
+    --color-indigo-400: #818cf8;
+    --color-indigo-500: #6366f1;
+    --color-indigo-600: #4f46e5;
+    --color-indigo-700: #4338ca;
+    --color-indigo-800: #3730a3;
+    --color-indigo-900: #312e81;
+    
+    --color-slate-50: #f8fafc;
+    --color-slate-100: #f1f5f9;
+    --color-slate-200: #e2e8f0;
+    --color-slate-300: #cbd5e1;
+    --color-slate-400: #94a3b8;
+    --color-slate-500: #64748b;
+    --color-slate-600: #475569;
+    --color-slate-700: #334155;
+    --color-slate-800: #1e293b;
+    --color-slate-900: #0f172a;
+    
+    --color-red-50: #fef2f2;
+    --color-red-100: #fee2e2;
+    --color-red-500: #ef4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    --color-red-800: #991b1b;
+    --color-red-900: #7f1d1d;
+    
+    /* Semantic Status Colors - Cold Variants */
+    --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+    --status-pending-light: #fffbeb;
+    --status-pending-border: #b45309;
+    --status-pending-glow: rgba(180, 83, 9, 0.35);
+    
+    --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 100%);
+    --status-success-light: #ecfdf5;
+    --status-success-border: #059669;
+    --status-success-glow: rgba(5, 150, 105, 0.35);
+    
+    --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    --status-destructive-light: #fef2f2;
+    --status-destructive-border: #dc2626;
+    --status-destructive-glow: rgba(220, 38, 38, 0.35);
+    
+    --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    --status-primary-light: #eef2ff;
+    --status-primary-border: #4f46e5;
+    --status-primary-glow: rgba(79, 70, 229, 0.35);
+    
+    /* Advanced Glassmorphism System */
+    --glass-bg-white: rgba(255, 255, 255, 0.75);
+    --glass-bg-light: rgba(248, 250, 252, 0.85);
+    --glass-bg-medium: rgba(241, 245, 249, 0.90);
+    --glass-bg-dark: rgba(15, 23, 42, 0.85);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.25);
+    --glass-border-strong: 2px solid rgba(255, 255, 255, 0.4);
+    --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+    --glass-blur: blur(24px);
+    --glass-blur-heavy: blur(40px);
+    --glass-blur-light: blur(12px);
+    
+    /* Multi-layer 3D Shadow System */
+    --shadow-3d-xs: 
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 2px 4px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    
+    --shadow-3d-sm: 
+      0 2px 4px -1px rgba(15, 23, 42, 0.08),
+      0 4px 8px -2px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    
+    --shadow-3d-md: 
+      0 4px 8px -2px rgba(15, 23, 42, 0.1),
+      0 8px 16px -4px rgba(15, 23, 42, 0.08),
+      0 16px 32px -8px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    
+    --shadow-3d-lg: 
+      0 8px 16px -4px rgba(15, 23, 42, 0.12),
+      0 16px 32px -8px rgba(15, 23, 42, 0.1),
+      0 24px 48px -12px rgba(15, 23, 42, 0.08),
+      inset 0 2px 0 0 rgba(255, 255, 255, 0.95);
+    
+    --shadow-3d-xl: 
+      0 12px 24px -6px rgba(15, 23, 42, 0.15),
+      0 24px 48px -12px rgba(15, 23, 42, 0.12),
+      0 36px 72px -18px rgba(15, 23, 42, 0.1),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
+    --shadow-3d-2xl: 
+      0 16px 32px -8px rgba(15, 23, 42, 0.18),
+      0 32px 64px -16px rgba(15, 23, 42, 0.15),
+      0 48px 96px -24px rgba(15, 23, 42, 0.12),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
+    /* Texture & Noise Patterns */
+    --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    
+    --texture-grid: repeating-linear-gradient(
+      0deg,
+      rgba(15, 23, 42, 0.005) 0px,
+      rgba(15, 23, 42, 0.005) 1px,
+      transparent 1px,
+      transparent 40px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.005) 0px,
+      rgba(15, 23, 42, 0.005) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+    
+    --texture-dots: radial-gradient(
+      circle at center,
+      rgba(15, 23, 42, 0.03) 1px,
+      transparent 1px
+    );
+    
+    /* Advanced Chart Colors - Cold Palette */
+    --chart-emerald: #059669;
+    --chart-amber: #d97706;
+    --chart-indigo: #4f46e5;
+    --chart-teal: #0d9488;
+    --chart-cyan: #0891b2;
+    --chart-sky: #0284c7;
+    --chart-violet: #7c3aed;
+    --chart-fuchsia: #c026d3;
+    
+    /* Spacing System - 4px base grid */
+    --spacing-0: 0;
+    --spacing-px: 1px;
+    --spacing-0-5: 0.125rem;
+    --spacing-1: 0.25rem;
+    --spacing-1-5: 0.375rem;
+    --spacing-2: 0.5rem;
+    --spacing-2-5: 0.625rem;
+    --spacing-3: 0.75rem;
+    --spacing-3-5: 0.875rem;
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-7: 1.75rem;
+    --spacing-8: 2rem;
+    --spacing-9: 2.25rem;
+    --spacing-10: 2.5rem;
+    --spacing-11: 2.75rem;
+    --spacing-12: 3rem;
+    --spacing-14: 3.5rem;
+    --spacing-16: 4rem;
+    --spacing-20: 5rem;
+    --spacing-24: 6rem;
+    --spacing-28: 7rem;
+    --spacing-32: 8rem;
+    
+    /* Enhanced Animation Curves */
+    --ease-linear: linear;
+    --ease-in: cubic-bezier(0.4, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
+    --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-in-cubic: cubic-bezier(0.32, 0, 0.67, 0);
+    --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+    --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    
+    /* Duration System */
+    --duration-instant: 0ms;
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-medium: 400ms;
+    --duration-slow: 600ms;
+    --duration-slower: 800ms;
+    --duration-slowest: 1200ms;
+    
+    /* Border Radius System */
+    --radius-none: 0;
+    --radius-sm: 0.375rem;
+    --radius-base: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
+    --radius-3xl: 2rem;
+    --radius-full: 9999px;
+    
+    /* Z-Index System */
+    --z-0: 0;
+    --z-10: 10;
+    --z-20: 20;
+    --z-30: 30;
+    --z-40: 40;
+    --z-50: 50;
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+  }
+  
+  /* ==========================================
+     ADVANCED KEYFRAME ANIMATIONS
+     ========================================== */
+  
+  @keyframes float-3d {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) rotateX(0deg);
+    }
+    50% {
+      transform: translate3d(0, -12px, 8px) rotateX(2deg);
+    }
+  }
+  
+  @keyframes shimmer-glass {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% {
+      opacity: 0.5;
+      filter: blur(20px);
+      transform: scale3d(0.95, 0.95, 1);
+    }
+    50% {
+      opacity: 1;
+      filter: blur(30px);
+      transform: scale3d(1.1, 1.1, 1);
+    }
+  }
+  
+  @keyframes slide-in-3d {
+    from {
+      opacity: 0;
+      transform: translate3d(-30px, 0, -20px) rotateY(-15deg);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotateY(0deg);
+    }
+  }
+  
+  @keyframes scale-in-3d {
+    from {
+      opacity: 0;
+      transform: scale3d(0.9, 0.9, 0.9) translateZ(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale3d(1, 1, 1) translateZ(0);
+    }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 20px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  
+  @keyframes texture-shift {
+    0%, 100% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 25% 25%;
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC METRIC CARDS - 3D ENHANCED
+     ========================================== */
+  
+  .metric-card-advanced {
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow, border-color;
+    transform-style: preserve-3d;
+  }
+  
+  .metric-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 400ms var(--ease-smooth);
+  }
+  
+  .metric-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: -100%;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 65%
+    );
+    opacity: 0;
+    transition: all 800ms var(--ease-smooth);
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .metric-card-advanced:hover {
+    transform: translateY(-8px) translateZ(12px) rotateX(2deg);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .metric-card-advanced:hover::before {
+    opacity: 0.2;
+  }
+  
+  .metric-card-advanced:hover::after {
+    opacity: 1;
+    transform: translateX(100%);
+  }
+  
+  .metric-card-advanced--warning {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 251, 235, 0.9) 0%,
+      rgba(254, 243, 199, 0.85) 100%
+    );
+    border-color: var(--status-pending-border);
+  }
+  
+  .metric-card-advanced--warning:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-pending-glow);
+  }
+  
+  .metric-card-advanced--success {
+    background: linear-gradient(
+      135deg,
+      rgba(236, 253, 245, 0.9) 0%,
+      rgba(209, 250, 229, 0.85) 100%
+    );
+    border-color: var(--status-success-border);
+  }
+  
+  .metric-card-advanced--success:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-success-glow);
+  }
+  
+  .metric-card-advanced--destructive {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 242, 242, 0.9) 0%,
+      rgba(254, 226, 226, 0.85) 100%
+    );
+    border-color: var(--status-destructive-border);
+  }
+  
+  .metric-card-advanced--destructive:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-destructive-glow);
+  }
+  
+  .metric-card-advanced--primary {
+    background: linear-gradient(
+      135deg,
+      rgba(238, 242, 255, 0.9) 0%,
+      rgba(224, 231, 255, 0.85) 100%
+    );
+    border-color: var(--status-primary-border);
+  }
+  
+  .metric-card-advanced--primary:hover {
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-primary-glow);
+  }
+  
+  /* ==========================================
+     3D ICON BADGES WITH GLASS EFFECTS
+     ========================================== */
+  
+  .metric-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-xl);
+    position: relative;
+    transition: all 500ms var(--ease-elastic);
+    will-change: transform;
+    transform-style: preserve-3d;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-3d-sm);
+  }
+  
+  .metric-icon-badge::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-xl);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    animation: glow-pulse 3s ease-in-out infinite;
+    animation-play-state: paused;
+    filter: blur(20px);
+    z-index: -1;
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge {
+    transform: scale3d(1.2, 1.2, 1.2) translateZ(8px) rotateZ(8deg);
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.6;
+    animation-play-state: running;
+  }
+  
+  .metric-icon-badge--warning {
+    background: var(--status-pending-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--warning::before {
+    background: var(--status-pending-bg);
+  }
+  
+  .metric-icon-badge--success {
+    background: var(--status-success-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--success::before {
+    background: var(--status-success-bg);
+  }
+  
+  .metric-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--destructive::before {
+    background: var(--status-destructive-bg);
+  }
+  
+  .metric-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--primary::before {
+    background: var(--status-primary-bg);
+  }
+  
+  /* ==========================================
+     ENHANCED METRIC VALUES WITH 3D DEPTH
+     ========================================== */
+  
+  .metric-value {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    transition: all 500ms var(--ease-elastic);
+    position: relative;
+    display: inline-block;
+    text-shadow: 
+      0 2px 4px rgba(15, 23, 42, 0.1),
+      0 4px 8px rgba(15, 23, 42, 0.05);
+    z-index: 10;
+  }
+  
+  .metric-card-advanced:hover .metric-value {
+    transform: scale3d(1.08, 1.08, 1) translateZ(4px);
+    text-shadow: 
+      0 4px 8px rgba(15, 23, 42, 0.15),
+      0 8px 16px rgba(15, 23, 42, 0.1);
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC CHART CARDS WITH 3D
+     ========================================== */
+  
+  .chart-card-advanced {
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow;
+    transform-style: preserve-3d;
+  }
+  
+  .chart-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-grid);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .chart-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .chart-card-advanced:hover {
+    transform: translateY(-6px) translateZ(8px);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .chart-card-advanced:hover::after {
+    opacity: 1;
+  }
+  
+  .chart-card-advanced--active {
+    border-color: var(--color-indigo-400);
+    box-shadow: 
+      var(--shadow-3d-lg),
+      0 0 30px rgba(79, 70, 229, 0.2);
+  }
+  
+  /* ==========================================
+     CHART ICON BADGES
+     ========================================== */
+  
+  .chart-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    transition: all 400ms var(--ease-elastic);
+    transform-style: preserve-3d;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .chart-card-advanced:hover .chart-icon-badge {
+    transform: scale3d(1.15, 1.15, 1) translateZ(4px) rotateZ(5deg);
+  }
+  
+  .chart-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--accent {
+    background: var(--status-pending-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+  }
+  
+  /* ==========================================
+     ENHANCED FILTER BAR WITH GLASS
+     ========================================== */
+  
+  .filter-bar-advanced {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 400ms var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .filter-bar-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.2;
+    pointer-events: none;
+  }
+  
+  .filter-bar-advanced:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-3d-lg);
+    transform: translateY(-2px);
+  }
+  
+  .filter-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+    background: var(--status-primary-bg);
+    color: white;
+    transition: all 400ms var(--ease-elastic);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .filter-bar-advanced:hover .filter-icon-badge {
+    transform: scale3d(1.12, 1.12, 1) rotateZ(5deg);
+  }
+  
+  /* ==========================================
+     ENHANCED LOADING STATES
+     ========================================== */
+  
+  .loading-state-advanced {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: var(--spacing-8);
+    background: linear-gradient(
+      135deg,
+      var(--color-slate-50) 0%,
+      rgba(238, 242, 255, 0.5) 50%,
+      var(--color-slate-50) 100%
+    );
+  }
+  
+  .loading-spinner-wrapper {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+  }
+  
+  .loading-spinner {
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    filter: drop-shadow(0 4px 12px rgba(79, 70, 229, 0.3));
+  }
+  
+  .loading-glow {
+    position: absolute;
+    inset: -30px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.4) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+  
+  /* ==========================================
+     EMPTY STATE WITH SOPHISTICATED DESIGN
+     ========================================== */
+  
+  .empty-state-advanced {
+    padding: var(--spacing-16) var(--spacing-4);
+    text-align: center;
+  }
+  
+  .empty-state-icon-wrapper {
+    position: relative;
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto var(--spacing-8);
+  }
+  
+  .empty-state-icon {
+    width: 100%;
+    height: 100%;
+    opacity: 0.25;
+    animation: float-3d 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.1));
+  }
+  
+  .empty-state-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.2) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+  
+  /* ==========================================
+     ENHANCED BADGE WITH GLASS EFFECT
+     ========================================== */
+  
+  .badge-advanced {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 700;
+    background: var(--glass-bg-white);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-3d-sm);
+    transition: all 300ms var(--ease-smooth);
+  }
+  
+  .badge-advanced:hover {
+    transform: scale3d(1.05, 1.05, 1);
+    box-shadow: var(--shadow-3d-md);
+  }
+  
+  /* ==========================================
+     GRADIENT TEXT WITH COLD COLORS
+     ========================================== */
+  
+  .gradient-text-animated {
+    background: linear-gradient(
+      90deg,
+      var(--color-indigo-600),
+      var(--color-emerald-600),
+      var(--color-indigo-600)
+    );
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-glass 4s linear infinite;
+    font-weight: 800;
+  }
+  
+  /* ==========================================
+     ANIMATION UTILITIES
+     ========================================== */
+  
+  .animate-fade-in-up {
+    animation: scale-in-3d 800ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-fade-in-scale {
+    animation: scale-in-3d 600ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-3d 700ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-with-delay {
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+  
+  /* ==========================================
+     RESPONSIVE GRID SYSTEM
+     ========================================== */
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: var(--spacing-6);
+  }
+  
+  @media (min-width: 640px) {
+    .dashboard-grid--metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .dashboard-grid--metrics {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    
+    .dashboard-grid--charts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* ==========================================
+     MAIN CONTAINER WITH ENHANCED BACKGROUND
+     ========================================== */
+  
+  .gradient-subtle {
+    background: 
+      var(--texture-grid),
+      linear-gradient(
+        135deg,
+        #ffffff 0%,
+        #fafbfc 50%,
+        #f8f9fb 100%
+      );
+    background-size: 
+      40px 40px,
+      100% 100%;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  
+  /* ==========================================
+     UTILITY CLASSES
+     ========================================== */
+  
+  .shadow-elegant {
+    box-shadow: var(--shadow-3d-md);
+  }
+  
+  .glass-card {
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+  }
+  
+  /* ==========================================
+     REDUCED MOTION SUPPORT
+     ========================================== */
+  
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
+  /* ==========================================
+     PRINT STYLES
+     ========================================== */
+  
+  @media print {
+    .metric-card-advanced,
+    .chart-card-advanced {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    
+    .gradient-subtle {
+      background: white;
+    }
+  }
+`;
+
+// ==========================================
 // CUSTOM TOOLTIP COMPONENT
 // ==========================================
 
@@ -107,14 +1066,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ==========================================
 
 const COLORS = [
-  "hsl(215 20% 40%)", // primary
-  "hsl(215 20% 50%)", // primary-light
-  "hsl(220 15% 55%)", // muted-1
-  "hsl(220 15% 45%)", // muted-2
-  "hsl(0 50% 45%)", // destructive
-  "hsl(145 30% 40%)", // success
-  "hsl(35 60% 45%)", // warning
-  "hsl(220 15% 35%)", // foreground-dark
+  "#4f46e5", // indigo
+  "#059669", // emerald
+  "#d97706", // amber
+  "#0d9488", // teal
+  "#0891b2", // cyan
+  "#0284c7", // sky
+  "#7c3aed", // violet
+  "#c026d3", // fuchsia
 ];
 
 // ==========================================
@@ -129,6 +1088,14 @@ const Index = () => {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [hoveredChart, setHoveredChart] = useState<string | null>(null);
 
+  useEffect(() => {
+    const styleElement = document.createElement("style");
+    styleElement.innerHTML = COMPLETE_DESIGN_SYSTEM;
+    document.head.appendChild(styleElement);
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   useEffect(() => {
     fetchAgendamentos();
@@ -332,56 +1299,84 @@ const Index = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-md transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="dashboard-grid dashboard-grid--metrics">
+          <Card
+            className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "0ms", opacity: 0 }}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
-              <Clock className="h-5 w-5 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-warning">
-                {metrics.pendentes}
+              <div className="metric-icon-badge metric-icon-badge--warning">
+                <Clock className="h-5 w-5" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Aguardando aprovação</p>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="flex items-baseline gap-3">
+                <div className="metric-value" style={{ color: "#b45309" }}>
+                  {metrics.pendentes}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Aguardando aprovação</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <Card
+            className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "100ms", opacity: 0 }}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
-              <CheckCircle className="h-5 w-5 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-success">
-                {metrics.aprovados}
+              <div className="metric-icon-badge metric-icon-badge--success">
+                <CheckCircle className="h-5 w-5" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Confirmados</p>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="flex items-baseline gap-3">
+                <div className="metric-value" style={{ color: "#059669" }}>
+                  {metrics.aprovados}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Confirmados</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <Card
+            className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "200ms", opacity: 0 }}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
-              <XCircle className="h-5 w-5 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-destructive">
-                {metrics.rejeitados}
+              <div className="metric-icon-badge metric-icon-badge--destructive">
+                <XCircle className="h-5 w-5" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Não aprovados</p>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="flex items-baseline gap-3">
+                <div className="metric-value" style={{ color: "#dc2626" }}>
+                  {metrics.rejeitados}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Não aprovados</p>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-smooth">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <Card
+            className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
+            style={{ animationDelay: "300ms", opacity: 0 }}
+          >
+            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
-              <Calendar className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-primary">
-                {metrics.total}
+              <div className="metric-icon-badge metric-icon-badge--primary">
+                <Calendar className="h-5 w-5" />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Todos os registros</p>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="flex items-baseline gap-3">
+                <div className="metric-value" style={{ color: "#4f46e5" }}>
+                  {metrics.total}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 font-medium">Todos os registros</p>
             </CardContent>
           </Card>
         </div>
@@ -420,26 +1415,31 @@ const Index = () => {
         )}
 
         {agendamentos.length === 0 ? (
-          <Card className="shadow-sm">
-            <CardContent className="py-12 text-center">
-              <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground/40" />
-              <h3 className="text-2xl font-semibold mb-2">Nenhum agendamento visível</h3>
-              <p className="text-muted-foreground mb-6">
-                {isAdmin()
-                  ? "Não há agendamentos cadastrados no sistema."
-                  : isMedicoUnidade()
-                    ? "Você ainda não criou nenhum agendamento."
-                    : isMedicoMaternidade()
-                      ? "Não há agendamentos aprovados para sua maternidade no momento."
-                      : "Você não tem permissões para visualizar agendamentos."}
-              </p>
+          <Card className="shadow-elegant border-2">
+            <CardContent className="empty-state-advanced">
+              <div className="empty-state-icon-wrapper">
+                <Calendar className="empty-state-icon" />
+                <div className="empty-state-glow bg-primary/10" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
+                <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
+                  {isAdmin()
+                    ? "Não há agendamentos cadastrados no sistema."
+                    : isMedicoUnidade()
+                      ? "Você ainda não criou nenhum agendamento."
+                      : isMedicoMaternidade()
+                        ? "Não há agendamentos aprovados para sua maternidade no momento."
+                        : "Você não tem permissões para visualizar agendamentos."}
+                </p>
+              </div>
               {(isMedicoUnidade() || isAdmin()) && (
                 <Button
                   onClick={() => navigate("/novo-agendamento")}
-                  className="shadow-md hover:shadow-lg transition-smooth"
+                  className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group"
                   size="lg"
                 >
-                  <Plus className="h-5 w-5 mr-2" />
+                  <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
                   Criar Primeiro Agendamento
                 </Button>
               )}

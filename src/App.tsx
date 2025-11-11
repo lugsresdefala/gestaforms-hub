@@ -15,7 +15,6 @@ import AprovacoesAgendamentos from "./pages/AprovacoesAgendamentos";
 import AprovacoesUsuarios from "./pages/AprovacoesUsuarios";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
 import GerenciarUsuarios from "./pages/GerenciarUsuarios";
-import EditarUsuarios from "./pages/EditarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import GuiaSistema from "./pages/GuiaSistema";
@@ -122,16 +121,6 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <GerenciarUsuarios />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/editar-usuarios" 
-              element={
-                <ProtectedRoute requireAdminMed>
-                  <AppLayout>
-                    <EditarUsuarios />
                   </AppLayout>
                 </ProtectedRoute>
               } 

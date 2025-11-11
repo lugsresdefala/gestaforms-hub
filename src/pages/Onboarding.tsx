@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Users,
+  FileText,
   CheckCircle,
   ArrowRight,
   ArrowLeft,
@@ -13,6 +14,7 @@ import {
   BarChart3,
   ClipboardList,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 
 const tourSteps = [
@@ -120,11 +122,21 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: "2s" }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: "4s" }} />
+      </div>
+
+      <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="flex items-center justify-center mb-4">
+            <Sparkles className="w-12 h-12 text-primary animate-pulse" />
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4">
             Tour Interativo
           </h1>
           <p className="text-muted-foreground text-lg">
@@ -142,9 +154,9 @@ const Onboarding = () => {
               {Math.round(((currentStep + 1) / tourSteps.length) * 100)}%
             </span>
           </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+          <div className="h-2 bg-secondary/20 rounded-full overflow-hidden backdrop-blur-sm">
             <div
-              className="h-full bg-primary transition-all duration-500 ease-out"
+              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out"
               style={{ width: `${((currentStep + 1) / tourSteps.length) * 100}%` }}
             />
           </div>
@@ -152,17 +164,20 @@ const Onboarding = () => {
 
         {/* Main Content Card */}
         <div className="max-w-4xl mx-auto">
-          <Card className="border shadow-sm">
+          <Card className="border-primary/20 bg-card/80 backdrop-blur-xl shadow-2xl animate-scale-in">
             <CardHeader className="text-center pb-8">
               <div className="flex justify-center mb-6">
-                <div className="bg-primary/5 p-6 rounded-xl border border-primary/10">
-                  <IconComponent className="w-12 h-12 text-primary" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-2xl blur-xl opacity-50 animate-pulse" />
+                  <div className="relative bg-gradient-to-br from-primary/20 to-accent/20 p-8 rounded-2xl backdrop-blur-sm border border-primary/30">
+                    <IconComponent className="w-16 h-16 text-primary" />
+                  </div>
                 </div>
               </div>
-              <Badge className="mb-4 mx-auto">
+              <Badge className="mb-4 mx-auto bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30">
                 Módulo {step.id}
               </Badge>
-              <CardTitle className="text-3xl font-bold">
+              <CardTitle className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 {step.title}
               </CardTitle>
               <CardDescription className="text-lg mt-2">
@@ -171,26 +186,27 @@ const Onboarding = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4 mb-8">
-                <h3 className="text-xl font-semibold mb-4">
+                <h3 className="text-xl font-semibold text-foreground mb-4">
                   Recursos Principais:
                 </h3>
                 {step.features.map((feature, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-4 rounded-lg bg-secondary/30 border border-border/50"
+                    className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-secondary/30 to-secondary/10 border border-secondary/20 backdrop-blur-sm hover:scale-105 transition-all duration-300 hover:shadow-lg"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
+                    <span className="text-foreground/90">{feature}</span>
                   </div>
                 ))}
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex items-center justify-between gap-4 pt-6 border-t">
+              <div className="flex items-center justify-between gap-4 pt-6 border-t border-border/50">
                 <Button
                   variant="ghost"
                   onClick={handleSkip}
-                  className="text-muted-foreground"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   Pular Tour
                 </Button>
@@ -206,7 +222,7 @@ const Onboarding = () => {
                   </Button>
                   <Button
                     onClick={handleNext}
-                    className="gap-2"
+                    className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
                   >
                     {currentStep === tourSteps.length - 1 ? "Começar" : "Próximo"}
                     <ArrowRight className="w-4 h-4" />
@@ -224,8 +240,8 @@ const Onboarding = () => {
                 onClick={() => setCurrentStep(index)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === currentStep
-                    ? "w-8 bg-primary"
-                    : "w-2 bg-secondary hover:bg-secondary/70"
+                    ? "w-8 bg-gradient-to-r from-primary to-accent"
+                    : "w-2 bg-secondary/30 hover:bg-secondary/50"
                 }`}
               />
             ))}
