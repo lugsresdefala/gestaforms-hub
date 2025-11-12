@@ -59,11 +59,11 @@ function parseCSVLine(line: string): string[] {
 function parseDate(dateStr: string): Date | null {
   if (!dateStr || dateStr === '-') return null;
   
-  // Try DD/MM/YYYY
+  // Try M/D/YYYY or MM/DD/YYYY (American format used in CSV)
   const parts = dateStr.split('/');
   if (parts.length === 3) {
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
+    const month = parseInt(parts[0]) - 1;
+    const day = parseInt(parts[1]);
     const year = parseInt(parts[2]);
     if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
       return new Date(year, month, day);
@@ -227,8 +227,12 @@ export async function importarAgendamentosLote(
       
       const resultado = calcularAgendamentoCompleto(dadosCalculo);
       
-      // Verificar disponibilidade na maternidade
-      const dataAgendamento = new Date(resultado.dataAgendamento);
+      // Garantir que a data está em 2025
+      let dataAgendamento = new Date(resultado.dataAgendamento);
+      if (dataAgendamento.getFullYear() < 2025) {
+        dataAgendamento.setFullYear(2025);
+      }
+      
       const isUrgente = resultado.observacoes.toLowerCase().includes('urgente');
       
       const disponibilidade = await verificarDisponibilidade(

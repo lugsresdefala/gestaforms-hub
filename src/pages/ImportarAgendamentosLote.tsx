@@ -50,8 +50,13 @@ export default function ImportarAgendamentosLote() {
         throw new Error('Usuário não autenticado');
       }
 
+      // Read file with UTF-8 encoding to handle special characters
       const text = await file.text();
-      const importResult = await importarAgendamentosLote(text, user.id);
+      
+      // Remove BOM if present
+      const cleanText = text.replace(/^\uFEFF/, '');
+      
+      const importResult = await importarAgendamentosLote(cleanText, user.id);
       
       setResult(importResult);
 
