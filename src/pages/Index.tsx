@@ -501,79 +501,42 @@ const COMPLETE_DESIGN_SYSTEM = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: var(--radius-xl);
-    position: relative;
-    transition: all 500ms var(--ease-elastic);
-    will-change: transform;
-    transform-style: preserve-3d;
-    z-index: 10;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: var(--shadow-3d-sm);
-  }
-  
-  .metric-icon-badge::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: var(--radius-xl);
-    opacity: 0;
-    transition: opacity 400ms var(--ease-smooth);
-    animation: glow-pulse 3s ease-in-out infinite;
-    animation-play-state: paused;
-    filter: blur(20px);
-    z-index: -1;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    transition: all 200ms ease;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
   }
   
   .metric-card-advanced:hover .metric-icon-badge {
-    transform: scale3d(1.2, 1.2, 1.2) translateZ(8px) rotateZ(8deg);
-  }
-  
-  .metric-card-advanced:hover .metric-icon-badge::before {
-    opacity: 0.6;
-    animation-play-state: running;
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.16);
   }
   
   .metric-icon-badge--warning {
-    background: var(--status-pending-bg);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--warning::before {
-    background: var(--status-pending-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--success {
-    background: var(--status-success-bg);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--success::before {
-    background: var(--status-success-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--destructive {
-    background: var(--status-destructive-bg);
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--destructive::before {
-    background: var(--status-destructive-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--primary {
-    background: var(--status-primary-bg);
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--primary::before {
-    background: var(--status-primary-bg);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   /* ==========================================
@@ -581,86 +544,45 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .metric-value {
-    font-size: 3rem;
-    font-weight: 800;
+    font-size: 2.5rem;
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
-    transition: all 500ms var(--ease-elastic);
+    transition: all 200ms ease;
     position: relative;
     display: inline-block;
-    text-shadow: 
-      0 2px 4px rgba(15, 23, 42, 0.1),
-      0 4px 8px rgba(15, 23, 42, 0.05);
-    z-index: 10;
   }
   
   .metric-card-advanced:hover .metric-value {
-    transform: scale3d(1.08, 1.08, 1) translateZ(4px);
-    text-shadow: 
-      0 4px 8px rgba(15, 23, 42, 0.15),
-      0 8px 16px rgba(15, 23, 42, 0.1);
+    transform: scale(1.02);
   }
   
   /* ==========================================
-     GLASSMORPHIC CHART CARDS WITH 3D
+     CHART CARDS - SIMPLIFIED ELEGANT STYLE
      ========================================== */
   
   .chart-card-advanced {
     position: relative;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-radius: var(--radius-xl);
     overflow: hidden;
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 600ms var(--ease-out-cubic);
-    will-change: transform, box-shadow;
-    transform-style: preserve-3d;
-  }
-  
-  .chart-card-advanced::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--texture-grid);
-    opacity: 0.3;
-    pointer-events: none;
-    z-index: 1;
-  }
-  
-  .chart-card-advanced::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    opacity: 0;
-    transition: opacity 400ms var(--ease-smooth);
-    pointer-events: none;
-    z-index: 2;
+    border: 1px solid rgba(30, 58, 138, 0.12);
+    border-radius: var(--radius-lg);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .chart-card-advanced:hover {
-    transform: translateY(-6px) translateZ(8px);
-    box-shadow: var(--shadow-3d-xl);
-    border-color: rgba(255, 255, 255, 0.6);
-  }
-  
-  .chart-card-advanced:hover::after {
-    opacity: 1;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(30, 58, 138, 0.2);
   }
   
   .chart-card-advanced--active {
-    border-color: var(--color-indigo-400);
-    box-shadow: 
-      var(--shadow-3d-lg),
-      0 0 30px rgba(79, 70, 229, 0.2);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: var(--shadow-3d-md);
   }
   
   /* ==========================================
@@ -671,24 +593,24 @@ const COMPLETE_DESIGN_SYSTEM = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-lg);
-    transition: all 400ms var(--ease-elastic);
-    transform-style: preserve-3d;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    transition: all 200ms ease;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-3d-sm);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .chart-card-advanced:hover .chart-icon-badge {
-    transform: scale3d(1.15, 1.15, 1) translateZ(4px) rotateZ(5deg);
+    transform: scale(1.05);
   }
   
   .chart-icon-badge--primary {
-    background: var(--status-primary-bg);
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: white;
+  }
   }
   
   .chart-icon-badge--accent {
@@ -706,49 +628,38 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .filter-bar-advanced {
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-radius: var(--radius-xl);
+    border: 1px solid rgba(30, 58, 138, 0.12);
+    border-radius: var(--radius-lg);
     padding: var(--spacing-6);
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 400ms var(--ease-smooth);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .filter-bar-advanced::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--texture-noise);
-    opacity: 0.2;
-    pointer-events: none;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .filter-bar-advanced:hover {
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: var(--shadow-3d-lg);
-    transform: translateY(-2px);
+    border-color: rgba(30, 58, 138, 0.2);
+    box-shadow: var(--shadow-3d-md);
+    transform: translateY(-1px);
   }
   
   .filter-icon-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: var(--radius-lg);
-    background: var(--status-primary-bg);
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
     color: white;
-    transition: all 400ms var(--ease-elastic);
-    box-shadow: var(--shadow-3d-sm);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: all 200ms ease;
+    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .filter-bar-advanced:hover .filter-icon-badge {
-    transform: scale3d(1.12, 1.12, 1) rotateZ(5deg);
+    transform: scale(1.05);
   }
   
   /* ==========================================
@@ -848,8 +759,8 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .badge-advanced:hover {
-    transform: scale3d(1.05, 1.05, 1);
-    box-shadow: var(--shadow-3d-md);
+    transform: scale(1.02);
+    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.16);
   }
   
   /* ==========================================
