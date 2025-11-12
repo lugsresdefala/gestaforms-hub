@@ -25,6 +25,7 @@ import CompararCSVs from "./pages/CompararCSVs";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
+import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -201,6 +202,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <CorrigirParidade />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-agendamentos-2025" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ImportarAgendamentos2025 />
                   </AppLayout>
                 </ProtectedRoute>
               } 

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck } from "lucide-react";
+import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
@@ -56,6 +56,11 @@ const AppSidebar = () => {
     title: "Aprovações Usuários",
     url: "/aprovacoes-usuarios",
     icon: Users,
+    show: isAdmin()
+  }, {
+    title: "Importar Agendamentos 2025",
+    url: "/importar-agendamentos-2025",
+    icon: Upload,
     show: isAdmin()
   }, {
     title: "Atualizar IG",
