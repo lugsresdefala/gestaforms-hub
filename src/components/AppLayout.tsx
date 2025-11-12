@@ -68,6 +68,11 @@ const AppSidebar = () => {
     icon: Upload,
     show: isAdmin()
   }, {
+    title: "Processar CSV Enviado",
+    url: "/processar-csv-upload",
+    icon: Upload,
+    show: isAdmin()
+  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,

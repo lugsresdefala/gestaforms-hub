@@ -27,6 +27,7 @@ import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
+import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -223,6 +224,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ImportarAgendamentosLote />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/processar-csv-upload" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ProcessarCSVUpload />
                   </AppLayout>
                 </ProtectedRoute>
               } 
