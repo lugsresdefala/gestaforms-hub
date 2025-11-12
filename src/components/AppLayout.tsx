@@ -63,6 +63,11 @@ const AppSidebar = () => {
     icon: Upload,
     show: isAdmin()
   }, {
+    title: "Importar Lote (Com Base Cálculo)",
+    url: "/importar-agendamentos-lote",
+    icon: Upload,
+    show: isAdmin()
+  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,

@@ -26,6 +26,7 @@ import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
+import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -212,6 +213,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ImportarAgendamentos2025 />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-agendamentos-lote" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ImportarAgendamentosLote />
                   </AppLayout>
                 </ProtectedRoute>
               } 
