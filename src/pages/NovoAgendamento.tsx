@@ -143,6 +143,16 @@ const NovoAgendamento = () => {
         placentaPrevia: values.placentaPrevia
       });
       
+      // Calcular IG no dia do agendamento
+      const hoje = new Date();
+      const diasAteAgendamento = Math.floor(
+        (resultado.dataAgendamento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const igNoAgendamentoTotal = resultado.igFinal.totalDays + diasAteAgendamento;
+      const igNoAgendamentoSemanas = Math.floor(igNoAgendamentoTotal / 7);
+      const igNoAgendamentoDias = igNoAgendamentoTotal % 7;
+      const igNoAgendamentoTexto = `${igNoAgendamentoSemanas} semanas e ${igNoAgendamentoDias} dias`;
+      
       // Preparar dados para inserção
       const agendamentoData = {
         carteirinha: values.carteirinha,
@@ -160,7 +170,7 @@ const NovoAgendamento = () => {
         semanas_usg: parseInt(values.semanasUsg),
         dias_usg: parseInt(values.diasUsg),
         usg_recente: values.usgRecente,
-        ig_pretendida: values.igPretendida,
+        ig_pretendida: `${igNoAgendamentoTexto} (${values.igPretendida})`,
         indicacao_procedimento: values.indicacaoProcedimento,
         medicacao: values.medicacao || null,
         diagnosticos_maternos: JSON.stringify(values.diagnosticosMaternos) || null,
@@ -177,7 +187,10 @@ const NovoAgendamento = () => {
         data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
         idade_gestacional_calculada: resultado.igFinal.displayText,
         created_by: user?.id,
-        observacoes_agendamento: `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` +
+        observacoes_agendamento: `IG HOJE: ${resultado.igFinal.displayText}\n` +
+          `IG NO DIA DO AGENDAMENTO: ${igNoAgendamentoTexto}\n` +
+          `DATA DO AGENDAMENTO: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')}\n\n` +
+          `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` +
           `IG pela DUM: ${resultado.igByDum?.displayText || 'N/A'}\n` +
           `IG pelo USG: ${resultado.igByUsg.displayText}\n` +
           `IG FINAL (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n\n` +

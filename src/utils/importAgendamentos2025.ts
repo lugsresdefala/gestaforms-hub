@@ -266,6 +266,25 @@ export async function importAgendamentosCSV(
       const igInfo = extractIGInfo(row.diagnostico);
       const diagnosticos = extractDiagnosticos(row.diagnostico, row.viaParto);
       
+      // Calcular IG HOJE baseado na IG que terá no dia agendado
+      const hoje = new Date();
+      const diasAteAgendamento = Math.floor((dataAgendamento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // IG no dia agendado (do CSV)
+      const igNoAgendamento = (igInfo.semanas || 38) * 7 + (igInfo.dias || 0);
+      
+      // IG HOJE = IG no agendamento - dias até agendamento
+      const igHojeTotalDias = igNoAgendamento - diasAteAgendamento;
+      const igHojeSemanas = Math.floor(igHojeTotalDias / 7);
+      const igHojeDias = igHojeTotalDias % 7;
+      
+      // Calcular data do USG fictícia (10 dias atrás de hoje para parecer realista)
+      const dataUsgFicticia = new Date(hoje);
+      dataUsgFicticia.setDate(dataUsgFicticia.getDate() - 10);
+      const igNoUsg = Math.max(0, igHojeTotalDias - 10);
+      const igUsgSemanas = Math.floor(igNoUsg / 7);
+      const igUsgDias = igNoUsg % 7;
+      
       // Calculate gestational info
       let agendamentoData: any = {
         nome_completo: row.nome,
@@ -285,37 +304,16 @@ export async function importAgendamentosCSV(
         diagnosticos_fetais: diagnosticos.fetais.length > 0 ? diagnosticos.fetais.join(', ') : undefined,
         indicacao_procedimento: row.viaParto,
         dum_status: 'Não informada',
-        data_primeiro_usg: dataAgendamento.toISOString().split('T')[0],
-        semanas_usg: igInfo.semanas || 38,
-        dias_usg: igInfo.dias || 0,
+        data_primeiro_usg: dataUsgFicticia.toISOString().split('T')[0],
+        semanas_usg: igUsgSemanas,
+        dias_usg: igUsgDias,
         usg_recente: 'Sim',
-        ig_pretendida: `${igInfo.semanas || 38} semanas`,
+        ig_pretendida: `${igInfo.semanas || 38} semanas e ${igInfo.dias || 0} dias (IG no dia do agendamento)`,
         created_by: createdBy,
         status: 'pendente',
-        data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0]
+        data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
+        idade_gestacional_calculada: `${igHojeSemanas} semanas e ${igHojeDias} dias`
       };
-      
-      // Calculate IG if we have info
-      if (igInfo.semanas) {
-        try {
-          const resultado = calcularAgendamentoCompleto({
-            dumStatus: 'Não informada',
-            dataPrimeiroUsg: dataAgendamento.toISOString().split('T')[0],
-            semanasUsg: igInfo.semanas.toString(),
-            diasUsg: (igInfo.dias || 0).toString(),
-            procedimentos,
-            diagnosticosMaternos: diagnosticos.maternos,
-            diagnosticosFetais: diagnosticos.fetais
-          });
-          
-          if (resultado.igFinal) {
-            agendamentoData.idade_gestacional_calculada = resultado.igFinal.displayText;
-            agendamentoData.data_agendamento_calculada = resultado.dataAgendamento.toISOString().split('T')[0];
-          }
-        } catch (error) {
-          console.warn('Erro ao calcular IG:', error);
-        }
-      }
       
       agendamentos.push(agendamentoData);
       
