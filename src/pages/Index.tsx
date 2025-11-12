@@ -150,30 +150,40 @@ const COMPLETE_DESIGN_SYSTEM = `
     --glass-blur-heavy: blur(40px);
     --glass-blur-light: blur(12px);
     
-    /* Refined Shadow System - Sophisticated & Cool */
+    /* Multi-layer 3D Shadow System */
     --shadow-3d-xs: 
-      0 1px 3px rgba(30, 58, 138, 0.08),
-      0 1px 2px rgba(30, 58, 138, 0.06);
+      0 1px 2px rgba(15, 23, 42, 0.06),
+      0 2px 4px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
     
     --shadow-3d-sm: 
-      0 2px 4px rgba(30, 58, 138, 0.10),
-      0 1px 2px rgba(30, 58, 138, 0.06);
+      0 2px 4px -1px rgba(15, 23, 42, 0.08),
+      0 4px 8px -2px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
     
     --shadow-3d-md: 
-      0 3px 8px rgba(30, 58, 138, 0.12),
-      0 1px 3px rgba(30, 58, 138, 0.08);
+      0 4px 8px -2px rgba(15, 23, 42, 0.1),
+      0 8px 16px -4px rgba(15, 23, 42, 0.08),
+      0 16px 32px -8px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
     
     --shadow-3d-lg: 
-      0 4px 12px rgba(30, 58, 138, 0.14),
-      0 2px 6px rgba(30, 58, 138, 0.10);
+      0 8px 16px -4px rgba(15, 23, 42, 0.12),
+      0 16px 32px -8px rgba(15, 23, 42, 0.1),
+      0 24px 48px -12px rgba(15, 23, 42, 0.08),
+      inset 0 2px 0 0 rgba(255, 255, 255, 0.95);
     
     --shadow-3d-xl: 
-      0 6px 16px rgba(30, 58, 138, 0.16),
-      0 3px 8px rgba(30, 58, 138, 0.12);
+      0 12px 24px -6px rgba(15, 23, 42, 0.15),
+      0 24px 48px -12px rgba(15, 23, 42, 0.12),
+      0 36px 72px -18px rgba(15, 23, 42, 0.1),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
     
     --shadow-3d-2xl: 
-      0 8px 24px rgba(30, 58, 138, 0.18),
-      0 4px 12px rgba(30, 58, 138, 0.14);
+      0 16px 32px -8px rgba(15, 23, 42, 0.18),
+      0 32px 64px -16px rgba(15, 23, 42, 0.15),
+      0 48px 96px -24px rgba(15, 23, 42, 0.12),
+      inset 0 2px 0 0 rgba(255, 255, 255, 1);
     
     /* Texture & Noise Patterns */
     --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
@@ -396,44 +406,58 @@ const COMPLETE_DESIGN_SYSTEM = `
   .metric-card-advanced {
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(30, 58, 138, 0.12);
-    border-radius: var(--radius-lg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
     padding: var(--spacing-6);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-3d-sm);
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow, border-color;
+    transform-style: preserve-3d;
   }
   
   .metric-card-advanced::before {
     content: '';
     position: absolute;
     inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 400ms var(--ease-smooth);
+  }
+  
+  .metric-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: -100%;
     background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0) 100%
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 65%
     );
     opacity: 0;
-    transition: opacity 300ms ease;
+    transition: all 800ms var(--ease-smooth);
     pointer-events: none;
+    z-index: 2;
   }
   
   .metric-card-advanced:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-3d-md);
-    border-color: rgba(30, 58, 138, 0.2);
+    transform: translateY(-8px) translateZ(12px) rotateX(2deg);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
   }
   
   .metric-card-advanced:hover::before {
-    opacity: 1;
+    opacity: 0.2;
   }
   
-  .metric-card-advanced:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-3d-sm);
+  .metric-card-advanced:hover::after {
+    opacity: 1;
+    transform: translateX(100%);
   }
   
   .metric-card-advanced--warning {
@@ -446,36 +470,39 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .metric-card-advanced--warning:hover {
-    box-shadow: var(--shadow-3d-md);
-    border-color: rgba(180, 83, 9, 0.3);
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-pending-glow);
   }
   
   .metric-card-advanced--success {
     background: linear-gradient(
       135deg,
-      rgba(236, 253, 245, 0.85) 0%,
-      rgba(209, 250, 229, 0.8) 100%
+      rgba(236, 253, 245, 0.9) 0%,
+      rgba(209, 250, 229, 0.85) 100%
     );
-    border-color: rgba(5, 150, 105, 0.12);
+    border-color: var(--status-success-border);
   }
   
   .metric-card-advanced--success:hover {
-    box-shadow: var(--shadow-3d-md);
-    border-color: rgba(5, 150, 105, 0.3);
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-success-glow);
   }
   
   .metric-card-advanced--destructive {
     background: linear-gradient(
       135deg,
-      rgba(254, 242, 242, 0.85) 0%,
-      rgba(254, 226, 226, 0.8) 100%
+      rgba(254, 242, 242, 0.9) 0%,
+      rgba(254, 226, 226, 0.85) 100%
     );
-    border-color: rgba(220, 38, 38, 0.12);
+    border-color: var(--status-destructive-border);
   }
   
   .metric-card-advanced--destructive:hover {
-    box-shadow: var(--shadow-3d-md);
-    border-color: rgba(220, 38, 38, 0.3);
+    box-shadow: 
+      var(--shadow-3d-xl),
+      0 0 40px var(--status-destructive-glow);
   }
   
   .metric-card-advanced--primary {
@@ -501,42 +528,79 @@ const COMPLETE_DESIGN_SYSTEM = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    border-radius: var(--radius-lg);
-    transition: all 200ms ease;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-xl);
+    position: relative;
+    transition: all 500ms var(--ease-elastic);
+    will-change: transform;
+    transform-style: preserve-3d;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-3d-sm);
+  }
+  
+  .metric-icon-badge::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-xl);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    animation: glow-pulse 3s ease-in-out infinite;
+    animation-play-state: paused;
+    filter: blur(20px);
+    z-index: -1;
   }
   
   .metric-card-advanced:hover .metric-icon-badge {
-    transform: scale(1.05);
-    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.16);
+    transform: scale3d(1.2, 1.2, 1.2) translateZ(8px) rotateZ(8deg);
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.6;
+    animation-play-state: running;
   }
   
   .metric-icon-badge--warning {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: var(--status-pending-bg);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--warning::before {
+    background: var(--status-pending-bg);
   }
   
   .metric-icon-badge--success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: var(--status-success-bg);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--success::before {
+    background: var(--status-success-bg);
   }
   
   .metric-icon-badge--destructive {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: var(--status-destructive-bg);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--destructive::before {
+    background: var(--status-destructive-bg);
   }
   
   .metric-icon-badge--primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: var(--status-primary-bg);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--primary::before {
+    background: var(--status-primary-bg);
   }
   
   /* ==========================================
@@ -544,45 +608,86 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .metric-value {
-    font-size: 2.5rem;
-    font-weight: 700;
+    font-size: 3rem;
+    font-weight: 800;
     line-height: 1;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
-    transition: all 200ms ease;
+    transition: all 500ms var(--ease-elastic);
     position: relative;
     display: inline-block;
+    text-shadow: 
+      0 2px 4px rgba(15, 23, 42, 0.1),
+      0 4px 8px rgba(15, 23, 42, 0.05);
+    z-index: 10;
   }
   
   .metric-card-advanced:hover .metric-value {
-    transform: scale(1.02);
+    transform: scale3d(1.08, 1.08, 1) translateZ(4px);
+    text-shadow: 
+      0 4px 8px rgba(15, 23, 42, 0.15),
+      0 8px 16px rgba(15, 23, 42, 0.1);
   }
   
   /* ==========================================
-     CHART CARDS - SIMPLIFIED ELEGANT STYLE
+     GLASSMORPHIC CHART CARDS WITH 3D
      ========================================== */
   
   .chart-card-advanced {
     position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
     overflow: hidden;
-    border: 1px solid rgba(30, 58, 138, 0.12);
-    border-radius: var(--radius-lg);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-3d-sm);
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 600ms var(--ease-out-cubic);
+    will-change: transform, box-shadow;
+    transform-style: preserve-3d;
+  }
+  
+  .chart-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-grid);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .chart-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%,
+      rgba(255, 255, 255, 0.05) 100%
+    );
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    pointer-events: none;
+    z-index: 2;
   }
   
   .chart-card-advanced:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-3d-md);
-    border-color: rgba(30, 58, 138, 0.2);
+    transform: translateY(-6px) translateZ(8px);
+    box-shadow: var(--shadow-3d-xl);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .chart-card-advanced:hover::after {
+    opacity: 1;
   }
   
   .chart-card-advanced--active {
-    border-color: rgba(99, 102, 241, 0.3);
-    box-shadow: var(--shadow-3d-md);
+    border-color: var(--color-indigo-400);
+    box-shadow: 
+      var(--shadow-3d-lg),
+      0 0 30px rgba(79, 70, 229, 0.2);
   }
   
   /* ==========================================
@@ -593,24 +698,24 @@ const COMPLETE_DESIGN_SYSTEM = `
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: var(--radius-md);
-    transition: all 200ms ease;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    transition: all 400ms var(--ease-elastic);
+    transform-style: preserve-3d;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
   }
   
   .chart-card-advanced:hover .chart-icon-badge {
-    transform: scale(1.05);
+    transform: scale3d(1.15, 1.15, 1) translateZ(4px) rotateZ(5deg);
   }
   
   .chart-icon-badge--primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: var(--status-primary-bg);
     color: white;
-  }
   }
   
   .chart-icon-badge--accent {
@@ -628,38 +733,49 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .filter-bar-advanced {
-    border: 1px solid rgba(30, 58, 138, 0.12);
-    border-radius: var(--radius-lg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
     padding: var(--spacing-6);
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-3d-sm);
-    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--shadow-3d-md);
+    transition: all 400ms var(--ease-smooth);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .filter-bar-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--texture-noise);
+    opacity: 0.2;
+    pointer-events: none;
   }
   
   .filter-bar-advanced:hover {
-    border-color: rgba(30, 58, 138, 0.2);
-    box-shadow: var(--shadow-3d-md);
-    transform: translateY(-1px);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-3d-lg);
+    transform: translateY(-2px);
   }
   
   .filter-icon-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: var(--status-primary-bg);
     color: white;
-    transition: all 200ms ease;
-    box-shadow: 0 1px 3px rgba(30, 58, 138, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 400ms var(--ease-elastic);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
   }
   
   .filter-bar-advanced:hover .filter-icon-badge {
-    transform: scale(1.05);
+    transform: scale3d(1.12, 1.12, 1) rotateZ(5deg);
   }
   
   /* ==========================================
@@ -759,8 +875,8 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .badge-advanced:hover {
-    transform: scale(1.02);
-    box-shadow: 0 2px 6px rgba(30, 58, 138, 0.16);
+    transform: scale3d(1.05, 1.05, 1);
+    box-shadow: var(--shadow-3d-md);
   }
   
   /* ==========================================
@@ -1187,16 +1303,6 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "0ms", opacity: 0 }}
-            onClick={() => {
-              navigate('/meus-agendamentos');
-              setTimeout(() => {
-                const filterSelect = document.querySelector('[id="filterStatus"]');
-                if (filterSelect) {
-                  (filterSelect as HTMLSelectElement).value = 'pendente';
-                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-              }, 100);
-            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
@@ -1217,16 +1323,6 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "100ms", opacity: 0 }}
-            onClick={() => {
-              navigate('/meus-agendamentos');
-              setTimeout(() => {
-                const filterSelect = document.querySelector('[id="filterStatus"]');
-                if (filterSelect) {
-                  (filterSelect as HTMLSelectElement).value = 'aprovado';
-                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-              }, 100);
-            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
@@ -1247,16 +1343,6 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "200ms", opacity: 0 }}
-            onClick={() => {
-              navigate('/meus-agendamentos');
-              setTimeout(() => {
-                const filterSelect = document.querySelector('[id="filterStatus"]');
-                if (filterSelect) {
-                  (filterSelect as HTMLSelectElement).value = 'rejeitado';
-                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-              }, 100);
-            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
@@ -1277,7 +1363,6 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "300ms", opacity: 0 }}
-            onClick={() => navigate('/meus-agendamentos')}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
