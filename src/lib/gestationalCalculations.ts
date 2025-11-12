@@ -1,4 +1,4 @@
-import { differenceInDays, addDays, addWeeks } from "date-fns";
+import { differenceInDays, addDays, addWeeks, getDay } from "date-fns";
 import { PROTOCOLS, type ProtocolConfig } from "./obstetricProtocols";
 
 export interface GestationalAge {
@@ -17,6 +17,7 @@ export interface CalculationResult {
   dataAgendamento: Date;
   igAgendamento: string;
   protocoloAplicado?: string;
+  dpp: Date;
 }
 
 /**
@@ -127,6 +128,56 @@ const parseIgIdeal = (igIdeal: string): { min: number; max: number } => {
 };
 
 /**
+ * Calcula Data Provável do Parto (DPP) baseada na IG atual
+ */
+export const calcularDPP = (igAtual: GestationalAge, dataReferencia: Date = new Date()): Date => {
+  const diasRestantes = (40 * 7) - igAtual.totalDays;
+  return addDays(dataReferencia, diasRestantes);
+};
+
+/**
+ * Calcula IG que a paciente terá em uma data específica
+ */
+export const calcularIgNaData = (igAtual: GestationalAge, dataAlvo: Date, dataReferencia: Date = new Date()): GestationalAge => {
+  const diasAte = differenceInDays(dataAlvo, dataReferencia);
+  const totalDias = igAtual.totalDays + diasAte;
+  const semanas = Math.floor(totalDias / 7);
+  const dias = totalDias % 7;
+  
+  return {
+    weeks: semanas,
+    days: dias,
+    totalDays: totalDias,
+    displayText: `${semanas} semanas e ${dias} dias`
+  };
+};
+
+/**
+ * Verifica se uma data é domingo
+ */
+const isDomingo = (data: Date): boolean => {
+  return getDay(data) === 0; // 0 = domingo
+};
+
+/**
+ * Encontra a próxima data disponível (não domingo, >= hoje + 10 dias)
+ */
+export const encontrarProximaDataDisponivel = (dataIdeal: Date): Date => {
+  const hoje = new Date();
+  const dataMinima = addDays(hoje, 10); // Antecedência mínima de 10 dias
+  
+  // Se data ideal é antes do mínimo, usar o mínimo
+  let dataCandidata = dataIdeal < dataMinima ? dataMinima : dataIdeal;
+  
+  // Pular domingos
+  while (isDomingo(dataCandidata)) {
+    dataCandidata = addDays(dataCandidata, 1);
+  }
+  
+  return dataCandidata;
+};
+
+/**
  * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
  */
 export const identificarPatologias = (dados: {
@@ -176,22 +227,29 @@ export const identificarPatologias = (dados: {
 
 /**
  * Calcula data de agendamento baseada em protocolos obstétricos
- * Aplica margem de +7 dias conforme protocolo
+ * Aplica regras: DPP, antecedência mínima 10 dias, excluir domingos
  */
 export const calcularDataAgendamento = (
   igAtual: GestationalAge,
-  patologias: string[]
-): { data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string } => {
+  patologias: string[],
+  dataReferencia: Date = new Date()
+): { data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date } => {
+  const dpp = calcularDPP(igAtual, dataReferencia);
+  
   // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
   if (patologias.length === 0) {
     const igAlvo = 39;
-    const diasParaAlvo = (igAlvo * 7) - igAtual.totalDays;
+    const semanasAntesDpp = 40 - igAlvo;
+    const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
+    const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
+    const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
     
     return {
-      data: diasParaAlvo > 0 ? addDays(new Date(), diasParaAlvo) : new Date(),
-      igAgendamento: `${igAlvo} semanas`,
-      observacoes: 'Gestação de baixo risco - resolução às 39 semanas',
-      protocoloAplicado: 'baixo_risco'
+      data: dataFinal,
+      igAgendamento: igNaData.displayText,
+      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}`,
+      protocoloAplicado: 'baixo_risco',
+      dpp
     };
   }
   
@@ -213,48 +271,42 @@ export const calcularDataAgendamento = (
   }
   
   if (!protocoloSelecionado) {
-    // Fallback
+    const dataFinal = encontrarProximaDataDisponivel(dataReferencia);
+    const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+    
     return {
-      data: new Date(),
-      igAgendamento: `${igAtual.weeks} semanas`,
+      data: dataFinal,
+      igAgendamento: igNaData.displayText,
       observacoes: 'Não foi possível determinar protocolo específico',
-      protocoloAplicado: 'indefinido'
+      protocoloAplicado: 'indefinido',
+      dpp
     };
   }
   
   // Calcular IG alvo (usar o mínimo da faixa)
   const igRange = parseIgIdeal(protocoloSelecionado.igIdeal);
   const igAlvo = igRange.min;
-  const margemDias = protocoloSelecionado.margemDias;
   
-  // Calcular dias até a IG alvo
-  const diasParaAlvo = (igAlvo * 7) - igAtual.totalDays;
+  // Calcular data ideal: DPP - (40 - IG_recomendada) semanas
+  const semanasAntesDpp = 40 - igAlvo;
+  const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
   
-  let dataAgendamento: Date;
+  // Aplicar regras de disponibilidade
+  const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
+  const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+  
   let observacoes = `${protocoloSelecionado.observacoes}\nVia preferencial: ${protocoloSelecionado.viaPreferencial}`;
+  observacoes += `\n📅 DPP: ${dpp.toLocaleDateString('pt-BR')}`;
+  observacoes += `\n📅 IG ideal protocolo: ${protocoloSelecionado.igIdeal} semanas`;
+  observacoes += `\n📅 Data ideal calculada: ${dataIdeal.toLocaleDateString('pt-BR')}`;
+  observacoes += `\n📅 Data final (após regras): ${dataFinal.toLocaleDateString('pt-BR')}`;
+  observacoes += `\n📅 IG no dia do agendamento: ${igNaData.displayText}`;
   
-  if (diasParaAlvo > 0) {
-    // Paciente ainda não atingiu a IG ideal
-    dataAgendamento = addDays(new Date(), diasParaAlvo);
-    
-    if (margemDias > 0) {
-      observacoes += `\n📅 IG ideal: ${protocoloSelecionado.igIdeal} semanas (margem de até +${margemDias} dias permitida)`;
-      observacoes += `\nData calculada: ${igAlvo} semanas completas`;
-    } else {
-      observacoes += `\n📅 IG recomendada: Exatamente ${protocoloSelecionado.igIdeal} semanas`;
-    }
-  } else if (diasParaAlvo >= -margemDias) {
-    // Paciente está dentro da margem permitida
-    dataAgendamento = addDays(new Date(), 1); // Agendar para o próximo dia útil
-    observacoes += `\n✓ Paciente está com ${igAtual.displayText} - dentro da janela de agendamento`;
-    observacoes += `\nIG ideal: ${protocoloSelecionado.igIdeal} semanas (margem: +${margemDias} dias)`;
-  } else {
-    // Paciente passou da margem
-    dataAgendamento = new Date();
-    const diasAtrasados = Math.abs(diasParaAlvo) - margemDias;
-    observacoes += `\n⚠️ URGENTE: Paciente com ${igAtual.displayText}, ultrapassou ${diasAtrasados} dias além da margem permitida`;
-    observacoes += `\nIG recomendada era: ${protocoloSelecionado.igIdeal} semanas + ${margemDias} dias`;
-    observacoes += `\n🚨 AVALIAÇÃO IMEDIATA NECESSÁRIA`;
+  // Verificar urgência
+  const hoje = new Date();
+  const diasAteDataIdeal = differenceInDays(dataIdeal, hoje);
+  if (diasAteDataIdeal < 10) {
+    observacoes += `\n⚠️ ATENÇÃO: Data ideal próxima - antecedência ajustada para 10 dias`;
   }
   
   // Adicionar informações de outras patologias
@@ -267,10 +319,11 @@ export const calcularDataAgendamento = (
   }
   
   return {
-    data: dataAgendamento,
-    igAgendamento: `${igAlvo} semanas`,
+    data: dataFinal,
+    igAgendamento: igNaData.displayText,
     observacoes,
-    protocoloAplicado: patologiaSelecionada
+    protocoloAplicado: patologiaSelecionada,
+    dpp
   };
 };
 
@@ -313,8 +366,8 @@ export const calcularAgendamentoCompleto = (dados: {
   const patologias = identificarPatologias(dados);
   
   // Calcular data de agendamento
-  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado } = 
-    calcularDataAgendamento(igFinal, patologias);
+  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp } = 
+    calcularDataAgendamento(igFinal, patologias, hoje);
   
   let observacoesFinais = `METODOLOGIA: ${obsMetodologia}\n\n`;
   
@@ -335,6 +388,7 @@ export const calcularAgendamentoCompleto = (dados: {
     observacoes: observacoesFinais,
     dataAgendamento,
     igAgendamento,
-    protocoloAplicado
+    protocoloAplicado,
+    dpp
   };
 };

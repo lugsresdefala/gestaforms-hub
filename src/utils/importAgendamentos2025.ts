@@ -85,6 +85,103 @@ function extractProcedimentos(viaParto: string): string[] {
   return procedimentos.length > 0 ? procedimentos : ['Cesariana'];
 }
 
+function extractDiagnosticos(diagnostico: string, viaParto: string): {
+  maternos: string[];
+  fetais: string[];
+} {
+  const maternos: string[] = [];
+  const fetais: string[] = [];
+  const textoCompleto = `${diagnostico} ${viaParto}`.toLowerCase();
+  
+  // Hipertensão
+  if (textoCompleto.includes('hipertens') || textoCompleto.includes('hac')) {
+    if (textoCompleto.includes('grave') || textoCompleto.includes('pré-eclampsia') || textoCompleto.includes('pre-eclampsia')) {
+      maternos.push('pre_eclampsia_grave');
+    } else if (textoCompleto.includes('difícil') || textoCompleto.includes('dificil')) {
+      maternos.push('hac_dificil');
+    } else if (textoCompleto.includes('gestacional')) {
+      maternos.push('hipertensao_gestacional');
+    } else {
+      maternos.push('hac');
+    }
+  }
+  
+  // Diabetes
+  if (textoCompleto.includes('dmg') || textoCompleto.includes('diabetes gestacional')) {
+    if (textoCompleto.includes('insulina')) {
+      if (textoCompleto.includes('descomp') || textoCompleto.includes('descontrol')) {
+        maternos.push('dmg_insulina_descomp');
+      } else {
+        maternos.push('dmg_insulina');
+      }
+    } else {
+      if (textoCompleto.includes('descomp') || textoCompleto.includes('descontrol')) {
+        maternos.push('dmg_sem_insulina_descomp');
+      } else {
+        maternos.push('dmg_sem_insulina');
+      }
+    }
+  }
+  
+  if (textoCompleto.includes('dm tipo') || textoCompleto.includes('dm1') || textoCompleto.includes('dm2')) {
+    if (textoCompleto.includes('descomp') || textoCompleto.includes('complicaç')) {
+      maternos.push('dm_pregestacional_descomp');
+    } else {
+      maternos.push('dm_pregestacional');
+    }
+  }
+  
+  // Gemelar
+  if (textoCompleto.includes('gemelar') || textoCompleto.includes('gêmeos')) {
+    if (textoCompleto.includes('monocori')) {
+      maternos.push('gestacao_gemelar_monocorionica');
+    } else {
+      maternos.push('gestacao_gemelar_dicorionica');
+    }
+  }
+  
+  // Apresentação
+  if (textoCompleto.includes('pélvica') || textoCompleto.includes('pelvica') || textoCompleto.includes('pódi') || textoCompleto.includes('podi')) {
+    maternos.push('apresentacao_pelvica');
+  }
+  if (textoCompleto.includes('transvers')) {
+    maternos.push('apresentacao_transversa');
+  }
+  
+  // Placenta
+  if (textoCompleto.includes('placenta') && textoCompleto.includes('prévia')) {
+    if (textoCompleto.includes('acret')) {
+      maternos.push('placenta_previa_acretismo');
+    } else {
+      maternos.push('placenta_previa_sem_acretismo');
+    }
+  }
+  
+  // Fetais
+  if (textoCompleto.includes('rcf') || textoCompleto.includes('restrição de crescimento')) {
+    fetais.push('rcf');
+  }
+  if (textoCompleto.includes('oligoâmnio') || textoCompleto.includes('oligoamnio')) {
+    fetais.push('oligoamnio');
+  }
+  if (textoCompleto.includes('polidrâmnio') || textoCompleto.includes('polidramnio')) {
+    fetais.push('polidramnio');
+  }
+  if (textoCompleto.includes('macrossomia')) {
+    fetais.push('macrossomia');
+  }
+  
+  // Laqueadura e desejo materno
+  if (textoCompleto.includes('laqueadura')) {
+    maternos.push('laqueadura');
+  } else if ((textoCompleto.includes('cesárea') || textoCompleto.includes('cesarea')) && 
+             maternos.length === 0 && fetais.length === 0) {
+    maternos.push('desejo_materno');
+  }
+  
+  return { maternos, fetais };
+}
+
 function extractParidade(diagnostico: string): {
   gestacoes: number;
   partosNormais: number;
@@ -167,6 +264,7 @@ export async function importAgendamentosCSV(
       const paridade = extractParidade(row.diagnostico);
       const procedimentos = extractProcedimentos(row.viaParto);
       const igInfo = extractIGInfo(row.diagnostico);
+      const diagnosticos = extractDiagnosticos(row.diagnostico, row.viaParto);
       
       // Calculate gestational info
       let agendamentoData: any = {
@@ -183,7 +281,8 @@ export async function importAgendamentosCSV(
         numero_partos_cesareas: paridade.cesareas,
         numero_abortos: paridade.abortos,
         procedimentos,
-        diagnosticos_maternos: row.diagnostico,
+        diagnosticos_maternos: diagnosticos.maternos.length > 0 ? diagnosticos.maternos.join(', ') : row.diagnostico,
+        diagnosticos_fetais: diagnosticos.fetais.length > 0 ? diagnosticos.fetais.join(', ') : undefined,
         indicacao_procedimento: row.viaParto,
         dum_status: 'Não informada',
         data_primeiro_usg: dataAgendamento.toISOString().split('T')[0],
@@ -204,11 +303,14 @@ export async function importAgendamentosCSV(
             dataPrimeiroUsg: dataAgendamento.toISOString().split('T')[0],
             semanasUsg: igInfo.semanas.toString(),
             diasUsg: (igInfo.dias || 0).toString(),
-            procedimentos
+            procedimentos,
+            diagnosticosMaternos: diagnosticos.maternos,
+            diagnosticosFetais: diagnosticos.fetais
           });
           
           if (resultado.igFinal) {
             agendamentoData.idade_gestacional_calculada = resultado.igFinal.displayText;
+            agendamentoData.data_agendamento_calculada = resultado.dataAgendamento.toISOString().split('T')[0];
           }
         } catch (error) {
           console.warn('Erro ao calcular IG:', error);

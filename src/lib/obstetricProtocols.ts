@@ -14,6 +14,13 @@ export const PROTOCOLS: Record<string, ProtocolConfig> = {
   'desejo_materno': { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Cesárea', observacoes: '≥39 semanas' },
   'laqueadura': { igIdeal: '39', margemDias: 0, prioridade: 3, viaPreferencial: 'Cesárea', observacoes: 'Exatamente 39 semanas' },
   
+  // Cerclagem
+  'cerclagem': { igIdeal: '15', margemDias: 7, prioridade: 2, viaPreferencial: 'Cesárea', observacoes: 'IIC - Cerclagem às 15 semanas' },
+  
+  // Apresentação anômala
+  'apresentacao_pelvica': { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Cesárea', observacoes: 'Apresentação pélvica' },
+  'apresentacao_transversa': { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Cesárea', observacoes: 'Apresentação transversa' },
+  
   // Hipertensão
   'hac': { igIdeal: '39-40', margemDias: 7, prioridade: 3, viaPreferencial: 'Via obstétrica', observacoes: 'HAC compensada' },
   'hac_dificil': { igIdeal: '37', margemDias: 7, prioridade: 2, viaPreferencial: 'Via obstétrica', observacoes: '3 drogas' },
