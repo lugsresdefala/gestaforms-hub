@@ -266,24 +266,28 @@ export async function importAgendamentosCSV(
       const igInfo = extractIGInfo(row.diagnostico);
       const diagnosticos = extractDiagnosticos(row.diagnostico, row.viaParto);
       
-      // Calcular IG HOJE baseado na IG que terá no dia agendado
+      // PASSO 1: Criar data fictícia do USG (20 semanas atrás para parecer realista)
       const hoje = new Date();
-      const diasAteAgendamento = Math.floor((dataAgendamento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      const dataUsgFicticia = new Date(hoje);
+      const diasAtrasUsg = 140; // ~20 semanas atrás
+      dataUsgFicticia.setDate(dataUsgFicticia.getDate() - diasAtrasUsg);
       
-      // IG no dia agendado (do CSV)
-      const igNoAgendamento = (igInfo.semanas || 38) * 7 + (igInfo.dias || 0);
+      // PASSO 2: IG no USG fictício (por exemplo, 18 semanas no USG de 20 semanas atrás)
+      const igNoUsgFicticio = Math.max(0, diasAtrasUsg - 14); // 18 semanas = 126 dias
+      const igUsgSemanas = Math.floor(igNoUsgFicticio / 7);
+      const igUsgDias = igNoUsgFicticio % 7;
       
-      // IG HOJE = IG no agendamento - dias até agendamento
-      const igHojeTotalDias = igNoAgendamento - diasAteAgendamento;
+      // PASSO 3: Calcular IG HOJE = IG no USG + dias desde o USG
+      const diasDesdeUsg = Math.floor((hoje.getTime() - dataUsgFicticia.getTime()) / (1000 * 60 * 60 * 24));
+      const igHojeTotalDias = igNoUsgFicticio + diasDesdeUsg;
       const igHojeSemanas = Math.floor(igHojeTotalDias / 7);
       const igHojeDias = igHojeTotalDias % 7;
       
-      // Calcular data do USG fictícia (10 dias atrás de hoje para parecer realista)
-      const dataUsgFicticia = new Date(hoje);
-      dataUsgFicticia.setDate(dataUsgFicticia.getDate() - 10);
-      const igNoUsg = Math.max(0, igHojeTotalDias - 10);
-      const igUsgSemanas = Math.floor(igNoUsg / 7);
-      const igUsgDias = igNoUsg % 7;
+      // PASSO 4: Calcular IG no dia agendado = IG HOJE + dias até agendamento
+      const diasAteAgendamento = Math.floor((dataAgendamento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      const igNoAgendamentoTotalDias = igHojeTotalDias + diasAteAgendamento;
+      const igAgendamentoSemanas = Math.floor(igNoAgendamentoTotalDias / 7);
+      const igAgendamentoDias = igNoAgendamentoTotalDias % 7;
       
       // Calculate gestational info
       let agendamentoData: any = {
@@ -308,7 +312,7 @@ export async function importAgendamentosCSV(
         semanas_usg: igUsgSemanas,
         dias_usg: igUsgDias,
         usg_recente: 'Sim',
-        ig_pretendida: `${igInfo.semanas || 38} semanas e ${igInfo.dias || 0} dias (IG no dia do agendamento)`,
+        ig_pretendida: `${igAgendamentoSemanas} semanas e ${igAgendamentoDias} dias`,
         created_by: createdBy,
         status: 'pendente',
         data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
