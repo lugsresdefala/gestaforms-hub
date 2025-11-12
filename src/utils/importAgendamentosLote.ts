@@ -275,7 +275,7 @@ export async function importarAgendamentosLote(
         dias_usg: diasUsgNum,
         usg_recente: usgRecente || 'Sim',
         ig_pretendida: resultado.igAgendamento,
-        data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
+        data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
         idade_gestacional_calculada: resultado.igFinal.displayText,
         observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}`,
         created_by: createdBy,
