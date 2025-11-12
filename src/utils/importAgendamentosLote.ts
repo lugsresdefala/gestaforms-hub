@@ -34,8 +34,26 @@ interface LoteRow {
   emailPaciente: string;
 }
 
-function parseTSVLine(line: string): string[] {
-  return line.split('\t').map(field => field.trim());
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let currentField = '';
+  let insideQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === ',' && !insideQuotes) {
+      fields.push(currentField.trim());
+      currentField = '';
+    } else {
+      currentField += char;
+    }
+  }
+  
+  fields.push(currentField.trim());
+  return fields;
 }
 
 function parseDate(dateStr: string): Date | null {
@@ -92,7 +110,7 @@ async function verificarDuplicado(carteirinha: string): Promise<boolean> {
 }
 
 export async function importarAgendamentosLote(
-  tsvContent: string,
+  csvContent: string,
   createdBy: string
 ): Promise<{ 
   success: number; 
@@ -101,35 +119,56 @@ export async function importarAgendamentosLote(
   errors: string[];
   warnings: string[];
 }> {
-  const lines = tsvContent.split('\n');
+  const lines = csvContent.split('\n');
   const errors: string[] = [];
   const warnings: string[] = [];
   let success = 0;
   let failed = 0;
   let skipped = 0;
   
-  // Skip header
-  for (let i = 1; i < lines.length; i++) {
+  // Skip header (lines 1-3, data starts at line 4)
+  for (let i = 3; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
     
     try {
-      const fields = parseTSVLine(line);
-      if (fields.length < 39) {
-        errors.push(`Linha ${i + 1}: Formato inválido - esperadas 39 colunas, encontradas ${fields.length}`);
+      const fields = parseCSVLine(line);
+      if (fields.length < 33) {
+        errors.push(`Linha ${i + 1}: Formato inválido - esperadas pelo menos 33 colunas, encontradas ${fields.length}`);
         failed++;
         continue;
       }
       
-      const [
-        id, horaInicio, nomeCompleto, dataNascimento, carteirinha,
-        numeroGestacoes, numeroCesareas, numeroPartosNormais, numeroAbortos,
-        telefones, procedimentos, dumStatus, dataDum, dataPrimeiroUsg,
-        semanasUsg, diasUsg, usgRecente, igPretendida, , // coluna vazia
-        indicacaoProcedimento, medicacao, diagnosticosMaternos, placentaPrevia,
-        diagnosticosFetais, historiaObstetrica, necessidadeUtiMaterna,
-        necessidadeReservaSangue, maternidade, medicoResponsavel, emailPaciente
-      ] = fields;
+      // CSV column mapping (0-indexed)
+      const id = fields[0];
+      const horaInicio = fields[1];
+      const nomeCompleto = fields[5]; // Nome completo da paciente
+      const dataNascimento = fields[6];
+      const carteirinha = fields[7];
+      const numeroGestacoes = fields[8];
+      const numeroCesareas = fields[9];
+      const numeroPartosNormais = fields[10];
+      const numeroAbortos = fields[11];
+      const telefones = fields[12];
+      const procedimentos = fields[13];
+      const dumStatus = fields[14];
+      const dataDum = fields[15];
+      const dataPrimeiroUsg = fields[16];
+      const semanasUsg = fields[17];
+      const diasUsg = fields[18];
+      const usgRecente = fields[19];
+      const igPretendida = fields[20];
+      const indicacaoProcedimento = fields[22];
+      const medicacao = fields[23];
+      const diagnosticosMaternos = fields[24];
+      const placentaPrevia = fields[25];
+      const diagnosticosFetais = fields[26];
+      const historiaObstetrica = fields[27];
+      const necessidadeUtiMaterna = fields[28];
+      const necessidadeReservaSangue = fields[29];
+      const maternidade = fields[30];
+      const medicoResponsavel = fields[31];
+      const emailPaciente = fields[32];
       
       // Validações básicas
       if (!carteirinha || !nomeCompleto) {

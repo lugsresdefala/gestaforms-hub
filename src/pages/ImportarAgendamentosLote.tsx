@@ -100,17 +100,17 @@ export default function ImportarAgendamentosLote() {
       <Card className="p-6 mb-6">
         <div className="space-y-4">
           <div>
-            <Label htmlFor="file">Arquivo TSV/Excel (separado por tabs)</Label>
+            <Label htmlFor="file">Arquivo CSV (separado por vírgulas)</Label>
             <Input
               id="file"
               type="file"
-              accept=".tsv,.txt,.xls,.xlsx"
+              accept=".csv,.txt"
               onChange={handleFileChange}
               disabled={importing}
               className="mt-2"
             />
             <p className="text-sm text-muted-foreground mt-2">
-              Formato esperado: arquivo com colunas separadas por tabs contendo dados completos de agendamento
+              Formato esperado: arquivo CSV com colunas separadas por vírgulas contendo dados completos de agendamento
             </p>
           </div>
 
