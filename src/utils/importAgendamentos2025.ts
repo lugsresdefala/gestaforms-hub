@@ -266,28 +266,19 @@ export async function importAgendamentosCSV(
       const igInfo = extractIGInfo(row.diagnostico);
       const diagnosticos = extractDiagnosticos(row.diagnostico, row.viaParto);
       
-      // PASSO 1: Criar data fictícia do USG (20 semanas atrás para parecer realista)
+      // CSV da maternidade é apenas uma confirmação de agendamento
+      // Não temos base de cálculo completa, apenas IG pretendida
       const hoje = new Date();
-      const dataUsgFicticia = new Date(hoje);
-      const diasAtrasUsg = 140; // ~20 semanas atrás
-      dataUsgFicticia.setDate(dataUsgFicticia.getDate() - diasAtrasUsg);
       
-      // PASSO 2: IG no USG fictício (por exemplo, 18 semanas no USG de 20 semanas atrás)
-      const igNoUsgFicticio = Math.max(0, diasAtrasUsg - 14); // 18 semanas = 126 dias
-      const igUsgSemanas = Math.floor(igNoUsgFicticio / 7);
-      const igUsgDias = igNoUsgFicticio % 7;
+      // IG extraída do diagnóstico (IG pretendida no agendamento)
+      const igSemanas = igInfo.semanas || 38;
+      const igDias = igInfo.dias || 0;
       
-      // PASSO 3: Calcular IG HOJE = IG no USG + dias desde o USG
-      const diasDesdeUsg = Math.floor((hoje.getTime() - dataUsgFicticia.getTime()) / (1000 * 60 * 60 * 24));
-      const igHojeTotalDias = igNoUsgFicticio + diasDesdeUsg;
-      const igHojeSemanas = Math.floor(igHojeTotalDias / 7);
-      const igHojeDias = igHojeTotalDias % 7;
-      
-      // PASSO 4: Calcular IG no dia agendado = IG HOJE + dias até agendamento
-      const diasAteAgendamento = Math.floor((dataAgendamento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-      const igNoAgendamentoTotalDias = igHojeTotalDias + diasAteAgendamento;
-      const igAgendamentoSemanas = Math.floor(igNoAgendamentoTotalDias / 7);
-      const igAgendamentoDias = igNoAgendamentoTotalDias % 7;
+      // Campos obrigatórios com valores padrão pois CSV não tem base de cálculo
+      const dataUsgPadrao = new Date(hoje);
+      dataUsgPadrao.setDate(dataUsgPadrao.getDate() - 30); // USG fictício 30 dias atrás
+      const igUsgSemanas = Math.max(0, igSemanas - 4); // IG fictício no USG
+      const igUsgDias = 0;
       
       // Calculate gestational info
       let agendamentoData: any = {
@@ -308,15 +299,15 @@ export async function importAgendamentosCSV(
         diagnosticos_fetais: diagnosticos.fetais.length > 0 ? diagnosticos.fetais.join(', ') : undefined,
         indicacao_procedimento: row.viaParto,
         dum_status: 'Não informada',
-        data_primeiro_usg: dataUsgFicticia.toISOString().split('T')[0],
+        data_primeiro_usg: dataUsgPadrao.toISOString().split('T')[0],
         semanas_usg: igUsgSemanas,
         dias_usg: igUsgDias,
         usg_recente: 'Sim',
-        ig_pretendida: `${igAgendamentoSemanas} semanas e ${igAgendamentoDias} dias`,
+        ig_pretendida: `${igSemanas} semanas e ${igDias} dias`,
         created_by: createdBy,
         status: 'pendente',
         data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
-        idade_gestacional_calculada: `${igHojeSemanas} semanas e ${igHojeDias} dias`
+        idade_gestacional_calculada: 'Não calculado (CSV sem base de cálculo)'
       };
       
       agendamentos.push(agendamentoData);
