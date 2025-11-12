@@ -150,40 +150,30 @@ const COMPLETE_DESIGN_SYSTEM = `
     --glass-blur-heavy: blur(40px);
     --glass-blur-light: blur(12px);
     
-    /* Multi-layer 3D Shadow System */
+    /* Refined Shadow System - Sophisticated & Cool */
     --shadow-3d-xs: 
-      0 1px 2px rgba(15, 23, 42, 0.06),
-      0 2px 4px rgba(15, 23, 42, 0.04),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+      0 1px 3px rgba(30, 58, 138, 0.08),
+      0 1px 2px rgba(30, 58, 138, 0.06);
     
     --shadow-3d-sm: 
-      0 2px 4px -1px rgba(15, 23, 42, 0.08),
-      0 4px 8px -2px rgba(15, 23, 42, 0.06),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+      0 2px 4px rgba(30, 58, 138, 0.10),
+      0 1px 2px rgba(30, 58, 138, 0.06);
     
     --shadow-3d-md: 
-      0 4px 8px -2px rgba(15, 23, 42, 0.1),
-      0 8px 16px -4px rgba(15, 23, 42, 0.08),
-      0 16px 32px -8px rgba(15, 23, 42, 0.06),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+      0 3px 8px rgba(30, 58, 138, 0.12),
+      0 1px 3px rgba(30, 58, 138, 0.08);
     
     --shadow-3d-lg: 
-      0 8px 16px -4px rgba(15, 23, 42, 0.12),
-      0 16px 32px -8px rgba(15, 23, 42, 0.1),
-      0 24px 48px -12px rgba(15, 23, 42, 0.08),
-      inset 0 2px 0 0 rgba(255, 255, 255, 0.95);
+      0 4px 12px rgba(30, 58, 138, 0.14),
+      0 2px 6px rgba(30, 58, 138, 0.10);
     
     --shadow-3d-xl: 
-      0 12px 24px -6px rgba(15, 23, 42, 0.15),
-      0 24px 48px -12px rgba(15, 23, 42, 0.12),
-      0 36px 72px -18px rgba(15, 23, 42, 0.1),
-      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+      0 6px 16px rgba(30, 58, 138, 0.16),
+      0 3px 8px rgba(30, 58, 138, 0.12);
     
     --shadow-3d-2xl: 
-      0 16px 32px -8px rgba(15, 23, 42, 0.18),
-      0 32px 64px -16px rgba(15, 23, 42, 0.15),
-      0 48px 96px -24px rgba(15, 23, 42, 0.12),
-      inset 0 2px 0 0 rgba(255, 255, 255, 1);
+      0 8px 24px rgba(30, 58, 138, 0.18),
+      0 4px 12px rgba(30, 58, 138, 0.14);
     
     /* Texture & Noise Patterns */
     --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
@@ -406,58 +396,44 @@ const COMPLETE_DESIGN_SYSTEM = `
   .metric-card-advanced {
     position: relative;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.4);
-    border-radius: var(--radius-xl);
+    border: 1px solid rgba(30, 58, 138, 0.12);
+    border-radius: var(--radius-lg);
     padding: var(--spacing-6);
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 600ms var(--ease-out-cubic);
-    will-change: transform, box-shadow, border-color;
-    transform-style: preserve-3d;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
   }
   
   .metric-card-advanced::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--texture-noise);
-    opacity: 0.4;
-    pointer-events: none;
-    z-index: 1;
-    transition: opacity 400ms var(--ease-smooth);
-  }
-  
-  .metric-card-advanced::after {
-    content: '';
-    position: absolute;
-    inset: -100%;
     background: linear-gradient(
-      115deg,
-      transparent 35%,
-      rgba(255, 255, 255, 0.3) 50%,
-      transparent 65%
+      135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0) 100%
     );
     opacity: 0;
-    transition: all 800ms var(--ease-smooth);
+    transition: opacity 300ms ease;
     pointer-events: none;
-    z-index: 2;
   }
   
   .metric-card-advanced:hover {
-    transform: translateY(-8px) translateZ(12px) rotateX(2deg);
-    box-shadow: var(--shadow-3d-xl);
-    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(30, 58, 138, 0.2);
   }
   
   .metric-card-advanced:hover::before {
-    opacity: 0.2;
+    opacity: 1;
   }
   
-  .metric-card-advanced:hover::after {
-    opacity: 1;
-    transform: translateX(100%);
+  .metric-card-advanced:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-3d-sm);
   }
   
   .metric-card-advanced--warning {
@@ -470,39 +446,36 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .metric-card-advanced--warning:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-pending-glow);
+    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(180, 83, 9, 0.3);
   }
   
   .metric-card-advanced--success {
     background: linear-gradient(
       135deg,
-      rgba(236, 253, 245, 0.9) 0%,
-      rgba(209, 250, 229, 0.85) 100%
+      rgba(236, 253, 245, 0.85) 0%,
+      rgba(209, 250, 229, 0.8) 100%
     );
-    border-color: var(--status-success-border);
+    border-color: rgba(5, 150, 105, 0.12);
   }
   
   .metric-card-advanced--success:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-success-glow);
+    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(5, 150, 105, 0.3);
   }
   
   .metric-card-advanced--destructive {
     background: linear-gradient(
       135deg,
-      rgba(254, 242, 242, 0.9) 0%,
-      rgba(254, 226, 226, 0.85) 100%
+      rgba(254, 242, 242, 0.85) 0%,
+      rgba(254, 226, 226, 0.8) 100%
     );
-    border-color: var(--status-destructive-border);
+    border-color: rgba(220, 38, 38, 0.12);
   }
   
   .metric-card-advanced--destructive:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-destructive-glow);
+    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(220, 38, 38, 0.3);
   }
   
   .metric-card-advanced--primary {
@@ -1303,6 +1276,16 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "0ms", opacity: 0 }}
+            onClick={() => {
+              navigate('/meus-agendamentos');
+              setTimeout(() => {
+                const filterSelect = document.querySelector('[id="filterStatus"]');
+                if (filterSelect) {
+                  (filterSelect as HTMLSelectElement).value = 'pendente';
+                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }, 100);
+            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
@@ -1323,6 +1306,16 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "100ms", opacity: 0 }}
+            onClick={() => {
+              navigate('/meus-agendamentos');
+              setTimeout(() => {
+                const filterSelect = document.querySelector('[id="filterStatus"]');
+                if (filterSelect) {
+                  (filterSelect as HTMLSelectElement).value = 'aprovado';
+                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }, 100);
+            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
@@ -1343,6 +1336,16 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "200ms", opacity: 0 }}
+            onClick={() => {
+              navigate('/meus-agendamentos');
+              setTimeout(() => {
+                const filterSelect = document.querySelector('[id="filterStatus"]');
+                if (filterSelect) {
+                  (filterSelect as HTMLSelectElement).value = 'rejeitado';
+                  filterSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+              }, 100);
+            }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
@@ -1363,6 +1366,7 @@ const Index = () => {
           <Card
             className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "300ms", opacity: 0 }}
+            onClick={() => navigate('/meus-agendamentos')}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
