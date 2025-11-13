@@ -26,6 +26,7 @@ interface LoteRow {
   diagnosticosMaternos: string;
   placentaPrevia: string;
   diagnosticosFetais: string;
+  diagnosticoLivre: string;
   historiaObstetrica: string;
   necessidadeUtiMaterna: string;
   necessidadeReservaSangue: string;
@@ -163,12 +164,13 @@ export async function importarAgendamentosLote(
       const diagnosticosMaternos = fields[24];
       const placentaPrevia = fields[25];
       const diagnosticosFetais = fields[26];
-      const historiaObstetrica = fields[27];
-      const necessidadeUtiMaterna = fields[28];
-      const necessidadeReservaSangue = fields[29];
-      const maternidade = fields[30];
-      const medicoResponsavel = fields[31];
-      const emailPaciente = fields[32];
+      const diagnosticoLivre = fields[27] || '';
+      const historiaObstetrica = fields[28];
+      const necessidadeUtiMaterna = fields[29];
+      const necessidadeReservaSangue = fields[30];
+      const maternidade = fields[31];
+      const medicoResponsavel = fields[32];
+      const emailPaciente = fields[33];
       
       // Validações básicas
       if (!carteirinha || !nomeCompleto) {
@@ -262,6 +264,7 @@ export async function importarAgendamentosLote(
         procedimentos: dadosCalculo.procedimentos,
         diagnosticos_maternos: diagnosticosMaternos || 'Não informado',
         diagnosticos_fetais: diagnosticosFetais || undefined,
+        diagnostico_livre: diagnosticoLivre || undefined,
         placenta_previa: dadosCalculo.placentaPrevia,
         indicacao_procedimento: indicacaoProcedimento,
         medicacao: medicacao || undefined,

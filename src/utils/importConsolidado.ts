@@ -219,6 +219,7 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
         idade_gestacional_calculada: resultado.igFinal.displayText,
         diagnosticos_maternos: row.diagnostico || 'Não informado',
+        diagnostico_livre: row.diagnostico && row.diagnostico.trim().length > 0 ? row.diagnostico : null,
         historia_obstetrica: '',
         
         // Paridade extraída do diagnóstico
