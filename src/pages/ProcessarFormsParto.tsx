@@ -135,16 +135,9 @@ export default function ProcessarFormsParto() {
     const month = parseInt(parts[1]) - 1;
     let year = parseInt(parts[2]);
     
-    // Se o ano tem apenas 2 dígitos ou é menor que 1900, assumir 20XX
+    // Se o ano tem apenas 2 dígitos, assumir 20XX
     if (year < 100) {
       year += 2000;
-    } else if (year < 1900) {
-      year += 2000;
-    }
-    
-    // GARANTIR QUE É 2025
-    if (year === 2024) {
-      year = 2025;
     }
     
     const date = new Date(year, month, day);
@@ -326,14 +319,14 @@ export default function ProcessarFormsParto() {
             Processar Formulários de Parto
           </CardTitle>
           <CardDescription>
-            Importar agendamentos do arquivo CSV de formulários de parto (2025)
+            Importar agendamentos do arquivo CSV de formulários de parto
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Este processador irá importar os agendamentos do arquivo CSV, garantindo que todas as datas sejam 2025.
+              Este processador irá importar os agendamentos do arquivo CSV.
               Registros duplicados serão ignorados automaticamente.
             </AlertDescription>
           </Alert>
