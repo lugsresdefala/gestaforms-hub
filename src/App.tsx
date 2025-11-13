@@ -28,6 +28,7 @@ import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
+import ProcessarFormsParto from "./pages/ProcessarFormsParto";
 import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
 import NotFound from "./pages/NotFound";
 
@@ -235,6 +236,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ProcessarCSVUpload />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/processar-forms-parto" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ProcessarFormsParto />
                   </AppLayout>
                 </ProtectedRoute>
               } 
