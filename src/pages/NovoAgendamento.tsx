@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
+import { classifyFreeDiagnosis } from "@/lib/diagnosisClassifier";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
 import { ProtocolosModal } from "@/components/ProtocolosModal";
@@ -59,6 +60,7 @@ const NovoAgendamento = () => {
       placentaPrevia: "",
       diagnosticosFetais: [],
       diagnosticosFetaisOutros: "",
+      diagnosticoLivre: "",
       historiaObstetrica: "",
       necessidadeUtiMaterna: "",
       necessidadeReservaSangue: "",
@@ -90,7 +92,8 @@ const NovoAgendamento = () => {
       diagnosticosFetais: values.diagnosticosFetais,
       placentaPrevia: values.placentaPrevia,
       igSemanas: resultado.igFinal.weeks,
-      igDias: resultado.igFinal.days
+      igDias: resultado.igFinal.days,
+      diagnosticoLivre: values.diagnosticoLivre
     });
     
     // Verificar disponibilidade de vagas
@@ -177,6 +180,7 @@ const NovoAgendamento = () => {
         placenta_previa: values.placentaPrevia || null,
         diagnosticos_fetais: JSON.stringify(values.diagnosticosFetais) || null,
         diagnosticos_fetais_outros: values.diagnosticosFetaisOutros || null,
+        diagnostico_livre: values.diagnosticoLivre || null,
         historia_obstetrica: values.historiaObstetrica || null,
         necessidade_uti_materna: values.necessidadeUtiMaterna,
         necessidade_reserva_sangue: values.necessidadeReservaSangue,
@@ -230,6 +234,29 @@ const NovoAgendamento = () => {
       
       console.log("=== SUCESSO NO SALVAMENTO ===");
       console.log("Dados inseridos:", JSON.stringify(insertedData, null, 2));
+      
+      // Log free diagnosis for audit if present
+      if (values.diagnosticoLivre && values.diagnosticoLivre.trim().length > 0 && insertedData && insertedData[0]) {
+        const classification = classifyFreeDiagnosis(values.diagnosticoLivre);
+        
+        const logData = {
+          agendamento_id: insertedData[0].id,
+          diagnostico_livre: values.diagnosticoLivre,
+          classificacao_automatica: classification.standardizedDiagnosis || null,
+          requer_revisao: classification.requiresReview,
+        };
+        
+        const { error: logError } = await supabase
+          .from('diagnosticos_livres_log')
+          .insert([logData]);
+        
+        if (logError) {
+          console.warn("Erro ao registrar diagnóstico livre no log de auditoria:", logError);
+          // Não bloqueia o fluxo, apenas loga o erro
+        } else {
+          console.log("Diagnóstico livre registrado para auditoria:", logData);
+        }
+      }
       
       toast.success(
         `Agendamento salvo com sucesso!\n\n` +
@@ -424,6 +451,28 @@ const NovoAgendamento = () => {
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+
+              {/* Free-text diagnosis info */}
+              {protocoloValidacao.diagnosticoLivreInfo && (
+                <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
+                    Diagnóstico Livre:
+                  </h4>
+                  <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
+                    <p><strong>Texto original:</strong> "{protocoloValidacao.diagnosticoLivreInfo.original}"</p>
+                    {protocoloValidacao.diagnosticoLivreInfo.classificado && protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido && (
+                      <p className="text-green-700 dark:text-green-300">
+                        ✓ Classificado automaticamente como: {protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido}
+                      </p>
+                    )}
+                    {protocoloValidacao.diagnosticoLivreInfo.requerRevisao && (
+                      <p className="text-orange-700 dark:text-orange-300">
+                        ⚠️ Este diagnóstico será registrado para revisão clínica e auditoria posterior.
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
