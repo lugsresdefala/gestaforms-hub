@@ -28,6 +28,7 @@ import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
+import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -234,6 +235,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ProcessarCSVUpload />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/recalcular-datas-2025" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <RecalcularDatas2025 />
                   </AppLayout>
                 </ProtectedRoute>
               } 

@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.import-csv]
 verify_jwt = true
+
+[functions.corrigir-paridade]
+verify_jwt = true
