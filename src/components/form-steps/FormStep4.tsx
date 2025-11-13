@@ -48,8 +48,8 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
                 { id: "dmg_insulina", label: "DMG com insulina" },
                 { id: "dmg_sem_insulina", label: "DMG sem insulina" },
                 { id: "pre_eclampsia_grave", label: "Pré-eclâmpsia grave / HELLP" },
-                { id: "hipertensao_gestacional", label: "Hipertensão gestacional" },
-                { id: "hac", label: "HAC - Hipertensão arterial crônica" },
+                { id: "hipertensao_gestacional", label: "Hipertensão gestacional (diagnosticada na gestação atual)" },
+                { id: "hac", label: "HAC - Hipertensão arterial crônica (pré-existente)" },
                 { id: "tpp", label: "TPP - Trabalho de parto prematuro na gestação atual" },
                 { id: "rpmo", label: "RPMO - Rotura prematura de membranas ovulares" },
                 { id: "hipotireoidismo", label: "Hipotireoidismo gestacional" },
@@ -232,6 +232,32 @@ export const FormStep4 = ({ form }: FormStep4Props) => {
                 {...field} 
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="diagnosticoLivre"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <span>Diagnóstico Livre (casos raros/nova conduta)</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                ⚠️ Será registrado para auditoria clínica
+              </span>
+            </FormLabel>
+            <FormControl>
+              <Textarea 
+                placeholder="Use este campo apenas para diagnósticos não listados acima ou casos especiais que requerem conduta individualizada. O sistema tentará classificar automaticamente." 
+                className="min-h-[80px] border-orange-200 focus:border-orange-400"
+                {...field} 
+              />
+            </FormControl>
+            <p className="text-xs text-muted-foreground mt-1">
+              💡 Este campo permite flexibilidade clínica. Diagnósticos livres serão logados para revisão posterior, mas não bloqueiam o cadastro.
+            </p>
             <FormMessage />
           </FormItem>
         )}
