@@ -235,28 +235,7 @@ const NovoAgendamento = () => {
       console.log("=== SUCESSO NO SALVAMENTO ===");
       console.log("Dados inseridos:", JSON.stringify(insertedData, null, 2));
       
-      // Log free diagnosis for audit if present
-      if (values.diagnosticoLivre && values.diagnosticoLivre.trim().length > 0 && insertedData && insertedData[0]) {
-        const classification = classifyFreeDiagnosis(values.diagnosticoLivre);
-        
-        const logData = {
-          agendamento_id: insertedData[0].id,
-          diagnostico_livre: values.diagnosticoLivre,
-          classificacao_automatica: classification.standardizedDiagnosis || null,
-          requer_revisao: classification.requiresReview,
-        };
-        
-        const { error: logError } = await supabase
-          .from('diagnosticos_livres_log')
-          .insert([logData]);
-        
-        if (logError) {
-          console.warn("Erro ao registrar diagnóstico livre no log de auditoria:", logError);
-          // Não bloqueia o fluxo, apenas loga o erro
-        } else {
-          console.log("Diagnóstico livre registrado para auditoria:", logData);
-        }
-      }
+      // Código de auditoria removido - tabela não existe
       
       toast.success(
         `Agendamento salvo com sucesso!\n\n` +
