@@ -289,7 +289,7 @@ serve(async (req) => {
         }
 
       } catch (error) {
-        results.errors.push(`Linha ${i + 1}: ${error.message}`);
+        results.errors.push(`Linha ${i + 1}: ${(error as Error).message || 'Erro desconhecido'}`);
         results.failed++;
       }
     }
@@ -301,7 +301,7 @@ serve(async (req) => {
 
   } catch (error) {
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message || 'Erro desconhecido' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
