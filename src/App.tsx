@@ -26,7 +26,7 @@ import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
-import ImportarGuarulhos2025 from "./pages/ImportarGuarulhos2025";
+import ProcessarImportacoes from "./pages/ProcessarImportacoes";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import ProcessarFormsParto from "./pages/ProcessarFormsParto";
@@ -222,11 +222,11 @@ const App = () => (
               } 
             />
             <Route 
-              path="/importar-guarulhos-2025" 
+              path="/processar-importacoes" 
               element={
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
-                    <ImportarGuarulhos2025 />
+                    <ProcessarImportacoes />
                   </AppLayout>
                 </ProtectedRoute>
               } 
