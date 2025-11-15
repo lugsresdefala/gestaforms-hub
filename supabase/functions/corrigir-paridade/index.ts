@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('❌ Erro:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message || 'Erro desconhecido' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
@@ -176,7 +176,7 @@ async function processCSV(csvText: string, supabase: any) {
       } catch (err) {
         console.error(`❌ Erro processando ${dados.carteirinha}:`, err);
         falhas++;
-        erros.push(`${dados.carteirinha}: ${err.message}`);
+        erros.push(`${dados.carteirinha}: ${(err as Error).message || 'Erro desconhecido'}`);
       }
     }
   }
