@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Copy, Check, UserPlus } from 'lucide-react';
+
 import { PasswordStrengthIndicator, validatePasswordStrength } from '@/components/PasswordStrengthIndicator';
 import { Footer } from '@/components/Footer';
 
@@ -19,7 +19,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [creatingUsers, setCreatingUsers] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
 
@@ -36,54 +35,6 @@ const Auth = () => {
     maternidade: '',
     justificativa: '',
   });
-
-  const [copiedCredential, setCopiedCredential] = useState<string | null>(null);
-
-  const credenciaisPadrao = [
-    {
-      tipo: 'Admin',
-      email: 'admin@hapvida.com.br',
-      senha: 'Admin@2024',
-      cor: 'bg-red-100 dark:bg-red-950 border-red-300 dark:border-red-800 text-red-800 dark:text-red-200'
-    },
-    {
-      tipo: 'Médico Unidade',
-      email: 'medico.unidade@hapvida.com.br',
-      senha: 'Medico@2024',
-      cor: 'bg-blue-100 dark:bg-blue-950 border-blue-300 dark:border-blue-800 text-blue-800 dark:text-blue-200'
-    },
-    {
-      tipo: 'Médico Maternidade',
-      email: 'medico.maternidade@hapvida.com.br',
-      senha: 'Medico@2024',
-      cor: 'bg-green-100 dark:bg-green-950 border-green-300 dark:border-green-800 text-green-800 dark:text-green-200'
-    }
-  ];
-
-  const copyToClipboard = (text: string, credential: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedCredential(credential);
-    setTimeout(() => setCopiedCredential(null), 2000);
-    toast.success('Copiado!');
-  };
-
-  const criarUsuariosPadrao = async () => {
-    setCreatingUsers(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-default-users');
-
-      if (error) throw error;
-
-      const successCount = data.results.filter((r: any) => r.success).length;
-      
-      toast.success(`${successCount} usuário(s) criado(s) com sucesso! Agora você pode fazer login.`);
-    } catch (error: any) {
-      console.error("Erro ao criar usuários:", error);
-      toast.error("Erro ao criar usuários: " + error.message);
-    } finally {
-      setCreatingUsers(false);
-    }
-  };
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,57 +321,6 @@ const Auth = () => {
                 </form>
               </TabsContent>
             </Tabs>
-          </CardContent>
-        </Card>
-
-        {/* Card de credenciais padrão */}
-        <Card className="w-full lg:w-80">
-          <CardHeader>
-            <CardTitle className="text-lg">Credenciais de Teste</CardTitle>
-            <CardDescription className="text-xs">
-              Use estas credenciais para acessar o sistema
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {credenciaisPadrao.map((cred, idx) => (
-              <div key={idx} className={`border-2 rounded-lg p-3 ${cred.cor}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <p className="font-semibold text-sm">{cred.tipo}</p>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-mono break-all">{cred.email}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 flex-shrink-0"
-                      onClick={() => copyToClipboard(cred.email, `${cred.tipo}-email`)}
-                    >
-                      {copiedCredential === `${cred.tipo}-email` ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-mono">{cred.senha}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 flex-shrink-0"
-                      onClick={() => copyToClipboard(cred.senha, `${cred.tipo}-senha`)}
-                    >
-                      {copiedCredential === `${cred.tipo}-senha` ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
           </CardContent>
         </Card>
         </div>
