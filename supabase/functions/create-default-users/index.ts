@@ -88,21 +88,21 @@ serve(async (req) => {
       {
         email: "admin@hapvida.com.br",
         password: "Admin@2024",
-        nome: "Administrador Sistema",
+        nome: "Administrador",
         role: "admin",
         maternidade: null
       },
       {
         email: "medico.unidade@hapvida.com.br",
         password: "Medico@2024",
-        nome: "Dr. João Silva - Unidade PGS",
+        nome: "Médico de Unidade",
         role: "medico_unidade",
         maternidade: null
       },
       {
         email: "medico.maternidade@hapvida.com.br",
         password: "Medico@2024",
-        nome: "Dra. Maria Santos - Maternidade",
+        nome: "Médico de Maternidade",
         role: "medico_maternidade",
         maternidade: "Maternidade Hapvida NotreDame Fortaleza"
       }
