@@ -1,17 +1,10 @@
 // Validação de protocolo para agendamentos obstétricos
 import { PROTOCOLS } from "./obstetricProtocols";
-import { classifyFreeDiagnosis, getDiagnosisLabel } from "./diagnosisClassifier";
 
 export interface ValidacaoProtocolo {
   compativel: boolean;
   alertas: string[];
   recomendacoes: string[];
-  diagnosticoLivreInfo?: {
-    original: string;
-    classificado: boolean;
-    diagnosticoSugerido?: string;
-    requerRevisao: boolean;
-  };
 }
 
 export const validarProtocolo = (dados: {
@@ -21,46 +14,12 @@ export const validarProtocolo = (dados: {
   placentaPrevia?: string;
   igSemanas: number;
   igDias: number;
-  diagnosticoLivre?: string;
 }): ValidacaoProtocolo => {
   const alertas: string[] = [];
   const recomendacoes: string[] = [];
   let compativel = true;
-  let diagnosticoLivreInfo;
 
   const igTotal = dados.igSemanas + (dados.igDias / 7);
-  
-  // Handle free-text diagnosis if provided
-  if (dados.diagnosticoLivre && dados.diagnosticoLivre.trim().length > 0) {
-    const classification = classifyFreeDiagnosis(dados.diagnosticoLivre);
-    
-    diagnosticoLivreInfo = {
-      original: dados.diagnosticoLivre,
-      classificado: classification.matched,
-      diagnosticoSugerido: classification.standardizedDiagnosis,
-      requerRevisao: classification.requiresReview,
-    };
-    
-    if (classification.matched && classification.standardizedDiagnosis) {
-      recomendacoes.push(
-        `📋 Diagnóstico livre classificado automaticamente como: "${getDiagnosisLabel(classification.standardizedDiagnosis)}" (confiança: ${classification.confidence})`
-      );
-      
-      // If matched with high confidence, add to diagnoses for protocol validation
-      if (classification.confidence === 'high') {
-        dados.diagnosticosMaternos.push(classification.standardizedDiagnosis);
-      }
-    } else if (classification.suggestions.length > 0) {
-      const suggestions = classification.suggestions.map(s => getDiagnosisLabel(s)).join(', ');
-      alertas.push(
-        `⚠️ Diagnóstico livre não reconhecido com certeza. Sugestões: ${suggestions}. Será registrado para revisão clínica.`
-      );
-    } else {
-      alertas.push(
-        `⚠️ Diagnóstico livre "${dados.diagnosticoLivre}" não foi classificado automaticamente. Será registrado para avaliação e conduta médica individual.`
-      );
-    }
-  }
   
   // Validar protocolos específicos dos diagnósticos
   [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].forEach(diagnostico => {
@@ -207,7 +166,6 @@ export const validarProtocolo = (dados: {
   return {
     compativel,
     alertas,
-    recomendacoes,
-    diagnosticoLivreInfo
+    recomendacoes
   };
 };

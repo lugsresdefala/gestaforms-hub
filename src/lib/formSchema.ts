@@ -23,7 +23,6 @@ export const formSchema = z.object({
   placentaPrevia: z.string().min(1, "Campo obrigatório"),
   diagnosticosFetais: z.array(z.string()).min(1, "Selecione pelo menos um diagnóstico"),
   diagnosticosFetaisOutros: z.string().optional(),
-  diagnosticoLivre: z.string().optional(),
   historiaObstetrica: z.string().min(1, "Campo obrigatório"),
   necessidadeUtiMaterna: z.string().min(1, "Campo obrigatório"),
   necessidadeReservaSangue: z.string().min(1, "Campo obrigatório"),
