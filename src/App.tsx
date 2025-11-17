@@ -26,6 +26,7 @@ import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
 import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
+import ProcessarAgendas2025 from "./pages/ProcessarAgendas2025";
 import ProcessarImportacoes from "./pages/ProcessarImportacoes";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
@@ -217,6 +218,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ImportarAgendamentos2025 />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/processar-agendas-2025" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ProcessarAgendas2025 />
                   </AppLayout>
                 </ProtectedRoute>
               } 
