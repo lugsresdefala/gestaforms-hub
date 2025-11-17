@@ -8,6 +8,50 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 
+const normalizeStringArray = (value: unknown): string[] => {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === "string")
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((item): item is string => typeof item === "string")
+          .map(item => item.trim())
+          .filter(Boolean);
+      }
+    } catch {
+      // Not a JSON string, fall through to comma separation below
+    }
+
+    if (trimmed.includes(',')) {
+      return trimmed
+        .split(',')
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    return [trimmed];
+  }
+
+  return [];
+};
+
+const normalizeOptionalArray = (value: unknown): string[] | undefined => {
+  const result = normalizeStringArray(value);
+  return result.length > 0 ? result : undefined;
+};
+
 const RecalcularDatas2025 = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [resultado, setResultado] = useState<{
@@ -58,6 +102,10 @@ const RecalcularDatas2025 = () => {
         setProgress(Math.round(((i + 1) / agendamentos.length) * 100));
 
         try {
+          const procedimentos = normalizeStringArray(agendamento.procedimentos);
+          const diagnosticosMaternos = normalizeOptionalArray(agendamento.diagnosticos_maternos);
+          const diagnosticosFetais = normalizeOptionalArray(agendamento.diagnosticos_fetais);
+
           // Recalcular usando a função existente
           const resultado = calcularAgendamentoCompleto({
             dumStatus: agendamento.dum_status,
@@ -65,9 +113,9 @@ const RecalcularDatas2025 = () => {
             dataPrimeiroUsg: agendamento.data_primeiro_usg,
             semanasUsg: agendamento.semanas_usg.toString(),
             diasUsg: agendamento.dias_usg.toString(),
-            procedimentos: agendamento.procedimentos,
-            diagnosticosMaternos: agendamento.diagnosticos_maternos ? [agendamento.diagnosticos_maternos] : undefined,
-            diagnosticosFetais: agendamento.diagnosticos_fetais ? [agendamento.diagnosticos_fetais] : undefined,
+            procedimentos,
+            diagnosticosMaternos,
+            diagnosticosFetais,
             placentaPrevia: agendamento.placenta_previa || undefined
           });
 
