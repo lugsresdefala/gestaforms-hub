@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase';
-import { startOfWeek, endOfWeek, format } from 'date-fns';
+﻿import { supabase } from '@/lib/supabase';
+import { startOfWeek, endOfWeek, format, addDays } from 'date-fns';
 
 interface CapacidadeMaternidade {
   vagas_dia_max: number;
@@ -16,8 +16,88 @@ interface ResultadoValidacao {
   vagasDisponiveis: number;
   vagasSemanais: number;
   mensagem: string;
+  dataAlternativa?: Date;
   sugestoes?: Date[];
 }
+
+const isDomingo = (data: Date): boolean => {
+  return data.getDay() === 0;
+};
+
+/**
+ * Busca data disponível dentro da janela de tolerância (+7 dias APENAS)
+ * REGRA: Pode agendar ATÉ 7 dias APÓS a data ideal, NUNCA antes
+ */
+const buscarDataDentroTolerancia = async (
+  dataIdeal: Date,
+  maternidade: string,
+  capacidade: CapacidadeMaternidade
+): Promise<{ data: Date | null; mensagem: string }> => {
+  const datasParaTestar: Date[] = [];
+  
+  // Testar data ideal primeiro
+  datasParaTestar.push(dataIdeal);
+  
+  // Depois testar +1, +2, +3... até +7 dias (APENAS DEPOIS)
+  for (let i = 1; i <= 7; i++) {
+    datasParaTestar.push(addDays(dataIdeal, i));
+  }
+  
+  for (const dataTestar of datasParaTestar) {
+    if (isDomingo(dataTestar)) continue;
+    
+    const hoje = new Date();
+    const diasAte = Math.floor((dataTestar.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    if (diasAte < 10) continue;
+    
+    const diaSemana = dataTestar.getDay();
+    const vagasMaxDia = diaSemana === 6 ? capacidade.vagas_sabado : capacidade.vagas_dia_util;
+    
+    const dataFormatada = format(dataTestar, 'yyyy-MM-dd');
+    const { data: agendamentosDia } = await supabase
+      .from('agendamentos_obst')
+      .select('id')
+      .eq('maternidade', maternidade)
+      .eq('data_agendamento_calculada', dataFormatada)
+      .neq('status', 'rejeitado');
+    
+    const vagasUsadas = agendamentosDia?.length || 0;
+    const vagasDisponiveis = vagasMaxDia - vagasUsadas;
+    
+    if (vagasDisponiveis > 0) {
+      const inicioSemana = startOfWeek(dataTestar, { weekStartsOn: 0 });
+      const fimSemana = endOfWeek(dataTestar, { weekStartsOn: 0 });
+      
+      const { data: agendamentosSemana } = await supabase
+        .from('agendamentos_obst')
+        .select('id')
+        .eq('maternidade', maternidade)
+        .gte('data_agendamento_calculada', format(inicioSemana, 'yyyy-MM-dd'))
+        .lte('data_agendamento_calculada', format(fimSemana, 'yyyy-MM-dd'))
+        .neq('status', 'rejeitado');
+      
+      const vagasSemanais = agendamentosSemana?.length || 0;
+      
+      if (vagasSemanais < capacidade.vagas_semana_max) {
+        const diasDiferenca = Math.floor((dataTestar.getTime() - dataIdeal.getTime()) / (1000 * 60 * 60 * 24));
+        let mensagem = '';
+        
+        if (diasDiferenca === 0) {
+          mensagem = ` ${vagasDisponiveis} vagas disponíveis na data ideal`;
+        } else {
+          mensagem = ` Data ajustada: +${diasDiferenca} dias após data ideal (${vagasDisponiveis} vagas)`;
+        }
+        
+        return { data: dataTestar, mensagem };
+      }
+    }
+  }
+  
+  return { 
+    data: null, 
+    mensagem: ' Sem vagas na data ideal nem nos próximos 7 dias'
+  };
+};
 
 export const verificarDisponibilidade = async (
   maternidade: string,
@@ -25,7 +105,6 @@ export const verificarDisponibilidade = async (
   isUrgente: boolean = false
 ): Promise<ResultadoValidacao> => {
   try {
-    // Buscar capacidade da maternidade
     const { data: capacidade, error: errorCap } = await supabase
       .from('capacidade_maternidades')
       .select('*')
@@ -43,20 +122,55 @@ export const verificarDisponibilidade = async (
     }
 
     const cap = capacidade as CapacidadeMaternidade;
-
-    // Determinar capacidade máxima baseada no dia da semana
-    const diaSemana = dataAgendamento.getDay(); // 0 = domingo, 6 = sábado
-    let vagasMaxDia: number;
+    const diaSemana = dataAgendamento.getDay();
     
     if (diaSemana === 0) {
-      vagasMaxDia = cap.vagas_domingo;
-    } else if (diaSemana === 6) {
+      const { data: dataAlternativa, mensagem } = await buscarDataDentroTolerancia(
+        dataAgendamento,
+        maternidade,
+        cap
+      );
+      
+      if (dataAlternativa) {
+        const dataAltFormatada = format(dataAlternativa, 'yyyy-MM-dd');
+        const { data: agendamentosAlt } = await supabase
+          .from('agendamentos_obst')
+          .select('id')
+          .eq('maternidade', maternidade)
+          .eq('data_agendamento_calculada', dataAltFormatada)
+          .neq('status', 'rejeitado');
+
+        const vagasUsadasAlt = agendamentosAlt?.length || 0;
+        const diaSemanaAlt = dataAlternativa.getDay();
+        const vagasMaxDiaAlt = diaSemanaAlt === 6 ? cap.vagas_sabado : cap.vagas_dia_util;
+        const vagasDisponiveisAlt = vagasMaxDiaAlt - vagasUsadasAlt;
+
+        return {
+          disponivel: true,
+          vagasUsadas: vagasUsadasAlt,
+          vagasDisponiveis: vagasDisponiveisAlt,
+          vagasSemanais: 0,
+          mensagem: ` Data ideal era domingo. ${mensagem}`,
+          dataAlternativa: dataAlternativa,
+        };
+      }
+      
+      return {
+        disponivel: false,
+        vagasUsadas: 0,
+        vagasDisponiveis: 0,
+        vagasSemanais: 0,
+        mensagem: ' Data ideal era domingo e não há vagas nos próximos 7 dias',
+      };
+    }
+    
+    let vagasMaxDia: number;
+    if (diaSemana === 6) {
       vagasMaxDia = cap.vagas_sabado;
     } else {
       vagasMaxDia = cap.vagas_dia_util;
     }
 
-    // Contar agendamentos no mesmo dia
     const dataFormatada = format(dataAgendamento, 'yyyy-MM-dd');
     
     const { data: agendamentosDia, error: errorDia } = await supabase
@@ -68,7 +182,6 @@ export const verificarDisponibilidade = async (
 
     const vagasUsadasDia = agendamentosDia?.length || 0;
 
-    // Contar agendamentos na mesma semana
     const inicioSemana = startOfWeek(dataAgendamento, { weekStartsOn: 0 });
     const fimSemana = endOfWeek(dataAgendamento, { weekStartsOn: 0 });
     const inicioSemanaStr = format(inicioSemana, 'yyyy-MM-dd');
@@ -84,45 +197,74 @@ export const verificarDisponibilidade = async (
 
     const vagasUsadasSemana = agendamentosSemana?.length || 0;
 
-    // Verificar disponibilidade
     const vagasDisponiveisDia = vagasMaxDia - vagasUsadasDia;
     const vagasDisponiveisSemana = cap.vagas_semana_max - vagasUsadasSemana;
 
-    // Se for urgente, verificar se há vagas de emergência
-    if (isUrgente && vagasDisponiveisDia <= 0) {
-      const temVagaEmergencia = vagasUsadasDia < (vagasMaxDia + cap.vagas_emergencia);
-      
-      if (temVagaEmergencia) {
-        return {
-          disponivel: true,
-          vagasUsadas: vagasUsadasDia,
-          vagasDisponiveis: cap.vagas_emergencia,
-          vagasSemanais: vagasUsadasSemana,
-          mensagem: `⚠️ Usando vaga de emergência (${vagasUsadasDia}/${vagasMaxDia + cap.vagas_emergencia})`,
-        };
-      }
+    if (isUrgente) {
+      return {
+        disponivel: false,
+        vagasUsadas: vagasUsadasDia,
+        vagasDisponiveis: 0,
+        vagasSemanais: vagasUsadasSemana,
+        mensagem: ' URGENTE (< 10 dias): Encaminhar para PRONTO-SOCORRO',
+      };
     }
 
-    // Validação normal
-    const disponivel = vagasDisponiveisDia > 0 && vagasDisponiveisSemana > 0;
+    const temVagaNaDataIdeal = vagasDisponiveisDia > 0 && vagasDisponiveisSemana > 0;
 
-    let mensagem = '';
-    if (!disponivel) {
-      if (vagasDisponiveisDia <= 0) {
-        mensagem = `❌ Sem vagas no dia ${format(dataAgendamento, 'dd/MM/yyyy')} (${vagasUsadasDia}/${vagasMaxDia} ocupadas)`;
-      } else if (vagasDisponiveisSemana <= 0) {
-        mensagem = `❌ Sem vagas na semana (${vagasUsadasSemana}/${cap.vagas_semana_max} ocupadas)`;
-      }
-    } else {
-      mensagem = `✅ ${vagasDisponiveisDia} vagas disponíveis no dia (${vagasUsadasSemana}/${cap.vagas_semana_max} na semana)`;
+    if (temVagaNaDataIdeal) {
+      return {
+        disponivel: true,
+        vagasUsadas: vagasUsadasDia,
+        vagasDisponiveis: vagasDisponiveisDia,
+        vagasSemanais: vagasUsadasSemana,
+        mensagem: ` ${vagasDisponiveisDia} vagas disponíveis na data ideal`,
+      };
+    }
+
+    const { data: dataAlternativa, mensagem } = await buscarDataDentroTolerancia(
+      dataAgendamento,
+      maternidade,
+      cap
+    );
+
+    if (dataAlternativa) {
+      const dataAltFormatada = format(dataAlternativa, 'yyyy-MM-dd');
+      const { data: agendamentosAlt } = await supabase
+        .from('agendamentos_obst')
+        .select('id')
+        .eq('maternidade', maternidade)
+        .eq('data_agendamento_calculada', dataAltFormatada)
+        .neq('status', 'rejeitado');
+
+      const vagasUsadasAlt = agendamentosAlt?.length || 0;
+      const diaSemanaAlt = dataAlternativa.getDay();
+      const vagasMaxDiaAlt = diaSemanaAlt === 6 ? cap.vagas_sabado : cap.vagas_dia_util;
+      const vagasDisponiveisAlt = vagasMaxDiaAlt - vagasUsadasAlt;
+
+      return {
+        disponivel: true,
+        vagasUsadas: vagasUsadasAlt,
+        vagasDisponiveis: vagasDisponiveisAlt,
+        vagasSemanais: vagasUsadasSemana,
+        mensagem: mensagem,
+        dataAlternativa: dataAlternativa,
+      };
+    }
+
+    let mensagemFinal = '';
+    if (vagasDisponiveisDia <= 0) {
+      mensagemFinal = ` Sem vagas no dia. Sem vagas nos próximos 7 dias.`;
+    } else if (vagasDisponiveisSemana <= 0) {
+      mensagemFinal = ` Sem vagas na semana. Sem vagas nos próximos 7 dias.`;
     }
 
     return {
-      disponivel,
+      disponivel: false,
       vagasUsadas: vagasUsadasDia,
       vagasDisponiveis: vagasDisponiveisDia,
       vagasSemanais: vagasUsadasSemana,
-      mensagem,
+      mensagem: mensagemFinal,
     };
   } catch (error) {
     console.error('Erro ao verificar disponibilidade:', error);
