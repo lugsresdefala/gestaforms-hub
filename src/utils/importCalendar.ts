@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
-import { parse } from 'date-fns';
+import { parse, isValid } from 'date-fns';
 
 interface CalendarRow {
   maternidade: string;
@@ -42,14 +42,23 @@ export const parseCSVLine = (line: string): CalendarRow | null => {
 };
 
 export const parseDate = (dateStr: string): Date | null => {
-  try {
-    if (dateStr.includes('-')) {
-      return new Date(dateStr);
+  const value = dateStr?.trim();
+  if (!value) return null;
+
+  const slashFormats = ['dd/MM/yyyy', 'd/M/yyyy', 'MM/dd/yyyy', 'M/d/yyyy'];
+
+  if (value.includes('/')) {
+    for (const format of slashFormats) {
+      const parsed = parse(value, format, new Date());
+      if (isValid(parsed)) {
+        return parsed;
+      }
     }
     return null;
-  } catch {
-    return null;
   }
+
+  const parsed = new Date(value);
+  return isValid(parsed) ? parsed : null;
 };
 
 export const calculateAppointmentDate = (mes: string, diaNumero: string): Date | null => {
