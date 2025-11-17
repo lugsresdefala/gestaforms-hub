@@ -188,7 +188,7 @@ const NovoAgendamento = () => {
         medico_responsavel: values.medicoResponsavel,
         centro_clinico: values.centroClinico,
         email_paciente: values.email,
-        data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
+        status: "pendente", // Aguardando aprovação do admin médico
         idade_gestacional_calculada: resultado.igFinal.displayText,
         created_by: user?.id,
         observacoes_agendamento: `IG HOJE: ${resultado.igFinal.displayText}\n` +
