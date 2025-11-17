@@ -26,10 +26,10 @@ interface Notificacao {
 
 const NotificationBell = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isAdminMed } = useAuth();
   const { notificacoes, marcarComoLida } = useRealtimeNotifications();
 
-  if (!isAdmin()) return null;
+  if (!isAdmin() && !isAdminMed()) return null;
 
   const handleNotificationClick = async (notificacao: Notificacao) => {
     marcarComoLida(notificacao.id);

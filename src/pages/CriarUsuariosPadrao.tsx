@@ -55,19 +55,19 @@ const CriarUsuariosPadrao = () => {
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Badge>Admin</Badge>
                   <span className="text-sm">admin@hapvida.com.br</span>
-                  <span className="text-sm text-muted-foreground">• Admin@2024</span>
+                  <span className="text-sm text-muted-foreground">• Senha segura gerada automaticamente</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Badge variant="secondary">Médico Unidade</Badge>
                   <span className="text-sm">medico.unidade@hapvida.com.br</span>
-                  <span className="text-sm text-muted-foreground">• Medico@2024</span>
+                  <span className="text-sm text-muted-foreground">• Senha segura gerada automaticamente</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Badge variant="outline">Médico Maternidade</Badge>
                   <span className="text-sm">medico.maternidade@hapvida.com.br</span>
-                  <span className="text-sm text-muted-foreground">• Medico@2024</span>
+                  <span className="text-sm text-muted-foreground">• Senha segura gerada automaticamente</span>
                 </div>
               </div>
             </div>

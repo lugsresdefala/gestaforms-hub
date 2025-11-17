@@ -56,7 +56,7 @@ const AppSidebar = () => {
     title: "Aprovações Usuários",
     url: "/aprovacoes-usuarios",
     icon: Users,
-    show: isAdmin()
+    show: isAdmin() || isAdminMed()
   }, {
     title: "Importar Agendamentos 2025",
     url: "/importar-agendamentos-2025",
@@ -172,7 +172,8 @@ export const AppLayout = ({
   const navigate = useNavigate();
   const {
     signOut,
-    isAdmin
+    isAdmin,
+    isAdminMed
   } = useAuth();
   const handleLogout = async () => {
     await signOut();
@@ -192,7 +193,7 @@ export const AppLayout = ({
             </div>
 
             <div className="flex items-center gap-2">
-              {isAdmin() && <NotificationBell />}
+              {(isAdmin() || isAdminMed()) && <NotificationBell />}
               <Button onClick={handleLogout} variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-all rounded-lg" title="Sair">
                 <LogOut className="h-4 w-4" />
               </Button>
