@@ -6,6 +6,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const UPPERCASE = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+const LOWERCASE = "abcdefghijkmnopqrstuvwxyz";
+const NUMBERS = "23456789";
+const SPECIAL = "@#$%&*+-_";
+const ALL_CHARS = `${UPPERCASE}${LOWERCASE}${NUMBERS}${SPECIAL}`;
+
+const getRandomChar = (alphabet: string) => {
+  const array = new Uint32Array(1);
+  crypto.getRandomValues(array);
+  return alphabet[array[0] % alphabet.length];
+};
+
+const shuffle = (value: string[]) => {
+  for (let i = value.length - 1; i > 0; i--) {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    const j = array[0] % (i + 1);
+    [value[i], value[j]] = [value[j], value[i]];
+  }
+  return value;
+};
+
+const generateSecurePassword = (length = 16) => {
+  const baseChars = [
+    getRandomChar(UPPERCASE),
+    getRandomChar(LOWERCASE),
+    getRandomChar(NUMBERS),
+    getRandomChar(SPECIAL)
+  ];
+
+  while (baseChars.length < length) {
+    baseChars.push(getRandomChar(ALL_CHARS));
+  }
+
+  return shuffle(baseChars).join("");
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -87,21 +124,21 @@ serve(async (req) => {
     const defaultUsers = [
       {
         email: "admin@hapvida.com.br",
-        password: "Admin@2024",
+        password: generateSecurePassword(),
         nome: "Administrador",
         role: "admin",
         maternidade: null
       },
       {
         email: "medico.unidade@hapvida.com.br",
-        password: "Medico@2024",
+        password: generateSecurePassword(),
         nome: "Médico de Unidade",
         role: "medico_unidade",
         maternidade: null
       },
       {
         email: "medico.maternidade@hapvida.com.br",
-        password: "Medico@2024",
+        password: generateSecurePassword(),
         nome: "Médico de Maternidade",
         role: "medico_maternidade",
         maternidade: "Maternidade Hapvida NotreDame Fortaleza"

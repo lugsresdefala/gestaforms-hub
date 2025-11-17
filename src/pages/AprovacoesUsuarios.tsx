@@ -27,24 +27,26 @@ interface Solicitacao {
 
 const AprovacoesUsuarios = () => {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAdminMed } = useAuth();
   const { toast } = useToast();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
 
+  const podeAprovarUsuarios = isAdmin() || isAdminMed();
+
   useEffect(() => {
-    if (!isAdmin()) {
+    if (!podeAprovarUsuarios) {
       toast({
         variant: "destructive",
         title: "Acesso negado",
-        description: "Apenas administradores podem acessar esta página.",
+        description: "Apenas administradores gerais ou médicos administradores podem acessar esta página.",
       });
       navigate('/');
       return;
     }
     fetchSolicitacoesPendentes();
-  }, [isAdmin, navigate]);
+  }, [podeAprovarUsuarios, navigate]);
 
   const fetchSolicitacoesPendentes = async () => {
     setLoading(true);
@@ -295,7 +297,7 @@ const AprovacoesUsuarios = () => {
                       <>
                         <li>• Aprovar agendamentos médicos</li>
                         <li>• Visualizar todos os agendamentos</li>
-                        <li>• Visualizar solicitações de usuários (sem poder aprovar)</li>
+                        <li>• Aprovar e rejeitar solicitações de novos usuários</li>
                       </>
                     )}
                     {solicitacao.tipo_acesso === 'medico_unidade' && (
