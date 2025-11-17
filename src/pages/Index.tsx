@@ -35,6 +35,8 @@ import {
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // ==========================================
 // TYPE DEFINITIONS
@@ -42,6 +44,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 interface Agendamento {
   id: string;
+  nome_completo: string;
   centro_clinico: string;
   maternidade: string;
   procedimentos: string[];
@@ -406,29 +409,26 @@ const COMPLETE_DESIGN_SYSTEM = `
   .metric-card-advanced {
     position: relative;
     overflow: hidden;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: var(--radius-xl);
     padding: var(--spacing-6);
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 600ms var(--ease-out-cubic);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    transition: transform 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
     will-change: transform, box-shadow, border-color;
-    transform-style: preserve-3d;
   }
-  
+
   .metric-card-advanced::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--texture-noise);
-    opacity: 0.4;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.08), transparent);
+    opacity: 1;
     pointer-events: none;
     z-index: 1;
-    transition: opacity 400ms var(--ease-smooth);
+    transition: opacity 240ms ease;
   }
-  
+
   .metric-card-advanced::after {
     content: '';
     position: absolute;
@@ -439,85 +439,60 @@ const COMPLETE_DESIGN_SYSTEM = `
       rgba(255, 255, 255, 0.3) 50%,
       transparent 65%
     );
-    opacity: 0;
-    transition: all 800ms var(--ease-smooth);
+    opacity: 0.15;
+    transition: opacity 400ms ease;
     pointer-events: none;
     z-index: 2;
   }
-  
+
   .metric-card-advanced:hover {
-    transform: translateY(-8px) translateZ(12px) rotateX(2deg);
-    box-shadow: var(--shadow-3d-xl);
-    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.18);
   }
-  
+
   .metric-card-advanced:hover::before {
-    opacity: 0.2;
+    opacity: 0.6;
   }
-  
+
   .metric-card-advanced:hover::after {
-    opacity: 1;
-    transform: translateX(100%);
+    opacity: 0.25;
   }
   
   .metric-card-advanced--warning {
     background: linear-gradient(
       135deg,
-      rgba(255, 251, 235, 0.9) 0%,
-      rgba(254, 243, 199, 0.85) 100%
+      rgba(254, 249, 195, 0.75) 0%,
+      rgba(253, 230, 138, 0.65) 100%
     );
-    border-color: var(--status-pending-border);
-  }
-  
-  .metric-card-advanced--warning:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-pending-glow);
+    border-color: rgba(245, 158, 11, 0.35);
   }
   
   .metric-card-advanced--success {
     background: linear-gradient(
       135deg,
-      rgba(236, 253, 245, 0.9) 0%,
-      rgba(209, 250, 229, 0.85) 100%
+      rgba(209, 250, 229, 0.7) 0%,
+      rgba(167, 243, 208, 0.6) 100%
     );
-    border-color: var(--status-success-border);
-  }
-  
-  .metric-card-advanced--success:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-success-glow);
+    border-color: rgba(16, 185, 129, 0.35);
   }
   
   .metric-card-advanced--destructive {
     background: linear-gradient(
       135deg,
-      rgba(254, 242, 242, 0.9) 0%,
-      rgba(254, 226, 226, 0.85) 100%
+      rgba(254, 226, 226, 0.7) 0%,
+      rgba(254, 202, 202, 0.6) 100%
     );
-    border-color: var(--status-destructive-border);
-  }
-  
-  .metric-card-advanced--destructive:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-destructive-glow);
+    border-color: rgba(239, 68, 68, 0.3);
   }
   
   .metric-card-advanced--primary {
     background: linear-gradient(
       135deg,
-      rgba(238, 242, 255, 0.9) 0%,
-      rgba(224, 231, 255, 0.85) 100%
+      rgba(224, 231, 255, 0.75) 0%,
+      rgba(199, 210, 254, 0.65) 100%
     );
-    border-color: var(--status-primary-border);
-  }
-  
-  .metric-card-advanced--primary:hover {
-    box-shadow: 
-      var(--shadow-3d-xl),
-      0 0 40px var(--status-primary-glow);
+    border-color: rgba(99, 102, 241, 0.35);
   }
   
   /* ==========================================
@@ -532,13 +507,11 @@ const COMPLETE_DESIGN_SYSTEM = `
     height: 3.5rem;
     border-radius: var(--radius-xl);
     position: relative;
-    transition: all 500ms var(--ease-elastic);
-    will-change: transform;
-    transform-style: preserve-3d;
+    transition: background 200ms ease, box-shadow 200ms ease;
     z-index: 10;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: var(--shadow-3d-sm);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
   }
   
   .metric-icon-badge::before {
@@ -554,12 +527,8 @@ const COMPLETE_DESIGN_SYSTEM = `
     z-index: -1;
   }
   
-  .metric-card-advanced:hover .metric-icon-badge {
-    transform: scale3d(1.2, 1.2, 1.2) translateZ(8px) rotateZ(8deg);
-  }
-  
   .metric-card-advanced:hover .metric-icon-badge::before {
-    opacity: 0.6;
+    opacity: 0.5;
     animation-play-state: running;
   }
   
@@ -623,10 +592,9 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .metric-card-advanced:hover .metric-value {
-    transform: scale3d(1.08, 1.08, 1) translateZ(4px);
-    text-shadow: 
-      0 4px 8px rgba(15, 23, 42, 0.15),
-      0 8px 16px rgba(15, 23, 42, 0.1);
+    transform: scale3d(1.02, 1.02, 1);
+    text-shadow:
+      0 4px 10px rgba(15, 23, 42, 0.12);
   }
   
   /* ==========================================
@@ -635,24 +603,19 @@ const COMPLETE_DESIGN_SYSTEM = `
   
   .chart-card-advanced {
     position: relative;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 600ms var(--ease-out-cubic);
-    will-change: transform, box-shadow;
-    transform-style: preserve-3d;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    transition: transform 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
   }
   
   .chart-card-advanced::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--texture-grid);
-    opacity: 0.3;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.05), transparent);
     pointer-events: none;
     z-index: 1;
   }
@@ -661,33 +624,21 @@ const COMPLETE_DESIGN_SYSTEM = `
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.05) 100%
-    );
-    opacity: 0;
-    transition: opacity 400ms var(--ease-smooth);
+    background: rgba(15, 23, 42, 0.02);
+    opacity: 1;
     pointer-events: none;
     z-index: 2;
   }
   
   .chart-card-advanced:hover {
-    transform: translateY(-6px) translateZ(8px);
-    box-shadow: var(--shadow-3d-xl);
-    border-color: rgba(255, 255, 255, 0.6);
-  }
-  
-  .chart-card-advanced:hover::after {
-    opacity: 1;
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.18);
   }
   
   .chart-card-advanced--active {
-    border-color: var(--color-indigo-400);
-    box-shadow: 
-      var(--shadow-3d-lg),
-      0 0 30px rgba(79, 70, 229, 0.2);
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 22px 48px rgba(79, 70, 229, 0.18);
   }
   
   /* ==========================================
@@ -710,7 +661,8 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .chart-card-advanced:hover .chart-icon-badge {
-    transform: scale3d(1.15, 1.15, 1) translateZ(4px) rotateZ(5deg);
+    transform: none;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
   }
   
   .chart-icon-badge--primary {
@@ -733,14 +685,12 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .filter-bar-advanced {
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(15, 23, 42, 0.08);
     border-radius: var(--radius-xl);
     padding: var(--spacing-6);
-    background: var(--glass-bg-white);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
-    box-shadow: var(--shadow-3d-md);
-    transition: all 400ms var(--ease-smooth);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    transition: border-color 240ms ease, box-shadow 240ms ease;
     position: relative;
     overflow: hidden;
   }
@@ -749,15 +699,13 @@ const COMPLETE_DESIGN_SYSTEM = `
     content: '';
     position: absolute;
     inset: 0;
-    background: var(--texture-noise);
-    opacity: 0.2;
+    background: rgba(148, 163, 184, 0.08);
     pointer-events: none;
   }
   
   .filter-bar-advanced:hover {
-    border-color: rgba(255, 255, 255, 0.6);
-    box-shadow: var(--shadow-3d-lg);
-    transform: translateY(-2px);
+    border-color: rgba(15, 23, 42, 0.16);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
   }
   
   .filter-icon-badge {
@@ -767,15 +715,74 @@ const COMPLETE_DESIGN_SYSTEM = `
     width: 2.75rem;
     height: 2.75rem;
     border-radius: var(--radius-lg);
-    background: var(--status-primary-bg);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9));
     color: white;
-    transition: all 400ms var(--ease-elastic);
-    box-shadow: var(--shadow-3d-sm);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: box-shadow 200ms ease;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+    border: none;
   }
-  
-  .filter-bar-advanced:hover .filter-icon-badge {
-    transform: scale3d(1.12, 1.12, 1) rotateZ(5deg);
+
+  /* ==========================================
+     DATA TABLE PANEL
+     ========================================== */
+
+  .data-panel-card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-xl);
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  }
+
+  .data-panel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .data-panel-table thead {
+    background: #f1f5f9;
+  }
+
+  .data-panel-table th {
+    text-align: left;
+    font-weight: 600;
+    padding: 0.85rem 1.5rem;
+    color: #475569;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .data-panel-table td {
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+  }
+
+  .data-panel-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .status-pill--pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+  }
+
+  .status-pill--approved {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+  }
+
+  .status-pill--rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
   }
   
   /* ==========================================
@@ -863,20 +870,18 @@ const COMPLETE_DESIGN_SYSTEM = `
     align-items: center;
     gap: var(--spacing-2);
     padding: var(--spacing-2) var(--spacing-4);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(15, 23, 42, 0.12);
     border-radius: var(--radius-full);
     font-size: 0.875rem;
     font-weight: 700;
-    background: var(--glass-bg-white);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: var(--shadow-3d-sm);
-    transition: all 300ms var(--ease-smooth);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transition: border-color 200ms ease, box-shadow 200ms ease;
   }
-  
+
   .badge-advanced:hover {
-    transform: scale3d(1.05, 1.05, 1);
-    box-shadow: var(--shadow-3d-md);
+    border-color: rgba(15, 23, 42, 0.25);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
   }
   
   /* ==========================================
@@ -885,16 +890,16 @@ const COMPLETE_DESIGN_SYSTEM = `
   
   .gradient-text-animated {
     background: linear-gradient(
-      90deg,
+      120deg,
+      var(--color-slate-700),
       var(--color-indigo-600),
-      var(--color-emerald-600),
-      var(--color-indigo-600)
+      var(--color-slate-700)
     );
-    background-size: 200% 100%;
+    background-size: 180% 100%;
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: shimmer-glass 4s linear infinite;
+    animation: shimmer-glass 12s linear infinite;
     font-weight: 800;
   }
   
@@ -950,18 +955,8 @@ const COMPLETE_DESIGN_SYSTEM = `
      ========================================== */
   
   .gradient-subtle {
-    background: 
-      var(--texture-grid),
-      linear-gradient(
-        135deg,
-        #ffffff 0%,
-        #fafbfc 50%,
-        #f8f9fb 100%
-      );
-    background-size: 
-      40px 40px,
-      100% 100%;
-    background-attachment: fixed;
+    background:
+      linear-gradient(180deg, #f8fafc 0%, #edf2f7 40%, #f8fafc 100%);
     min-height: 100vh;
   }
   
@@ -1075,6 +1070,12 @@ const COLORS = [
   "#7c3aed", // violet
   "#c026d3", // fuchsia
 ];
+
+const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
+  pendente: { label: "Pendente", className: "status-pill status-pill--pending" },
+  aprovado: { label: "Aprovado", className: "status-pill status-pill--approved" },
+  rejeitado: { label: "Rejeitado", className: "status-pill status-pill--rejected" },
+};
 
 // ==========================================
 // MAIN COMPONENT
@@ -1250,6 +1251,18 @@ const Index = () => {
     [agendamentos, filtroStatus],
   );
 
+  const agendamentosRecentes = useMemo(() => agendamentosFiltrados.slice(0, 8), [agendamentosFiltrados]);
+
+  const formatarData = useCallback((data?: string) => {
+    if (!data) return "-";
+    try {
+      return format(new Date(data), "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      console.warn("Não foi possível formatar data", error);
+      return "-";
+    }
+  }, []);
+
   const handleChartHover = useCallback((chartId: string) => {
     setHoveredChart(chartId);
   }, []);
@@ -1409,6 +1422,66 @@ const Index = () => {
                     {agendamentosFiltrados.length === 1 ? "agendamento" : "agendamentos"}
                   </span>
                 </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {agendamentosFiltrados.length > 0 && (
+          <Card className="data-panel-card">
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle className="text-xl font-semibold">Banco de agendamentos</CardTitle>
+                <CardDescription className="text-sm">
+                  Últimos registros com o filtro aplicado
+                </CardDescription>
+              </div>
+              <Badge className="badge-advanced">
+                Mostrando {agendamentosRecentes.length} de {agendamentosFiltrados.length}
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="data-panel-table">
+                  <thead>
+                    <tr>
+                      <th>Paciente</th>
+                      <th>Centro clínico</th>
+                      <th>Maternidade</th>
+                      <th>Data</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agendamentosRecentes.map((agendamento) => {
+                      const statusKey = (agendamento.status || "").toLowerCase();
+                      const statusConfig = STATUS_CONFIG[statusKey] || {
+                        label: agendamento.status || "Sem status",
+                        className: "status-pill",
+                      };
+                      return (
+                        <tr key={agendamento.id}>
+                          <td>
+                            <p className="font-semibold text-sm text-foreground">
+                              {agendamento.nome_completo}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {agendamento.procedimentos?.length
+                                ? agendamento.procedimentos.join(", ")
+                                : "Sem procedimento"}
+                            </p>
+                          </td>
+                          <td className="text-sm text-muted-foreground">{agendamento.centro_clinico}</td>
+                          <td className="text-sm text-muted-foreground">{agendamento.maternidade}</td>
+                          <td className="text-sm font-medium">{formatarData(agendamento.data_agendamento_calculada)}</td>
+                          <td>
+                            <span className={statusConfig.className}>{statusConfig.label}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
