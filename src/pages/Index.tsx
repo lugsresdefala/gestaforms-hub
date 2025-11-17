@@ -120,25 +120,25 @@ const COMPLETE_DESIGN_SYSTEM = `
     --color-red-900: #7f1d1d;
     
     /* Semantic Status Colors - Cold Variants */
-    --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 100%);
+    --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 80%);
     --status-pending-light: #fffbeb;
     --status-pending-border: #b45309;
     --status-pending-glow: rgba(180, 83, 9, 0.35);
     
-    --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 100%);
+    --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 80%);
     --status-success-light: #ecfdf5;
     --status-success-border: #059669;
     --status-success-glow: rgba(5, 150, 105, 0.35);
     
-    --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 80%);
     --status-destructive-light: #fef2f2;
     --status-destructive-border: #dc2626;
     --status-destructive-glow: rgba(220, 38, 38, 0.35);
     
-    --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 80%);
     --status-primary-light: #eef2ff;
     --status-primary-border: #4f46e5;
-    --status-primary-glow: rgba(79, 70, 229, 0.35);
+    --status-primary-glow: rgba(79, 70, 229, 0.25);
     
     /* Advanced Glassmorphism System */
     --glass-bg-white: rgba(255, 255, 255, 0.75);
@@ -149,9 +149,9 @@ const COMPLETE_DESIGN_SYSTEM = `
     --glass-border-strong: 2px solid rgba(255, 255, 255, 0.4);
     --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
-    --glass-blur: blur(24px);
-    --glass-blur-heavy: blur(40px);
-    --glass-blur-light: blur(12px);
+    --glass-blur: blur(8px);
+    --glass-blur-heavy: blur(10px);
+    --glass-blur-light: blur(4px);
     
     /* Multi-layer 3D Shadow System */
     --shadow-3d-xs: 
@@ -160,14 +160,14 @@ const COMPLETE_DESIGN_SYSTEM = `
       inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
     
     --shadow-3d-sm: 
-      0 2px 4px -1px rgba(15, 23, 42, 0.08),
-      0 4px 8px -2px rgba(15, 23, 42, 0.06),
+      0 2px 2px -1px rgba(15, 23, 42, 0.08),
+      0 4px 4px -2px rgba(15, 23, 42, 0.06),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
     
     --shadow-3d-md: 
-      0 4px 8px -2px rgba(15, 23, 42, 0.1),
-      0 8px 16px -4px rgba(15, 23, 42, 0.08),
-      0 16px 32px -8px rgba(15, 23, 42, 0.06),
+      0 3px 6px -2px rgba(15, 23, 42, 0.1),
+      0 6px 8px -4px rgba(15, 23, 42, 0.08),
+      0 6px 10px -6px rgba(15, 23, 42, 0.06),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
     
     --shadow-3d-lg: 
@@ -305,7 +305,7 @@ const COMPLETE_DESIGN_SYSTEM = `
       transform: translate3d(0, 0, 0) rotateX(0deg);
     }
     50% {
-      transform: translate3d(0, -12px, 8px) rotateX(2deg);
+      transform: translate3d(0, -10px, 6px) rotateX(0deg);
     }
   }
   
@@ -321,7 +321,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   @keyframes glow-pulse {
     0%, 100% {
       opacity: 0.5;
-      filter: blur(20px);
+      filter: blur(10px);
       transform: scale3d(0.95, 0.95, 1);
     }
     50% {
@@ -334,7 +334,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   @keyframes slide-in-3d {
     from {
       opacity: 0;
-      transform: translate3d(-30px, 0, -20px) rotateY(-15deg);
+      transform: translate3d(-10px, 0, -10px) rotateY(0deg);
     }
     to {
       opacity: 1;
@@ -446,7 +446,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
 
   .metric-card-advanced:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
     border-color: rgba(15, 23, 42, 0.18);
   }
@@ -509,9 +509,9 @@ const COMPLETE_DESIGN_SYSTEM = `
     position: relative;
     transition: background 200ms ease, box-shadow 200ms ease;
     z-index: 10;
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 8px 80px rgba(15, 23, 42, 0.1);
   }
   
   .metric-icon-badge::before {
@@ -1573,9 +1573,7 @@ const Index = () => {
             <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-xl font-semibold">Banco de agendamentos</CardTitle>
-                <CardDescription className="text-sm">
-                  Últimos registros com o filtro aplicado
-                </CardDescription>
+                <CardDescription className="text-sm">Últimos registros com o filtro aplicado</CardDescription>
               </div>
               <Badge className="badge-advanced">
                 Mostrando {agendamentosRecentes.length} de {agendamentosFiltrados.length}
@@ -1603,9 +1601,7 @@ const Index = () => {
                       return (
                         <tr key={agendamento.id}>
                           <td>
-                            <p className="font-semibold text-sm text-foreground">
-                              {agendamento.nome_completo}
-                            </p>
+                            <p className="font-semibold text-sm text-foreground">{agendamento.nome_completo}</p>
                             <p className="text-xs text-muted-foreground truncate">
                               {agendamento.procedimentos?.length
                                 ? agendamento.procedimentos.join(", ")
@@ -1614,7 +1610,9 @@ const Index = () => {
                           </td>
                           <td className="text-sm text-muted-foreground">{agendamento.centro_clinico}</td>
                           <td className="text-sm text-muted-foreground">{agendamento.maternidade}</td>
-                          <td className="text-sm font-medium">{formatarData(agendamento.data_agendamento_calculada)}</td>
+                          <td className="text-sm font-medium">
+                            {formatarData(agendamento.data_agendamento_calculada)}
+                          </td>
                           <td>
                             <span className={statusConfig.className}>{statusConfig.label}</span>
                           </td>
