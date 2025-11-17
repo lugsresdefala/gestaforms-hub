@@ -381,10 +381,6 @@ export default function CalendarioCompleto() {
                   <p className="text-sm text-muted-foreground">Domingos</p>
                   <p className="text-2xl font-bold">{capacity.vagas_domingo}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Emergência</p>
-                  <p className="text-2xl font-bold">{capacity.vagas_emergencia}</p>
-                </div>
               </CardContent>
             </Card>
           )}
