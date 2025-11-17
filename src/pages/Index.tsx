@@ -447,7 +447,7 @@ const COMPLETE_DESIGN_SYSTEM = `
 
   .metric-card-advanced:hover {
     transform: translateY(-2px);
-    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 8px 6px rgba(15, 23, 42, 0.12);
     border-color: rgba(15, 23, 42, 0.18);
   }
 
@@ -631,8 +631,8 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .chart-card-advanced:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 12px rgba(15, 23, 42, 0.12);
     border-color: rgba(15, 23, 42, 0.18);
   }
   
@@ -662,7 +662,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   
   .chart-card-advanced:hover .chart-icon-badge {
     transform: none;
-    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.14);
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
   }
   
   .chart-icon-badge--primary {
@@ -705,7 +705,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   
   .filter-bar-advanced:hover {
     border-color: rgba(15, 23, 42, 0.16);
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 6px 4px rgba(15, 23, 42, 0.12);
   }
   
   .filter-icon-badge {
@@ -881,7 +881,7 @@ const COMPLETE_DESIGN_SYSTEM = `
 
   .badge-advanced:hover {
     border-color: rgba(15, 23, 42, 0.25);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 10px 14px rgba(15, 23, 42, 0.08);
   }
   
   /* ==========================================
