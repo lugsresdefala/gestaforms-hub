@@ -1000,10 +1000,151 @@ const COMPLETE_DESIGN_SYSTEM = `
       break-inside: avoid;
       page-break-inside: avoid;
     }
-    
+
     .gradient-subtle {
       background: white;
     }
+  }
+
+  /* ==========================================
+     SOBER MODE OVERRIDES
+     ========================================== */
+
+  :root {
+    --shadow-3d-xs: 0 1px 2px rgba(15, 23, 42, 0.08);
+    --shadow-3d-sm: 0 2px 6px rgba(15, 23, 42, 0.08);
+    --shadow-3d-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+    --shadow-3d-lg: 0 10px 24px rgba(15, 23, 42, 0.1);
+    --glass-bg-white: rgba(255, 255, 255, 0.96);
+    --glass-border: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .gradient-subtle {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  .metric-card-advanced {
+    padding: var(--spacing-5);
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: var(--shadow-3d-md);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .metric-card-advanced::before,
+  .metric-card-advanced::after {
+    content: none;
+  }
+
+  .metric-card-advanced:hover {
+    transform: translateY(-2px);
+    border-color: rgba(71, 85, 105, 0.5);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .metric-card-advanced--warning,
+  .metric-card-advanced--success,
+  .metric-card-advanced--destructive,
+  .metric-card-advanced--primary {
+    background: #fff;
+  }
+
+  .metric-icon-badge {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.85;
+  }
+
+  .metric-value {
+    font-size: 2.25rem;
+  }
+
+  .chart-card-advanced {
+    background: #fff;
+    box-shadow: var(--shadow-3d-md);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .chart-card-advanced::before,
+  .chart-card-advanced::after {
+    content: none;
+  }
+
+  .chart-card-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .chart-card-advanced--active {
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .chart-icon-badge {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow-3d-sm);
+    transform: none;
+  }
+
+  .chart-card-advanced:hover .chart-icon-badge {
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .filter-bar-advanced {
+    padding: var(--spacing-5);
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .filter-bar-advanced::before {
+    content: none;
+  }
+
+  .filter-bar-advanced:hover {
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .filter-icon-badge {
+    background: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    color: rgba(15, 23, 42, 0.8);
+    box-shadow: none;
+  }
+
+  .data-panel-table tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  .data-panel-table tbody tr:hover {
+    background: rgba(148, 163, 184, 0.12);
+    transform: none;
+    box-shadow: none;
+  }
+
+  .data-panel-card {
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .badge-advanced {
+    letter-spacing: 0.05em;
+    transition: none;
+  }
+
+  .badge-advanced:hover {
+    transform: none;
+    box-shadow: none;
   }
 `;
 
@@ -1302,12 +1443,12 @@ const Index = () => {
           {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && (
             <Button
               onClick={() => navigate("/novo-agendamento")}
-              className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 group"
+              className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors"
               size="lg"
             >
-              <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+              <Plus className="h-5 w-5 mr-2" />
               Novo Agendamento
-              <ArrowUpRight className="h-4 w-4 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowUpRight className="h-4 w-4 ml-2 opacity-80" />
             </Button>
           )}
         </div>
@@ -1404,7 +1545,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1">
                     <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                      <SelectTrigger className="w-full sm:w-[280px] border-2 hover:border-primary transition-colors">
+                      <SelectTrigger className="w-full sm:w-[280px] border border-slate-200 rounded-2xl bg-white focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
                         <SelectValue placeholder="Filtrar por status" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1509,10 +1650,10 @@ const Index = () => {
               {(isMedicoUnidade() || isAdmin()) && (
                 <Button
                   onClick={() => navigate("/novo-agendamento")}
-                  className="gradient-primary shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 mt-8 group"
+                  className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors mt-8"
                   size="lg"
                 >
-                  <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                  <Plus className="h-5 w-5 mr-2" />
                   Criar Primeiro Agendamento
                 </Button>
               )}
