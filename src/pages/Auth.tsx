@@ -278,6 +278,7 @@ const Auth = () => {
                       <SelectContent>
                         <SelectItem value="medico_unidade">Médico de Unidade PGS</SelectItem>
                         <SelectItem value="medico_maternidade">Médico de Maternidade</SelectItem>
+                        <SelectItem value="admin_med">Administrador Médico</SelectItem>
                         <SelectItem value="admin">Administrador</SelectItem>
                       </SelectContent>
                     </Select>
