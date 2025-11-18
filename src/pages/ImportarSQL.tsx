@@ -17,92 +17,201 @@ interface ParsedPatient {
   maternidade: string;
 }
 
+type SqlRecord = Record<string, string | null>;
+
+const DEFAULT_DATA_NASCIMENTO = '1990-01-01';
+
+const normalizeText = (value?: string | null) =>
+  value?.replace(/\s+/g, ' ').trim() ?? '';
+
+const splitTuples = (valuesBlock: string) => {
+  const tuples: string[] = [];
+  let depth = 0;
+  let current = '';
+
+  for (let i = 0; i < valuesBlock.length; i++) {
+    const char = valuesBlock[i];
+
+    if (char === '(') {
+      if (depth === 0) {
+        current = '';
+      }
+      depth++;
+    }
+
+    if (depth > 0) {
+      current += char;
+    }
+
+    if (char === ')') {
+      depth--;
+      if (depth === 0) {
+        tuples.push(current.trim());
+        current = '';
+      }
+    }
+  }
+
+  return tuples;
+};
+
+const parseTupleValues = (tuple: string): (string | null)[] => {
+  const values: (string | null)[] = [];
+  let current = '';
+  let inString = false;
+
+  for (let i = 0; i < tuple.length; i++) {
+    const char = tuple[i];
+
+    if (char === "'" && tuple[i - 1] !== '\\') {
+      inString = !inString;
+
+      if (!inString) {
+        values.push(current);
+        current = '';
+      }
+      continue;
+    }
+
+    if (char === ',' && !inString) {
+      const trimmed = current.trim();
+      values.push(trimmed.length === 0 ? '' : (trimmed.toUpperCase() === 'NULL' ? null : trimmed));
+      current = '';
+      continue;
+    }
+
+    if (!inString && (char === '(' || char === ')')) {
+      continue;
+    }
+
+    current += char;
+  }
+
+  const trimmed = current.trim();
+  if (trimmed.length > 0) {
+    values.push(trimmed.toUpperCase() === 'NULL' ? null : trimmed);
+  }
+
+  return values;
+};
+
+const parseInsertRecords = (sql: string, table: string): SqlRecord[] => {
+  const regex = new RegExp(`INSERT INTO\\s+${table}\\s*\\(([^)]+)\\)\\s*VALUES\\s*([\\s\\S]*?);`, 'gi');
+  const records: SqlRecord[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(sql)) !== null) {
+    const columns = match[1]
+      .split(',')
+      .map(column => column.trim().replace(/["`]/g, ''));
+    const valuesBlock = match[2].trim();
+    const tuples = splitTuples(valuesBlock);
+
+    for (const tuple of tuples) {
+      const values = parseTupleValues(tuple);
+      const record: SqlRecord = {};
+      columns.forEach((column, index) => {
+        record[column] = values[index] ?? null;
+      });
+      records.push(record);
+    }
+  }
+
+  return records;
+};
+
+const toNumber = (value?: string | null) => {
+  if (value === undefined || value === null) return null;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const parseProcedimentos = (procedimento: string): string[] => {
+  const normalized = procedimento
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '');
+
+  const procs: string[] = [];
+
+  if (normalized.includes('cesa')) procs.push('Cesariana');
+  if (normalized.includes('laque')) procs.push('Laqueadura Tubária');
+  if (normalized.includes('normal')) procs.push('Parto Normal');
+  if (normalized.includes('indu')) procs.push('Indução Programada');
+  if (normalized.includes('cerclag')) procs.push('Cerclagem');
+  if (normalized.includes('diu')) procs.push('DIU de Cobre Pós-parto');
+
+  return procs.length > 0 ? Array.from(new Set(procs)) : ['Parto Normal'];
+};
+
+const parseMaternidade = (idMaternidade: number): string => {
+  const maternidades: { [key: number]: string } = {
+    1: 'Guarulhos',
+    2: 'NotreCare',
+    3: 'Salvalus',
+    4: 'Cruzeiro'
+  };
+  return maternidades[idMaternidade] || 'Guarulhos';
+};
+
+const parseSQL = (sql: string): ParsedPatient[] => {
+  const maternidades = parseInsertRecords(sql, 'maternidades');
+  const pacientes = parseInsertRecords(sql, 'pacientes');
+  const agendamentos = parseInsertRecords(sql, 'agendamentos');
+
+  if (pacientes.length === 0 || agendamentos.length === 0) {
+    return [];
+  }
+
+  const maternidadeMap = new Map<number, string>();
+  maternidades.forEach((record, index) => {
+    const nome = normalizeText(record.nome) || `Maternidade ${index + 1}`;
+    maternidadeMap.set(index + 1, nome);
+  });
+
+  const pacientesMap = new Map<number, SqlRecord>();
+  pacientes.forEach((record, index) => {
+    pacientesMap.set(index + 1, record);
+  });
+
+  const patients: ParsedPatient[] = [];
+
+  for (const agendamento of agendamentos) {
+    const pacienteId = toNumber(agendamento.id_paciente);
+    const maternidadeId = toNumber(agendamento.id_maternidade);
+    const paciente = pacienteId ? pacientesMap.get(pacienteId) : undefined;
+
+    if (!paciente || !agendamento.data_agendamento) {
+      continue;
+    }
+
+    const nomePaciente = normalizeText(paciente.nome ?? paciente.nome_completo);
+    const carteirinha = normalizeText(paciente.carteirinha);
+
+    if (!nomePaciente || !carteirinha) {
+      continue;
+    }
+
+    patients.push({
+      carteirinha,
+      nome_completo: nomePaciente,
+      data_nascimento: paciente.data_nascimento || DEFAULT_DATA_NASCIMENTO,
+      telefone: normalizeText(paciente.telefone) || 'Não informado',
+      diagnostico_materno: normalizeText(agendamento.diagnostico) || 'Não informado',
+      procedimento_solicitado: normalizeText(agendamento.procedimento) || 'Parto Normal',
+      data_agendada: agendamento.data_agendamento,
+      maternidade: maternidadeId ? (maternidadeMap.get(maternidadeId) || parseMaternidade(maternidadeId)) : 'Guarulhos'
+    });
+  }
+
+  return patients;
+};
+
 export default function ImportarSQL() {
   const [sqlContent, setSqlContent] = useState('');
   const [processing, setProcessing] = useState(false);
   const [results, setResults] = useState<{ success: number; failed: number; duplicates: number; errors: string[] } | null>(null);
   const { toast } = useToast();
-
-  const parseMaternidade = (idMaternidade: number): string => {
-    const maternidades: { [key: number]: string } = {
-      1: 'Guarulhos',
-      2: 'NotreCare',
-      3: 'Salvalus',
-      4: 'Cruzeiro'
-    };
-    return maternidades[idMaternidade] || 'Guarulhos';
-  };
-
-  const parseProcedimentos = (procedimento: string): string[] => {
-    const lower = procedimento.toLowerCase();
-    const procs: string[] = [];
-    
-    if (lower.includes('cesarea') || lower.includes('cesárea')) procs.push('Cesariana');
-    if (lower.includes('laqueadura')) procs.push('Laqueadura Tubária');
-    if (lower.includes('normal')) procs.push('Parto Normal');
-    
-    return procs.length > 0 ? procs : ['Parto Normal'];
-  };
-
-  const parseSQL = (sql: string): ParsedPatient[] => {
-    const patients: ParsedPatient[] = [];
-    const lines = sql.split('\n');
-    
-    let currentPatient: Partial<ParsedPatient> = {};
-    let currentMaternidade = '';
-    
-    for (const line of lines) {
-      const trimmed = line.trim();
-      
-      // Identificar maternidade
-      if (trimmed.includes("INSERT INTO maternidades")) {
-        const match = trimmed.match(/VALUES \((\d+), '([^']+)'\)/);
-        if (match) {
-          currentMaternidade = match[2];
-        }
-      }
-      
-      // Parse paciente
-      if (trimmed.includes("INSERT INTO pacientes")) {
-        const match = trimmed.match(/VALUES \(\d+, '([^']+)', '([^']+)', '([^']+)', '([^']+)'\)/);
-        if (match) {
-          currentPatient = {
-            carteirinha: match[1],
-            nome_completo: match[2],
-            data_nascimento: match[3].split(' ')[0],
-            telefone: match[4]
-          };
-        }
-      }
-      
-      // Parse diagnóstico
-      if (trimmed.includes("INSERT INTO diagnosticos")) {
-        const match = trimmed.match(/VALUES \(\d+, \d+, '([^']+)', '([^']+)'\)/);
-        if (match && currentPatient.carteirinha) {
-          currentPatient.diagnostico_materno = match[1].replace(/\t/g, ' ').trim();
-          currentPatient.procedimento_solicitado = match[2];
-        }
-      }
-      
-      // Parse agendamento
-      if (trimmed.includes("INSERT INTO agendamentos")) {
-        const match = trimmed.match(/VALUES \(\d+, \d+, (\d+), '([^']+)', '[^']+'\)/);
-        if (match && currentPatient.carteirinha) {
-          const idMaternidade = parseInt(match[1]);
-          currentPatient.data_agendada = match[2];
-          currentPatient.maternidade = parseMaternidade(idMaternidade);
-          
-          if (currentPatient.carteirinha && currentPatient.nome_completo && 
-              currentPatient.data_nascimento && currentPatient.data_agendada) {
-            patients.push(currentPatient as ParsedPatient);
-            currentPatient = {};
-          }
-        }
-      }
-    }
-    
-    return patients;
-  };
 
   const importPatients = async () => {
     setProcessing(true);
@@ -165,7 +274,7 @@ export default function ImportarSQL() {
             numero_partos_cesareas: 0,
             numero_partos_normais: 0,
             numero_abortos: 0,
-            dum_status: 'Não sabe informar',
+            dum_status: 'Não sabe',
             data_dum: null,
             data_primeiro_usg: patient.data_nascimento,
             semanas_usg: 0,
