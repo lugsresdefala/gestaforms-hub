@@ -100,7 +100,7 @@ const NovoAgendamento = () => {
     const dataAgendamentoCalculada = resultado.dataAgendamento;
     const maternidade = values.maternidade;
     
-    // Detectar se é urgente (menos de 7 dias até o agendamento)
+    // Detectar se Ã© urgente (menos de 7 dias atÃ© o agendamento)
     const diasAteAgendamento = Math.floor((dataAgendamentoCalculada.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     const isUrgente = diasAteAgendamento <= 7;
     
@@ -116,7 +116,7 @@ const NovoAgendamento = () => {
       ...(disponibilidade.disponivel ? [] : [disponibilidade.mensagem])
     ];
 
-    // Se não for compatível ou houver alertas, mostrar diálogo
+    // Se nÃ£o for compatÃ­vel ou houver alertas, mostrar diÃ¡logo
     if (!validacao.compativel || alertasCombinados.length > 0 || validacao.recomendacoes.length > 0) {
       setProtocoloValidacao(validacao);
       setAlertaVagas(disponibilidade.mensagem);
@@ -125,7 +125,7 @@ const NovoAgendamento = () => {
       return;
     }
 
-    // Se passou na validação, salvar direto
+    // Se passou na validaÃ§Ã£o, salvar direto
     await salvarAgendamento(values);
   };
 
@@ -156,7 +156,7 @@ const NovoAgendamento = () => {
       const igNoAgendamentoDias = igNoAgendamentoTotal % 7;
       const igNoAgendamentoTexto = `${igNoAgendamentoSemanas} semanas e ${igNoAgendamentoDias} dias`;
       
-      // Preparar dados para inserção
+      // Preparar dados para inserÃ§Ã£o
       const agendamentoData = {
         carteirinha: values.carteirinha,
         nome_completo: values.nomeCompleto,
@@ -188,7 +188,8 @@ const NovoAgendamento = () => {
         medico_responsavel: values.medicoResponsavel,
         centro_clinico: values.centroClinico,
         email_paciente: values.email,
-        status: "pendente", // Aguardando aprova��o do admin m�dico
+        data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
+        status: "pendente", // Aguardando aprovao do admin mdico
         idade_gestacional_calculada: resultado.igFinal.displayText,
         created_by: user?.id,
         observacoes_agendamento: `IG HOJE: ${resultado.igFinal.displayText}\n` +
@@ -225,7 +226,7 @@ const NovoAgendamento = () => {
         toast.error(
           `ERRO AO SALVAR AGENDAMENTO:\n\n` +
           `${error.message}\n\n` +
-          `Código: ${error.code}\n` +
+          `CÃ³digo: ${error.code}\n` +
           `Por favor, copie esta mensagem e reporte o erro.`,
           { duration: 10000 }
         );
@@ -235,17 +236,17 @@ const NovoAgendamento = () => {
       console.log("=== SUCESSO NO SALVAMENTO ===");
       console.log("Dados inseridos:", JSON.stringify(insertedData, null, 2));
       
-      // Código de auditoria removido - tabela não existe
+      // CÃ³digo de auditoria removido - tabela nÃ£o existe
       
       toast.success(
         `Agendamento salvo com sucesso!\n\n` +
         `Paciente: ${values.nomeCompleto}\n` +
         `IG Atual (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n` +
         `Data sugerida: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')} (${resultado.igAgendamento})\n\n` +
-        `Verifique as observações no backend para mais detalhes.`
+        `Verifique as observaÃ§Ãµes no backend para mais detalhes.`
       );
       
-      // Resetar formulário
+      // Resetar formulÃ¡rio
       form.reset();
       setCurrentStep(1);
       setShowProtocolAlert(false);
@@ -253,7 +254,7 @@ const NovoAgendamento = () => {
       
     } catch (error) {
       console.error("Erro inesperado:", error);
-      toast.error("Ocorreu um erro ao processar o formulário.");
+      toast.error("Ocorreu um erro ao processar o formulÃ¡rio.");
     } finally {
       setIsSubmitting(false);
     }
@@ -274,7 +275,7 @@ const NovoAgendamento = () => {
       setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
+      toast.error("Por favor, preencha todos os campos obrigatÃ³rios.");
     }
   };
 
@@ -304,14 +305,14 @@ const NovoAgendamento = () => {
           <div className="flex items-center gap-4">
             <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
             <div className="border-l border-border pl-4">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
-              <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÃÃO SEGURA</h1>
+              <p className="text-sm text-muted-foreground">Hapvida NotreDame IntermÃ©dica</p>
             </div>
           </div>
           <div className="flex gap-2">
             <ProtocolosModal />
             <Button onClick={() => navigate('/')} variant="outline">
-              ← Dashboard
+              â Dashboard
             </Button>
             <Button onClick={() => navigate('/dashboard')} variant="outline">
               Ver Listagem
@@ -324,7 +325,7 @@ const NovoAgendamento = () => {
         <div className="bg-card rounded-2xl shadow-elegant p-8 md:p-12 animate-fade-in border border-border/50">
           <div className="mb-10">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3 tracking-tight">
-              Formulário de Agendamento de Parto
+              FormulÃ¡rio de Agendamento de Parto
             </h1>
             <p className="text-lg text-muted-foreground font-medium">Fluxo novo 2025</p>
           </div>
@@ -358,7 +359,7 @@ const NovoAgendamento = () => {
                     onClick={prevStep}
                     className="w-full md:w-auto px-8 py-6 text-base font-medium transition-smooth hover:scale-105"
                   >
-                    ← Anterior
+                    â Anterior
                   </Button>
                 )}
                 {currentStep < totalSteps ? (
@@ -367,7 +368,7 @@ const NovoAgendamento = () => {
                     onClick={nextStep}
                     className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold transition-smooth hover:scale-105 shadow-md hover:shadow-lg"
                   >
-                    Próxima →
+                    PrÃ³xima â
                   </Button>
                 ) : (
                   <Button 
@@ -375,7 +376,7 @@ const NovoAgendamento = () => {
                     disabled={isSubmitting}
                     className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold gradient-primary transition-smooth hover:scale-105 shadow-md hover:shadow-xl"
                   >
-                    {isSubmitting ? "Salvando..." : "Enviar Formulário ✓"}
+                    {isSubmitting ? "Salvando..." : "Enviar FormulÃ¡rio â"}
                   </Button>
                 )}
               </div>
@@ -384,16 +385,16 @@ const NovoAgendamento = () => {
         </div>
       </main>
 
-      {/* Alert Dialog para validação de protocolo */}
+      {/* Alert Dialog para validaÃ§Ã£o de protocolo */}
       <AlertDialog open={showProtocolAlert} onOpenChange={setShowProtocolAlert}>
         <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>
             <div className="flex items-center gap-2">
               <AlertCircle className="h-6 w-6 text-orange-500" />
-              <AlertDialogTitle>Validação de Protocolo Obstétrico</AlertDialogTitle>
+              <AlertDialogTitle>ValidaÃ§Ã£o de Protocolo ObstÃ©trico</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-base">
-              O sistema detectou pontos que requerem atenção conforme o protocolo obstétrico:
+              O sistema detectou pontos que requerem atenÃ§Ã£o conforme o protocolo obstÃ©trico:
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -408,7 +409,7 @@ const NovoAgendamento = () => {
                   <ul className="space-y-2">
                     {protocoloValidacao.alertas.map((alerta, idx) => (
                       <li key={idx} className="text-sm text-orange-700 dark:text-orange-300 flex items-start gap-2">
-                        <span className="mt-0.5">•</span>
+                        <span className="mt-0.5">â¢</span>
                         <span>{alerta}</span>
                       </li>
                     ))}
@@ -416,16 +417,16 @@ const NovoAgendamento = () => {
                 </div>
               )}
 
-              {/* Recomendações */}
+              {/* RecomendaÃ§Ãµes */}
               {protocoloValidacao.recomendacoes.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                    Recomendações:
+                    RecomendaÃ§Ãµes:
                   </h4>
                   <ul className="space-y-2">
                     {protocoloValidacao.recomendacoes.map((rec, idx) => (
                       <li key={idx} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
-                        <span className="mt-0.5">•</span>
+                        <span className="mt-0.5">â¢</span>
                         <span>{rec}</span>
                       </li>
                     ))}
@@ -437,18 +438,18 @@ const NovoAgendamento = () => {
               {protocoloValidacao.diagnosticoLivreInfo && (
                 <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
                   <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
-                    Diagnóstico Livre:
+                    DiagnÃ³stico Livre:
                   </h4>
                   <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
                     <p><strong>Texto original:</strong> "{protocoloValidacao.diagnosticoLivreInfo.original}"</p>
                     {protocoloValidacao.diagnosticoLivreInfo.classificado && protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido && (
                       <p className="text-green-700 dark:text-green-300">
-                        ✓ Classificado automaticamente como: {protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido}
+                        â Classificado automaticamente como: {protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido}
                       </p>
                     )}
                     {protocoloValidacao.diagnosticoLivreInfo.requerRevisao && (
                       <p className="text-orange-700 dark:text-orange-300">
-                        ⚠️ Este diagnóstico será registrado para revisão clínica e auditoria posterior.
+                        â ï¸ Este diagnÃ³stico serÃ¡ registrado para revisÃ£o clÃ­nica e auditoria posterior.
                       </p>
                     )}
                   </div>
@@ -467,8 +468,8 @@ const NovoAgendamento = () => {
                     : 'text-red-800 dark:text-red-200'
                 }`}>
                   {protocoloValidacao.compativel
-                    ? '✓ O agendamento está dentro das diretrizes do protocolo, mas requer atenção aos pontos acima.'
-                    : '⚠️ O agendamento apresenta divergências significativas com o protocolo. Você pode continuar, mas é recomendado revisar os dados ou documentar a justificativa clínica.'}
+                    ? 'â O agendamento estÃ¡ dentro das diretrizes do protocolo, mas requer atenÃ§Ã£o aos pontos acima.'
+                    : 'â ï¸ O agendamento apresenta divergÃªncias significativas com o protocolo. VocÃª pode continuar, mas Ã© recomendado revisar os dados ou documentar a justificativa clÃ­nica.'}
                 </p>
               </div>
             </div>
