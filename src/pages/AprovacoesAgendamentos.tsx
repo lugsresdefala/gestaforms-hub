@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Check, X, Clock, Stethoscope, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -23,7 +24,7 @@ interface Agendamento {
   medico_responsavel: string;
   centro_clinico: string;
   procedimentos: string[];
-  data_agendamento_calculada: string;
+  data_agendamento_calculada: string | null;
   idade_gestacional_calculada: string;
   indicacao_procedimento: string;
   diagnosticos_maternos: string;
@@ -39,6 +40,7 @@ const AprovacoesAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
+  const [datasAprovacao, setDatasAprovacao] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     if (!isAdminMed()) {
@@ -69,17 +71,33 @@ const AprovacoesAgendamentos = () => {
       });
     } else {
       setAgendamentos(data || []);
+      const novasDatas: Record<string, string> = {};
+      data?.forEach((agendamento) => {
+        novasDatas[agendamento.id] = agendamento.data_agendamento_calculada || '';
+      });
+      setDatasAprovacao(novasDatas);
     }
     setLoading(false);
   };
 
   const handleAprovar = async (agendamentoId: string) => {
+    const dataSelecionada = datasAprovacao[agendamentoId];
+    if (!dataSelecionada) {
+      toast({
+        variant: "destructive",
+        title: "Data obrigatória",
+        description: "Defina a data final de agendamento antes de aprovar.",
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('agendamentos_obst')
       .update({
         status: 'aprovado',
         aprovado_por: user?.id,
         aprovado_em: new Date().toISOString(),
+        data_agendamento_calculada: dataSelecionada,
         observacoes_aprovacao: observacoes[agendamentoId] || null,
       })
       .eq('id', agendamentoId);
@@ -134,8 +152,11 @@ const AprovacoesAgendamentos = () => {
     }
   };
 
-  const getUrgenciaBadge = (dataAgendamento: string, createdAt: string) => {
+  const getUrgenciaBadge = (dataAgendamento: string | null) => {
     const hoje = new Date();
+    if (!dataAgendamento) {
+      return <Badge variant="outline" className="gap-1">Sem data</Badge>;
+    }
     const dataCalc = new Date(dataAgendamento);
     const diasRestantes = Math.ceil((dataCalc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -201,7 +222,7 @@ const AprovacoesAgendamentos = () => {
                   <div className="flex-1">
                     <CardTitle className="text-xl flex items-center gap-2">
                       {agendamento.nome_completo}
-                      {getUrgenciaBadge(agendamento.data_agendamento_calculada, agendamento.created_at)}
+                      {getUrgenciaBadge(agendamento.data_agendamento_calculada)}
                     </CardTitle>
                     <CardDescription className="mt-2 space-y-1">
                       <p>Carteirinha: {agendamento.carteirinha}</p>
@@ -237,9 +258,27 @@ const AprovacoesAgendamentos = () => {
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Data Calculada</p>
-                    <Badge className="text-base">
-                      {format(new Date(agendamento.data_agendamento_calculada), 'dd/MM/yyyy')}
-                    </Badge>
+                    {agendamento.data_agendamento_calculada ? (
+                      <Badge className="text-base">
+                        {format(new Date(agendamento.data_agendamento_calculada), 'dd/MM/yyyy')}
+                      </Badge>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Sem data calculada</p>
+                    )}
+                  </div>
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">Definir data final (obrigatório)</p>
+                    <Input
+                      type="date"
+                      value={datasAprovacao[agendamento.id] || ''}
+                      onChange={(e) =>
+                        setDatasAprovacao((prev) => ({
+                          ...prev,
+                          [agendamento.id]: e.target.value,
+                        }))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Essa data será usada em todos os painéis.</p>
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">IG Calculada</p>
