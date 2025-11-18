@@ -8,10 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Clock, Stethoscope, AlertTriangle } from 'lucide-react';
+import { Check, X, Clock, Stethoscope, AlertTriangle, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProtocolosModal } from '@/components/ProtocolosModal';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Agendamento {
   id: string;
@@ -41,6 +42,7 @@ const AprovacoesAgendamentos = () => {
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [datasAprovacao, setDatasAprovacao] = useState<{ [key: string]: string }>({});
+  const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
 
   useEffect(() => {
     if (!isAdminMed()) {
@@ -53,15 +55,20 @@ const AprovacoesAgendamentos = () => {
       return;
     }
     fetchAgendamentosPendentes();
-  }, [isAdminMed, navigate]);
+  }, [isAdminMed, navigate, filtroStatus]);
 
   const fetchAgendamentosPendentes = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('agendamentos_obst')
       .select('*')
-      .eq('status', 'pendente')
       .order('created_at', { ascending: false });
+
+    if (filtroStatus !== 'todos') {
+      query = query.eq('status', filtroStatus);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast({
@@ -189,16 +196,30 @@ const AprovacoesAgendamentos = () => {
         </p>
       </div>
 
+      <Tabs value={filtroStatus} onValueChange={setFiltroStatus} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsTrigger value="pendente">Pendentes</TabsTrigger>
+          <TabsTrigger value="aprovado">Aprovados</TabsTrigger>
+          <TabsTrigger value="todos">Todos</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Agendamentos Pendentes</span>
+            <span>
+              {filtroStatus === 'pendente' && 'Agendamentos Pendentes'}
+              {filtroStatus === 'aprovado' && 'Agendamentos Aprovados'}
+              {filtroStatus === 'todos' && 'Todos os Agendamentos'}
+            </span>
             <Badge variant="secondary" className="text-lg px-4 py-2">
-              {agendamentos.length} pendente{agendamentos.length !== 1 ? 's' : ''}
+              {agendamentos.length} {filtroStatus === 'todos' ? 'total' : filtroStatus === 'pendente' ? 'pendente' : 'aprovado'}{agendamentos.length !== 1 ? 's' : ''}
             </Badge>
           </CardTitle>
           <CardDescription>
-            Revise os detalhes clínicos e aprove ou rejeite os agendamentos
+            {filtroStatus === 'pendente' && 'Revise os detalhes clínicos e aprove ou rejeite os agendamentos'}
+            {filtroStatus === 'aprovado' && 'Agendamentos já aprovados - você pode editá-los se necessário'}
+            {filtroStatus === 'todos' && 'Visão completa de todos os agendamentos do sistema'}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -220,8 +241,26 @@ const AprovacoesAgendamentos = () => {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-xl flex items-center gap-2">
+                    <CardTitle className="text-xl flex items-center gap-2 flex-wrap">
                       {agendamento.nome_completo}
+                      {agendamento.status === 'aprovado' && (
+                        <Badge variant="default" className="bg-green-500">
+                          <Check className="h-3 w-3 mr-1" />
+                          Aprovado
+                        </Badge>
+                      )}
+                      {agendamento.status === 'rejeitado' && (
+                        <Badge variant="destructive">
+                          <X className="h-3 w-3 mr-1" />
+                          Rejeitado
+                        </Badge>
+                      )}
+                      {agendamento.status === 'pendente' && (
+                        <Badge variant="secondary">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pendente
+                        </Badge>
+                      )}
                       {getUrgenciaBadge(agendamento.data_agendamento_calculada)}
                     </CardTitle>
                     <CardDescription className="mt-2 space-y-1">
@@ -334,23 +373,45 @@ const AprovacoesAgendamentos = () => {
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    onClick={() => handleAprovar(agendamento.id)}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    size="lg"
-                  >
-                    <Check className="h-5 w-5 mr-2" />
-                    Aprovar Agendamento
-                  </Button>
-                  <Button
-                    onClick={() => handleRejeitar(agendamento.id)}
-                    variant="destructive"
-                    className="flex-1"
-                    size="lg"
-                  >
-                    <X className="h-5 w-5 mr-2" />
-                    Rejeitar Agendamento
-                  </Button>
+                  {agendamento.status === 'pendente' ? (
+                    <>
+                      <Button
+                        onClick={() => handleAprovar(agendamento.id)}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        size="lg"
+                      >
+                        <Check className="h-5 w-5 mr-2" />
+                        Aprovar Agendamento
+                      </Button>
+                      <Button
+                        onClick={() => navigate(`/editar-agendamento/${agendamento.id}`)}
+                        variant="outline"
+                        size="lg"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        onClick={() => handleRejeitar(agendamento.id)}
+                        variant="destructive"
+                        className="flex-1"
+                        size="lg"
+                      >
+                        <X className="h-5 w-5 mr-2" />
+                        Rejeitar Agendamento
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={() => navigate(`/editar-agendamento/${agendamento.id}`)}
+                      variant="outline"
+                      className="flex-1"
+                      size="lg"
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar Agendamento
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

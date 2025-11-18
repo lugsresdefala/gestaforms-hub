@@ -33,7 +33,6 @@ interface MaternityCapacity {
   vagas_dia_util: number;
   vagas_sabado: number;
   vagas_domingo: number;
-  vagas_emergencia: number;
   vagas_semana_max: number;
 }
 
