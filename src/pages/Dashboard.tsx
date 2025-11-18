@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Loader2, Calendar as CalendarIcon, User, FileText, Filter, Download, Pl
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
+import { useRealtimeAgendamentos } from "@/hooks/useRealtimeAgendamentos";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -46,6 +47,7 @@ const Dashboard = () => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
+  const { refreshKey } = useRealtimeAgendamentos();
   
   // Filtros
   const [searchNome, setSearchNome] = useState("");
@@ -56,15 +58,7 @@ const Dashboard = () => {
   const [filterPatologia, setFilterPatologia] = useState("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
-  useEffect(() => {
-    fetchAgendamentos();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
-
-  const fetchAgendamentos = async () => {
+  const fetchAgendamentos = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase
@@ -90,7 +84,15 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getMaternidadesAcesso, isAdmin, isMedicoMaternidade]);
+
+  useEffect(() => {
+    fetchAgendamentos();
+  }, [fetchAgendamentos, refreshKey]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
 
   const handleLogout = async () => {
     await signOut();
