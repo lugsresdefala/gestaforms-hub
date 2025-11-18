@@ -15,16 +15,15 @@ export const useRealtimeAgendamentos = (createdBy?: string) => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'agendamentos_obst',
           filter: createdBy ? `created_by=eq.${createdBy}` : undefined
         },
         (payload) => {
           const updated = payload.new as any;
-          
-          // Notificar apenas se o usuário for o criador e o status mudou
-          if (createdBy && updated.created_by === createdBy) {
+
+          if (createdBy && updated?.created_by === createdBy && payload.eventType === 'UPDATE') {
             if (updated.status === 'aprovado') {
               toast({
                 title: '✅ Agendamento Aprovado',
@@ -37,10 +36,10 @@ export const useRealtimeAgendamentos = (createdBy?: string) => {
                 variant: 'destructive',
               });
             }
-            
-            // Forçar atualização da lista
-            setRefreshKey(prev => prev + 1);
           }
+
+          // Sempre força atualização quando qualquer mudança relevante ocorrer
+          setRefreshKey(prev => prev + 1);
         }
       )
       .subscribe();
