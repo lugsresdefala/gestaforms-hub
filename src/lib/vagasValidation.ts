@@ -4,7 +4,6 @@ import { startOfWeek, endOfWeek, format, addDays } from 'date-fns';
 interface CapacidadeMaternidade {
   vagas_dia_max: number;
   vagas_semana_max: number;
-  vagas_emergencia: number;
   vagas_dia_util: number;
   vagas_sabado: number;
   vagas_domingo: number;

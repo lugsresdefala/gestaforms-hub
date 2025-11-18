@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import AprovacoesAgendamentos from "./pages/AprovacoesAgendamentos";
+import EditarAgendamento from "./pages/EditarAgendamento";
 import AprovacoesUsuarios from "./pages/AprovacoesUsuarios";
 import MeusAgendamentos from "./pages/MeusAgendamentos";
 import GerenciarUsuarios from "./pages/GerenciarUsuarios";
@@ -104,7 +105,17 @@ const App = () => (
               } 
             />
             <Route 
-              path="/aprovacoes-usuarios" 
+              path="/editar-agendamento/:id" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <EditarAgendamento />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/aprovacoes-usuarios"
               element={
                 <ProtectedRoute requireAdmin>
                   <AppLayout>

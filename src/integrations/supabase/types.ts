@@ -152,7 +152,6 @@ export type Database = {
           vagas_dia_max: number
           vagas_dia_util: number
           vagas_domingo: number
-          vagas_emergencia: number
           vagas_sabado: number
           vagas_semana_max: number
         }
@@ -164,7 +163,6 @@ export type Database = {
           vagas_dia_max?: number
           vagas_dia_util?: number
           vagas_domingo?: number
-          vagas_emergencia?: number
           vagas_sabado?: number
           vagas_semana_max?: number
         }
@@ -176,7 +174,6 @@ export type Database = {
           vagas_dia_max?: number
           vagas_dia_util?: number
           vagas_domingo?: number
-          vagas_emergencia?: number
           vagas_sabado?: number
           vagas_semana_max?: number
         }

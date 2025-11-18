@@ -20,7 +20,6 @@ interface CapacidadeMaternidade {
   vagas_sabado: number;
   vagas_domingo: number;
   vagas_semana_max: number;
-  vagas_emergencia: number;
 }
 
 const OcupacaoMaternidades = () => {

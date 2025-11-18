@@ -25,7 +25,6 @@ interface MaternityCapacity {
   vagas_dia_util: number;
   vagas_sabado: number;
   vagas_domingo: number;
-  vagas_emergencia: number;
 }
 
 export default function CalendarioOcupacao() {
@@ -66,7 +65,7 @@ export default function CalendarioOcupacao() {
       // Load capacity
       const { data: capacityData } = await supabase
         .from('capacidade_maternidades')
-        .select('vagas_dia_util, vagas_sabado, vagas_domingo, vagas_emergencia')
+        .select('vagas_dia_util, vagas_sabado, vagas_domingo')
         .eq('maternidade', selectedMaternidade)
         .single();
 
