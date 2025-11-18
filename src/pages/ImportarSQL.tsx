@@ -20,7 +20,7 @@ interface ParsedPatient {
 export default function ImportarSQL() {
   const [sqlContent, setSqlContent] = useState('');
   const [processing, setProcessing] = useState(false);
-  const [results, setResults] = useState<{ success: number; failed: number; errors: string[] } | null>(null);
+  const [results, setResults] = useState<{ success: number; failed: number; duplicates: number; errors: string[] } | null>(null);
   const { toast } = useToast();
 
   const parseMaternidade = (idMaternidade: number): string => {
@@ -131,10 +131,24 @@ export default function ImportarSQL() {
         return;
       }
 
-      const importResults = { success: 0, failed: 0, errors: [] as string[] };
+      const importResults = { success: 0, failed: 0, duplicates: 0, errors: [] as string[] };
       
       for (const patient of patients) {
         try {
+          // Verificar se já existe agendamento com mesma carteirinha e data
+          const { data: existingAgendamento } = await supabase
+            .from('agendamentos_obst')
+            .select('id')
+            .eq('carteirinha', patient.carteirinha)
+            .eq('data_agendamento_calculada', patient.data_agendada)
+            .maybeSingle();
+
+          if (existingAgendamento) {
+            importResults.duplicates++;
+            importResults.errors.push(`${patient.nome_completo}: Duplicado - já existe agendamento para esta carteirinha e data`);
+            continue;
+          }
+
           const agendamento = {
             carteirinha: patient.carteirinha,
             nome_completo: patient.nome_completo,
@@ -237,14 +251,15 @@ export default function ImportarSQL() {
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-green-600">✓ Sucesso: {results.success}</p>
+                  <p className="text-yellow-600">⊘ Duplicados: {results.duplicates}</p>
                   <p className="text-red-600">✗ Falhas: {results.failed}</p>
                   
                   {results.errors.length > 0 && (
                     <div className="mt-4">
-                      <p className="font-semibold mb-2">Erros:</p>
+                      <p className="font-semibold mb-2">Detalhes:</p>
                       <div className="max-h-48 overflow-y-auto">
                         {results.errors.map((error, i) => (
-                          <p key={i} className="text-sm text-red-600">{error}</p>
+                          <p key={i} className="text-sm text-muted-foreground">{error}</p>
                         ))}
                       </div>
                     </div>
