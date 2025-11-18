@@ -55,7 +55,7 @@ const normalizeProcedimentos = (procedimentos: unknown): string[] => {
     } catch {
       return procedimentos
         .split(/[,;\n]/)
-        .map(proc => proc.trim())
+        .map((proc) => proc.trim())
         .filter(Boolean);
     }
 
@@ -72,7 +72,7 @@ const Dashboard = () => {
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const { refreshKey } = useRealtimeAgendamentos();
-  
+
   // Filtros
   const [searchNome, setSearchNome] = useState("");
   const [filterMedico, setFilterMedico] = useState("all");
@@ -85,28 +85,39 @@ const Dashboard = () => {
   const fetchAgendamentos = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('agendamentos_obst')
-        .select('*');
+      let query = supabase.from("agendamentos_obst").select("*");
 
-      // Aplicar filtros baseados nas permissões
+      // Permissões de médico de maternidade
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
-        query = query.in('maternidade', maternidades).eq('status', 'aprovado');
+        console.log("Médico de maternidade / acessos:", maternidades);
+
+        if (maternidades && maternidades.length > 0) {
+          query = query.in("maternidade", maternidades).eq("status", "aprovado");
+        } else {
+          console.warn("Usuário médico de maternidade sem maternidade vinculada");
+          toast.error("Seu usuário não está vinculado a nenhuma maternidade");
+          setAgendamentos([]);
+          setFilteredAgendamentos([]);
+          setLoading(false);
+          return;
+        }
       }
 
-      query = query.order('created_at', { ascending: false });
+      query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      const normalizedData = (data || []).map(agendamento => ({
+      const normalizedData = (data || []).map((agendamento) => ({
         ...agendamento,
-        procedimentos: normalizeProcedimentos((agendamento as { procedimentos?: unknown }).procedimentos)
+        procedimentos: normalizeProcedimentos((agendamento as { procedimentos?: unknown }).procedimentos),
       }));
 
+      console.log("Agendamentos carregados:", normalizedData.length);
       setAgendamentos(normalizedData as Agendamento[]);
+      setFilteredAgendamentos(normalizedData as Agendamento[]);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
       toast.error("Não foi possível carregar os agendamentos");
@@ -119,103 +130,130 @@ const Dashboard = () => {
     fetchAgendamentos();
   }, [fetchAgendamentos, refreshKey]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-
   const applyFilters = () => {
     let filtered = [...agendamentos];
 
     // Filtro por data selecionada no calendário
     if (selectedDate) {
-      const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
-      filtered = filtered.filter(a => a.data_agendamento_calculada === selectedDateStr);
+      const selectedDateStr = format(selectedDate, "yyyy-MM-dd");
+      filtered = filtered.filter((a) => {
+        const dataStr = (a.data_agendamento_calculada || "").slice(0, 10);
+        return dataStr === selectedDateStr;
+      });
     }
 
-    // Filtro por nome
+    // Filtro por nome/carteirinha
     if (searchNome) {
-      filtered = filtered.filter(a => 
-        a.nome_completo.toLowerCase().includes(searchNome.toLowerCase()) ||
-        a.carteirinha.includes(searchNome)
+      const termo = searchNome.toLowerCase();
+      filtered = filtered.filter(
+        (a) => a.nome_completo.toLowerCase().includes(termo) || (a.carteirinha || "").toLowerCase().includes(termo),
       );
     }
 
     // Filtro por médico
     if (filterMedico !== "all") {
-      filtered = filtered.filter(a => a.medico_responsavel === filterMedico);
+      filtered = filtered.filter((a) => a.medico_responsavel === filterMedico);
     }
 
     // Filtro por maternidade
     if (filterMaternidade !== "all") {
-      filtered = filtered.filter(a => a.maternidade === filterMaternidade);
+      filtered = filtered.filter((a) => a.maternidade === filterMaternidade);
     }
 
-    // Filtro por data range
+    // Filtro por intervalo de datas
     if (filterDataInicio) {
-      filtered = filtered.filter(a => a.data_agendamento_calculada >= filterDataInicio);
+      filtered = filtered.filter((a) => {
+        const dataStr = (a.data_agendamento_calculada || "").slice(0, 10);
+        return dataStr >= filterDataInicio;
+      });
     }
+
     if (filterDataFim) {
-      filtered = filtered.filter(a => a.data_agendamento_calculada <= filterDataFim);
+      filtered = filtered.filter((a) => {
+        const dataStr = (a.data_agendamento_calculada || "").slice(0, 10);
+        return dataStr <= filterDataFim;
+      });
     }
 
     // Filtro por patologia
     if (filterPatologia !== "all") {
-      filtered = filtered.filter(a => {
-        const diagMat = a.diagnosticos_maternos || '';
-        const diagFet = a.diagnosticos_fetais || '';
-        return diagMat.toLowerCase().includes(filterPatologia.toLowerCase()) || 
-               diagFet.toLowerCase().includes(filterPatologia.toLowerCase());
+      const termoPat = filterPatologia.toLowerCase();
+      filtered = filtered.filter((a) => {
+        const diagMat = (a.diagnosticos_maternos || "").toLowerCase();
+        const diagFet = (a.diagnosticos_fetais || "").toLowerCase();
+        return diagMat.includes(termoPat) || diagFet.includes(termoPat);
       });
     }
 
     setFilteredAgendamentos(filtered);
   };
 
+  useEffect(() => {
+    applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    agendamentos,
+    searchNome,
+    filterMedico,
+    filterMaternidade,
+    filterDataInicio,
+    filterDataFim,
+    filterPatologia,
+    selectedDate,
+  ]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   const getUniqueMedicos = () => {
-    return [...new Set(agendamentos.map(a => a.medico_responsavel))];
+    return [...new Set(agendamentos.map((a) => a.medico_responsavel).filter(Boolean))];
   };
 
   const getUniqueMaternidades = () => {
-    return [...new Set(agendamentos.map(a => a.maternidade))];
+    return [...new Set(agendamentos.map((a) => a.maternidade).filter(Boolean))];
   };
 
   const exportToCSV = () => {
     const headers = [
-      "Carteirinha", "Nome", "Data Nascimento", "Telefone", "Procedimentos",
-      "Médico", "Maternidade", "Centro Clínico", "Data Agendamento", "IG Calculada",
-      "Diagnósticos Maternos", "Diagnósticos Fetais", "Observações"
+      "Carteirinha",
+      "Nome",
+      "Data Nascimento",
+      "Telefone",
+      "Procedimentos",
+      "Médico",
+      "Maternidade",
+      "Centro Clínico",
+      "Data Agendamento",
+      "IG Calculada",
+      "Diagnósticos Maternos",
+      "Diagnósticos Fetais",
+      "Observações",
     ];
 
-    const rows = filteredAgendamentos.map(a => [
+    const rows = filteredAgendamentos.map((a) => [
       a.carteirinha,
       a.nome_completo,
       a.data_nascimento,
       a.telefones,
-      a.procedimentos.length ? a.procedimentos.join('; ') : 'Não informado',
+      a.procedimentos.length ? a.procedimentos.join("; ") : "Não informado",
       a.medico_responsavel,
       a.maternidade,
       a.centro_clinico,
       a.data_agendamento_calculada,
-      a.idade_gestacional_calculada || 'Não calculado',
-      formatDiagnosticos(a.diagnosticos_maternos || 'Não informado'),
-      formatDiagnosticos(a.diagnosticos_fetais || 'Não informado'),
-      a.observacoes_agendamento?.replace(/\n/g, ' ') || ''
+      a.idade_gestacional_calculada || "Não calculado",
+      formatDiagnosticos(a.diagnosticos_maternos || "Não informado"),
+      formatDiagnosticos(a.diagnosticos_fetais || "Não informado"),
+      a.observacoes_agendamento?.replace(/\n/g, " ") || "",
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+    const csvContent = [headers.join(","), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(","))].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `agendamentos_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `agendamentos_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
   };
 
@@ -230,10 +268,16 @@ const Dashboard = () => {
   };
 
   const getDatesWithAgendamentos = () => {
-    return agendamentos.map(a => new Date(a.data_agendamento_calculada));
+    return agendamentos
+      .filter((a) => !!a.data_agendamento_calculada)
+      .map((a) => new Date(a.data_agendamento_calculada));
   };
 
   const getStatusBadge = (dataAgendamento: string) => {
+    if (!dataAgendamento) {
+      return <Badge variant="outline">Sem data</Badge>;
+    }
+
     const hoje = new Date();
     const dataAgend = new Date(dataAgendamento);
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
@@ -254,7 +298,11 @@ const Dashboard = () => {
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
+            <img
+              src="/hapvida-logo.png"
+              alt="Hapvida NotreDame"
+              className="h-12 md:h-16 transition-transform hover:scale-105"
+            />
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard - Agendamentos</h1>
               <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
@@ -262,10 +310,10 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             {isAdmin() && <NotificationBell />}
-            <Button onClick={() => navigate('/')} variant="outline">
+            <Button onClick={() => navigate("/")} variant="outline">
               ← Dashboard
             </Button>
-            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+            <Button onClick={() => navigate("/novo-agendamento")} className="gradient-primary">
               <Plus className="h-4 w-4 mr-2" />
               Novo Agendamento
             </Button>
@@ -294,13 +342,13 @@ const Dashboard = () => {
                 locale={ptBR}
                 className="rounded-md border pointer-events-auto"
                 modifiers={{
-                  hasAgendamento: getDatesWithAgendamentos()
+                  hasAgendamento: getDatesWithAgendamentos(),
                 }}
                 modifiersStyles={{
                   hasAgendamento: {
-                    fontWeight: 'bold',
-                    textDecoration: 'underline'
-                  }
+                    fontWeight: "bold",
+                    textDecoration: "underline",
+                  },
                 }}
               />
             </CardContent>
@@ -309,12 +357,7 @@ const Dashboard = () => {
                 <p className="text-sm text-center text-muted-foreground">
                   Exibindo agendamentos de {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                  onClick={() => setSelectedDate(undefined)}
-                >
+                <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setSelectedDate(undefined)}>
                   Limpar data
                 </Button>
               </CardContent>
@@ -332,10 +375,16 @@ const Dashboard = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-orange-500">
-                  {filteredAgendamentos.filter(a => {
-                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diff <= 7 && diff >= 0;
-                  }).length}
+                  {
+                    filteredAgendamentos.filter((a) => {
+                      if (!a.data_agendamento_calculada) return false;
+                      const diff = Math.ceil(
+                        (new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      );
+                      return diff <= 7 && diff >= 0;
+                    }).length
+                  }
                 </div>
                 <p className="text-sm text-muted-foreground">Urgentes</p>
               </CardContent>
@@ -343,7 +392,11 @@ const Dashboard = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-destructive">
-                  {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) < new Date()).length}
+                  {
+                    filteredAgendamentos.filter(
+                      (a) => a.data_agendamento_calculada && new Date(a.data_agendamento_calculada) < new Date(),
+                    ).length
+                  }
                 </div>
                 <p className="text-sm text-muted-foreground">Vencidos</p>
               </CardContent>
@@ -351,10 +404,16 @@ const Dashboard = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-green-500">
-                  {filteredAgendamentos.filter(a => {
-                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diff > 7;
-                  }).length}
+                  {
+                    filteredAgendamentos.filter((a) => {
+                      if (!a.data_agendamento_calculada) return false;
+                      const diff = Math.ceil(
+                        (new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) /
+                          (1000 * 60 * 60 * 24),
+                      );
+                      return diff > 7;
+                    }).length
+                  }
                 </div>
                 <p className="text-sm text-muted-foreground">Agendados</p>
               </CardContent>
@@ -390,8 +449,10 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {getUniqueMedicos().map(medico => (
-                      <SelectItem key={medico} value={medico}>{medico}</SelectItem>
+                    {getUniqueMedicos().map((medico) => (
+                      <SelectItem key={medico} value={medico}>
+                        {medico}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -405,8 +466,10 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
-                    {getUniqueMaternidades().map(maternidade => (
-                      <SelectItem key={maternidade} value={maternidade}>{maternidade}</SelectItem>
+                    {getUniqueMaternidades().map((maternidade) => (
+                      <SelectItem key={maternidade} value={maternidade}>
+                        {maternidade}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -466,22 +529,20 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Lista de Agendamentos como Accordions */}
+        {/* Lista de Agendamentos */}
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : filteredAgendamentos.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              Nenhum agendamento encontrado
-            </CardContent>
+            <CardContent className="py-12 text-center text-muted-foreground">Nenhum agendamento encontrado</CardContent>
           </Card>
         ) : (
           <Accordion type="single" collapsible className="space-y-2">
             {filteredAgendamentos.map((agendamento) => (
-              <AccordionItem 
-                key={agendamento.id} 
+              <AccordionItem
+                key={agendamento.id}
                 value={agendamento.id}
                 className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-card"
               >
@@ -491,16 +552,17 @@ const Dashboard = () => {
                       <div>
                         <h3 className="text-lg font-semibold">{agendamento.nome_completo}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(agendamento.data_agendamento_calculada), "dd/MM/yyyy", { locale: ptBR })} • {agendamento.maternidade}
+                          {agendamento.data_agendamento_calculada
+                            ? format(new Date(agendamento.data_agendamento_calculada), "dd/MM/yyyy", { locale: ptBR })
+                            : "Sem data"}{" "}
+                          • {agendamento.maternidade}
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      {getStatusBadge(agendamento.data_agendamento_calculada)}
-                    </div>
+                    <div className="flex gap-2">{getStatusBadge(agendamento.data_agendamento_calculada)}</div>
                   </div>
                 </AccordionTrigger>
-                
+
                 <AccordionContent className="px-6 pb-4">
                   <div className="space-y-4 pt-2">
                     {/* Informações de contato */}
@@ -521,7 +583,7 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* PARIDADE - INFORMAÇÃO CRÍTICA */}
+                    {/* PARIDADE */}
                     <div className="p-4 bg-primary/5 border-l-4 border-primary rounded">
                       <p className="text-sm font-bold text-foreground mb-2">PARIDADE</p>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -544,19 +606,27 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* IDADE GESTACIONAL - INFORMAÇÃO CRÍTICA */}
+                    {/* IDADE GESTACIONAL */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-secondary/10 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Data Nascimento</p>
-                        <p className="text-sm">{format(new Date(agendamento.data_nascimento), 'dd/MM/yyyy')}</p>
+                        <p className="text-sm">
+                          {agendamento.data_nascimento
+                            ? format(new Date(agendamento.data_nascimento), "dd/MM/yyyy")
+                            : "Não informado"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG ATUAL</p>
-                        <p className="text-base font-semibold text-primary">{agendamento.idade_gestacional_calculada || 'Não calculado'}</p>
+                        <p className="text-base font-semibold text-primary">
+                          {agendamento.idade_gestacional_calculada || "Não calculado"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG DO PARTO</p>
-                        <p className="text-base font-semibold text-orange-600">{agendamento.ig_pretendida || 'Não informado'}</p>
+                        <p className="text-base font-semibold text-orange-600">
+                          {agendamento.ig_pretendida || "Não informado"}
+                        </p>
                       </div>
                     </div>
 
@@ -575,7 +645,9 @@ const Dashboard = () => {
                       <div className="flex flex-wrap gap-2">
                         {agendamento.procedimentos.length > 0 ? (
                           agendamento.procedimentos.map((proc, idx) => (
-                            <Badge key={idx} variant="secondary">{proc}</Badge>
+                            <Badge key={idx} variant="secondary">
+                              {proc}
+                            </Badge>
                           ))
                         ) : (
                           <Badge variant="outline">Não informado</Badge>
@@ -583,18 +655,18 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {/* DIAGNÓSTICOS - INFORMAÇÃO CRÍTICA */}
+                    {/* DIAGNÓSTICOS */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 border-l-4 border-orange-500 bg-orange-50/50 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS MATERNOS</p>
                         <p className="text-sm whitespace-pre-wrap">
-                          {formatDiagnosticos(agendamento.diagnosticos_maternos || 'Não informado')}
+                          {formatDiagnosticos(agendamento.diagnosticos_maternos || "Não informado")}
                         </p>
                       </div>
                       <div className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS FETAIS</p>
                         <p className="text-sm whitespace-pre-wrap">
-                          {formatDiagnosticos(agendamento.diagnosticos_fetais || 'Não informado')}
+                          {formatDiagnosticos(agendamento.diagnosticos_fetais || "Não informado")}
                         </p>
                       </div>
                     </div>
