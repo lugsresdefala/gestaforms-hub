@@ -56,6 +56,8 @@ interface Agendamento {
   created_at?: string;
 }
 
+const normalizeStatus = (status?: string | null) => status?.trim().toLowerCase() ?? "";
+
 // ==========================================
 // COMPLETE ADVANCED DESIGN SYSTEM
 // ==========================================
@@ -1277,9 +1279,9 @@ const Index = () => {
 
     return {
       total: agendamentos.length,
-      pendentes: agendamentos.filter((a) => a.status === "pendente").length,
-      aprovados: agendamentos.filter((a) => a.status === "aprovado").length,
-      rejeitados: agendamentos.filter((a) => a.status === "rejeitado").length,
+      pendentes: agendamentos.filter((a) => normalizeStatus(a.status) === "pendente").length,
+      aprovados: agendamentos.filter((a) => normalizeStatus(a.status) === "aprovado").length,
+      rejeitados: agendamentos.filter((a) => normalizeStatus(a.status) === "rejeitado").length,
       hoje: agendamentos.filter((a) => a.data_agendamento_calculada === today).length,
       proximos: agendamentos.filter((a) => {
         const dataAgend = new Date(a.data_agendamento_calculada);
@@ -1388,7 +1390,10 @@ const Index = () => {
   );
 
   const agendamentosFiltrados = useMemo(
-    () => (filtroStatus === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtroStatus)),
+    () =>
+      filtroStatus === "todos"
+        ? agendamentos
+        : agendamentos.filter((a) => normalizeStatus(a.status) === normalizeStatus(filtroStatus)),
     [agendamentos, filtroStatus],
   );
 
