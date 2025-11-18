@@ -29,6 +29,7 @@ import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
 import ProcessarAgendas2025 from "./pages/ProcessarAgendas2025";
 import ProcessarImportacoes from "./pages/ProcessarImportacoes";
 import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
+import ImportarSQL from "./pages/ImportarSQL";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import ProcessarFormsParto from "./pages/ProcessarFormsParto";
 import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
@@ -233,6 +234,16 @@ const App = () => (
               } 
             />
             <Route 
+              path="/importar-sql" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ImportarSQL />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route
               path="/processar-importacoes" 
               element={
                 <ProtectedRoute requireAdmin>

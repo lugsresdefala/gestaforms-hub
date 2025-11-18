@@ -60,7 +60,6 @@ const NovoAgendamento = () => {
       placentaPrevia: "",
       diagnosticosFetais: [],
       diagnosticosFetaisOutros: "",
-      diagnosticoLivre: "",
       historiaObstetrica: "",
       necessidadeUtiMaterna: "",
       necessidadeReservaSangue: "",
@@ -92,8 +91,7 @@ const NovoAgendamento = () => {
       diagnosticosFetais: values.diagnosticosFetais,
       placentaPrevia: values.placentaPrevia,
       igSemanas: resultado.igFinal.weeks,
-      igDias: resultado.igFinal.days,
-      diagnosticoLivre: values.diagnosticoLivre
+      igDias: resultado.igFinal.days
     });
     
     // Verificar disponibilidade de vagas
@@ -180,7 +178,6 @@ const NovoAgendamento = () => {
         placenta_previa: values.placentaPrevia || null,
         diagnosticos_fetais: JSON.stringify(values.diagnosticosFetais) || null,
         diagnosticos_fetais_outros: values.diagnosticosFetaisOutros || null,
-        diagnostico_livre: values.diagnosticoLivre || null,
         historia_obstetrica: values.historiaObstetrica || null,
         necessidade_uti_materna: values.necessidadeUtiMaterna,
         necessidade_reserva_sangue: values.necessidadeReservaSangue,
@@ -431,28 +428,6 @@ const NovoAgendamento = () => {
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
-
-              {/* Free-text diagnosis info */}
-              {protocoloValidacao.diagnosticoLivreInfo && (
-                <div className="bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
-                  <h4 className="font-semibold text-purple-800 dark:text-purple-200 mb-2">
-                    DiagnÃ³stico Livre:
-                  </h4>
-                  <div className="space-y-2 text-sm text-purple-700 dark:text-purple-300">
-                    <p><strong>Texto original:</strong> "{protocoloValidacao.diagnosticoLivreInfo.original}"</p>
-                    {protocoloValidacao.diagnosticoLivreInfo.classificado && protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido && (
-                      <p className="text-green-700 dark:text-green-300">
-                        â Classificado automaticamente como: {protocoloValidacao.diagnosticoLivreInfo.diagnosticoSugerido}
-                      </p>
-                    )}
-                    {protocoloValidacao.diagnosticoLivreInfo.requerRevisao && (
-                      <p className="text-orange-700 dark:text-orange-300">
-                        â ï¸ Este diagnÃ³stico serÃ¡ registrado para revisÃ£o clÃ­nica e auditoria posterior.
-                      </p>
-                    )}
-                  </div>
                 </div>
               )}
 
