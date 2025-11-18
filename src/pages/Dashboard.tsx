@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, Calendar as CalendarIcon, User, FileText, Filter, Download, Plus, LogOut, Phone, Mail } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, FileText, Filter, Download, Plus, LogOut, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
@@ -40,6 +40,30 @@ interface Agendamento {
   observacoes_agendamento: string;
   created_at: string;
 }
+
+const normalizeProcedimentos = (procedimentos: unknown): string[] => {
+  if (Array.isArray(procedimentos)) {
+    return procedimentos.filter((proc): proc is string => typeof proc === "string" && proc.trim().length > 0);
+  }
+
+  if (typeof procedimentos === "string" && procedimentos.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(procedimentos);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((proc): proc is string => typeof proc === "string" && proc.trim().length > 0);
+      }
+    } catch {
+      return procedimentos
+        .split(/[,;\n]/)
+        .map(proc => proc.trim())
+        .filter(Boolean);
+    }
+
+    return [procedimentos];
+  }
+
+  return [];
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -77,7 +101,12 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      setAgendamentos(data || []);
+      const normalizedData = (data || []).map(agendamento => ({
+        ...agendamento,
+        procedimentos: normalizeProcedimentos((agendamento as { procedimentos?: unknown }).procedimentos)
+      }));
+
+      setAgendamentos(normalizedData as Agendamento[]);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
       toast.error("Não foi possível carregar os agendamentos");
@@ -167,14 +196,14 @@ const Dashboard = () => {
       a.nome_completo,
       a.data_nascimento,
       a.telefones,
-      a.procedimentos.join('; '),
+      a.procedimentos.length ? a.procedimentos.join('; ') : 'Não informado',
       a.medico_responsavel,
       a.maternidade,
       a.centro_clinico,
       a.data_agendamento_calculada,
       a.idade_gestacional_calculada || 'Não calculado',
-      a.diagnosticos_maternos || 'Não informado',
-      a.diagnosticos_fetais || 'Não informado',
+      formatDiagnosticos(a.diagnosticos_maternos || 'Não informado'),
+      formatDiagnosticos(a.diagnosticos_fetais || 'Não informado'),
       a.observacoes_agendamento?.replace(/\n/g, ' ') || ''
     ]);
 
@@ -544,9 +573,13 @@ const Dashboard = () => {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Procedimentos</p>
                       <div className="flex flex-wrap gap-2">
-                        {agendamento.procedimentos.map((proc, idx) => (
-                          <Badge key={idx} variant="secondary">{proc}</Badge>
-                        ))}
+                        {agendamento.procedimentos.length > 0 ? (
+                          agendamento.procedimentos.map((proc, idx) => (
+                            <Badge key={idx} variant="secondary">{proc}</Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline">Não informado</Badge>
+                        )}
                       </div>
                     </div>
 
@@ -555,13 +588,13 @@ const Dashboard = () => {
                       <div className="p-4 border-l-4 border-orange-500 bg-orange-50/50 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS MATERNOS</p>
                         <p className="text-sm whitespace-pre-wrap">
-                          {agendamento.diagnosticos_maternos || 'Não informado'}
+                          {formatDiagnosticos(agendamento.diagnosticos_maternos || 'Não informado')}
                         </p>
                       </div>
                       <div className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS FETAIS</p>
                         <p className="text-sm whitespace-pre-wrap">
-                          {agendamento.diagnosticos_fetais || 'Não informado'}
+                          {formatDiagnosticos(agendamento.diagnosticos_fetais || 'Não informado')}
                         </p>
                       </div>
                     </div>
