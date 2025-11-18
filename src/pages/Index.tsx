@@ -56,41 +56,15 @@ interface Agendamento {
   created_at?: string;
 }
 
-const normalizeStatus = (status?: string | null) => status?.trim().toLowerCase() ?? "";
-
-// Normaliza procedimentos vindos como null, string, JSON ou array
-const normalizeProcedimentos = (value: unknown): string[] => {
-  if (!value) return [];
-  if (Array.isArray(value)) {
-    return value.map((v) => (typeof v === "string" ? v.trim() : "")).filter((v) => v.length > 0);
-  }
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    if (!trimmed) return [];
-    try {
-      const parsed = JSON.parse(trimmed);
-      if (Array.isArray(parsed)) {
-        return parsed.map((v) => (typeof v === "string" ? v.trim() : "")).filter((v) => v.length > 0);
-      }
-    } catch {
-      // não é JSON, tenta split
-    }
-    return trimmed
-      .split(/[,;\n]/)
-      .map((v) => v.trim())
-      .filter((v) => v.length > 0);
-  }
-  return [];
-};
-
 // ==========================================
 // COMPLETE ADVANCED DESIGN SYSTEM
 // ==========================================
 
-const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações) */
+const COMPLETE_DESIGN_SYSTEM = `
   /* ==========================================
      COMPLETE DESIGN SYSTEM - COLD PALETTE & GLASS EFFECTS
      ========================================== */
+  
   :root {
     /* Cold Color Palette - Dark & Sophisticated */
     --color-emerald-50: #ecfdf5;
@@ -103,6 +77,7 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --color-emerald-700: #047857;
     --color-emerald-800: #065f46;
     --color-emerald-900: #064e3b;
+    
     --color-amber-50: #fffbeb;
     --color-amber-100: #fef3c7;
     --color-amber-200: #fde68a;
@@ -113,6 +88,7 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --color-amber-700: #b45309;
     --color-amber-800: #92400e;
     --color-amber-900: #78350f;
+    
     --color-indigo-50: #eef2ff;
     --color-indigo-100: #e0e7ff;
     --color-indigo-200: #c7d2fe;
@@ -123,6 +99,7 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --color-indigo-700: #4338ca;
     --color-indigo-800: #3730a3;
     --color-indigo-900: #312e81;
+    
     --color-slate-50: #f8fafc;
     --color-slate-100: #f1f5f9;
     --color-slate-200: #e2e8f0;
@@ -133,6 +110,7 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --color-slate-700: #334155;
     --color-slate-800: #1e293b;
     --color-slate-900: #0f172a;
+    
     --color-red-50: #fef2f2;
     --color-red-100: #fee2e2;
     --color-red-500: #ef4444;
@@ -140,22 +118,29 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --color-red-700: #b91c1c;
     --color-red-800: #991b1b;
     --color-red-900: #7f1d1d;
+    
+    /* Semantic Status Colors - Cold Variants */
     --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 80%);
     --status-pending-light: #fffbeb;
     --status-pending-border: #b45309;
     --status-pending-glow: rgba(180, 83, 9, 0.35);
+    
     --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 80%);
     --status-success-light: #ecfdf5;
     --status-success-border: #059669;
     --status-success-glow: rgba(5, 150, 105, 0.35);
+    
     --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 80%);
     --status-destructive-light: #fef2f2;
     --status-destructive-border: #dc2626;
     --status-destructive-glow: rgba(220, 38, 38, 0.35);
+    
     --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 80%);
     --status-primary-light: #eef2ff;
     --status-primary-border: #4f46e5;
     --status-primary-glow: rgba(79, 70, 229, 0.25);
+    
+    /* Advanced Glassmorphism System */
     --glass-bg-white: rgba(255, 255, 255, 0.75);
     --glass-bg-light: rgba(248, 250, 252, 0.85);
     --glass-bg-medium: rgba(241, 245, 249, 0.90);
@@ -167,35 +152,45 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --glass-blur: blur(8px);
     --glass-blur-heavy: blur(10px);
     --glass-blur-light: blur(4px);
+    
+    /* Multi-layer 3D Shadow System */
     --shadow-3d-xs: 
       0 1px 2px rgba(15, 23, 42, 0.06),
       0 2px 4px rgba(15, 23, 42, 0.04),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+    
     --shadow-3d-sm: 
       0 2px 2px -1px rgba(15, 23, 42, 0.08),
       0 4px 4px -2px rgba(15, 23, 42, 0.06),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+    
     --shadow-3d-md: 
       0 3px 6px -2px rgba(15, 23, 42, 0.1),
       0 6px 8px -4px rgba(15, 23, 42, 0.08),
       0 6px 10px -6px rgba(15, 23, 42, 0.06),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    
     --shadow-3d-lg: 
       0 8px 16px -4px rgba(15, 23, 42, 0.12),
       0 16px 32px -8px rgba(15, 23, 42, 0.1),
       0 24px 48px -12px rgba(15, 23, 42, 0.08),
       inset 0 2px 0 0 rgba(255, 255, 255, 0.95);
+    
     --shadow-3d-xl: 
       0 12px 24px -6px rgba(15, 23, 42, 0.15),
       0 24px 48px -12px rgba(15, 23, 42, 0.12),
       0 36px 72px -18px rgba(15, 23, 42, 0.1),
       inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
     --shadow-3d-2xl: 
       0 16px 32px -8px rgba(15, 23, 42, 0.18),
       0 32px 64px -16px rgba(15, 23, 42, 0.15),
       0 48px 96px -24px rgba(15, 23, 42, 0.12),
       inset 0 2px 0 0 rgba(255, 255, 255, 1);
+    
+    /* Texture & Noise Patterns */
     --texture-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    
     --texture-grid: repeating-linear-gradient(
       0deg,
       rgba(15, 23, 42, 0.005) 0px,
@@ -210,11 +205,14 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
       transparent 1px,
       transparent 40px
     );
+    
     --texture-dots: radial-gradient(
       circle at center,
       rgba(15, 23, 42, 0.03) 1px,
       transparent 1px
     );
+    
+    /* Advanced Chart Colors - Cold Palette */
     --chart-emerald: #059669;
     --chart-amber: #d97706;
     --chart-indigo: #4f46e5;
@@ -223,6 +221,8 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --chart-sky: #0284c7;
     --chart-violet: #7c3aed;
     --chart-fuchsia: #c026d3;
+    
+    /* Spacing System - 4px base grid */
     --spacing-0: 0;
     --spacing-px: 1px;
     --spacing-0-5: 0.125rem;
@@ -247,6 +247,8 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --spacing-24: 6rem;
     --spacing-28: 7rem;
     --spacing-32: 8rem;
+    
+    /* Enhanced Animation Curves */
     --ease-linear: linear;
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
@@ -257,6 +259,8 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
     --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    
+    /* Duration System */
     --duration-instant: 0ms;
     --duration-fast: 150ms;
     --duration-normal: 250ms;
@@ -264,6 +268,8 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --duration-slow: 600ms;
     --duration-slower: 800ms;
     --duration-slowest: 1200ms;
+    
+    /* Border Radius System */
     --radius-none: 0;
     --radius-sm: 0.375rem;
     --radius-base: 0.5rem;
@@ -273,6 +279,8 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --radius-2xl: 1.5rem;
     --radius-3xl: 2rem;
     --radius-full: 9999px;
+    
+    /* Z-Index System */
     --z-0: 0;
     --z-10: 10;
     --z-20: 20;
@@ -287,7 +295,857 @@ const COMPLETE_DESIGN_SYSTEM = `/* (mesmo CSS que você enviou, sem alterações
     --z-popover: 1060;
     --z-tooltip: 1070;
   }
-  /* (restante do CSS igual ao que você colou, mantido sem alterações) */
+  
+  /* ==========================================
+     ADVANCED KEYFRAME ANIMATIONS
+     ========================================== */
+  
+  @keyframes float-3d {
+    0%, 100% {
+      transform: translate3d(0, 0, 0) rotateX(0deg);
+    }
+    50% {
+      transform: translate3d(0, -10px, 6px) rotateX(0deg);
+    }
+  }
+  
+  @keyframes shimmer-glass {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% {
+      opacity: 0.5;
+      filter: blur(10px);
+      transform: scale3d(0.95, 0.95, 1);
+    }
+    50% {
+      opacity: 1;
+      filter: blur(30px);
+      transform: scale3d(1.1, 1.1, 1);
+    }
+  }
+  
+  @keyframes slide-in-3d {
+    from {
+      opacity: 0;
+      transform: translate3d(-10px, 0, -10px) rotateY(0deg);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotateY(0deg);
+    }
+  }
+  
+  @keyframes scale-in-3d {
+    from {
+      opacity: 0;
+      transform: scale3d(0.9, 0.9, 0.9) translateZ(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale3d(1, 1, 1) translateZ(0);
+    }
+  }
+  
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 20px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+  
+  @keyframes texture-shift {
+    0%, 100% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 25% 25%;
+    }
+  }
+  
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+  
+  @keyframes bounce {
+    0%, 100% {
+      transform: translateY(-25%);
+      animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+    }
+    50% {
+      transform: translateY(0);
+      animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+    }
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC METRIC CARDS - 3D ENHANCED
+     ========================================== */
+  
+  .metric-card-advanced {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    transition: transform 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
+    will-change: transform, box-shadow, border-color;
+  }
+
+  .metric-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.08), transparent);
+    opacity: 1;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 240ms ease;
+  }
+
+  .metric-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: -100%;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 65%
+    );
+    opacity: 0.15;
+    transition: opacity 400ms ease;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .metric-card-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 6px rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.18);
+  }
+
+  .metric-card-advanced:hover::before {
+    opacity: 0.6;
+  }
+
+  .metric-card-advanced:hover::after {
+    opacity: 0.25;
+  }
+  
+  .metric-card-advanced--warning {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 249, 195, 0.75) 0%,
+      rgba(253, 230, 138, 0.65) 100%
+    );
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  
+  .metric-card-advanced--success {
+    background: linear-gradient(
+      135deg,
+      rgba(209, 250, 229, 0.7) 0%,
+      rgba(167, 243, 208, 0.6) 100%
+    );
+    border-color: rgba(16, 185, 129, 0.35);
+  }
+  
+  .metric-card-advanced--destructive {
+    background: linear-gradient(
+      135deg,
+      rgba(254, 226, 226, 0.7) 0%,
+      rgba(254, 202, 202, 0.6) 100%
+    );
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+  
+  .metric-card-advanced--primary {
+    background: linear-gradient(
+      135deg,
+      rgba(224, 231, 255, 0.75) 0%,
+      rgba(199, 210, 254, 0.65) 100%
+    );
+    border-color: rgba(99, 102, 241, 0.35);
+  }
+  
+  /* ==========================================
+     3D ICON BADGES WITH GLASS EFFECTS
+     ========================================== */
+  
+  .metric-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-xl);
+    position: relative;
+    transition: background 200ms ease, box-shadow 200ms ease;
+    z-index: 10;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 80px rgba(15, 23, 42, 0.1);
+  }
+  
+  .metric-icon-badge::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: var(--radius-xl);
+    opacity: 0;
+    transition: opacity 400ms var(--ease-smooth);
+    animation: glow-pulse 3s ease-in-out infinite;
+    animation-play-state: paused;
+    filter: blur(20px);
+    z-index: -1;
+  }
+  
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.5;
+    animation-play-state: running;
+  }
+  
+  .metric-icon-badge--warning {
+    background: var(--status-pending-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--warning::before {
+    background: var(--status-pending-bg);
+  }
+  
+  .metric-icon-badge--success {
+    background: var(--status-success-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--success::before {
+    background: var(--status-success-bg);
+  }
+  
+  .metric-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--destructive::before {
+    background: var(--status-destructive-bg);
+  }
+  
+  .metric-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .metric-icon-badge--primary::before {
+    background: var(--status-primary-bg);
+  }
+  
+  /* ==========================================
+     ENHANCED METRIC VALUES WITH 3D DEPTH
+     ========================================== */
+  
+  .metric-value {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    transition: all 500ms var(--ease-elastic);
+    position: relative;
+    display: inline-block;
+    text-shadow: 
+      0 2px 4px rgba(15, 23, 42, 0.1),
+      0 4px 8px rgba(15, 23, 42, 0.05);
+    z-index: 10;
+  }
+  
+  .metric-card-advanced:hover .metric-value {
+    transform: scale3d(1.02, 1.02, 1);
+    text-shadow:
+      0 4px 10px rgba(15, 23, 42, 0.12);
+  }
+  
+  /* ==========================================
+     GLASSMORPHIC CHART CARDS WITH 3D
+     ========================================== */
+  
+  .chart-card-advanced {
+    position: relative;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+    transition: transform 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
+  }
+  
+  .chart-card-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.05), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .chart-card-advanced::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.02);
+    opacity: 1;
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  .chart-card-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 12px rgba(15, 23, 42, 0.12);
+    border-color: rgba(15, 23, 42, 0.18);
+  }
+  
+  .chart-card-advanced--active {
+    border-color: rgba(99, 102, 241, 0.45);
+    box-shadow: 0 22px 48px rgba(79, 70, 229, 0.18);
+  }
+  
+  /* ==========================================
+     CHART ICON BADGES
+     ========================================== */
+  
+  .chart-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    transition: all 400ms var(--ease-elastic);
+    transform-style: preserve-3d;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-3d-sm);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .chart-card-advanced:hover .chart-icon-badge {
+    transform: none;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+  }
+  
+  .chart-icon-badge--primary {
+    background: var(--status-primary-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--accent {
+    background: var(--status-pending-bg);
+    color: white;
+  }
+  
+  .chart-icon-badge--destructive {
+    background: var(--status-destructive-bg);
+    color: white;
+  }
+  
+  /* ==========================================
+     ENHANCED FILTER BAR WITH GLASS
+     ========================================== */
+  
+  .filter-bar-advanced {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    transition: border-color 240ms ease, box-shadow 240ms ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .filter-bar-advanced::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(148, 163, 184, 0.08);
+    pointer-events: none;
+  }
+  
+  .filter-bar-advanced:hover {
+    border-color: rgba(15, 23, 42, 0.16);
+    box-shadow: 0 6px 4px rgba(15, 23, 42, 0.12);
+  }
+  
+  .filter-icon-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(79, 70, 229, 0.9));
+    color: white;
+    transition: box-shadow 200ms ease;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+    border: none;
+  }
+
+  /* ==========================================
+     DATA TABLE PANEL
+     ========================================== */
+
+  .data-panel-card {
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: var(--radius-xl);
+    background: #fff;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  }
+
+  .data-panel-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .data-panel-table thead {
+    background: #f1f5f9;
+  }
+
+  .data-panel-table th {
+    text-align: left;
+    font-weight: 600;
+    padding: 0.85rem 1.5rem;
+    color: #475569;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  }
+
+  .data-panel-table td {
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+    color: #0f172a;
+  }
+
+  .data-panel-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .status-pill--pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #b45309;
+  }
+
+  .status-pill--approved {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+  }
+
+  .status-pill--rejected {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+  }
+  
+  /* ==========================================
+     ENHANCED LOADING STATES
+     ========================================== */
+  
+  .loading-state-advanced {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: var(--spacing-8);
+    background: linear-gradient(
+      135deg,
+      var(--color-slate-50) 0%,
+      rgba(238, 242, 255, 0.5) 50%,
+      var(--color-slate-50) 100%
+    );
+  }
+  
+  .loading-spinner-wrapper {
+    position: relative;
+    width: 5rem;
+    height: 5rem;
+  }
+  
+  .loading-spinner {
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    filter: drop-shadow(0 4px 12px rgba(79, 70, 229, 0.3));
+  }
+  
+  .loading-glow {
+    position: absolute;
+    inset: -30px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.4) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+  
+  /* ==========================================
+     EMPTY STATE WITH SOPHISTICATED DESIGN
+     ========================================== */
+  
+  .empty-state-advanced {
+    padding: var(--spacing-16) var(--spacing-4);
+    text-align: center;
+  }
+  
+  .empty-state-icon-wrapper {
+    position: relative;
+    width: 7rem;
+    height: 7rem;
+    margin: 0 auto var(--spacing-8);
+  }
+  
+  .empty-state-icon {
+    width: 100%;
+    height: 100%;
+    opacity: 0.25;
+    animation: float-3d 4s ease-in-out infinite;
+    filter: drop-shadow(0 8px 16px rgba(15, 23, 42, 0.1));
+  }
+  
+  .empty-state-glow {
+    position: absolute;
+    inset: -40px;
+    background: radial-gradient(
+      circle,
+      rgba(79, 70, 229, 0.2) 0%,
+      transparent 70%
+    );
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+  
+  /* ==========================================
+     ENHANCED BADGE WITH GLASS EFFECT
+     ========================================== */
+  
+  .badge-advanced {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) var(--spacing-4);
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .badge-advanced:hover {
+    border-color: rgba(15, 23, 42, 0.25);
+    box-shadow: 0 10px 14px rgba(15, 23, 42, 0.08);
+  }
+  
+  /* ==========================================
+     GRADIENT TEXT WITH COLD COLORS
+     ========================================== */
+  
+  .gradient-text-animated {
+    background: linear-gradient(
+      120deg,
+      var(--color-slate-700),
+      var(--color-indigo-600),
+      var(--color-slate-700)
+    );
+    background-size: 180% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer-glass 12s linear infinite;
+    font-weight: 800;
+  }
+  
+  /* ==========================================
+     ANIMATION UTILITIES
+     ========================================== */
+  
+  .animate-fade-in-up {
+    animation: scale-in-3d 800ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-fade-in-scale {
+    animation: scale-in-3d 600ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-3d 700ms var(--ease-out-cubic) forwards;
+  }
+  
+  .animate-with-delay {
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+  
+  /* ==========================================
+     RESPONSIVE GRID SYSTEM
+     ========================================== */
+  
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: var(--spacing-6);
+  }
+  
+  @media (min-width: 640px) {
+    .dashboard-grid--metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .dashboard-grid--metrics {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    
+    .dashboard-grid--charts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* ==========================================
+     MAIN CONTAINER WITH ENHANCED BACKGROUND
+     ========================================== */
+  
+  .gradient-subtle {
+    background:
+      linear-gradient(180deg, #f8fafc 0%, #edf2f7 40%, #f8fafc 100%);
+    min-height: 100vh;
+  }
+  
+  /* ==========================================
+     UTILITY CLASSES
+     ========================================== */
+  
+  .shadow-elegant {
+    box-shadow: var(--shadow-3d-md);
+  }
+  
+  .glass-card {
+    background: var(--glass-bg-white);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: var(--glass-border);
+  }
+  
+  /* ==========================================
+     REDUCED MOTION SUPPORT
+     ========================================== */
+  
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  
+  /* ==========================================
+     PRINT STYLES
+     ========================================== */
+  
+  @media print {
+    .metric-card-advanced,
+    .chart-card-advanced {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .gradient-subtle {
+      background: white;
+    }
+  }
+
+  /* ==========================================
+     SOBER MODE OVERRIDES
+     ========================================== */
+
+  :root {
+    --shadow-3d-xs: 0 1px 2px rgba(15, 23, 42, 0.08);
+    --shadow-3d-sm: 0 2px 6px rgba(15, 23, 42, 0.08);
+    --shadow-3d-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+    --shadow-3d-lg: 0 10px 24px rgba(15, 23, 42, 0.1);
+    --glass-bg-white: rgba(255, 255, 255, 0.96);
+    --glass-border: 1px solid rgba(226, 232, 240, 0.9);
+  }
+
+  .gradient-subtle {
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  }
+
+  .metric-card-advanced {
+    padding: var(--spacing-5);
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    box-shadow: var(--shadow-3d-md);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .metric-card-advanced::before,
+  .metric-card-advanced::after {
+    content: none;
+  }
+
+  .metric-card-advanced:hover {
+    transform: translateY(-2px);
+    border-color: rgba(71, 85, 105, 0.5);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .metric-card-advanced--warning,
+  .metric-card-advanced--success,
+  .metric-card-advanced--destructive,
+  .metric-card-advanced--primary {
+    background: #fff;
+  }
+
+  .metric-icon-badge {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .metric-card-advanced:hover .metric-icon-badge::before {
+    opacity: 0.85;
+  }
+
+  .metric-value {
+    font-size: 2.25rem;
+  }
+
+  .chart-card-advanced {
+    background: #fff;
+    box-shadow: var(--shadow-3d-md);
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  .chart-card-advanced::before,
+  .chart-card-advanced::after {
+    content: none;
+  }
+
+  .chart-card-advanced:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .chart-card-advanced--active {
+    border-color: rgba(99, 102, 241, 0.25);
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .chart-icon-badge {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--shadow-3d-sm);
+    transform: none;
+  }
+
+  .chart-card-advanced:hover .chart-icon-badge {
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .filter-bar-advanced {
+    padding: var(--spacing-5);
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .filter-bar-advanced::before {
+    content: none;
+  }
+
+  .filter-bar-advanced:hover {
+    box-shadow: var(--shadow-3d-lg);
+  }
+
+  .filter-icon-badge {
+    background: rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    color: rgba(15, 23, 42, 0.8);
+    box-shadow: none;
+  }
+
+  .data-panel-table tbody tr {
+    transition: background-color 160ms ease;
+  }
+
+  .data-panel-table tbody tr:hover {
+    background: rgba(148, 163, 184, 0.12);
+    transform: none;
+    box-shadow: none;
+  }
+
+  .data-panel-card {
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    box-shadow: var(--shadow-3d-md);
+  }
+
+  .badge-advanced {
+    letter-spacing: 0.05em;
+    transition: none;
+  }
+
+  .badge-advanced:hover {
+    transform: none;
+    box-shadow: none;
+  }
 `;
 
 // ==========================================
@@ -325,7 +1183,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                 boxShadow: `0 0 8px ${entry.color}40`,
               }}
             />
-            <span>
+            <span style={{ color: "hsl(var(--foreground))" }}>
               {entry.name}:{" "}
               <span className="font-bold" style={{ color: entry.color }}>
                 {entry.value}
@@ -343,7 +1201,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // CHART COLOR PALETTE
 // ==========================================
 
-const COLORS = ["#4f46e5", "#059669", "#d97706", "#0d9488", "#0891b2", "#0284c7", "#7c3aed", "#c026d3"];
+const COLORS = [
+  "#4f46e5", // indigo
+  "#059669", // emerald
+  "#d97706", // amber
+  "#0d9488", // teal
+  "#0891b2", // cyan
+  "#0284c7", // sky
+  "#7c3aed", // violet
+  "#c026d3", // fuchsia
+];
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pendente: { label: "Pendente", className: "status-pill status-pill--pending" },
@@ -372,21 +1239,18 @@ const Index = () => {
     };
   }, []);
 
-  const fetchAgendamentos = useCallback(async () => {
+  useEffect(() => {
+    fetchAgendamentos();
+  }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
+
+  const fetchAgendamentos = async () => {
     setLoading(true);
     try {
       let query = supabase.from("agendamentos_obst").select("*");
 
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
-        if (maternidades && maternidades.length > 0) {
-          query = query.in("maternidade", maternidades).eq("status", "aprovado");
-        } else {
-          toast.error("Seu usuário não possui maternidades vinculadas.");
-          setAgendamentos([]);
-          setLoading(false);
-          return;
-        }
+        query = query.in("maternidade", maternidades).eq("status", "aprovado");
       } else if (!isAdmin() && !isMedicoUnidade()) {
         setAgendamentos([]);
         setLoading(false);
@@ -398,46 +1262,28 @@ const Index = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      const normalizados = (data || []).map((row: any) => ({
-        ...row,
-        procedimentos: normalizeProcedimentos(row.procedimentos),
-      })) as Agendamento[];
-
-      setAgendamentos(normalizados);
+      setAgendamentos(data || []);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
       toast.error("Não foi possível carregar os agendamentos");
-      setAgendamentos([]);
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
-
-  useEffect(() => {
-    fetchAgendamentos();
-  }, [fetchAgendamentos]);
+  };
 
   const metrics = useMemo(() => {
-    const todayISO = new Date().toISOString().split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
     const todayDate = new Date();
-
-    const safeDate = (d?: string) => {
-      if (!d) return null;
-      const ds = d.slice(0, 10); // lida com timestamp "YYYY-MM-DDTHH..."
-      const date = new Date(ds);
-      return Number.isNaN(date.getTime()) ? null : date;
-    };
 
     return {
       total: agendamentos.length,
-      pendentes: agendamentos.filter((a) => normalizeStatus(a.status) === "pendente").length,
-      aprovados: agendamentos.filter((a) => normalizeStatus(a.status) === "aprovado").length,
-      rejeitados: agendamentos.filter((a) => normalizeStatus(a.status) === "rejeitado").length,
-      hoje: agendamentos.filter((a) => (a.data_agendamento_calculada || "").slice(0, 10) === todayISO).length,
+      pendentes: agendamentos.filter((a) => a.status === "pendente").length,
+      aprovados: agendamentos.filter((a) => a.status === "aprovado").length,
+      rejeitados: agendamentos.filter((a) => a.status === "rejeitado").length,
+      hoje: agendamentos.filter((a) => a.data_agendamento_calculada === today).length,
       proximos: agendamentos.filter((a) => {
-        const date = safeDate(a.data_agendamento_calculada);
-        if (!date) return false;
-        const diffDias = Math.ceil((date.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dataAgend = new Date(a.data_agendamento_calculada);
+        const diffDias = Math.ceil((dataAgend.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
         return diffDias >= 0 && diffDias <= 7;
       }).length,
     };
@@ -446,8 +1292,7 @@ const Index = () => {
   const dadosPorUnidade = useMemo(() => {
     const contagem = agendamentos.reduce(
       (acc, a) => {
-        const key = a.centro_clinico || "Sem centro clínico";
-        acc[key] = (acc[key] || 0) + 1;
+        acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
@@ -461,8 +1306,7 @@ const Index = () => {
   const dadosPorMaternidade = useMemo(() => {
     const contagem = agendamentos.reduce(
       (acc, a) => {
-        const key = a.maternidade || "Sem maternidade";
-        acc[key] = (acc[key] || 0) + 1;
+        acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
         return acc;
       },
       {} as Record<string, number>,
@@ -480,13 +1324,11 @@ const Index = () => {
       try {
         const diagsMat = a.diagnosticos_maternos ? JSON.parse(a.diagnosticos_maternos) : [];
         const diagsFet = a.diagnosticos_fetais ? JSON.parse(a.diagnosticos_fetais) : [];
-        [...diagsMat, ...diagsFet]
-          .filter((diag: any) => typeof diag === "string" && diag.trim().length > 0)
-          .forEach((diag: string) => {
-            contagem[diag] = (contagem[diag] || 0) + 1;
-          });
-      } catch {
-        // ignora erros de parse
+        [...diagsMat, ...diagsFet].forEach((diag: string) => {
+          contagem[diag] = (contagem[diag] || 0) + 1;
+        });
+      } catch (e) {
+        // Ignore parsing errors
       }
     });
 
@@ -500,8 +1342,7 @@ const Index = () => {
     const contagem: Record<string, number> = {};
 
     agendamentos.forEach((a) => {
-      (a.procedimentos || []).forEach((proc) => {
-        if (!proc) return;
+      a.procedimentos.forEach((proc) => {
         contagem[proc] = (contagem[proc] || 0) + 1;
       });
     });
@@ -547,10 +1388,7 @@ const Index = () => {
   );
 
   const agendamentosFiltrados = useMemo(
-    () =>
-      filtroStatus === "todos"
-        ? agendamentos
-        : agendamentos.filter((a) => normalizeStatus(a.status) === normalizeStatus(filtroStatus)),
+    () => (filtroStatus === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtroStatus)),
     [agendamentos, filtroStatus],
   );
 
@@ -560,7 +1398,8 @@ const Index = () => {
     if (!data) return "-";
     try {
       return format(new Date(data), "dd/MM/yyyy", { locale: ptBR });
-    } catch {
+    } catch (error) {
+      console.warn("Não foi possível formatar data", error);
       return "-";
     }
   }, []);
@@ -849,6 +1688,7 @@ const Index = () => {
                       label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
                       outerRadius={110}
                       innerRadius={60}
+                      fill="hsl(var(--primary))"
                       dataKey="value"
                       animationBegin={0}
                       animationDuration={1000}
@@ -957,6 +1797,7 @@ const Index = () => {
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         outerRadius={110}
                         innerRadius={60}
+                        fill="hsl(var(--primary))"
                         dataKey="value"
                         animationBegin={0}
                         animationDuration={1000}
@@ -1074,6 +1915,7 @@ const Index = () => {
                         label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                         outerRadius={110}
                         innerRadius={60}
+                        fill="hsl(var(--accent))"
                         dataKey="value"
                         animationBegin={0}
                         animationDuration={1000}
