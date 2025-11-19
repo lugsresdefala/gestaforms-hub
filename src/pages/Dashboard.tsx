@@ -252,13 +252,13 @@ const Dashboard = () => {
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDias < 0) {
-      return <Badge variant="destructive">Vencido</Badge>;
+      return <Badge variant="overdue">Vencido</Badge>;
     } else if (diffDias <= 7) {
-      return <Badge className="bg-orange-500">Urgente</Badge>;
+      return <Badge variant="urgent">Urgente</Badge>;
     } else if (diffDias <= 14) {
-      return <Badge className="bg-yellow-500">Próximo</Badge>;
+      return <Badge variant="warning">Próximo</Badge>;
     } else {
-      return <Badge variant="secondary">Agendado</Badge>;
+      return <Badge variant="scheduled">Agendado</Badge>;
     }
   };
 
@@ -275,15 +275,15 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             {isAdmin() && <NotificationBell />}
-            <Button onClick={() => navigate('/')} variant="outline">
+            <Button onClick={() => navigate('/')} variant="outline" className="hover-lift">
               ← Dashboard
             </Button>
-            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary">
+            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary hover-lift shadow-elegant">
               <Plus className="h-4 w-4 mr-2" />
               Novo Agendamento
             </Button>
-            <Button onClick={handleLogout} variant="ghost" size="icon">
-              <LogOut className="h-5 w-5" />
+            <Button onClick={handleLogout} variant="ghost" size="icon" className="hover-lift">
+              <LogOut className="h-5 w-5 text-muted-foreground hover:text-destructive transition-colors" />
             </Button>
           </div>
         </div>
@@ -294,10 +294,10 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CalendarIcon className="h-5 w-5" />
-                Selecione uma Data
-              </CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              Selecione uma Data
+            </CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
               <Calendar
@@ -336,15 +336,15 @@ const Dashboard = () => {
 
           {/* Estatísticas */}
           <div className="lg:col-span-2 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card>
+            <Card className="glass-card">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold">{filteredAgendamentos.length}</div>
+                <div className="text-2xl font-bold text-primary">{filteredAgendamentos.length}</div>
                 <p className="text-sm text-muted-foreground">Total</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="glass-card">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-orange-500">
+                <div className="text-2xl font-bold text-urgent">
                   {filteredAgendamentos.filter(a => {
                     const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                     return diff <= 7 && diff >= 0;
@@ -353,17 +353,17 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">Urgentes</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="glass-card">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-destructive">
+                <div className="text-2xl font-bold text-overdue">
                   {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) < new Date()).length}
                 </div>
                 <p className="text-sm text-muted-foreground">Vencidos</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="glass-card">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-green-500">
+                <div className="text-2xl font-bold text-scheduled">
                   {filteredAgendamentos.filter(a => {
                     const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                     return diff > 7;
@@ -379,7 +379,7 @@ const Dashboard = () => {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
+              <Filter className="h-5 w-5 text-primary" />
               Filtros
             </CardTitle>
           </CardHeader>
@@ -468,11 +468,11 @@ const Dashboard = () => {
             </div>
 
             <div className="flex gap-2 mt-4">
-              <Button onClick={clearFilters} variant="outline">
+              <Button onClick={clearFilters} variant="outline" className="hover-lift">
                 Limpar Filtros
               </Button>
-              <Button onClick={exportToCSV} variant="outline" className="ml-auto">
-                <Download className="h-4 w-4 mr-2" />
+              <Button onClick={exportToCSV} variant="outline" className="ml-auto hover-lift">
+                <Download className="h-4 w-4 mr-2 text-primary" />
                 Exportar CSV
               </Button>
             </div>
@@ -519,14 +519,14 @@ const Dashboard = () => {
                     {/* Informações de contato */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <Phone className="h-4 w-4 text-primary" />
                         <div>
                           <p className="text-xs text-muted-foreground">Telefone</p>
                           <p className="text-sm font-medium">{agendamento.telefones}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <FileText className="h-4 w-4 text-primary" />
                         <div>
                           <p className="text-xs text-muted-foreground">Carteirinha</p>
                           <p className="text-sm font-medium">{agendamento.carteirinha}</p>
@@ -544,11 +544,11 @@ const Dashboard = () => {
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Partos Normais</p>
-                          <p className="text-lg font-bold text-green-600">{agendamento.numero_partos_normais}</p>
+                          <p className="text-lg font-bold text-scheduled">{agendamento.numero_partos_normais}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Cesáreas</p>
-                          <p className="text-lg font-bold text-orange-600">{agendamento.numero_partos_cesareas}</p>
+                          <p className="text-lg font-bold text-urgent">{agendamento.numero_partos_cesareas}</p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">Abortos</p>
@@ -569,7 +569,7 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG DO PARTO</p>
-                        <p className="text-base font-semibold text-orange-600">{agendamento.ig_pretendida || 'Não informado'}</p>
+                        <p className="text-base font-semibold text-urgent">{agendamento.ig_pretendida || 'Não informado'}</p>
                       </div>
                     </div>
 
@@ -598,13 +598,13 @@ const Dashboard = () => {
 
                     {/* DIAGNÓSTICOS - INFORMAÇÃO CRÍTICA */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-4 border-l-4 border-orange-500 bg-orange-50/50 rounded">
+                      <div className="p-4 border-l-4 border-urgent bg-urgent/5 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS MATERNOS</p>
                         <p className="text-sm whitespace-pre-wrap">
                           {formatDiagnosticos(agendamento.diagnosticos_maternos || 'Não informado')}
                         </p>
                       </div>
-                      <div className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded">
+                      <div className="p-4 border-l-4 border-primary bg-primary/5 rounded">
                         <p className="text-sm font-bold text-foreground mb-2">DIAGNÓSTICOS FETAIS</p>
                         <p className="text-sm whitespace-pre-wrap">
                           {formatDiagnosticos(agendamento.diagnosticos_fetais || 'Não informado')}
