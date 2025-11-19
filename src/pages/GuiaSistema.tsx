@@ -372,38 +372,6 @@ const GuiaSistema = () => {
           </Card>
         </div>
 
-        {/* Credenciais de Teste */}
-        <Card className="bg-background/60 backdrop-blur-xl border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-500 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          <CardHeader className="relative z-10">
-            <CardTitle className="flex items-center gap-3 text-2xl">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-primary to-accent shadow-lg">
-                <UserCircle className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Credenciais de Teste</span>
-            </CardTitle>
-            <CardDescription className="text-base">Use estas credenciais para testar o sistema com diferentes perfis</CardDescription>
-          </CardHeader>
-          <CardContent className="relative z-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-6 rounded-xl border-2 border-primary/20 backdrop-blur-sm hover:scale-105 hover:border-primary/40 transition-all duration-300 shadow-lg">
-                <Badge className="mb-3 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg">Admin</Badge>
-                <p className="text-sm font-mono mb-2 font-semibold">admin@hapvida.com.br</p>
-                <p className="text-sm font-mono text-muted-foreground">Admin@2024</p>
-              </div>
-              <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-6 rounded-xl border-2 border-blue-500/20 backdrop-blur-sm hover:scale-105 hover:border-blue-500/40 transition-all duration-300 shadow-lg">
-                <Badge className="mb-3 bg-gradient-to-r from-blue-500 to-blue-400 text-white shadow-lg">Médico Unidade</Badge>
-                <p className="text-sm font-mono mb-2 font-semibold">medico.unidade@hapvida.com.br</p>
-                <p className="text-sm font-mono text-muted-foreground">Medico@2024</p>
-              </div>
-              <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 p-6 rounded-xl border-2 border-green-500/20 backdrop-blur-sm hover:scale-105 hover:border-green-500/40 transition-all duration-300 shadow-lg">
-                <Badge className="mb-3 bg-gradient-to-r from-green-500 to-green-400 text-white shadow-lg">Médico Maternidade</Badge>
-                <p className="text-sm font-mono mb-2 font-semibold">medico.maternidade@hapvida.com.br</p>
-                <p className="text-sm font-mono text-muted-foreground">Medico@2024</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
