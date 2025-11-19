@@ -5,11 +5,17 @@ import { supabase } from '@/lib/supabase';
 import { Calendar, Users, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { calcularIGAtual } from '@/lib/calcularIGAtual';
 
 interface Appointment {
   nome_completo: string;
   idade_gestacional_calculada: string;
   procedimentos: string[];
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  dum_status: string;
+  data_dum: string | null;
 }
 
 interface DayOccupation {
@@ -78,7 +84,7 @@ export default function CalendarioOcupacao() {
 
       const { data: appointments } = await supabase
         .from('agendamentos_obst')
-        .select('data_agendamento_calculada, nome_completo, idade_gestacional_calculada, procedimentos')
+        .select('data_agendamento_calculada, nome_completo, idade_gestacional_calculada, procedimentos, data_primeiro_usg, semanas_usg, dias_usg, dum_status, data_dum')
         .eq('maternidade', selectedMaternidade)
         .gte('data_agendamento_calculada', startDate.toISOString().split('T')[0])
         .lte('data_agendamento_calculada', endDate.toISOString().split('T')[0]);
@@ -93,7 +99,12 @@ export default function CalendarioOcupacao() {
           appointmentsByDay[apt.data_agendamento_calculada].push({
             nome_completo: apt.nome_completo,
             idade_gestacional_calculada: apt.idade_gestacional_calculada,
-            procedimentos: apt.procedimentos
+            procedimentos: apt.procedimentos,
+            data_primeiro_usg: apt.data_primeiro_usg,
+            semanas_usg: apt.semanas_usg,
+            dias_usg: apt.dias_usg,
+            dum_status: apt.dum_status,
+            data_dum: apt.data_dum,
           });
         }
       });
@@ -302,7 +313,7 @@ export default function CalendarioOcupacao() {
                             <div key={idx} className="text-sm flex items-center justify-between bg-muted/50 p-2 rounded">
                               <div>
                                 <span className="font-medium">{apt.nome_completo}</span>
-                                <span className="text-muted-foreground ml-2">IG: {apt.idade_gestacional_calculada}</span>
+                                <span className="text-muted-foreground ml-2">IG: {calcularIGAtual(apt)}</span>
                               </div>
                               <div className="flex gap-1">
                                 {apt.procedimentos.slice(0, 2).map((proc, i) => (

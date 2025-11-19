@@ -17,6 +17,7 @@ import { useRealtimeAgendamentos } from "@/hooks/useRealtimeAgendamentos";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { calcularIGAtual } from "@/lib/calcularIGAtual";
 
 interface Agendamento {
   id: string;
@@ -39,6 +40,11 @@ interface Agendamento {
   diagnosticos_fetais: string;
   observacoes_agendamento: string;
   created_at: string;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  dum_status: string;
+  data_dum: string | null;
 }
 
 const normalizeProcedimentos = (procedimentos: unknown): string[] => {
@@ -558,7 +564,7 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG ATUAL</p>
-                        <p className="text-base font-semibold text-primary">{agendamento.idade_gestacional_calculada || 'Não calculado'}</p>
+                        <p className="text-base font-semibold text-primary">{calcularIGAtual(agendamento)}</p>
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG DO PARTO</p>

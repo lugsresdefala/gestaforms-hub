@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
+import { calcularIGAtual } from "@/lib/calcularIGAtual";
 
 interface Agendamento {
   id: string;
@@ -30,6 +31,11 @@ interface Agendamento {
   observacoes_aprovacao: string | null;
   diagnosticos_maternos?: string;
   diagnosticos_fetais?: string;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  dum_status: string;
+  data_dum: string | null;
 }
 
 const MeusAgendamentos = () => {
@@ -190,8 +196,8 @@ const MeusAgendamentos = () => {
                       <p className="text-sm text-muted-foreground">{agendamento.centro_clinico}</p>
                     </div>
                     <div>
-                      <p className="text-sm font-medium">IG Calculada</p>
-                      <p className="text-sm text-muted-foreground">{agendamento.idade_gestacional_calculada}</p>
+                      <p className="text-sm font-medium">IG Atual</p>
+                      <p className="text-sm text-muted-foreground">{calcularIGAtual(agendamento)}</p>
                     </div>
                   </div>
 

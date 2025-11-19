@@ -10,12 +10,18 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { format, startOfWeek, endOfWeek, addWeeks, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { calcularIGAtual } from '@/lib/calcularIGAtual';
 
 interface Appointment {
   nome_completo: string;
   idade_gestacional_calculada: string;
   procedimentos: string[];
   status: string;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  dum_status: string;
+  data_dum: string | null;
 }
 
 interface DayOccupation {
@@ -121,7 +127,7 @@ export default function CalendarioCompleto() {
 
       const { data: appointments } = await supabase
         .from('agendamentos_obst')
-        .select('data_agendamento_calculada, nome_completo, idade_gestacional_calculada, procedimentos, status, created_at')
+        .select('data_agendamento_calculada, nome_completo, idade_gestacional_calculada, procedimentos, status, created_at, data_primeiro_usg, semanas_usg, dias_usg, dum_status, data_dum')
         .eq('maternidade', selectedMaternidade)
         .gte('data_agendamento_calculada', startDate.toISOString().split('T')[0])
         .lte('data_agendamento_calculada', endDate.toISOString().split('T')[0])
@@ -140,7 +146,12 @@ export default function CalendarioCompleto() {
             nome_completo: apt.nome_completo,
             idade_gestacional_calculada: apt.idade_gestacional_calculada,
             procedimentos: apt.procedimentos,
-            status: apt.status
+            status: apt.status,
+            data_primeiro_usg: apt.data_primeiro_usg,
+            semanas_usg: apt.semanas_usg,
+            dias_usg: apt.dias_usg,
+            dum_status: apt.dum_status,
+            data_dum: apt.data_dum,
           });
 
           const diasAteAgendamento = Math.floor(
@@ -448,7 +459,7 @@ export default function CalendarioCompleto() {
                                   <div className="flex-1">
                                     <span className="font-medium">{apt.nome_completo}</span>
                                     <span className="text-muted-foreground ml-2">
-                                      IG: {apt.idade_gestacional_calculada}
+                                      IG: {calcularIGAtual(apt)}
                                     </span>
                                     <Badge variant="outline" className="ml-2 text-xs">
                                       {apt.status}
