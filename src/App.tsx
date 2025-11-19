@@ -37,6 +37,7 @@ import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import ProcessarFormsParto from "./pages/ProcessarFormsParto";
 import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
 import FAQ from "./pages/FAQ";
+import Sobre from "./pages/Sobre";
 import LogsAuditoria from "./pages/LogsAuditoria";
 import NotFound from "./pages/NotFound";
 
@@ -316,6 +317,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <FAQ />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/sobre" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Sobre />
                   </AppLayout>
                 </ProtectedRoute>
               } 
