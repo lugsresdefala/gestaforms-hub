@@ -1,30 +1,23 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  UserCircle, 
-  FileText, 
-  CheckCircle, 
-  Calendar, 
-  Building2, 
-  Users,
-  ArrowRight,
-  Shield,
-  Stethoscope,
-  Baby,
-  Sparkles
-} from "lucide-react";
+import { UserCircle, FileText, CheckCircle, Calendar, Building2, Users, ArrowRight, Shield, Stethoscope, Baby, Sparkles } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
 const GuiaSistema = () => {
-  return (
-    <div className="min-h-screen relative overflow-hidden">
+  return <div className="min-h-screen relative overflow-hidden">
       {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10 animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute inset-0 bg-gradient-to-br from-background via-primary/5 to-accent/10 animate-pulse" style={{
+      animationDuration: '8s'
+    }} />
       
       {/* 3D floating orbs */}
-      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-float" style={{ animationDuration: '10s' }} />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDuration: '15s', animationDelay: '2s' }} />
+      <div className="absolute top-20 left-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl animate-float" style={{
+      animationDuration: '10s'
+    }} />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{
+      animationDuration: '15s',
+      animationDelay: '2s'
+    }} />
       
       <div className="container mx-auto max-w-7xl p-8 relative z-10">
         {/* Header with glassmorphism */}
@@ -34,10 +27,10 @@ const GuiaSistema = () => {
             <span className="text-sm font-medium text-primary">Sistema Inteligente</span>
           </div>
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent mb-4 animate-fade-in">
-            Guia do Sistema PGS
+            Agendamentos Obstétricos    
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Entenda como funciona o Programa Gestação Segura e as permissões de cada usuário
+            Entenda como funciona a plataforma de agendamentos do Programa Gestação Segura e as permissões de cada usuário
           </p>
         </div>
 
@@ -87,7 +80,9 @@ const GuiaSistema = () => {
               </div>
 
               <div className="flex justify-center">
-                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{
+                animationDelay: '0.5s'
+              }} />
               </div>
 
               <div className="flex items-start gap-4 group">
@@ -105,7 +100,9 @@ const GuiaSistema = () => {
               </div>
 
               <div className="flex justify-center">
-                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{ animationDelay: '1s' }} />
+                <ArrowRight className="h-10 w-10 text-primary/60 animate-pulse" style={{
+                animationDelay: '1s'
+              }} />
               </div>
 
               <div className="flex items-start gap-4 group">
@@ -373,8 +370,6 @@ const GuiaSistema = () => {
         </div>
 
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default GuiaSistema;
