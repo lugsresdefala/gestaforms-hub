@@ -1378,7 +1378,7 @@ const Index = () => {
       { name: "Pendente", value: metrics.pendentes, color: "#b45309" },
       { name: "Aprovado", value: metrics.aprovados, color: "#059669" },
       { name: "Rejeitado", value: metrics.rejeitados, color: "#dc2626" },
-    ],
+    ].filter(item => item.value > 0),
     [metrics],
   );
 
@@ -1597,34 +1597,56 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={dadosPorStatus}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent, value }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={110}
-                      innerRadius={60}
-                      fill="hsl(var(--primary))"
-                      dataKey="value"
-                      animationBegin={0}
-                      animationDuration={1000}
-                      animationEasing="ease-out"
-                    >
-                      {dadosPorStatus.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.color}
-                          stroke="hsl(var(--background))"
-                          strokeWidth={3}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+                {dadosPorStatus.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
+                    <PieChart>
+                      <Pie
+                        data={dadosPorStatus}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={true}
+                        label={({ name, percent, value }) => {
+                          const percentFormatted = (percent * 100).toFixed(1);
+                          return percentFormatted === "100.0" 
+                            ? `${name}\n${value} (100%)`
+                            : `${name}\n${value} (${percentFormatted}%)`;
+                        }}
+                        outerRadius={100}
+                        innerRadius={50}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                        animationBegin={0}
+                        animationDuration={1000}
+                        animationEasing="ease-out"
+                        paddingAngle={dadosPorStatus.length > 1 ? 2 : 0}
+                      >
+                        {dadosPorStatus.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke="hsl(var(--background))"
+                            strokeWidth={3}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value, entry: any) => (
+                          <span style={{ color: 'hsl(var(--foreground))' }}>
+                            {value}: {entry.payload.value}
+                          </span>
+                        )}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                    <AlertCircle className="h-16 w-16 opacity-20" />
+                    <p className="text-sm font-medium">Nenhum dado disponível</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
