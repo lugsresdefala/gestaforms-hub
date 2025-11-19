@@ -51,3 +51,42 @@ export const calcularIGAtual = (agendamento: AgendamentoData): string => {
     return 'Erro ao calcular';
   }
 };
+
+/**
+ * Calcula a idade gestacional especificamente para a data do agendamento
+ * Esta função SEMPRE usa a data_agendamento_calculada como referência
+ */
+export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string => {
+  try {
+    // Se não tiver data de agendamento, retornar mensagem apropriada
+    if (!agendamento.data_agendamento_calculada) {
+      return 'Sem data definida';
+    }
+    
+    const dataAgendamento = new Date(agendamento.data_agendamento_calculada);
+    
+    // Calcular IG por USG usando a data do agendamento
+    const dataUsg = new Date(agendamento.data_primeiro_usg);
+    const igUsg = calcularIgPorUsg(
+      dataUsg,
+      agendamento.semanas_usg,
+      agendamento.dias_usg,
+      dataAgendamento
+    );
+
+    // Se tiver DUM confiável, calcular IG por DUM também
+    let igDum = null;
+    if (agendamento.dum_status === 'certa' && agendamento.data_dum) {
+      const dataDum = new Date(agendamento.data_dum);
+      igDum = calcularIgPorDum(dataDum, dataAgendamento);
+    }
+
+    // Determinar qual IG usar conforme protocolo
+    const { igFinal } = determinarIgFinal(igDum, igUsg);
+
+    return igFinal.displayText;
+  } catch (error) {
+    console.error('Erro ao calcular IG na data agendada:', error);
+    return 'Erro ao calcular';
+  }
+};

@@ -18,7 +18,7 @@ import { useRealtimeAgendamentos } from "@/hooks/useRealtimeAgendamentos";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { calcularIGAtual } from "@/lib/calcularIGAtual";
+import { calcularIGAtual, calcularIGNaDataAgendada } from "@/lib/calcularIGAtual";
 import HistoricoAlteracoes from "@/components/HistoricoAlteracoes";
 
 interface Agendamento {
@@ -575,7 +575,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* IDADE GESTACIONAL - INFORMAÇÃO CRÍTICA */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-secondary/10 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-secondary/10 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Data Nascimento</p>
                         <p className="text-sm">{format(new Date(agendamento.data_nascimento), 'dd/MM/yyyy')}</p>
@@ -583,6 +583,10 @@ const Dashboard = () => {
                       <div>
                         <p className="text-sm font-bold text-foreground">IG ATUAL</p>
                         <p className="text-base font-semibold text-primary">{calcularIGAtual(agendamento)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground">IG NA DATA AGENDADA</p>
+                        <p className="text-base font-semibold text-accent">{calcularIGNaDataAgendada(agendamento)}</p>
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">IG DO PARTO</p>
