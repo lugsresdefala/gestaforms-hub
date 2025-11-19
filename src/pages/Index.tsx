@@ -1388,25 +1388,32 @@ const Index = () => {
   }, [agendamentos]);
   const dadosPorIG = useMemo(() => {
     const faixas: Record<string, number> = {
-      "< 28 semanas": 0,
-      "28-32 semanas": 0,
-      "33-36 semanas": 0,
-      "37-40 semanas": 0,
-      "> 40 semanas": 0
+      "< 28 sem": 0,
+      "28-32 sem": 0,
+      "33-36 sem": 0,
+      "37-40 sem": 0,
+      "> 40 sem": 0
     };
+    
     agendamentos.forEach(a => {
       if (a.idade_gestacional_calculada) {
         const match = a.idade_gestacional_calculada.match(/(\d+)s/);
         if (match) {
           const semanas = parseInt(match[1]);
-          if (semanas < 28) faixas["< 28 semanas"]++;else if (semanas <= 32) faixas["28-32 semanas"]++;else if (semanas <= 36) faixas["33-36 semanas"]++;else if (semanas <= 40) faixas["37-40 semanas"]++;else faixas["> 40 semanas"]++;
+          if (semanas < 28) faixas["< 28 sem"]++;
+          else if (semanas <= 32) faixas["28-32 sem"]++;
+          else if (semanas <= 36) faixas["33-36 sem"]++;
+          else if (semanas <= 40) faixas["37-40 sem"]++;
+          else faixas["> 40 sem"]++;
         }
       }
     });
+    
     return Object.entries(faixas).map(([name, value]) => ({
       name,
-      value
-    }));
+      value,
+      color: "hsl(var(--primary))"
+    })).filter(item => item.value > 0); // Só mostrar faixas com dados
   }, [agendamentos]);
   const dadosPorStatus = useMemo(() => [{
     name: "Pendente",
@@ -1909,61 +1916,56 @@ const Index = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {dadosPorIG.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={dadosPorIG}>
+                {dadosPorIG.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={dadosPorIG} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.35} />
-                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.25} />
-                          <stop offset="100%" stopColor="hsl(210, 100%, 45%)" stopOpacity={0.15} />
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                         </linearGradient>
-                        <filter id="barGlow">
-                          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                          <feMerge>
-                            <feMergeNode in="coloredBlur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
                       </defs>
-                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(148, 163, 184, 0.1)" opacity={0.5} />
-                      <XAxis dataKey="name" tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.15)"
-                  }} tickLine={{
-                    stroke: "rgba(148, 163, 184, 0.15)"
-                  }} />
-                      <YAxis tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.15)"
-                  }} tickLine={{
-                    stroke: "rgba(148, 163, 184, 0.15)"
-                  }} />
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9))',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(210, 100%, 35%, 0.15)',
-                    borderRadius: '14px',
-                    padding: '14px 16px',
-                    boxShadow: '0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04)'
-                  }} cursor={{
-                    fill: 'rgba(210, 100%, 35%, 0.05)'
-                  }} />
-                      <Bar dataKey="value" fill="url(#colorIG)" radius={[8, 8, 0, 0]} filter="url(#barGlow)">
-                        <LabelList dataKey="value" position="top" style={{
-                      fill: "hsl(210, 100%, 35%)",
-                      fontSize: "12px",
-                      fontWeight: 600
-                    }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis 
+                        dataKey="name" 
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tickLine={{ stroke: "hsl(var(--border))" }}
+                      />
+                      <YAxis 
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tickLine={{ stroke: "hsl(var(--border))" }}
+                        allowDecimals={false}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          background: 'hsl(var(--popover))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                          padding: '12px'
+                        }}
+                        cursor={{ fill: 'hsl(var(--accent))' }}
+                      />
+                      <Bar dataKey="value" fill="url(#colorIG)" radius={[8, 8, 0, 0]}>
+                        <LabelList 
+                          dataKey="value" 
+                          position="top" 
+                          style={{
+                            fill: "hsl(var(--primary))",
+                            fontSize: "14px",
+                            fontWeight: 600
+                          }} 
+                        />
                       </Bar>
                     </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
                     <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+                    <p className="text-sm font-medium">Nenhum dado disponível</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>}
