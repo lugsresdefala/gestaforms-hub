@@ -5,7 +5,7 @@ import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell } from 'lucide-react';
+import { Bell, AlertCircle } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -28,8 +28,21 @@ const NotificationBell = () => {
   const navigate = useNavigate();
   const { isAdmin, isAdminMed } = useAuth();
   const { notificacoes, marcarComoLida } = useRealtimeNotifications();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Animar sino quando chegar nova notificação
+  useEffect(() => {
+    if (notificacoes.length > 0) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [notificacoes.length]);
 
   if (!isAdmin() && !isAdminMed()) return null;
+
+  const naoLidas = notificacoes.filter(n => !n.lida).length;
+  const temUrgente = notificacoes.some(n => !n.lida && n.tipo === 'agendamento_urgente');
 
   const handleNotificationClick = async (notificacao: Notificacao) => {
     marcarComoLida(notificacao.id);
@@ -45,24 +58,29 @@ const NotificationBell = () => {
     if (agendamento?.status === 'aprovado') {
       navigate('/meus-agendamentos');
     } else {
-      navigate('/aprovacoes');
+      navigate('/aprovacoes-agendamentos');
     }
   };
-
-  const naoLidas = notificacoes.filter(n => !n.lida).length;
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={`relative ${isAnimating ? 'animate-bounce' : ''}`}
+        >
+          <Bell className={`h-5 w-5 ${temUrgente ? 'text-destructive animate-pulse' : ''}`} />
           {naoLidas > 0 && (
             <Badge 
-              variant="destructive" 
+              variant={temUrgente ? "destructive" : "default"}
               className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
             >
               {naoLidas}
             </Badge>
+          )}
+          {temUrgente && (
+            <AlertCircle className="absolute -bottom-1 -right-1 h-3 w-3 text-destructive animate-pulse" />
           )}
         </Button>
       </PopoverTrigger>
@@ -80,27 +98,43 @@ const NotificationBell = () => {
             </div>
           ) : (
             <div className="divide-y">
-              {notificacoes.map((notificacao) => (
-                <button
-                  key={notificacao.id}
-                  onClick={() => handleNotificationClick(notificacao)}
-                  className={`w-full p-4 text-left hover:bg-accent transition-colors ${
-                    !notificacao.lida ? 'bg-primary/5' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <p className="text-sm">{notificacao.mensagem}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(notificacao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </p>
+              {notificacoes.map((notificacao) => {
+                const isUrgente = notificacao.tipo === 'agendamento_urgente';
+                return (
+                  <button
+                    key={notificacao.id}
+                    onClick={() => handleNotificationClick(notificacao)}
+                    className={`w-full p-4 text-left hover:bg-accent transition-colors ${
+                      !notificacao.lida 
+                        ? isUrgente 
+                          ? 'bg-destructive/10 border-l-4 border-l-destructive' 
+                          : 'bg-primary/5' 
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          {isUrgente && (
+                            <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                          )}
+                          <p className={`text-sm ${isUrgente ? 'font-semibold' : ''}`}>
+                            {notificacao.mensagem}
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {format(new Date(notificacao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </p>
+                      </div>
+                      {!notificacao.lida && (
+                        <div className={`h-2 w-2 rounded-full flex-shrink-0 mt-1 ${
+                          isUrgente ? 'bg-destructive animate-pulse' : 'bg-primary'
+                        }`} />
+                      )}
                     </div>
-                    {!notificacao.lida && (
-                      <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-1" />
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
           )}
         </ScrollArea>
