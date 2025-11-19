@@ -73,6 +73,11 @@ const AppSidebar = () => {
     icon: Upload,
     show: isAdmin()
   }, {
+    title: "Importar Pacientes Pendentes",
+    url: "/importar-pacientes-pendentes",
+    icon: Upload,
+    show: isAdminMed()
+  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,
