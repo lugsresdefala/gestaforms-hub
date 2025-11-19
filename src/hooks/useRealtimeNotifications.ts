@@ -13,7 +13,7 @@ interface Notificacao {
 }
 
 export const useRealtimeNotifications = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAdminMed } = useAuth();
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -36,7 +36,7 @@ export const useRealtimeNotifications = () => {
   };
 
   useEffect(() => {
-    if (!user || !isAdmin()) return;
+    if (!user || (!isAdmin() && !isAdminMed())) return;
 
     // Buscar notificações iniciais
     const fetchNotificacoes = async () => {
@@ -94,7 +94,7 @@ export const useRealtimeNotifications = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isAdminMed]);
 
   const marcarComoLida = async (notificacaoId: string) => {
     const { error } = await supabase
