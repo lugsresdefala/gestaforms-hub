@@ -505,71 +505,35 @@ const COMPLETE_DESIGN_SYSTEM = `
     justify-content: center;
     width: 3.5rem;
     height: 3.5rem;
-    border-radius: var(--radius-xl);
+    border-radius: 12px;
     position: relative;
-    transition: background 200ms ease, box-shadow 200ms ease;
+    transition: all 200ms ease;
     z-index: 10;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 80px rgba(15, 23, 42, 0.1);
-  }
-  
-  .metric-icon-badge::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: var(--radius-xl);
-    opacity: 0;
-    transition: opacity 400ms var(--ease-smooth);
-    animation: glow-pulse 3s ease-in-out infinite;
-    animation-play-state: paused;
-    filter: blur(20px);
-    z-index: -1;
-  }
-  
-  .metric-card-advanced:hover .metric-icon-badge::before {
-    opacity: 0.5;
-    animation-play-state: running;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
   }
   
   .metric-icon-badge--warning {
-    background: var(--status-pending-bg);
+    background: hsl(38, 92%, 50%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--warning::before {
-    background: var(--status-pending-bg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
   
   .metric-icon-badge--success {
-    background: var(--status-success-bg);
+    background: hsl(25, 95%, 55%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--success::before {
-    background: var(--status-success-bg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
   
   .metric-icon-badge--destructive {
-    background: var(--status-destructive-bg);
+    background: hsl(0, 72%, 51%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--destructive::before {
-    background: var(--status-destructive-bg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
   
   .metric-icon-badge--primary {
-    background: var(--status-primary-bg);
+    background: hsl(210, 100%, 35%);
     color: white;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-  }
-  
-  .metric-icon-badge--primary::before {
-    background: var(--status-primary-bg);
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
   
   /* ==========================================
@@ -651,32 +615,28 @@ const COMPLETE_DESIGN_SYSTEM = `
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    border-radius: var(--radius-lg);
-    transition: all 400ms var(--ease-elastic);
-    transform-style: preserve-3d;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow-3d-sm);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    transition: all 200ms ease;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.4);
   }
   
   .chart-card-advanced:hover .chart-icon-badge {
-    transform: none;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
   }
   
   .chart-icon-badge--primary {
-    background: var(--status-primary-bg);
+    background: hsl(210, 100%, 35%);
     color: white;
   }
   
   .chart-icon-badge--accent {
-    background: var(--status-accent-bg);
+    background: hsl(25, 95%, 55%);
     color: white;
   }
   
   .chart-icon-badge--destructive {
-    background: var(--status-destructive-bg);
+    background: hsl(0, 72%, 51%);
     color: white;
   }
   
@@ -1492,7 +1452,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "#b45309" }}>
+                <div className="metric-value" style={{ color: "hsl(38, 92%, 50%)" }}>
                   {metrics.pendentes}
                 </div>
               </div>
@@ -1512,7 +1472,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "#059669" }}>
+                <div className="metric-value" style={{ color: "hsl(25, 95%, 55%)" }}>
                   {metrics.aprovados}
                 </div>
               </div>
@@ -1532,7 +1492,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "#dc2626" }}>
+                <div className="metric-value" style={{ color: "hsl(0, 72%, 51%)" }}>
                   {metrics.rejeitados}
                 </div>
               </div>
@@ -1552,7 +1512,7 @@ const Index = () => {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{ color: "#4f46e5" }}>
+                <div className="metric-value" style={{ color: "hsl(210, 100%, 35%)" }}>
                   {metrics.total}
                 </div>
               </div>
