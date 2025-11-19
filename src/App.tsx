@@ -11,6 +11,8 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import TermosDeUso from "./pages/TermosDeUso";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import AprovacoesAgendamentos from "./pages/AprovacoesAgendamentos";
 import EditarAgendamento from "./pages/EditarAgendamento";
 import AprovacoesUsuarios from "./pages/AprovacoesUsuarios";
@@ -62,6 +64,8 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<AuthRedirect />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/termos" element={<TermosDeUso />} />
+            <Route path="/privacidade" element={<PoliticaPrivacidade />} />
             <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route 
