@@ -53,7 +53,7 @@ const PACIENTES_PENDENTES = [
     dataDum: "3/12/2025",
     dataPrimeiroUsg: "5/13/2025",
     semanasUsg: "8",
-    diasUsg: "7",
+    diasUsg: "6",
     usgRecente: "06/11 CEFALICO PESO 2628 %76,4 MBV 8,1 DOPPLER MATERNO FETAL OK",
     igPretendida: "39",
     indicacaoProcedimento: "A PEDIDO DMG DEXTRO UBS",
