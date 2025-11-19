@@ -1,4 +1,5 @@
 import { Mail, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const Footer = () => {
@@ -21,6 +22,30 @@ export const Footer = () => {
             </p>
           </div>
           
+          {/* Divisor visual para desktop */}
+          <div className="hidden lg:block h-12 w-px bg-border"></div>
+          
+          {/* Links Institucionais */}
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Links Úteis
+            </h3>
+            <div className="flex flex-col gap-1.5">
+              <Link to="/sobre" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Sobre o Sistema
+              </Link>
+              <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                FAQ
+              </Link>
+              <Link to="/termos" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Termos de Uso
+              </Link>
+              <Link to="/privacidade" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                Política de Privacidade
+              </Link>
+            </div>
+          </div>
+
           {/* Divisor visual para desktop */}
           <div className="hidden lg:block h-12 w-px bg-border"></div>
           
