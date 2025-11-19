@@ -1202,14 +1202,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ==========================================
 
 const COLORS = [
-  "#06b6d4", // Cyan 500
-  "#0ea5e9", // Sky 500  
-  "#3b82f6", // Blue 500
-  "#8b5cf6", // Violet 500
-  "#6366f1", // Indigo 500
-  "#14b8a6", // Teal 500
-  "#64748b", // Slate 500
-  "#10b981", // Emerald 500
+  "hsl(210, 100%, 35%)",  // Azul Hapvida (primary)
+  "hsl(25, 95%, 55%)",    // Laranja NotreDame (accent)
+  "hsl(210, 80%, 45%)",   // Azul mais claro
+  "hsl(25, 85%, 60%)",    // Laranja mais claro
+  "hsl(210, 60%, 55%)",   // Azul intermediário
+  "hsl(25, 75%, 65%)",    // Laranja suave
+  "hsl(210, 70%, 40%)",   // Azul escuro
+  "hsl(25, 80%, 50%)",    // Laranja profundo
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -1317,13 +1317,34 @@ const Index = () => {
 
     agendamentos.forEach((a) => {
       try {
-        const diagsMat = a.diagnosticos_maternos ? JSON.parse(a.diagnosticos_maternos) : [];
-        const diagsFet = a.diagnosticos_fetais ? JSON.parse(a.diagnosticos_fetais) : [];
+        let diagsMat: string[] = [];
+        let diagsFet: string[] = [];
+        
+        // Tentar parsear como JSON primeiro, se falhar usar como texto simples
+        if (a.diagnosticos_maternos) {
+          try {
+            diagsMat = JSON.parse(a.diagnosticos_maternos);
+          } catch {
+            // Se não for JSON, tratar como texto simples separado por vírgula ou ponto e vírgula
+            diagsMat = a.diagnosticos_maternos.split(/[,;]/).map(d => d.trim()).filter(d => d.length > 0);
+          }
+        }
+        
+        if (a.diagnosticos_fetais) {
+          try {
+            diagsFet = JSON.parse(a.diagnosticos_fetais);
+          } catch {
+            diagsFet = a.diagnosticos_fetais.split(/[,;]/).map(d => d.trim()).filter(d => d.length > 0);
+          }
+        }
+        
         [...diagsMat, ...diagsFet].forEach((diag: string) => {
-          contagem[diag] = (contagem[diag] || 0) + 1;
+          if (diag && diag.length > 0) {
+            contagem[diag] = (contagem[diag] || 0) + 1;
+          }
         });
       } catch (e) {
-        // Ignore parsing errors
+        console.warn("Erro ao processar diagnósticos:", e);
       }
     });
 
@@ -1378,19 +1399,19 @@ const Index = () => {
       { 
         name: "Pendente", 
         value: metrics.pendentes, 
-        color: "#0ea5e9", // Sky blue
+        color: "hsl(38, 92%, 50%)", // Warning
         gradient: "url(#gradientPendente)"
       },
       { 
         name: "Aprovado", 
         value: metrics.aprovados, 
-        color: "#06b6d4", // Cyan
+        color: "hsl(25, 95%, 55%)", // Accent/Success
         gradient: "url(#gradientAprovado)"
       },
       { 
         name: "Rejeitado", 
         value: metrics.rejeitados, 
-        color: "#64748b", // Slate
+        color: "hsl(0, 72%, 51%)", // Destructive
         gradient: "url(#gradientRejeitado)"
       },
     ].filter(item => item.value > 0),
@@ -1617,16 +1638,16 @@ const Index = () => {
                     <PieChart>
                       <defs>
                         <linearGradient id="gradientPendente" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#0284c7" stopOpacity={0.7} />
+                          <stop offset="0%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.95} />
+                          <stop offset="100%" stopColor="hsl(38, 92%, 40%)" stopOpacity={0.85} />
                         </linearGradient>
                         <linearGradient id="gradientAprovado" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#0891b2" stopOpacity={0.7} />
+                          <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
+                          <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.85} />
                         </linearGradient>
                         <linearGradient id="gradientRejeitado" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="#64748b" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="#475569" stopOpacity={0.7} />
+                          <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.95} />
+                          <stop offset="100%" stopColor="hsl(0, 72%, 41%)" stopOpacity={0.85} />
                         </linearGradient>
                       </defs>
                       <Pie
@@ -1711,9 +1732,9 @@ const Index = () => {
                      <BarChart data={dadosPorUnidade}>
                       <defs>
                         <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
-                          <stop offset="50%" stopColor="#2563eb" stopOpacity={0.7} />
-                          <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.5} />
+                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.95} />
+                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.85} />
+                          <stop offset="100%" stopColor="hsl(210, 100%, 30%)" stopOpacity={0.75} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
@@ -1862,9 +1883,9 @@ const Index = () => {
                     <BarChart data={dadosPorPatologia} layout="vertical">
                       <defs>
                         <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.9} />
-                          <stop offset="50%" stopColor="#7c3aed" stopOpacity={0.7} />
-                          <stop offset="100%" stopColor="#6d28d9" stopOpacity={0.5} />
+                          <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
+                          <stop offset="50%" stopColor="hsl(25, 95%, 50%)" stopOpacity={0.85} />
+                          <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.75} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
@@ -2016,9 +2037,9 @@ const Index = () => {
                     <BarChart data={dadosPorIG}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#14b8a6" stopOpacity={0.9} />
-                          <stop offset="50%" stopColor="#0d9488" stopOpacity={0.7} />
-                          <stop offset="100%" stopColor="#0f766e" stopOpacity={0.5} />
+                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.95} />
+                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.85} />
+                          <stop offset="100%" stopColor="hsl(210, 100%, 30%)" stopOpacity={0.75} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
