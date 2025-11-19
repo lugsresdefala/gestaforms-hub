@@ -1224,7 +1224,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const { isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -1241,7 +1241,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchAgendamentos();
-  }, [isAdmin, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
+  }, [isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
 
   const fetchAgendamentos = async () => {
     setLoading(true);
@@ -1249,17 +1249,17 @@ const Index = () => {
       let query = supabase.from("agendamentos_obst").select("*");
 
       // Aplicar filtros baseados no tipo de usuário
-      if (isMedicoMaternidade() && !isAdmin()) {
+      if (isMedicoMaternidade() && !isAdmin() && !isAdminMed()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in("maternidade", maternidades).eq("status", "aprovado");
-      } else if (isMedicoUnidade() && !isAdmin()) {
+      } else if (isMedicoUnidade() && !isAdmin() && !isAdminMed()) {
         // Médicos de unidade veem seus próprios agendamentos
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           query = query.eq("created_by", user.id);
         }
       }
-      // Admin vê tudo (sem filtro adicional)
+      // Admin e Admin_Med veem tudo (sem filtro adicional)
 
       query = query.order("created_at", { ascending: false });
 
