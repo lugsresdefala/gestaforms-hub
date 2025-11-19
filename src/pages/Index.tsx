@@ -1778,8 +1778,8 @@ const Index = () => {
                     <Stethoscope className="h-5 w-5" />
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-bold">Top 10 Patologias</CardTitle>
-                    <CardDescription className="text-xs mt-1">Diagnósticos mais frequentes</CardDescription>
+                    <CardTitle className="text-xl font-bold">Principais Diagnósticos</CardTitle>
+                    <CardDescription className="text-xs mt-1">Distribuição por frequência</CardDescription>
                   </div>
                 </div>
               </CardHeader>
