@@ -1224,7 +1224,7 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const { isAdmin, isAdminMed, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -1241,25 +1241,16 @@ const Index = () => {
 
   useEffect(() => {
     fetchAgendamentos();
-  }, [isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade, getMaternidadesAcesso]);
+  }, []);
 
   const fetchAgendamentos = async () => {
     setLoading(true);
     try {
       let query = supabase.from("agendamentos_obst").select("*");
 
-      // Aplicar filtros baseados no tipo de usuário
-      if (isMedicoMaternidade() && !isAdmin() && !isAdminMed()) {
-        const maternidades = getMaternidadesAcesso();
-        query = query.in("maternidade", maternidades).eq("status", "aprovado");
-      } else if (isMedicoUnidade() && !isAdmin() && !isAdminMed()) {
-        // Médicos de unidade veem seus próprios agendamentos
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          query = query.eq("created_by", user.id);
-        }
-      }
-      // Admin e Admin_Med veem tudo (sem filtro adicional)
+      // Todos os usuários autenticados podem ver estatísticas agregadas
+      // Admin e Admin_Med veem tudo para estatísticas
+      // Outros usuários veem apenas dados agregados sem informações individuais
 
       query = query.order("created_at", { ascending: false });
 
@@ -1396,18 +1387,6 @@ const Index = () => {
     [agendamentos, filtroStatus],
   );
 
-  const agendamentosRecentes = useMemo(() => agendamentosFiltrados.slice(0, 8), [agendamentosFiltrados]);
-
-  const formatarData = useCallback((data?: string) => {
-    if (!data) return "-";
-    try {
-      return format(new Date(data), "dd/MM/yyyy", { locale: ptBR });
-    } catch (error) {
-      console.warn("Não foi possível formatar data", error);
-      return "-";
-    }
-  }, []);
-
   const handleChartHover = useCallback((chartId: string) => {
     setHoveredChart(chartId);
   }, []);
@@ -1444,7 +1423,7 @@ const Index = () => {
               Análise em tempo real • {agendamentos.length} registros
             </p>
           </div>
-          {(isMedicoUnidade() || isAdmin()) && agendamentos.length > 0 && (
+          {isAdmin() && agendamentos.length > 0 && (
             <Button
               onClick={() => navigate("/novo-agendamento")}
               className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors"
@@ -1572,64 +1551,6 @@ const Index = () => {
           </Card>
         )}
 
-        {agendamentosFiltrados.length > 0 && (
-          <Card className="data-panel-card">
-            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <CardTitle className="text-xl font-semibold">Banco de agendamentos</CardTitle>
-                <CardDescription className="text-sm">Últimos registros com o filtro aplicado</CardDescription>
-              </div>
-              <Badge className="badge-advanced">
-                Mostrando {agendamentosRecentes.length} de {agendamentosFiltrados.length}
-              </Badge>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="data-panel-table">
-                  <thead>
-                    <tr>
-                      <th>Paciente</th>
-                      <th>Centro clínico</th>
-                      <th>Maternidade</th>
-                      <th>Data</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {agendamentosRecentes.map((agendamento) => {
-                      const statusKey = (agendamento.status || "").toLowerCase();
-                      const statusConfig = STATUS_CONFIG[statusKey] || {
-                        label: agendamento.status || "Sem status",
-                        className: "status-pill",
-                      };
-                      return (
-                        <tr key={agendamento.id}>
-                          <td>
-                            <p className="font-semibold text-sm text-foreground">{agendamento.nome_completo}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {agendamento.procedimentos?.length
-                                ? agendamento.procedimentos.join(", ")
-                                : "Sem procedimento"}
-                            </p>
-                          </td>
-                          <td className="text-sm text-muted-foreground">{agendamento.centro_clinico}</td>
-                          <td className="text-sm text-muted-foreground">{agendamento.maternidade}</td>
-                          <td className="text-sm font-medium">
-                            {formatarData(agendamento.data_agendamento_calculada)}
-                          </td>
-                          <td>
-                            <span className={statusConfig.className}>{statusConfig.label}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {agendamentos.length === 0 ? (
           <Card className="shadow-elegant border-2">
             <CardContent className="empty-state-advanced">
@@ -1640,16 +1561,10 @@ const Index = () => {
               <div className="space-y-3">
                 <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
                 <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
-                  {isAdmin()
-                    ? "Não há agendamentos cadastrados no sistema."
-                    : isMedicoUnidade()
-                      ? "Você ainda não criou nenhum agendamento."
-                      : isMedicoMaternidade()
-                        ? "Não há agendamentos aprovados para sua maternidade no momento."
-                        : "Você não tem permissões para visualizar agendamentos."}
+                  Não há agendamentos cadastrados no sistema.
                 </p>
               </div>
-              {(isMedicoUnidade() || isAdmin()) && (
+              {isAdmin() && (
                 <Button
                   onClick={() => navigate("/novo-agendamento")}
                   className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors mt-8"
