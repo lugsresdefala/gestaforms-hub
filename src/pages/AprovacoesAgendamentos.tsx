@@ -13,6 +13,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProtocolosModal } from '@/components/ProtocolosModal';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { calcularIGAtual } from '@/lib/calcularIGAtual';
 
 interface Agendamento {
   id: string;
@@ -32,6 +33,11 @@ interface Agendamento {
   diagnosticos_fetais: string;
   status: string;
   created_at: string;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  dum_status: string;
+  data_dum: string | null;
 }
 
 const AprovacoesAgendamentos = () => {
@@ -320,8 +326,8 @@ const AprovacoesAgendamentos = () => {
                     <p className="text-xs text-muted-foreground mt-1">Essa data será usada em todos os painéis.</p>
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
-                    <p className="text-sm font-semibold mb-2">IG Calculada</p>
-                    <p className="text-sm">{agendamento.idade_gestacional_calculada}</p>
+                    <p className="text-sm font-semibold mb-2">IG Atual</p>
+                    <p className="text-sm">{calcularIGAtual(agendamento)}</p>
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Médico Responsável</p>
