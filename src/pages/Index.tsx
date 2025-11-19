@@ -119,26 +119,26 @@ const COMPLETE_DESIGN_SYSTEM = `
     --color-red-800: #991b1b;
     --color-red-900: #7f1d1d;
     
-    /* Semantic Status Colors - Cold Variants */
-    --status-pending-bg: linear-gradient(135deg, #b45309 0%, #78350f 80%);
-    --status-pending-light: #fffbeb;
-    --status-pending-border: #b45309;
-    --status-pending-glow: rgba(180, 83, 9, 0.35);
+    /* Semantic Status Colors - Hapvida/NotreDame Brand */
+    --status-primary-bg: linear-gradient(135deg, hsl(210, 100%, 35%) 0%, hsl(210, 100%, 25%) 80%);
+    --status-primary-light: hsl(210, 100%, 95%);
+    --status-primary-border: hsl(210, 100%, 35%);
+    --status-primary-glow: hsla(210, 100%, 35%, 0.35);
     
-    --status-success-bg: linear-gradient(135deg, #059669 0%, #047857 80%);
-    --status-success-light: #ecfdf5;
-    --status-success-border: #059669;
-    --status-success-glow: rgba(5, 150, 105, 0.35);
+    --status-accent-bg: linear-gradient(135deg, hsl(25, 95%, 55%) 0%, hsl(25, 95%, 45%) 80%);
+    --status-accent-light: hsl(25, 95%, 95%);
+    --status-accent-border: hsl(25, 95%, 55%);
+    --status-accent-glow: hsla(25, 95%, 55%, 0.35);
     
-    --status-destructive-bg: linear-gradient(135deg, #dc2626 0%, #991b1b 80%);
-    --status-destructive-light: #fef2f2;
-    --status-destructive-border: #dc2626;
-    --status-destructive-glow: rgba(220, 38, 38, 0.35);
+    --status-warning-bg: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(38, 92%, 40%) 80%);
+    --status-warning-light: hsl(38, 92%, 95%);
+    --status-warning-border: hsl(38, 92%, 50%);
+    --status-warning-glow: hsla(38, 92%, 50%, 0.35);
     
-    --status-primary-bg: linear-gradient(135deg, #4f46e5 0%, #4338ca 80%);
-    --status-primary-light: #eef2ff;
-    --status-primary-border: #4f46e5;
-    --status-primary-glow: rgba(79, 70, 229, 0.25);
+    --status-destructive-bg: linear-gradient(135deg, hsl(0, 72%, 51%) 0%, hsl(0, 72%, 41%) 80%);
+    --status-destructive-light: hsl(0, 72%, 95%);
+    --status-destructive-border: hsl(0, 72%, 51%);
+    --status-destructive-glow: hsla(0, 72%, 51%, 0.35);
     
     /* Advanced Glassmorphism System */
     --glass-bg-white: rgba(255, 255, 255, 0.75);
@@ -671,7 +671,7 @@ const COMPLETE_DESIGN_SYSTEM = `
   }
   
   .chart-icon-badge--accent {
-    background: var(--status-pending-bg);
+    background: var(--status-accent-bg);
     color: white;
   }
   
@@ -1314,6 +1314,7 @@ const Index = () => {
 
   const dadosPorPatologia = useMemo(() => {
     const contagem: Record<string, number> = {};
+    const dadosNaoDiagnosticos = ['paridade', 'ig', 'idade gestacional', 'semanas', 'dum'];
 
     agendamentos.forEach((a) => {
       try {
@@ -1340,7 +1341,13 @@ const Index = () => {
         
         [...diagsMat, ...diagsFet].forEach((diag: string) => {
           if (diag && diag.length > 0) {
-            contagem[diag] = (contagem[diag] || 0) + 1;
+            // Filtrar dados que não são diagnósticos (paridade, IG, etc)
+            const diagLower = diag.toLowerCase();
+            const ehNaoDiagnostico = dadosNaoDiagnosticos.some(termo => diagLower.includes(termo));
+            
+            if (!ehNaoDiagnostico) {
+              contagem[diag] = (contagem[diag] || 0) + 1;
+            }
           }
         });
       } catch (e) {
@@ -1623,7 +1630,7 @@ const Index = () => {
             >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--primary">
+                  <div className="chart-icon-badge chart-icon-badge--accent">
                     <Activity className="h-5 w-5" />
                   </div>
                   <div>
@@ -1868,7 +1875,7 @@ const Index = () => {
             >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--destructive">
+                  <div className="chart-icon-badge chart-icon-badge--accent">
                     <Stethoscope className="h-5 w-5" />
                   </div>
                   <div>
@@ -1939,7 +1946,7 @@ const Index = () => {
             >
               <CardHeader className="space-y-2">
                 <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--accent">
+                  <div className="chart-icon-badge chart-icon-badge--primary">
                     <Activity className="h-5 w-5" />
                   </div>
                   <div>
