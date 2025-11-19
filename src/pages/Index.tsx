@@ -32,6 +32,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  LabelList,
 } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -2055,39 +2056,54 @@ const Index = () => {
                     <BarChart data={dadosPorIG}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.95} />
-                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.85} />
-                          <stop offset="100%" stopColor="hsl(210, 100%, 30%)" stopOpacity={0.75} />
+                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.35} />
+                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.25} />
+                          <stop offset="100%" stopColor="hsl(210, 100%, 45%)" stopOpacity={0.15} />
                         </linearGradient>
+                        <filter id="barGlow">
+                          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                      <CartesianGrid strokeDasharray="4 4" stroke="rgba(148, 163, 184, 0.1)" opacity={0.5} />
                       <XAxis
                         dataKey="name"
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.15)" }}
+                        tickLine={{ stroke: "rgba(148, 163, 184, 0.15)" }}
                       />
                       <YAxis
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.15)" }}
+                        tickLine={{ stroke: "rgba(148, 163, 184, 0.15)" }}
                       />
-                      <Tooltip 
+                      <Tooltip
                         content={<CustomTooltip />}
                         contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: '1px solid rgba(148, 163, 184, 0.2)',
-                          borderRadius: '12px',
-                          padding: '12px',
-                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9))',
+                          backdropFilter: 'blur(12px)',
+                          border: '1px solid rgba(210, 100%, 35%, 0.15)',
+                          borderRadius: '14px',
+                          padding: '14px 16px',
+                          boxShadow: '0 8px 32px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.04)',
                         }}
+                        cursor={{ fill: 'rgba(210, 100%, 35%, 0.05)' }}
                       />
-                      <Bar
-                        dataKey="value"
-                        fill="url(#colorIG)"
-                        radius={[12, 12, 0, 0]}
-                        animationBegin={0}
-                        animationDuration={1000}
-                        animationEasing="ease-out"
-                      />
+                      <Bar 
+                        dataKey="value" 
+                        fill="url(#colorIG)" 
+                        radius={[8, 8, 0, 0]}
+                        filter="url(#barGlow)"
+                      >
+                        <LabelList
+                          dataKey="value"
+                          position="top"
+                          style={{ fill: "hsl(210, 100%, 35%)", fontSize: "12px", fontWeight: 600 }}
+                        />
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
