@@ -3,7 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
@@ -1232,13 +1233,24 @@ const Index = () => {
     isAdmin,
     isAdminMed,
     getMaternidadesAcesso,
-    userRoles
+    userRoles,
+    signOut
   } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [hoveredChart, setHoveredChart] = useState<string | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+      toast.success('Logout realizado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao fazer logout');
+    }
+  };
 
   // Verifica se é a primeira vez do usuário
   useEffect(() => {
@@ -1448,20 +1460,41 @@ const Index = () => {
                 Análise em tempo real • {agendamentos.length} registros
               </p>
             </div>
-            <div className="flex gap-3">
-              {(isAdmin() || isAdminMed()) && <ExportarRelatorios />}
-              <Button size="lg" onClick={() => navigate("/novo-agendamento")} className="group shadow-elegant hover:shadow-2xl transition-all duration-300 hover:scale-105 text-base font-bold">
-                <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
-                Novo Agendamento
-              </Button>
+            <div className="flex gap-3 items-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="lg" variant="outline" className="hover-lift shadow-elegant">
+                    <Menu className="h-5 w-5 text-primary" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover border-border shadow-lg z-[100]">
+                  <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                    <Plus className="h-4 w-4 mr-2 text-primary" />
+                    <span>Novo Agendamento</span>
+                  </DropdownMenuItem>
+                  {(isAdmin() || isAdminMed()) && (
+                    <ExportarRelatorios 
+                      trigger={
+                        <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
+                          <Download className="h-4 w-4 mr-2 text-primary" />
+                          <span>Exportar Relatórios</span>
+                        </div>
+                      }
+                    />
+                  )}
+                  <DropdownMenuSeparator className="bg-border" />
+                  <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                    <Info className="h-4 w-4 mr-2 text-primary" />
+                    <span>Sobre</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10">
+                    <LogOut className="h-4 w-4 mr-2 text-destructive" />
+                    <span className="text-destructive">Sair</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
-
-          {isAdmin() && agendamentos.length > 0 && <Button onClick={() => navigate("/novo-agendamento")} className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors" size="lg">
-              <Plus className="h-5 w-5 mr-2" />
-              Novo Agendamento
-              <ArrowUpRight className="h-4 w-4 ml-2 opacity-80" />
-            </Button>}
 
         <div className="dashboard-grid dashboard-grid--metrics">
           <Card className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up" style={{
