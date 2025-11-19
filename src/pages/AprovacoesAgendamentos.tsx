@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProtocolosModal } from '@/components/ProtocolosModal';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { calcularIGAtual } from '@/lib/calcularIGAtual';
+import { calcularIGAtual, calcularIGNaDataAgendada } from '@/lib/calcularIGAtual';
 
 interface Agendamento {
   id: string;
@@ -328,6 +328,10 @@ const AprovacoesAgendamentos = () => {
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">IG Atual</p>
                     <p className="text-sm">{calcularIGAtual(agendamento)}</p>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-background">
+                    <p className="text-sm font-semibold mb-2">IG na Data Agendada</p>
+                    <p className="text-sm font-bold text-primary">{calcularIGNaDataAgendada(agendamento)}</p>
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Médico Responsável</p>

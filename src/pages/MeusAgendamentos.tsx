@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
-import { calcularIGAtual } from "@/lib/calcularIGAtual";
+import { calcularIGAtual, calcularIGNaDataAgendada } from "@/lib/calcularIGAtual";
 
 interface Agendamento {
   id: string;
@@ -205,6 +205,10 @@ const MeusAgendamentos = () => {
                     <div>
                       <p className="text-sm font-medium">IG Atual</p>
                       <p className="text-sm text-muted-foreground">{calcularIGAtual(agendamento)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">IG na Data Agendada</p>
+                      <p className="text-sm font-semibold text-primary">{calcularIGNaDataAgendada(agendamento)}</p>
                     </div>
                   </div>
 
