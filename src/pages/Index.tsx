@@ -1413,7 +1413,7 @@ const Index = () => {
       name,
       value,
       color: "hsl(var(--primary))"
-    })).filter(item => item.value > 0); // Só mostrar faixas com dados
+    }));
   }, [agendamentos]);
   const dadosPorStatus = useMemo(() => [{
     name: "Pendente",
