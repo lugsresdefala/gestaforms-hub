@@ -36,6 +36,8 @@ import ImportarSQL from "./pages/ImportarSQL";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import ProcessarFormsParto from "./pages/ProcessarFormsParto";
 import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
+import FAQ from "./pages/FAQ";
+import LogsAuditoria from "./pages/LogsAuditoria";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -304,6 +306,26 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <RecalcularDatas2025 />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/faq" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <FAQ />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/logs-auditoria" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <LogsAuditoria />
                   </AppLayout>
                 </ProtectedRoute>
               } 

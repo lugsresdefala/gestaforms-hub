@@ -38,6 +38,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import TutorialInterativo from "@/components/TutorialInterativo";
+import ExportarRelatorios from "@/components/ExportarRelatorios";
 
 // ==========================================
 // TYPE DEFINITIONS
@@ -1236,11 +1238,20 @@ const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAdmin, isAdminMed, getMaternidadesAcesso } = useAuth();
+  const { isAdmin, isAdminMed, getMaternidadesAcesso, userRoles } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [hoveredChart, setHoveredChart] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // Verifica se é a primeira vez do usuário
+  useEffect(() => {
+    const tutorialCompleted = localStorage.getItem('tutorial_completed');
+    if (!tutorialCompleted) {
+      setTimeout(() => setShowTutorial(true), 1000);
+    }
+  }, []);
 
   useEffect(() => {
     const styleElement = document.createElement("style");
@@ -1468,16 +1479,35 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle">
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
-          <div className="space-y-2">
-            <h1 className="gradient-text-animated text-4xl text-left font-bold">Dashboard Obstétrico</h1>
-            <p className="text-muted-foreground text-base font-medium flex items-center gap-2">
-              <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
-              Análise em tempo real • {agendamentos.length} registros
-            </p>
+    <>
+      <TutorialInterativo 
+        open={showTutorial} 
+        onOpenChange={setShowTutorial}
+        userRole={userRoles?.[0]?.role}
+      />
+      <div className="min-h-screen gradient-subtle">
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
+            <div className="space-y-2">
+              <h1 className="gradient-text-animated text-4xl text-left font-bold">Dashboard Obstétrico</h1>
+              <p className="text-muted-foreground text-base font-medium flex items-center gap-2">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse" />
+                Análise em tempo real • {agendamentos.length} registros
+              </p>
+            </div>
+            <div className="flex gap-3">
+              {(isAdmin() || isAdminMed()) && <ExportarRelatorios />}
+              <Button
+                size="lg"
+                className="group shadow-elegant hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                onClick={() => navigate("/novo-agendamento")}
+              >
+                <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform duration-300" />
+                Novo Agendamento
+              </Button>
+            </div>
           </div>
+
           {isAdmin() && agendamentos.length > 0 && (
             <Button
               onClick={() => navigate("/novo-agendamento")}
@@ -2118,6 +2148,7 @@ const Index = () => {
         )}
       </main>
     </div>
+    </>
   );
 };
 

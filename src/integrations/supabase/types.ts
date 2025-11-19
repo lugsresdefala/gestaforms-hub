@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos_historico: {
+        Row: {
+          action: string
+          agendamento_id: string
+          campo_alterado: string | null
+          created_at: string
+          id: string
+          observacoes: string | null
+          user_id: string
+          valor_anterior: string | null
+          valor_novo: string | null
+        }
+        Insert: {
+          action: string
+          agendamento_id: string
+          campo_alterado?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          user_id: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Update: {
+          action?: string
+          agendamento_id?: string
+          campo_alterado?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          user_id?: string
+          valor_anterior?: string | null
+          valor_novo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_historico_agendamento_id_fkey"
+            columns: ["agendamento_id"]
+            isOneToOne: false
+            referencedRelation: "agendamentos_obst"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agendamentos_obst: {
         Row: {
           aprovado_em: string | null
@@ -143,6 +187,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       capacidade_maternidades: {
         Row: {
           created_at: string | null
@@ -176,6 +259,39 @@ export type Database = {
           vagas_domingo?: number
           vagas_sabado?: number
           vagas_semana_max?: number
+        }
+        Relationships: []
+      }
+      faq_items: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          created_at: string
+          id: string
+          ordem: number | null
+          pergunta: string
+          resposta: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          pergunta: string
+          resposta: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          created_at?: string
+          id?: string
+          ordem?: number | null
+          pergunta?: string
+          resposta?: string
+          updated_at?: string
         }
         Relationships: []
       }

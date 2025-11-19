@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload } from "lucide-react";
+import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload, HelpCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
@@ -87,6 +87,11 @@ const AppSidebar = () => {
     url: "/gerenciar-usuarios",
     icon: Users,
     show: isAdmin()
+  }, {
+    title: "Logs de Auditoria",
+    url: "/logs-auditoria",
+    icon: Shield,
+    show: isAdmin()
   }].filter(item => item.show);
   return <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
@@ -157,6 +162,14 @@ const AppSidebar = () => {
                   <NavLink to="/guia" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
                     <BookOpen className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Guia</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/faq" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                    <HelpCircle className="h-4 w-4" />
+                    {!collapsed && <span className="text-sm">FAQ</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
