@@ -238,6 +238,13 @@ serve(async (req) => {
           continue;
         }
 
+        // Validar dias_usg no intervalo 0-6
+        if (diasUsgNum < 0 || diasUsgNum > 6) {
+          results.errors.push(`Linha ${i + 1}: Dias USG deve estar entre 0-6 (recebido: ${diasUsgNum})`);
+          results.failed++;
+          continue;
+        }
+
         const dataPrimeiroUsgDate = new Date(dataPrimeiroUsgParsed);
         const { dataAgendamento, igDisplay } = calcularIG(dataPrimeiroUsgDate, semanasUsgNum, diasUsgNum);
 
@@ -245,8 +252,8 @@ serve(async (req) => {
           nome_completo: nomeCompleto,
           carteirinha: carteirinha,
           data_nascimento: dataNascParsed,
-          telefones: telefones || 'Não informado',
-          email_paciente: emailPaciente || 'nao.informado@email.com',
+          telefones: telefones || '',
+          email_paciente: emailPaciente || '',
           maternidade: maternidade,
           centro_clinico: 'Importado em Lote',
           medico_responsavel: medicoResponsavel || 'Médico Importado',
@@ -255,10 +262,11 @@ serve(async (req) => {
           numero_partos_cesareas: parseInt(numeroCesareas) || 0,
           numero_abortos: parseInt(numeroAbortos) || 0,
           procedimentos: extractProcedimentos(procedimentos),
-          diagnosticos_maternos: diagnosticosMaternos || 'Não informado',
-          diagnosticos_fetais: diagnosticosFetais || null,
-          placenta_previa: (placentaPrevia && placentaPrevia !== '-' && placentaPrevia.toLowerCase() !== 'não') ? placentaPrevia : null,
-          indicacao_procedimento: indicacaoProcedimento || 'Não informado',
+          diagnosticos_maternos: diagnosticosMaternos ? JSON.stringify([diagnosticosMaternos]) : JSON.stringify([]),
+          diagnosticos_fetais: diagnosticosFetais ? JSON.stringify([diagnosticosFetais]) : JSON.stringify([]),
+          diagnosticos_fetais_outros: null,
+          placenta_previa: (placentaPrevia && (placentaPrevia.toLowerCase() === 'sim' || placentaPrevia === 'Sim')) ? 'Sim' : 'Não',
+          indicacao_procedimento: indicacaoProcedimento || '',
           medicacao: medicacao || null,
           historia_obstetrica: historiaObstetrica || null,
           necessidade_uti_materna: necessidadeUtiMaterna === 'Sim' ? 'Sim' : 'Não',
@@ -268,8 +276,8 @@ serve(async (req) => {
           data_primeiro_usg: dataPrimeiroUsgParsed,
           semanas_usg: semanasUsgNum,
           dias_usg: diasUsgNum,
-          usg_recente: usgRecente || 'Sim',
-          ig_pretendida: igPretendida || '39s',
+          usg_recente: usgRecente || '',
+          ig_pretendida: igPretendida || '',
           data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
           idade_gestacional_calculada: igDisplay,
           observacoes_agendamento: `Importado automaticamente do CSV\nIG calculada: ${igDisplay}\nData agendamento: ${dataAgendamento.toISOString().split('T')[0]}`,
