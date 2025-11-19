@@ -40,12 +40,12 @@ const AppSidebar = () => {
     title: "Novo",
     url: "/novo-agendamento",
     icon: PlusCircle,
-    show: isMedicoUnidade() || isAdmin()
+    show: true
   }, {
     title: "Meus",
     url: "/meus-agendamentos",
     icon: Calendar,
-    show: isMedicoUnidade()
+    show: true
   }].filter(item => item.show);
   const adminItems = [{
     title: "Aprovações Médicas",

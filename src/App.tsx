@@ -81,7 +81,7 @@ const App = () => (
             <Route 
               path="/novo-agendamento" 
               element={
-                <ProtectedRoute requireMedicoUnidade>
+                <ProtectedRoute>
                   <AppLayout>
                     <NovoAgendamento />
                   </AppLayout>
@@ -131,7 +131,7 @@ const App = () => (
             <Route 
               path="/meus-agendamentos" 
               element={
-                <ProtectedRoute requireMedicoUnidade>
+                <ProtectedRoute>
                   <AppLayout>
                     <MeusAgendamentos />
                   </AppLayout>
