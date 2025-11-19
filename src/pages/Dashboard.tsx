@@ -18,6 +18,7 @@ import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { calcularIGAtual } from "@/lib/calcularIGAtual";
+import HistoricoAlteracoes from "@/components/HistoricoAlteracoes";
 
 interface Agendamento {
   id: string;
