@@ -48,6 +48,15 @@ All colors MUST be HSL.
 
     --warning: 35 85% 48%;
     --warning-foreground: 0 0% 100%;
+    
+    --urgent: 28 90% 52%;
+    --urgent-foreground: 0 0% 100%;
+    
+    --overdue: 0 72% 51%;
+    --overdue-foreground: 0 0% 100%;
+    
+    --scheduled: 142 76% 36%;
+    --scheduled-foreground: 0 0% 100%;
 
     --border: 214 28% 90%;
     --input: 214 28% 90%;
@@ -124,6 +133,15 @@ All colors MUST be HSL.
 
     --warning: 35 85% 50%;
     --warning-foreground: 0 0% 100%;
+    
+    --urgent: 28 90% 55%;
+    --urgent-foreground: 0 0% 100%;
+    
+    --overdue: 0 72% 55%;
+    --overdue-foreground: 0 0% 100%;
+    
+    --scheduled: 142 76% 38%;
+    --scheduled-foreground: 0 0% 100%;
 
     --border: 215 25% 25%;
     --input: 215 25% 25%;
