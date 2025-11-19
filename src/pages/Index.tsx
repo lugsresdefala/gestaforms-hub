@@ -1202,14 +1202,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ==========================================
 
 const COLORS = [
-  "#4f46e5", // indigo
-  "#059669", // emerald
-  "#d97706", // amber
-  "#0d9488", // teal
-  "#0891b2", // cyan
-  "#0284c7", // sky
-  "#7c3aed", // violet
-  "#c026d3", // fuchsia
+  "#06b6d4", // Cyan 500
+  "#0ea5e9", // Sky 500  
+  "#3b82f6", // Blue 500
+  "#8b5cf6", // Violet 500
+  "#6366f1", // Indigo 500
+  "#14b8a6", // Teal 500
+  "#64748b", // Slate 500
+  "#10b981", // Emerald 500
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -1375,9 +1375,24 @@ const Index = () => {
 
   const dadosPorStatus = useMemo(
     () => [
-      { name: "Pendente", value: metrics.pendentes, color: "#b45309" },
-      { name: "Aprovado", value: metrics.aprovados, color: "#059669" },
-      { name: "Rejeitado", value: metrics.rejeitados, color: "#dc2626" },
+      { 
+        name: "Pendente", 
+        value: metrics.pendentes, 
+        color: "#0ea5e9", // Sky blue
+        gradient: "url(#gradientPendente)"
+      },
+      { 
+        name: "Aprovado", 
+        value: metrics.aprovados, 
+        color: "#06b6d4", // Cyan
+        gradient: "url(#gradientAprovado)"
+      },
+      { 
+        name: "Rejeitado", 
+        value: metrics.rejeitados, 
+        color: "#64748b", // Slate
+        gradient: "url(#gradientRejeitado)"
+      },
     ].filter(item => item.value > 0),
     [metrics],
   );
@@ -1600,6 +1615,20 @@ const Index = () => {
                 {dadosPorStatus.length > 0 ? (
                   <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
+                      <defs>
+                        <linearGradient id="gradientPendente" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#0284c7" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="gradientAprovado" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#06b6d4" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#0891b2" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="gradientRejeitado" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="#64748b" stopOpacity={0.9} />
+                          <stop offset="100%" stopColor="#475569" stopOpacity={0.7} />
+                        </linearGradient>
+                      </defs>
                       <Pie
                         data={dadosPorStatus}
                         cx="50%"
@@ -1613,28 +1642,36 @@ const Index = () => {
                         }}
                         outerRadius={100}
                         innerRadius={50}
-                        fill="hsl(var(--primary))"
                         dataKey="value"
                         animationBegin={0}
                         animationDuration={1000}
                         animationEasing="ease-out"
-                        paddingAngle={dadosPorStatus.length > 1 ? 2 : 0}
+                        paddingAngle={dadosPorStatus.length > 1 ? 3 : 0}
                       >
                         {dadosPorStatus.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={entry.color}
-                            stroke="hsl(var(--background))"
-                            strokeWidth={3}
+                            fill={entry.gradient}
+                            stroke="rgba(255, 255, 255, 0.8)"
+                            strokeWidth={2}
                           />
                         ))}
                       </Pie>
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Legend 
                         verticalAlign="bottom" 
                         height={36}
                         formatter={(value, entry: any) => (
-                          <span style={{ color: 'hsl(var(--foreground))' }}>
+                          <span style={{ color: 'hsl(var(--foreground))', fontSize: '13px', fontWeight: 500 }}>
                             {value}: {entry.payload.value}
                           </span>
                         )}
@@ -1671,24 +1708,34 @@ const Index = () => {
               <CardContent>
                 {dadosPorUnidade.length > 0 ? (
                   <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={dadosPorUnidade}>
+                     <BarChart data={dadosPorUnidade}>
                       <defs>
                         <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.9} />
+                          <stop offset="50%" stopColor="#2563eb" stopOpacity={0.7} />
+                          <stop offset="100%" stopColor="#1d4ed8" stopOpacity={0.5} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
                       <XAxis
                         dataKey="name"
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
                       <YAxis
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Bar
                         dataKey="value"
                         fill="url(#colorUnidade)"
@@ -1730,30 +1777,56 @@ const Index = () => {
                 {dadosPorMaternidade.length > 0 ? (
                   <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
+                      <defs>
+                        {dadosPorMaternidade.map((entry, index) => (
+                          <linearGradient key={`gradient-${index}`} id={`gradientMat${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
+                            <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       <Pie
                         data={dadosPorMaternidade}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={110}
-                        innerRadius={60}
-                        fill="hsl(var(--primary))"
+                        labelLine={true}
+                        label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        innerRadius={50}
                         dataKey="value"
                         animationBegin={0}
                         animationDuration={1000}
                         animationEasing="ease-out"
+                        paddingAngle={2}
                       >
                         {dadosPorMaternidade.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            stroke="hsl(var(--background))"
-                            strokeWidth={3}
+                            fill={`url(#gradientMat${index})`}
+                            stroke="rgba(255, 255, 255, 0.8)"
+                            strokeWidth={2}
                           />
                         ))}
                       </Pie>
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value) => (
+                          <span style={{ color: 'hsl(var(--foreground))', fontSize: '13px', fontWeight: 500 }}>
+                            {value}
+                          </span>
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1789,24 +1862,34 @@ const Index = () => {
                     <BarChart data={dadosPorPatologia} layout="vertical">
                       <defs>
                         <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="hsl(var(--destructive))" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity={0.3} />
+                          <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.9} />
+                          <stop offset="50%" stopColor="#7c3aed" stopOpacity={0.7} />
+                          <stop offset="100%" stopColor="#6d28d9" stopOpacity={0.5} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
                       <XAxis
                         type="number"
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
                       <YAxis
                         dataKey="name"
                         type="category"
                         width={160}
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Bar
                         dataKey="value"
                         fill="url(#colorPatologia)"
@@ -1848,30 +1931,56 @@ const Index = () => {
                 {dadosPorProcedimento.length > 0 ? (
                   <ResponsiveContainer width="100%" height={320}>
                     <PieChart>
+                      <defs>
+                        {dadosPorProcedimento.map((entry, index) => (
+                          <linearGradient key={`gradProc-${index}`} id={`gradientProc${index}`} x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
+                            <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                          </linearGradient>
+                        ))}
+                      </defs>
                       <Pie
                         data={dadosPorProcedimento}
                         cx="50%"
                         cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={110}
-                        innerRadius={60}
-                        fill="hsl(var(--accent))"
+                        labelLine={true}
+                        label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        innerRadius={50}
                         dataKey="value"
                         animationBegin={0}
                         animationDuration={1000}
                         animationEasing="ease-out"
+                        paddingAngle={2}
                       >
                         {dadosPorProcedimento.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                            stroke="hsl(var(--background))"
-                            strokeWidth={3}
+                            fill={`url(#gradientProc${index})`}
+                            stroke="rgba(255, 255, 255, 0.8)"
+                            strokeWidth={2}
                           />
                         ))}
                       </Pie>
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value) => (
+                          <span style={{ color: 'hsl(var(--foreground))', fontSize: '13px', fontWeight: 500 }}>
+                            {value}
+                          </span>
+                        )}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
@@ -1907,21 +2016,31 @@ const Index = () => {
                     <BarChart data={dadosPorIG}>
                       <defs>
                         <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="0%" stopColor="#14b8a6" stopOpacity={0.9} />
+                          <stop offset="50%" stopColor="#0d9488" stopOpacity={0.7} />
+                          <stop offset="100%" stopColor="#0f766e" stopOpacity={0.5} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
                       <XAxis
                         dataKey="name"
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
                       <YAxis
-                        tick={{ fill: "hsl(var(--muted-foreground))" }}
-                        axisLine={{ stroke: "hsl(var(--border))" }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                        axisLine={{ stroke: "rgba(148, 163, 184, 0.3)" }}
                       />
-                      <Tooltip content={<CustomTooltip />} />
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid rgba(148, 163, 184, 0.2)',
+                          borderRadius: '12px',
+                          padding: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                       <Bar
                         dataKey="value"
                         fill="url(#colorIG)"
