@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Clock, Stethoscope, AlertTriangle, Edit } from 'lucide-react';
+import { Check, X, Clock, Stethoscope, AlertTriangle, Edit, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProtocolosModal } from '@/components/ProtocolosModal';
@@ -174,7 +174,7 @@ const AprovacoesAgendamentos = () => {
     const diasRestantes = Math.ceil((dataCalc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diasRestantes < 0) {
-      return <Badge variant="destructive" className="gap-1"><AlertTriangle className="h-3 w-3" />Vencido</Badge>;
+      return <Badge variant="secondary" className="gap-1 bg-green-600 text-white"><CheckCircle2 className="h-3 w-3" />Resolvido</Badge>;
     }
     if (diasRestantes <= 7) {
       return <Badge variant="default" className="gap-1 bg-orange-500"><Clock className="h-3 w-3" />Urgente ({diasRestantes}d)</Badge>;

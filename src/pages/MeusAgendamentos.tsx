@@ -98,12 +98,14 @@ const MeusAgendamentos = () => {
     }
   };
 
-  const getStatusColor = (dataAgendamento: string) => {
+  const getStatusColor = (dataAgendamento: string | null) => {
+    if (!dataAgendamento) return 'secondary';
+    
     const hoje = new Date();
     const dataCalc = new Date(dataAgendamento);
     const diasRestantes = Math.ceil((dataCalc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diasRestantes < 0) return 'destructive';
+    if (diasRestantes < 0) return 'secondary';
     if (diasRestantes <= 7) return 'default';
     return 'secondary';
   };
@@ -178,6 +180,11 @@ const MeusAgendamentos = () => {
                       <Badge variant={getStatusColor(agendamento.data_agendamento_calculada)}>
                         Data: {format(new Date(agendamento.data_agendamento_calculada), 'dd/MM/yyyy')}
                       </Badge>
+                      {new Date(agendamento.data_agendamento_calculada) < new Date() && (
+                        <Badge variant="secondary" className="bg-green-600 text-white">
+                          Resolvido
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

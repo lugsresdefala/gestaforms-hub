@@ -6,6 +6,7 @@ interface AgendamentoData {
   dias_usg: number;
   dum_status?: string;
   data_dum?: string | null;
+  data_agendamento_calculada?: string | null;
 }
 
 /**
@@ -15,21 +16,30 @@ interface AgendamentoData {
 export const calcularIGAtual = (agendamento: AgendamentoData): string => {
   try {
     const hoje = new Date();
+    const dataAgendamento = agendamento.data_agendamento_calculada 
+      ? new Date(agendamento.data_agendamento_calculada) 
+      : null;
     
-    // Calcular IG por USG (sempre disponível)
+    // Se a data do agendamento já passou, usar a data do agendamento como referência
+    // (o cálculo de IG se encerra no dia do parto)
+    const dataReferencia = dataAgendamento && dataAgendamento < hoje 
+      ? dataAgendamento 
+      : hoje;
+    
+    // Calcular IG por USG usando a data de referência adequada
     const dataUsg = new Date(agendamento.data_primeiro_usg);
     const igUsg = calcularIgPorUsg(
       dataUsg,
       agendamento.semanas_usg,
       agendamento.dias_usg,
-      hoje
+      dataReferencia
     );
 
     // Se tiver DUM confiável, calcular IG por DUM também
     let igDum = null;
     if (agendamento.dum_status === 'certa' && agendamento.data_dum) {
       const dataDum = new Date(agendamento.data_dum);
-      igDum = calcularIgPorDum(dataDum, hoje);
+      igDum = calcularIgPorDum(dataDum, dataReferencia);
     }
 
     // Determinar qual IG usar conforme protocolo

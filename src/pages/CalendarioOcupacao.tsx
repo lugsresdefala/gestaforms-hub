@@ -16,6 +16,7 @@ interface Appointment {
   dias_usg: number;
   dum_status: string;
   data_dum: string | null;
+  data_agendamento_calculada: string | null;
 }
 
 interface DayOccupation {
@@ -105,6 +106,7 @@ export default function CalendarioOcupacao() {
             dias_usg: apt.dias_usg,
             dum_status: apt.dum_status,
             data_dum: apt.data_dum,
+            data_agendamento_calculada: apt.data_agendamento_calculada,
           });
         }
       });
