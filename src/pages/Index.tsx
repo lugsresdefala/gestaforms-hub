@@ -505,35 +505,49 @@ const COMPLETE_DESIGN_SYSTEM = `
     justify-content: center;
     width: 3.5rem;
     height: 3.5rem;
-    border-radius: 12px;
+    border-radius: 16px;
     position: relative;
-    transition: all 200ms ease;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--warning {
-    background: hsl(38, 92%, 50%);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, hsla(38, 92%, 50%, 0.25), hsla(38, 92%, 60%, 0.15));
+    color: hsl(38, 92%, 50%);
+    box-shadow: 
+      0 4px 16px hsla(38, 92%, 50%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--success {
-    background: hsl(25, 95%, 55%);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, hsla(25, 95%, 55%, 0.25), hsla(25, 95%, 65%, 0.15));
+    color: hsl(25, 95%, 50%);
+    box-shadow: 
+      0 4px 16px hsla(25, 95%, 55%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--destructive {
-    background: hsl(0, 72%, 51%);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, hsla(0, 72%, 51%, 0.25), hsla(0, 72%, 61%, 0.15));
+    color: hsl(0, 72%, 51%);
+    box-shadow: 
+      0 4px 16px hsla(0, 72%, 51%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   .metric-icon-badge--primary {
-    background: hsl(210, 100%, 35%);
-    color: white;
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, hsla(210, 100%, 35%, 0.25), hsla(210, 100%, 45%, 0.15));
+    color: hsl(210, 100%, 35%);
+    box-shadow: 
+      0 4px 16px hsla(210, 100%, 35%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  
+  .metric-icon-badge:hover {
+    transform: translateY(-2px) scale(1.05);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   
   /* ==========================================
@@ -567,37 +581,54 @@ const COMPLETE_DESIGN_SYSTEM = `
   
   .chart-card-advanced {
     position: relative;
-    border: 1px solid rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(15, 23, 42, 0.06);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
-    transition: transform 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.85));
+    backdrop-filter: blur(20px);
+    box-shadow: 
+      0 8px 32px rgba(15, 23, 42, 0.06),
+      0 2px 8px rgba(15, 23, 42, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .chart-card-advanced::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(148, 163, 184, 0.05), transparent);
+    background: linear-gradient(135deg, 
+      rgba(210, 100%, 35%, 0.02), 
+      rgba(25, 95%, 55%, 0.02),
+      transparent 60%);
     pointer-events: none;
     z-index: 1;
+    opacity: 0.7;
   }
   
   .chart-card-advanced::after {
     content: '';
     position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.02);
-    opacity: 1;
+    inset: -1px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+    border-radius: inherit;
+    opacity: 0;
     pointer-events: none;
     z-index: 2;
+    transition: opacity 400ms ease;
   }
   
   .chart-card-advanced:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 12px rgba(15, 23, 42, 0.12);
-    border-color: rgba(15, 23, 42, 0.18);
+    transform: translateY(-4px);
+    box-shadow: 
+      0 16px 48px rgba(15, 23, 42, 0.1),
+      0 4px 16px rgba(15, 23, 42, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-color: rgba(210, 100%, 35%, 0.15);
+  }
+  
+  .chart-card-advanced:hover::after {
+    opacity: 1;
   }
   
   .chart-card-advanced--active {
@@ -615,29 +646,49 @@ const COMPLETE_DESIGN_SYSTEM = `
     justify-content: center;
     width: 3rem;
     height: 3rem;
-    border-radius: 12px;
-    transition: all 200ms ease;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 14px;
+    transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .chart-icon-badge::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+    pointer-events: none;
   }
   
   .chart-card-advanced:hover .chart-icon-badge {
-    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px) scale(1.05);
+    border-color: rgba(255, 255, 255, 0.3);
   }
   
   .chart-icon-badge--primary {
-    background: hsl(210, 100%, 35%);
-    color: white;
+    background: linear-gradient(135deg, hsla(210, 100%, 35%, 0.25), hsla(210, 100%, 45%, 0.15));
+    color: hsl(210, 100%, 35%);
+    box-shadow: 
+      0 4px 16px hsla(210, 100%, 35%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   .chart-icon-badge--accent {
-    background: hsl(25, 95%, 55%);
-    color: white;
+    background: linear-gradient(135deg, hsla(25, 95%, 55%, 0.25), hsla(25, 95%, 65%, 0.15));
+    color: hsl(25, 95%, 50%);
+    box-shadow: 
+      0 4px 16px hsla(25, 95%, 55%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   .chart-icon-badge--destructive {
-    background: hsl(0, 72%, 51%);
-    color: white;
+    background: linear-gradient(135deg, hsla(0, 72%, 51%, 0.25), hsla(0, 72%, 61%, 0.15));
+    color: hsl(0, 72%, 51%);
+    box-shadow: 
+      0 4px 16px hsla(0, 72%, 51%, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
   
   /* ==========================================
