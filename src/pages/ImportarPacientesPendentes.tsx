@@ -682,40 +682,50 @@ export default function ImportarPacientesPendentes() {
   const { toast } = useToast();
 
   const gerarCSV = () => {
-    const header = "ID,Hora Início,Nome Completo,Data Nascimento,Carteirinha,Nº Gestações,Nº Cesáreas,Nº Partos Normais,Nº Abortos,Telefones,Procedimentos,DUM,Data DUM,Data 1º USG,Semanas USG,Dias USG,USG Recente,IG Pretendida,Coluna3,Indicação,Medicação,Diagnósticos Maternos,Placenta Prévia,Diagnósticos Fetais,História Obstétrica,UTI Materna,Reserva Sangue,Maternidade,Médico Responsável,Email Paciente";
+    // A edge function espera exatamente 33 campos na seguinte ordem:
+    // 0-4: vazios, 5: Nome, 6: Data Nasc, 7: Carteirinha, 8-11: Paridade,
+    // 12: Tel, 13: Proc, 14: DUM Status, 15: Data DUM, 16: Data USG,
+    // 17: Sem USG, 18: Dias USG, 19: USG Rec, 20: IG Pret, 21: vazio,
+    // 22: Indicação, 23: Med, 24: Diag Mat, 25: Placenta, 26: Diag Fetal,
+    // 27: Hist Obst, 28: UTI, 29: Reserva, 30: Maternidade, 31: Médico, 32: Email
+    
+    const header = "ID,Hora Início,Coluna1,Coluna2,Coluna3,Nome Completo,Data Nascimento,Carteirinha,Nº Gestações,Nº Cesáreas,Nº Partos Normais,Nº Abortos,Telefones,Procedimentos,DUM,Data DUM,Data 1º USG,Semanas USG,Dias USG,USG Recente,IG Pretendida,Coluna3,Indicação,Medicação,Diagnósticos Maternos,Placenta Prévia,Diagnósticos Fetais,História Obstétrica,UTI Materna,Reserva Sangue,Maternidade,Médico Responsável,Email Paciente";
     
     const linhas = PACIENTES_PENDENTES.map(p => {
       const campos = [
-        p.id,
-        "", // Hora Início
-        p.nomeCompleto,
-        p.dataNascimento,
-        p.carteirinha,
-        p.numeroGestacoes,
-        p.numeroCesareas,
-        p.numeroPartosNormais,
-        p.numeroAbortos,
-        p.telefones,
-        p.procedimentos,
-        p.dumStatus,
-        p.dataDum || "",
-        p.dataPrimeiroUsg,
-        p.semanasUsg,
-        p.diasUsg,
-        `"${p.usgRecente}"`,
-        p.igPretendida,
-        "", // Coluna3
-        `"${p.indicacaoProcedimento}"`,
-        `"${p.medicacao}"`,
-        `"${p.diagnosticosMaternos}"`,
-        p.placentaPrevia,
-        `"${p.diagnosticosFetais}"`,
-        `"${p.historiaObstetrica}"`,
-        p.necessidadeUtiMaterna,
-        p.necessidadeReservaSangue,
-        p.maternidade,
-        p.medicoResponsavel,
-        p.emailPaciente
+        p.id,                           // 0
+        "",                             // 1: Hora Início
+        "",                             // 2: Coluna1
+        "",                             // 3: Coluna2
+        "",                             // 4: Coluna3
+        p.nomeCompleto,                 // 5
+        p.dataNascimento,               // 6
+        p.carteirinha,                  // 7
+        p.numeroGestacoes,              // 8
+        p.numeroCesareas,               // 9
+        p.numeroPartosNormais,          // 10
+        p.numeroAbortos,                // 11
+        p.telefones,                    // 12
+        p.procedimentos,                // 13
+        p.dumStatus,                    // 14
+        p.dataDum,                      // 15
+        p.dataPrimeiroUsg,              // 16
+        p.semanasUsg,                   // 17
+        p.diasUsg,                      // 18
+        `"${p.usgRecente.replace(/"/g, '""')}"`,  // 19: escape quotes
+        p.igPretendida,                 // 20
+        "",                             // 21: Coluna3
+        `"${p.indicacaoProcedimento.replace(/"/g, '""')}"`,  // 22
+        `"${p.medicacao.replace(/"/g, '""')}"`,              // 23
+        p.diagnosticosMaternos,         // 24
+        p.placentaPrevia,               // 25
+        `"${p.diagnosticosFetais.replace(/"/g, '""')}"`,     // 26
+        `"${p.historiaObstetrica.replace(/"/g, '""')}"`,     // 27
+        p.necessidadeUtiMaterna,        // 28
+        p.necessidadeReservaSangue,     // 29
+        p.maternidade,                  // 30
+        p.medicoResponsavel,            // 31
+        p.emailPaciente                 // 32
       ];
       
       return campos.join(',');
