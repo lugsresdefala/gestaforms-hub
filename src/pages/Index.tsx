@@ -1520,7 +1520,7 @@ const Index = () => {
             </Button>
           )}
 
-          <div className="dashboard-grid dashboard-grid--metrics">
+        <div className="dashboard-grid dashboard-grid--metrics">
           <Card
             className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up"
             style={{ animationDelay: "0ms", opacity: 0 }}
