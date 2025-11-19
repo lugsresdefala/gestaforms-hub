@@ -123,7 +123,7 @@ const GuiaSistema = () => {
         </Card>
 
         {/* Tipos de Usuário with 3D effects */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
           {/* Admin */}
           <Card className="bg-background/60 backdrop-blur-xl border-2 border-primary/30 shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -191,6 +191,86 @@ const GuiaSistema = () => {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Admin Médico */}
+          <Card className="bg-background/60 backdrop-blur-xl border-2 border-purple-500/30 shadow-2xl hover:shadow-purple-500/20 transition-all duration-500 hover:scale-105 hover:-translate-y-2 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-purple-400 shadow-lg">
+                  <Shield className="h-10 w-10 text-white" />
+                </div>
+                <Badge className="bg-gradient-to-r from-purple-500 to-purple-400 text-white shadow-lg px-4 py-1">ADMIN MED</Badge>
+              </div>
+              <CardTitle className="text-2xl bg-gradient-to-r from-purple-500 to-purple-400 bg-clip-text text-transparent">Administrador Médico</CardTitle>
+              <CardDescription>Gerencia usuários e aprova acessos médicos</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 relative z-10">
+              <div>
+                <h4 className="font-semibold mb-2 text-sm uppercase text-muted-foreground">Permissões Administrativas</h4>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Aprovar ou rejeitar agendamentos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Visualizar todos os agendamentos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Gerenciar usuários médicos</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Aprovar solicitações de acesso</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Monitorar ocupação das maternidades</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm">Acessar dashboards e relatórios</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h4 className="font-semibold mb-2 text-sm uppercase text-muted-foreground">Páginas Disponíveis</h4>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-3 w-3" />
+                    <span>Dashboard e Listagem</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileText className="h-3 w-3" />
+                    <span>Aprovações de Agendamentos</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-3 w-3" />
+                    <span>Aprovações de Usuários</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 className="h-3 w-3" />
+                    <span>Ocupação de Maternidades</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-3 w-3" />
+                    <span>Gerenciar Usuários</span>
+                  </div>
+                </div>
+              </div>
+
+              <Alert>
+                <AlertDescription className="text-xs">
+                  <strong>Diferencial:</strong> Foco na gestão de equipe médica e aprovação de acessos ao sistema.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
 
