@@ -286,21 +286,21 @@ const Dashboard = () => {
                   <Menu className="h-5 w-5 text-primary" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-card border-border z-50">
-                <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent">
+              <DropdownMenuContent align="end" className="w-56 bg-popover border-border shadow-lg z-[100]">
+                <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent focus:bg-accent">
                   <Plus className="h-4 w-4 mr-2 text-primary" />
-                  Novo Agendamento
+                  <span>Novo Agendamento</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer hover:bg-accent">
+                <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer hover:bg-accent focus:bg-accent">
                   <Download className="h-4 w-4 mr-2 text-primary" />
-                  Exportar Relatório
+                  <span>Exportar Relatório</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent">
+                <DropdownMenuSeparator className="bg-border" />
+                <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent focus:bg-accent">
                   <Info className="h-4 w-4 mr-2 text-primary" />
-                  Sobre
+                  <span>Sobre</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10">
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10">
                   <LogOut className="h-4 w-4 mr-2 text-destructive" />
                   <span className="text-destructive">Sair</span>
                 </DropdownMenuItem>
