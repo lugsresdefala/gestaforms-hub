@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
@@ -34,6 +35,8 @@ const Auth = () => {
     tipoAcesso: '',
     maternidade: '',
     justificativa: '',
+    aceitouTermos: false,
+    aceitouPrivacidade: false,
   });
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -75,6 +78,16 @@ const Auth = () => {
     
     if (!validatePasswordStrength(signupData.password)) {
       toast.error('A senha não atende aos requisitos mínimos de segurança');
+      return;
+    }
+    
+    if (!signupData.aceitouTermos) {
+      toast.error('Você deve aceitar os Termos e Condições de Uso');
+      return;
+    }
+
+    if (!signupData.aceitouPrivacidade) {
+      toast.error('Você deve aceitar a Política de Privacidade');
       return;
     }
     
@@ -131,7 +144,16 @@ const Auth = () => {
       }
 
       toast.success('Cadastro realizado! Aguarde aprovação do administrador.');
-      setSignupData({ email: '', password: '', nomeCompleto: '', tipoAcesso: '', maternidade: '', justificativa: '' });
+      setSignupData({ 
+        email: '', 
+        password: '', 
+        nomeCompleto: '', 
+        tipoAcesso: '', 
+        maternidade: '', 
+        justificativa: '',
+        aceitouTermos: false,
+        aceitouPrivacidade: false,
+      });
     }
     
     setLoading(false);
@@ -310,6 +332,58 @@ const Auth = () => {
                     />
                   </div>
                   
+                  <div className="space-y-4 border-t pt-4">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="termos"
+                        checked={signupData.aceitouTermos}
+                        onCheckedChange={(checked) => 
+                          setSignupData({ ...signupData, aceitouTermos: checked as boolean })
+                        }
+                        required
+                      />
+                      <Label 
+                        htmlFor="termos" 
+                        className="text-sm font-normal leading-relaxed cursor-pointer"
+                      >
+                        Li e aceito os{' '}
+                        <Link 
+                          to="/termos" 
+                          target="_blank"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Termos e Condições de Uso
+                        </Link>
+                        <span className="text-destructive">*</span>
+                      </Label>
+                    </div>
+
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="privacidade"
+                        checked={signupData.aceitouPrivacidade}
+                        onCheckedChange={(checked) => 
+                          setSignupData({ ...signupData, aceitouPrivacidade: checked as boolean })
+                        }
+                        required
+                      />
+                      <Label 
+                        htmlFor="privacidade" 
+                        className="text-sm font-normal leading-relaxed cursor-pointer"
+                      >
+                        Li e aceito a{' '}
+                        <Link 
+                          to="/privacidade" 
+                          target="_blank"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Política de Privacidade
+                        </Link>
+                        <span className="text-destructive">*</span>
+                      </Label>
+                    </div>
+                  </div>
+
                   <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
                       ℹ️ Sua solicitação será enviada para aprovação do administrador. Você receberá uma notificação quando for aprovada.
