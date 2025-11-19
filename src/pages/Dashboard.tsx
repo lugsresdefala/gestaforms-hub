@@ -253,7 +253,7 @@ const Dashboard = () => {
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDias < 0) {
-      return <Badge variant="overdue">Vencido</Badge>;
+      return <Badge variant="secondary" className="gap-1 bg-green-600 text-white">Resolvido</Badge>;
     } else if (diffDias <= 7) {
       return <Badge variant="urgent">Urgente</Badge>;
     } else if (diffDias <= 14) {
@@ -376,10 +376,10 @@ const Dashboard = () => {
             </Card>
             <Card className="glass-card">
               <CardContent className="pt-6">
-                <div className="text-2xl font-bold text-overdue">
+                <div className="text-2xl font-bold text-green-600">
                   {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) < new Date()).length}
                 </div>
-                <p className="text-sm text-muted-foreground">Vencidos</p>
+                <p className="text-sm text-muted-foreground">Resolvidos</p>
               </CardContent>
             </Card>
             <Card className="glass-card">
