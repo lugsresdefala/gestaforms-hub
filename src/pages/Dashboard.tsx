@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, Calendar as CalendarIcon, FileText, Filter, Download, Plus, LogOut, Phone } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, FileText, Filter, Download, Plus, LogOut, Phone, Menu, Info } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
@@ -278,13 +279,33 @@ const Dashboard = () => {
             <Button onClick={() => navigate('/')} variant="outline" className="hover-lift">
               ← Dashboard
             </Button>
-            <Button onClick={() => navigate('/novo-agendamento')} className="gradient-primary hover-lift shadow-elegant">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Agendamento
-            </Button>
-            <Button onClick={handleLogout} variant="ghost" size="icon" className="hover-lift">
-              <LogOut className="h-5 w-5 text-muted-foreground hover:text-destructive transition-colors" />
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="hover-lift">
+                  <Menu className="h-5 w-5 text-primary" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-card border-border z-50">
+                <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent">
+                  <Plus className="h-4 w-4 mr-2 text-primary" />
+                  Novo Agendamento
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer hover:bg-accent">
+                  <Download className="h-4 w-4 mr-2 text-primary" />
+                  Exportar Relatório
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent">
+                  <Info className="h-4 w-4 mr-2 text-primary" />
+                  Sobre
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10">
+                  <LogOut className="h-4 w-4 mr-2 text-destructive" />
+                  <span className="text-destructive">Sair</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -470,10 +491,6 @@ const Dashboard = () => {
             <div className="flex gap-2 mt-4">
               <Button onClick={clearFilters} variant="outline" className="hover-lift">
                 Limpar Filtros
-              </Button>
-              <Button onClick={exportToCSV} variant="outline" className="ml-auto hover-lift">
-                <Download className="h-4 w-4 mr-2 text-primary" />
-                Exportar CSV
               </Button>
             </div>
           </CardContent>
