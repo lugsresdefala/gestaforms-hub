@@ -67,7 +67,7 @@ const normalizeProcedimentos = (procedimentos: unknown): string[] => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { signOut, isAdmin, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const { signOut, isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,17 +90,17 @@ const Dashboard = () => {
         .select('*');
 
       // Aplicar filtros baseados no tipo de usuário
-      if (isMedicoMaternidade() && !isAdmin()) {
+      if (isMedicoMaternidade() && !isAdmin() && !isAdminMed()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in('maternidade', maternidades).eq('status', 'aprovado');
-      } else if (!isAdmin() && !isMedicoMaternidade()) {
+      } else if (!isAdmin() && !isAdminMed() && !isMedicoMaternidade()) {
         // Médicos de unidade veem seus próprios agendamentos
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           query = query.eq('created_by', user.id);
         }
       }
-      // Admin vê tudo (sem filtro adicional)
+      // Admin e Admin_Med veem tudo (sem filtro adicional)
 
       query = query.order('created_at', { ascending: false });
 
@@ -119,7 +119,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, isMedicoMaternidade, getMaternidadesAcesso]);
+  }, [isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso]);
 
   useEffect(() => {
     fetchAgendamentos();
