@@ -39,6 +39,7 @@ import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
 import FAQ from "./pages/FAQ";
 import Sobre from "./pages/Sobre";
 import LogsAuditoria from "./pages/LogsAuditoria";
+import ImportarPacientesPendentes from "./pages/ImportarPacientesPendentes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -307,6 +308,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <RecalcularDatas2025 />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-pacientes-pendentes" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <ImportarPacientesPendentes />
                   </AppLayout>
                 </ProtectedRoute>
               } 
