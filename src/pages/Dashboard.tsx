@@ -89,31 +89,37 @@ const Dashboard = () => {
         .from('agendamentos_obst')
         .select('*');
 
-      // Aplicar filtros baseados nas permissões
+      // Aplicar filtros baseados no tipo de usuário
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in('maternidade', maternidades).eq('status', 'aprovado');
+      } else if (!isAdmin() && !isMedicoMaternidade()) {
+        // Médicos de unidade veem seus próprios agendamentos
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq('created_by', user.id);
+        }
       }
+      // Admin vê tudo (sem filtro adicional)
 
       query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao buscar agendamentos:", error);
+        toast.error("Erro ao carregar dados: " + error.message);
+        return;
+      }
 
-      const normalizedData = (data || []).map(agendamento => ({
-        ...agendamento,
-        procedimentos: normalizeProcedimentos((agendamento as { procedimentos?: unknown }).procedimentos)
-      }));
-
-      setAgendamentos(normalizedData as Agendamento[]);
+      setAgendamentos(data || []);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
       toast.error("Não foi possível carregar os agendamentos");
     } finally {
       setLoading(false);
     }
-  }, [getMaternidadesAcesso, isAdmin, isMedicoMaternidade]);
+  }, [isAdmin, isMedicoMaternidade, getMaternidadesAcesso]);
 
   useEffect(() => {
     fetchAgendamentos();

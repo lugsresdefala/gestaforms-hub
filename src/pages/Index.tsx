@@ -1248,14 +1248,18 @@ const Index = () => {
     try {
       let query = supabase.from("agendamentos_obst").select("*");
 
+      // Aplicar filtros baseados no tipo de usuário
       if (isMedicoMaternidade() && !isAdmin()) {
         const maternidades = getMaternidadesAcesso();
         query = query.in("maternidade", maternidades).eq("status", "aprovado");
-      } else if (!isAdmin() && !isMedicoUnidade()) {
-        setAgendamentos([]);
-        setLoading(false);
-        return;
+      } else if (isMedicoUnidade() && !isAdmin()) {
+        // Médicos de unidade veem seus próprios agendamentos
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq("created_by", user.id);
+        }
       }
+      // Admin vê tudo (sem filtro adicional)
 
       query = query.order("created_at", { ascending: false });
 
