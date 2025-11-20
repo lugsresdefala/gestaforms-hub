@@ -65,7 +65,8 @@ export const calcularIgPorUsg = (
  */
 export const determinarIgFinal = (
   igDum: GestationalAge | null,
-  igUsg: GestationalAge
+  igUsg: GestationalAge,
+  semanasNoUsgOriginal: number
 ): { igFinal: GestationalAge; metodologia: 'DUM' | 'USG'; observacoes: string } => {
   // Se não houver DUM confiável, usar USG
   if (!igDum) {
@@ -77,7 +78,8 @@ export const determinarIgFinal = (
   }
 
   const diferencaDias = Math.abs(igDum.totalDays - igUsg.totalDays);
-  const semanasUsg = igUsg.weeks;
+  // CORREÇÃO: Usar as semanas no momento do USG, não as semanas calculadas
+  const semanasUsg = semanasNoUsgOriginal;
   
   let limiteMaximo: number;
   let observacoes = '';
@@ -360,7 +362,11 @@ export const calcularAgendamentoCompleto = (dados: {
   }
   
   // Determinar qual IG usar
-  const { igFinal, metodologia, observacoes: obsMetodologia } = determinarIgFinal(igDum, igUsg);
+  const { igFinal, metodologia, observacoes: obsMetodologia } = determinarIgFinal(
+    igDum, 
+    igUsg, 
+    parseInt(dados.semanasUsg) || 0
+  );
   
   // Identificar patologias
   const patologias = identificarPatologias(dados);
