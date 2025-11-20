@@ -7,6 +7,7 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGrou
 import { NavLink } from "@/components/NavLink";
 import NotificationBell from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
+import { ProtocolosModal } from "@/components/ProtocolosModal";
 interface AppLayoutProps {
   children: ReactNode;
 }
@@ -184,6 +185,24 @@ const AppSidebar = () => {
                     <HelpCircle className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">FAQ</span>}
                   </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <div className="px-2">
+                  <ProtocolosModal trigger={
+                    <Button variant="ghost" className="w-full justify-start gap-2 transition-all hover:bg-accent/20 rounded-lg">
+                      <FileText className="h-4 w-4" />
+                      {!collapsed && <span className="text-sm">Protocolos</span>}
+                    </Button>
+                  } />
+                </div>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR" className="transition-all hover:bg-accent/20 rounded-lg">
+                    <Mail className="h-4 w-4" />
+                    {!collapsed && <span className="text-sm">Contato</span>}
+                  </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
