@@ -102,7 +102,7 @@ const CriarUsuariosPadrao = () => {
             <CardDescription>
               {isInitialSetup 
                 ? "Setup inicial: Crie os primeiros usuários do sistema" 
-                : "Crie usuários de teste para os 3 tipos de perfil do sistema"}
+                : "Crie usuários de teste para os 4 tipos de perfil do sistema"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -121,6 +121,12 @@ const CriarUsuariosPadrao = () => {
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   <Badge>Admin</Badge>
                   <span className="text-sm">admin@hapvida.com.br</span>
+                  <span className="text-sm text-muted-foreground">• Senha segura gerada automaticamente</span>
+                </div>
+
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <Badge variant="secondary">Admin Médico</Badge>
+                  <span className="text-sm">admin.med@hapvida.com.br</span>
                   <span className="text-sm text-muted-foreground">• Senha segura gerada automaticamente</span>
                 </div>
 

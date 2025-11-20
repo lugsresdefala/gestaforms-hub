@@ -141,6 +141,13 @@ serve(async (req) => {
         maternidade: null
       },
       {
+        email: "admin.med@hapvida.com.br",
+        password: generateSecurePassword(),
+        nome: "Administrador Médico",
+        role: "admin_med",
+        maternidade: null
+      },
+      {
         email: "medico.unidade@hapvida.com.br",
         password: generateSecurePassword(),
         nome: "Médico de Unidade",
