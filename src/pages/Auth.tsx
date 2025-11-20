@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -18,10 +18,14 @@ import { Footer } from '@/components/Footer';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+
+  // Get the redirect location from state (where user was trying to go)
+  const from = location.state?.from?.pathname || '/';
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -69,7 +73,8 @@ const Auth = () => {
     setLoading(false);
     
     if (!error) {
-      navigate('/');
+      // Redirect to the page they were trying to access, or home
+      navigate(from, { replace: true });
     }
   };
 
