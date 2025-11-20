@@ -24,18 +24,13 @@ const CriarUsuariosPadrao = () => {
 
   const checkSystemSetup = async () => {
     try {
-      // Fetch to check setup status without invoking as POST
+      // Simple GET request - no auth headers needed since verify_jwt is false
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/create-default-users`,
         {
-          method: 'GET',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Content-Type': 'application/json'
-          }
+          method: 'GET'
         }
       );
 
