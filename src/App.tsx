@@ -25,6 +25,7 @@ import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CalendarioCompleto from "./pages/CalendarioCompleto";
 import CompararCSVs from "./pages/CompararCSVs";
+import CompararPacientes from "./pages/CompararPacientes";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
@@ -215,7 +216,17 @@ const App = () => (
               } 
             />
             <Route 
-              path="/atualizar-ig" 
+              path="/comparar-pacientes" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <CompararPacientes />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/atualizar-ig"
               element={
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
