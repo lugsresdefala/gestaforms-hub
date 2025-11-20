@@ -462,7 +462,22 @@ const AprovacoesAgendamentos = () => {
                       <p className="font-semibold text-base">Validação de Protocolo Obstétrico</p>
                     </div>
                     
-                    {validacoesProtocolo[agendamento.id].compativel ? (
+                    {/* Alerta Crítico - Destaque Extra */}
+                    {!validacoesProtocolo[agendamento.id].compativel && (
+                      <Alert variant="destructive" className="border-2 border-red-600 bg-red-100 dark:bg-red-950/30">
+                        <AlertTriangle className="h-5 w-5" />
+                        <AlertTitle className="text-lg font-bold">
+                          ⛔ AGENDAMENTO FORA DO PROTOCOLO OBSTÉTRICO
+                        </AlertTitle>
+                        <AlertDescription className="text-base mt-2">
+                          <strong>Esta data NÃO segue as diretrizes dos protocolos PT-AON-097 e PR-GNDI-PPS-27.</strong>
+                          <br />
+                          Revisar urgentemente ou documentar justificativa clínica detalhada para aprovação.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
+                    {validacoesProtocolo[agendamento.id].compativel && (
                       <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
                         <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                         <AlertTitle className="text-green-700 dark:text-green-300">
@@ -472,28 +487,18 @@ const AprovacoesAgendamentos = () => {
                           A data selecionada está dentro dos parâmetros recomendados pelos protocolos obstétricos.
                         </AlertDescription>
                       </Alert>
-                    ) : (
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>
-                          Atenção: Data fora do protocolo
-                        </AlertTitle>
-                        <AlertDescription>
-                          A data selecionada não segue as recomendações do protocolo obstétrico.
-                        </AlertDescription>
-                      </Alert>
                     )}
 
                     {validacoesProtocolo[agendamento.id].alertas.length > 0 && (
-                      <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
-                        <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                        <AlertTitle className="text-orange-700 dark:text-orange-300">
-                          Alertas de Protocolo
+                      <Alert className="border-orange-600 bg-orange-50 dark:bg-orange-950/20 border-2">
+                        <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                        <AlertTitle className="text-orange-700 dark:text-orange-300 text-base font-bold">
+                          ⚠️ Alertas Clínicos de Protocolo
                         </AlertTitle>
                         <AlertDescription>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-orange-600 dark:text-orange-400 mt-2">
+                          <ul className="list-disc list-inside space-y-2 text-sm text-orange-700 dark:text-orange-300 mt-2 font-medium">
                             {validacoesProtocolo[agendamento.id].alertas.map((alerta, idx) => (
-                              <li key={idx}>{alerta}</li>
+                              <li key={idx} className="leading-relaxed">{alerta}</li>
                             ))}
                           </ul>
                         </AlertDescription>
