@@ -113,17 +113,22 @@ const Auth = () => {
 
     setLoading(true);
     
-    const { error } = await signUp(
-      signupData.email,
-      signupData.password,
-      signupData.nomeCompleto
-    );
-    
-    if (!error) {
-      // Aguardar para garantir que o perfil foi criado
-      await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const { error: signUpError } = await signUp(
+        signupData.email,
+        signupData.password,
+        signupData.nomeCompleto
+      );
       
-      // Fazer login para obter o user_id
+      if (signUpError) {
+        setLoading(false);
+        return;
+      }
+
+      // Aguardar para garantir que o perfil foi criado e o usuário está totalmente registrado
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Fazer login para obter sessão válida
       const { data: sessionData, error: loginError } = await supabase.auth.signInWithPassword({
         email: signupData.email,
         password: signupData.password,
@@ -131,16 +136,34 @@ const Auth = () => {
 
       if (loginError) {
         console.error('Erro no login após cadastro:', loginError);
-        toast.error('Cadastro realizado mas não foi possível criar a solicitação. Entre em contato com o suporte.');
+        toast.error('Cadastro realizado mas houve erro ao criar solicitação. Faça login e entre em contato com o suporte.');
         setLoading(false);
         return;
       }
 
-      if (sessionData.user) {
-        console.log('Criando solicitação para user_id:', sessionData.user.id);
+      if (!sessionData.user) {
+        console.error('Sessão não foi criada após login');
+        toast.error('Cadastro realizado mas houve erro ao criar solicitação. Faça login e entre em contato com o suporte.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('User ID para solicitação:', sessionData.user.id);
+      
+      // Aguardar mais um pouco para garantir que o token está propagado
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Criar solicitação de acesso com retry
+      let solicitacaoData = null;
+      let solicitacaoError = null;
+      let tentativas = 0;
+      const maxTentativas = 3;
+      
+      while (tentativas < maxTentativas && !solicitacaoData) {
+        tentativas++;
+        console.log(`Tentativa ${tentativas} de criar solicitação...`);
         
-        // Criar solicitação de acesso
-        const { error: solicitacaoError, data: solicitacaoData } = await supabase
+        const resultado = await supabase
           .from('solicitacoes_acesso')
           .insert({
             user_id: sessionData.user.id,
@@ -150,23 +173,30 @@ const Auth = () => {
           })
           .select();
 
+        solicitacaoData = resultado.data;
+        solicitacaoError = resultado.error;
+        
         if (solicitacaoError) {
-          console.error('Erro ao criar solicitação:', solicitacaoError);
-          toast.error(`Erro ao criar solicitação: ${solicitacaoError.message}. Entre em contato com o suporte.`);
-          
-          // Fazer logout mesmo com erro
-          await supabase.auth.signOut();
-          setLoading(false);
-          return;
+          console.error(`Tentativa ${tentativas} falhou:`, solicitacaoError);
+          if (tentativas < maxTentativas) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        } else {
+          console.log('Solicitação criada com sucesso:', solicitacaoData);
         }
-
-        console.log('Solicitação criada com sucesso:', solicitacaoData);
-
-        // Fazer logout
-        await supabase.auth.signOut();
       }
 
-      toast.success('Cadastro realizado! Aguarde aprovação do administrador.');
+      // Fazer logout
+      await supabase.auth.signOut();
+
+      if (solicitacaoError || !solicitacaoData) {
+        console.error('Falha ao criar solicitação após todas tentativas:', solicitacaoError);
+        toast.error(`Cadastro realizado mas a solicitação de acesso falhou. Por favor, faça login e entre em contato com o suporte informando seu email: ${signupData.email}`);
+        setLoading(false);
+        return;
+      }
+
+      toast.success('Cadastro e solicitação enviados com sucesso! Aguarde aprovação do administrador.');
       setSignupData({ 
         email: '', 
         password: '', 
@@ -177,9 +207,12 @@ const Auth = () => {
         aceitouTermos: false,
         aceitouPrivacidade: false,
       });
+    } catch (error: any) {
+      console.error('Erro geral no cadastro:', error);
+      toast.error(`Erro no cadastro: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   return (
