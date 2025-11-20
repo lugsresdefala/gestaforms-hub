@@ -145,15 +145,28 @@ const AprovacoesAgendamentos = () => {
       
       try {
         if (agendamento.diagnosticos_maternos) {
-          diagnosticosMaternos = JSON.parse(agendamento.diagnosticos_maternos);
+          const parsed = JSON.parse(agendamento.diagnosticos_maternos);
+          diagnosticosMaternos = Array.isArray(parsed) ? parsed : [agendamento.diagnosticos_maternos];
         }
-      } catch {}
+      } catch {
+        // Se não for JSON, tratar como texto livre
+        diagnosticosMaternos = [agendamento.diagnosticos_maternos || ''];
+      }
       
       try {
         if (agendamento.diagnosticos_fetais) {
-          diagnosticosFetais = JSON.parse(agendamento.diagnosticos_fetais);
+          const parsed = JSON.parse(agendamento.diagnosticos_fetais);
+          diagnosticosFetais = Array.isArray(parsed) ? parsed : [agendamento.diagnosticos_fetais];
         }
-      } catch {}
+      } catch {
+        // Se não for JSON, tratar como texto livre
+        diagnosticosFetais = [agendamento.diagnosticos_fetais || ''];
+      }
+      
+      // Adicionar indicação do procedimento aos diagnósticos maternos para análise
+      if (agendamento.indicacao_procedimento) {
+        diagnosticosMaternos.push(agendamento.indicacao_procedimento);
+      }
       
       // Validar protocolo
       return validarProtocolo({
