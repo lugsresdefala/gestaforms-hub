@@ -38,7 +38,10 @@ const getProtocolLabel = (key: string): string => {
     'hac': 'HAC Compensada',
     'hac_dificil': 'HAC Difícil Controle',
     'hipertensao_gestacional': 'Hipertensão Gestacional',
+    'pre_eclampsia_sem_deterioracao': 'Pré-eclâmpsia sem Deterioração',
     'pre_eclampsia_grave': 'Pré-eclâmpsia Grave',
+    'eclampsia': 'Eclâmpsia',
+    'sindrome_hellp': 'Síndrome HELLP',
     
     // Diabetes
     'dmg_sem_insulina': 'DMG sem Insulina',
@@ -48,31 +51,89 @@ const getProtocolLabel = (key: string): string => {
     'dm_pregestacional': 'DM Pré-gestacional',
     'dm_pregestacional_descomp': 'DM Pré-gestacional Descompensada',
     
-    // Gemelar
-    'gestacao_gemelar_dicorionica': 'Gemelar Dicoriônica',
-    'gestacao_gemelar_monocorionica': 'Gemelar Monocoriônica',
-    
     // Placenta
-    'placenta_previa_acretismo': 'Placenta Prévia com Acretismo',
-    'placenta_previa_sem_acretismo': 'Placenta Prévia sem Acretismo',
-    'vasa_previa': 'Vasa Prévia',
+    'placenta_previa_total': 'Placenta Prévia Total',
+    'placenta_previa_parcial': 'Placenta Prévia Parcial',
+    'placenta_baixa': 'Placenta Baixa',
+    'placenta_acreta': 'Placenta Acreta',
+    'placenta_percreta': 'Placenta Percreta',
+    'dpp': 'Descolamento Prematuro Placenta',
     
-    // Fetais
+    // Gemelar
+    'gemelar_monocorionico': 'Gemelar Monocoriônica',
+    'gemelar_bicorionico': 'Gemelar Bicoriônica',
+    'gemelar_monoamniotico': 'Gemelar Monoamniótica',
+    
+    // Apresentação Fetal
+    'pelvico': 'Apresentação Pélvica',
+    'cormica': 'Apresentação Córmica',
+    
+    // Rotura de Membranas
+    'rpmo_pretermo': 'RPMO Pré-termo',
+    'rpmo_termo': 'RPMO a Termo',
+    
+    // Crescimento Fetal
     'rcf': 'Restrição de Crescimento Fetal',
-    'oligoamnio': 'Oligoâmnio',
-    'polidramnio': 'Polidrâmnio',
+    'rcf_grave': 'RCF Grave',
     'macrossomia': 'Macrossomia',
+    'macrossomia_severa': 'Macrossomia Severa',
+    
+    // Líquido Amniótico
+    'oligodramnia': 'Oligodrâmnia',
+    'oligodramnia_severa': 'Oligodrâmnia Severa',
+    'polidramnia': 'Polidrâmnia',
+    
+    // Iteratividade
+    'iteratividade_1cesarea': 'Iteratividade 1 Cesárea',
+    'iteratividade_2cesarea': 'Iteratividade 2+ Cesáreas',
+    'cesarea_corporal': 'Cesárea Corporal Prévia',
+    
+    // Malformações Fetais
+    'malformacao_grave': 'Malformação Fetal Grave',
+    'cardiopatia_fetal': 'Cardiopatia Fetal',
+    'hidrocefalia': 'Hidrocefalia',
+    
+    // Doenças Maternas
+    'cardiopatia_materna': 'Cardiopatia Materna',
+    'cardiopatia_grave': 'Cardiopatia Grave',
+    'doenca_renal': 'Doença Renal',
+    'lupus': 'Lúpus',
+    'epilepsia': 'Epilepsia',
+    'trombofilia': 'Trombofilia',
+    
+    // Infecções
+    'hiv': 'HIV',
+    'hepatite_b': 'Hepatite B',
+    'hepatite_c': 'Hepatite C',
+    'sifilis': 'Sífilis',
+    'toxoplasmose': 'Toxoplasmose',
+    'cmv': 'Citomegalovírus',
+    'herpes': 'Herpes Genital',
+    
+    // Condições Especiais
+    'colestase': 'Colestase Gravídica',
+    'obesidade': 'Obesidade Mórbida',
+    'pos_datismo': 'Pós-datismo',
+    'obito_fetal': 'Óbito Fetal',
   };
   return labels[key] || key;
 };
 
 const categorias = {
   'Cesárea Eletiva': ['desejo_materno', 'laqueadura'],
-  'Hipertensão': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_grave'],
-  'Diabetes': ['dmg_sem_insulina', 'dmg_sem_insulina_descomp', 'dmg_insulina', 'dmg_insulina_descomp', 'dm_pregestacional', 'dm_pregestacional_descomp'],
-  'Gestação Gemelar': ['gestacao_gemelar_dicorionica', 'gestacao_gemelar_monocorionica'],
-  'Patologias Placentárias': ['placenta_previa_acretismo', 'placenta_previa_sem_acretismo', 'vasa_previa'],
-  'Patologias Fetais': ['rcf', 'oligoamnio', 'polidramnio', 'macrossomia'],
+  'Distúrbios Hipertensivos': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_sem_deterioracao', 'pre_eclampsia_grave', 'eclampsia', 'sindrome_hellp'],
+  'Diabetes Gestacional e Pré-gestacional': ['dmg_sem_insulina', 'dmg_sem_insulina_descomp', 'dmg_insulina', 'dmg_insulina_descomp', 'dm_pregestacional', 'dm_pregestacional_descomp'],
+  'Patologias Placentárias': ['placenta_previa_total', 'placenta_previa_parcial', 'placenta_baixa', 'placenta_acreta', 'placenta_percreta', 'dpp'],
+  'Gestação Gemelar': ['gemelar_monocorionico', 'gemelar_bicorionico', 'gemelar_monoamniotico'],
+  'Apresentação Fetal': ['pelvico', 'cormica'],
+  'Rotura de Membranas': ['rpmo_pretermo', 'rpmo_termo'],
+  'Crescimento Fetal Anormal': ['rcf', 'rcf_grave', 'macrossomia', 'macrossomia_severa'],
+  'Alterações do Líquido Amniótico': ['oligodramnia', 'oligodramnia_severa', 'polidramnia'],
+  'Iteratividade e Cicatriz Uterina': ['iteratividade_1cesarea', 'iteratividade_2cesarea', 'cesarea_corporal'],
+  'Malformações Fetais': ['malformacao_grave', 'cardiopatia_fetal', 'hidrocefalia'],
+  'Doenças Maternas': ['cardiopatia_materna', 'cardiopatia_grave', 'doenca_renal', 'lupus', 'epilepsia', 'trombofilia'],
+  'Infecções Maternas': ['hiv', 'hepatite_b', 'hepatite_c', 'sifilis', 'toxoplasmose', 'cmv', 'herpes'],
+  'Outras Condições': ['colestase', 'obesidade', 'pos_datismo', 'obito_fetal'],
 };
 
 export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
