@@ -8,12 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Check, X, Clock, Stethoscope, AlertTriangle, Edit, CheckCircle2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { Check, X, Clock, Stethoscope, AlertTriangle, Edit, CheckCircle2, Calendar, Shield } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ProtocolosModal } from '@/components/ProtocolosModal';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { calcularIGAtual, calcularIGNaDataAgendada } from '@/lib/calcularIGAtual';
+import { validarProtocolo, type ValidacaoProtocolo } from '@/lib/protocoloValidation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { calcularIgPorUsg, calcularIgNaData, determinarIgFinal, calcularIgPorDum } from '@/lib/gestationalCalculations';
 
 interface Agendamento {
   id: string;
@@ -49,6 +52,7 @@ const AprovacoesAgendamentos = () => {
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
   const [datasAprovacao, setDatasAprovacao] = useState<{ [key: string]: string }>({});
   const [filtroStatus, setFiltroStatus] = useState<string>('pendente');
+  const [validacoesProtocolo, setValidacoesProtocolo] = useState<{ [key: string]: ValidacaoProtocolo }>({});
 
   useEffect(() => {
     if (!isAdminMed()) {
@@ -89,8 +93,102 @@ const AprovacoesAgendamentos = () => {
         novasDatas[agendamento.id] = agendamento.data_agendamento_calculada || '';
       });
       setDatasAprovacao(novasDatas);
+      
+      // Validar protocolos para cada agendamento
+      validarTodosProtocolos(data || [], novasDatas);
     }
     setLoading(false);
+  };
+
+  const validarTodosProtocolos = (agendamentos: Agendamento[], datas: Record<string, string>) => {
+    const novasValidacoes: Record<string, ValidacaoProtocolo> = {};
+    
+    agendamentos.forEach((agendamento) => {
+      const dataAgendamento = datas[agendamento.id];
+      if (!dataAgendamento) return;
+      
+      const validacao = validarProtocoloParaAgendamento(agendamento, dataAgendamento);
+      novasValidacoes[agendamento.id] = validacao;
+    });
+    
+    setValidacoesProtocolo(novasValidacoes);
+  };
+
+  const validarProtocoloParaAgendamento = (
+    agendamento: Agendamento, 
+    dataAgendamentoStr: string
+  ): ValidacaoProtocolo => {
+    try {
+      // Calcular IG atual
+      const dataUsg = new Date(agendamento.data_primeiro_usg);
+      const igUsg = calcularIgPorUsg(
+        dataUsg, 
+        agendamento.semanas_usg, 
+        agendamento.dias_usg,
+        new Date()
+      );
+      
+      let igDum = null;
+      if (agendamento.dum_status.includes('Sim') && agendamento.data_dum) {
+        igDum = calcularIgPorDum(new Date(agendamento.data_dum), new Date());
+      }
+      
+      const { igFinal } = determinarIgFinal(igDum, igUsg);
+      
+      // Calcular IG na data de agendamento
+      const dataAgendamento = new Date(dataAgendamentoStr);
+      const igNaData = calcularIgNaData(igFinal, dataAgendamento, new Date());
+      
+      // Parsear diagnósticos
+      let diagnosticosMaternos: string[] = [];
+      let diagnosticosFetais: string[] = [];
+      
+      try {
+        if (agendamento.diagnosticos_maternos) {
+          diagnosticosMaternos = JSON.parse(agendamento.diagnosticos_maternos);
+        }
+      } catch {}
+      
+      try {
+        if (agendamento.diagnosticos_fetais) {
+          diagnosticosFetais = JSON.parse(agendamento.diagnosticos_fetais);
+        }
+      } catch {}
+      
+      // Validar protocolo
+      return validarProtocolo({
+        procedimentos: agendamento.procedimentos,
+        diagnosticosMaternos,
+        diagnosticosFetais,
+        placentaPrevia: '',
+        igSemanas: igNaData.weeks,
+        igDias: igNaData.days
+      });
+    } catch (error) {
+      console.error('Erro ao validar protocolo:', error);
+      return {
+        compativel: true,
+        alertas: [],
+        recomendacoes: []
+      };
+    }
+  };
+
+  const handleDataChange = (agendamentoId: string, novaData: string) => {
+    setDatasAprovacao((prev) => ({
+      ...prev,
+      [agendamentoId]: novaData
+    }));
+    
+    // Validar protocolo para esta nova data
+    const agendamento = agendamentos.find(a => a.id === agendamentoId);
+    if (agendamento && novaData) {
+      const validacao = validarProtocoloParaAgendamento(agendamento, novaData);
+      setValidacoesProtocolo((prev) => ({
+        ...prev,
+        [agendamentoId]: validacao
+      }));
+    }
   };
 
   const handleAprovar = async (agendamentoId: string) => {
@@ -316,12 +414,7 @@ const AprovacoesAgendamentos = () => {
                     <Input
                       type="date"
                       value={datasAprovacao[agendamento.id] || ''}
-                      onChange={(e) =>
-                        setDatasAprovacao((prev) => ({
-                          ...prev,
-                          [agendamento.id]: e.target.value,
-                        }))
-                      }
+                      onChange={(e) => handleDataChange(agendamento.id, e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground mt-1">Essa data será usada em todos os painéis.</p>
                   </div>
@@ -347,6 +440,70 @@ const AprovacoesAgendamentos = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Validação de Protocolo */}
+                {validacoesProtocolo[agendamento.id] && datasAprovacao[agendamento.id] && (
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <p className="font-semibold text-base">Validação de Protocolo Obstétrico</p>
+                    </div>
+                    
+                    {validacoesProtocolo[agendamento.id].compativel ? (
+                      <Alert className="border-green-500 bg-green-50 dark:bg-green-950/20">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <AlertTitle className="text-green-700 dark:text-green-300">
+                          Data compatível com protocolo
+                        </AlertTitle>
+                        <AlertDescription className="text-green-600 dark:text-green-400">
+                          A data selecionada está dentro dos parâmetros recomendados pelos protocolos obstétricos.
+                        </AlertDescription>
+                      </Alert>
+                    ) : (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>
+                          Atenção: Data fora do protocolo
+                        </AlertTitle>
+                        <AlertDescription>
+                          A data selecionada não segue as recomendações do protocolo obstétrico.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {validacoesProtocolo[agendamento.id].alertas.length > 0 && (
+                      <Alert className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+                        <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        <AlertTitle className="text-orange-700 dark:text-orange-300">
+                          Alertas de Protocolo
+                        </AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-orange-600 dark:text-orange-400 mt-2">
+                            {validacoesProtocolo[agendamento.id].alertas.map((alerta, idx) => (
+                              <li key={idx}>{alerta}</li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {validacoesProtocolo[agendamento.id].recomendacoes.length > 0 && (
+                      <Alert className="border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+                        <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        <AlertTitle className="text-blue-700 dark:text-blue-300">
+                          Recomendações do Protocolo
+                        </AlertTitle>
+                        <AlertDescription>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-blue-600 dark:text-blue-400 mt-2">
+                            {validacoesProtocolo[agendamento.id].recomendacoes.map((rec, idx) => (
+                              <li key={idx}>{rec}</li>
+                            ))}
+                          </ul>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <p className="text-sm font-semibold">Indicação do Procedimento</p>
