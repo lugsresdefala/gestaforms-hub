@@ -21,6 +21,32 @@ export const validarProtocolo = (dados: {
 
   const igTotal = dados.igSemanas + (dados.igDias / 7);
   
+  // VALIDAÇÃO CRÍTICA: DMG com repercussão fetal (FETO GIG / Macrossomia)
+  const temDMG = dados.diagnosticosMaternos.some(d => 
+    d.includes('dmg') || d.includes('dm') || d.includes('diabetes')
+  );
+  
+  const temRepercussaoFetal = dados.diagnosticosFetais.some(d => 
+    d.includes('macrossomia') || d.includes('gig') || d.includes('feto_gig') ||
+    d.toLowerCase().includes('feto gig') || d.toLowerCase().includes('grande para idade')
+  );
+  
+  // DMG + Repercussão Fetal = protocolo DESCOMPENSADA (37-38 semanas MAX)
+  if (temDMG && temRepercussaoFetal) {
+    if (igTotal >= 39) {
+      alertas.push('🚨 CRÍTICO: DMG com repercussão fetal (FETO GIG) - IG máxima recomendada: 37-38 semanas');
+      alertas.push('⚠️ IG atual ('+dados.igSemanas+'s'+dados.igDias+'d) está ACIMA do protocolo para DMG descompensada');
+      compativel = false;
+    } else if (igTotal >= 38) {
+      alertas.push('⚠️ ATENÇÃO: DMG com repercussão fetal - IG no limite superior (38 semanas)');
+      recomendacoes.push('Considerar antecipação para 37 semanas se houver outras comorbidades');
+    } else if (igTotal >= 37 && igTotal < 38) {
+      recomendacoes.push('✓ DMG com repercussão fetal: IG dentro da janela recomendada (37-38 semanas)');
+    } else {
+      recomendacoes.push('ℹ️ DMG com repercussão fetal: IG abaixo da janela ideal (37-38 semanas)');
+    }
+  }
+  
   // Validar protocolos específicos dos diagnósticos
   [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].forEach(diagnostico => {
     if (diagnostico === 'nenhum_materno' || diagnostico === 'nenhum_fetal') return;
@@ -41,6 +67,7 @@ export const validarProtocolo = (dados: {
         }
       } else if (igTotal > margemMax) {
         alertas.push(`⚠️ ATENÇÃO: ${diagnostico.replace(/_/g, ' ')} - IG atual ultrapassou janela ideal + margem (${protocolo.igIdeal} + ${protocolo.margemDias}d)`);
+        compativel = false;
       } else if (igTotal >= igMin && igTotal <= margemMax) {
         recomendacoes.push(`✓ ${diagnostico.replace(/_/g, ' ')}: IG dentro da janela recomendada (${protocolo.igIdeal} ±${protocolo.margemDias}d)`);
       }
@@ -74,6 +101,22 @@ export const validarProtocolo = (dados: {
     if (!temIndicacaoPrecoce && igTotal < 39) {
       alertas.push('⚠️ PROTOCOLO: Cesárea eletiva sem indicação específica deve ser realizada com 39 semanas completas');
       recomendacoes.push('Considerar reagendar para 39 semanas ou documentar indicação específica');
+    }
+  }
+
+  // VALIDAÇÃO CRÍTICA: Múltiplas comorbidades de alta prioridade
+  const patologiasAltaPrioridade = [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].filter(d => {
+    const protocolo = PROTOCOLS[d];
+    return protocolo && protocolo.prioridade <= 2;
+  });
+  
+  if (patologiasAltaPrioridade.length >= 2) {
+    alertas.push(`🚨 ATENÇÃO: ${patologiasAltaPrioridade.length} comorbidades de alta prioridade detectadas`);
+    recomendacoes.push('⚠️ Múltiplas comorbidades requerem avaliação médica criteriosa da IG de interrupção');
+    
+    // Com múltiplas comorbidades, ser mais restritivo
+    if (igTotal >= 38) {
+      alertas.push('⚠️ Com múltiplas comorbidades, IG ≥38 semanas requer justificativa clínica');
     }
   }
 
