@@ -24,22 +24,33 @@ const CriarUsuariosPadrao = () => {
 
   const checkSystemSetup = async () => {
     try {
-      // Call edge function to check if it's initial setup
-      const { data, error } = await supabase.functions.invoke('create-default-users', {
-        method: 'GET'
-      });
-
-      if (error) {
-        console.error("Erro ao verificar setup:", error);
-        setIsInitialSetup(false);
-      } else {
-        setIsInitialSetup(data?.isInitialSetup ?? false);
-      }
+      // Fetch to check setup status without invoking as POST
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       
-      // If not initial setup and user is not admin, redirect
-      if (!data?.isInitialSetup && user && !isAdmin()) {
-        toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
-        navigate('/');
+      const response = await fetch(
+        `${SUPABASE_URL}/functions/v1/create-default-users`,
+        {
+          method: 'GET',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsInitialSetup(data?.isInitialSetup ?? false);
+        
+        // If not initial setup and user is not admin, redirect
+        if (!data?.isInitialSetup && user && !isAdmin()) {
+          toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
+          navigate('/');
+        }
+      } else {
+        console.error("Erro ao verificar setup");
+        setIsInitialSetup(false);
       }
     } catch (error) {
       console.error("Erro ao verificar setup:", error);
