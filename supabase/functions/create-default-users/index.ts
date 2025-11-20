@@ -69,20 +69,68 @@ serve(async (req) => {
       );
     }
 
-    // Only allow if it's initial setup (no users exist)
+    // If there are no users, allow initial setup without authentication
     const isInitialSetup = !usersData.users || usersData.users.length === 0;
 
     if (!isInitialSetup) {
-      console.warn("Cannot create default users - system already has users");
-      return new Response(
-        JSON.stringify({ 
-          error: "Sistema já possui usuários. Esta operação só é permitida durante o setup inicial." 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-      );
-    }
+      // SERVER-SIDE SECURITY: Extract and verify JWT token
+      const authHeader = req.headers.get("Authorization");
+      
+      // Check if we have a proper Bearer token (not just the anon key)
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: Missing authorization header" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
 
-    console.log("Initial system setup - creating first users");
+      const token = authHeader.replace("Bearer ", "");
+      
+      // Check if token looks like anon key (starts with "eyJ" and is the anon key)
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+      if (token === anonKey) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: User authentication required" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+
+      // SERVER-SIDE SECURITY: Verify user identity from JWT
+      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+      
+      if (userError || !user) {
+        console.error("Authentication error:", userError);
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: Invalid token" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+
+      // SERVER-SIDE SECURITY: Verify admin role using database function
+      // Never trust client-side role claims - always verify server-side
+      const { data: hasAdminRole, error: roleError } = await supabaseAdmin
+        .rpc("has_role", { _user_id: user.id, _role: "admin" });
+
+      if (roleError) {
+        console.error("Role check error:", roleError);
+        return new Response(
+          JSON.stringify({ error: "Error verifying permissions" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
+
+      if (!hasAdminRole) {
+        console.warn(`Unauthorized access attempt by user ${user.id}`);
+        return new Response(
+          JSON.stringify({ error: "Forbidden: Admin role required" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+        );
+      }
+
+      console.log(`Admin user ${user.email} creating default users`);
+    } else {
+      console.log("Initial system setup - creating first users");
+    }
 
     const defaultUsers = [
       {
