@@ -27,6 +27,10 @@ const CriarUsuariosPadrao = () => {
       // Simple GET request - no auth headers needed since verify_jwt is false
       const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://uoyzfzzjzhvcxfmpmufz.supabase.co';
       
+      console.log('🔍 DEBUG - Verificando setup do sistema...');
+      console.log('🔍 DEBUG - Usuário atual:', user);
+      console.log('🔍 DEBUG - É admin?', user ? isAdmin() : 'sem usuário');
+      
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/create-default-users`,
         {
@@ -36,12 +40,20 @@ const CriarUsuariosPadrao = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 DEBUG - Resposta do servidor:', data);
         setIsInitialSetup(data?.isInitialSetup ?? false);
         
         // If not initial setup and user is not admin, redirect
         if (!data?.isInitialSetup && user && !isAdmin()) {
+          console.log('❌ DEBUG - Acesso negado: não é admin');
           toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
           navigate('/');
+        } else if (!data?.isInitialSetup && !user) {
+          console.log('❌ DEBUG - Acesso negado: não está autenticado');
+          toast.error("Você precisa estar autenticado para acessar esta página.");
+          navigate('/auth');
+        } else {
+          console.log('✅ DEBUG - Acesso permitido');
         }
       } else {
         console.error("Erro ao verificar setup");
