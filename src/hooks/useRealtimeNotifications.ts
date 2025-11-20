@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -16,24 +16,6 @@ export const useRealtimeNotifications = () => {
   const { user, isAdmin, isAdminMed } = useAuth();
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
   const [loading, setLoading] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Criar elemento de áudio para notificações
-  useEffect(() => {
-    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWi67OafTBAMUKfj77RgGgU7k9jyzHkpBSZ9yO/WjzwIFmG56OShUBIIQJze8L9rIAUsgs/y2Yk2Bxpqvuvm') as HTMLAudioElement;
-  }, []);
-
-  const playNotificationSound = () => {
-    if (audioRef.current) {
-      audioRef.current.play().catch(err => console.log('Erro ao tocar som:', err));
-    }
-  };
-
-  const vibrate = () => {
-    if ('vibrate' in navigator) {
-      navigator.vibrate([200, 100, 200]);
-    }
-  };
 
   useEffect(() => {
     if (!user || (!isAdmin() && !isAdminMed())) return;
@@ -67,10 +49,6 @@ export const useRealtimeNotifications = () => {
         (payload) => {
           const newNotification = payload.new as Notificacao;
           setNotificacoes(prev => [newNotification, ...prev]);
-          
-          // Tocar som e vibrar
-          playNotificationSound();
-          vibrate();
           
           // Mostrar toast para notificações urgentes
           if (newNotification.tipo === 'agendamento_urgente') {
