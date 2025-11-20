@@ -18,11 +18,20 @@ const CriarUsuariosPadrao = () => {
 
       if (error) throw error;
 
+      console.log("RESPOSTA COMPLETA DO BACKEND:", data);
+      console.log("RESULTADOS:", data.results);
+      
       setUsuarios(data.results || []);
       
       const successCount = data.results.filter((r: any) => r.success).length;
+      const errorCount = data.results.filter((r: any) => !r.success).length;
       
-      toast.success(`${successCount} usuário(s) criado(s) com sucesso!`);
+      if (successCount > 0) {
+        toast.success(`✅ ${successCount} usuário(s) criado(s) com sucesso!`);
+      }
+      if (errorCount > 0) {
+        toast.error(`❌ ${errorCount} usuário(s) NÃO foram criados (já existem ou erro)`);
+      }
     } catch (error: any) {
       console.error("Erro ao criar usuários:", error);
       toast.error("Erro ao criar usuários: " + error.message);
@@ -97,40 +106,72 @@ const CriarUsuariosPadrao = () => {
             </Button>
 
             {usuarios.length > 0 && (
-              <div className="mt-6 space-y-3">
-                <h3 className="font-semibold">Resultado:</h3>
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-lg">Resultado da Criação:</h3>
+                  <div className="flex gap-2">
+                    <Badge className="bg-green-600">
+                      {usuarios.filter(u => u.success).length} Criados
+                    </Badge>
+                    <Badge variant="destructive">
+                      {usuarios.filter(u => !u.success).length} Erros
+                    </Badge>
+                  </div>
+                </div>
+                
                 {usuarios.map((usuario, idx) => (
-                  <Card key={idx}>
+                  <Card key={idx} className={usuario.success ? "border-green-500 border-2" : "border-red-500 border-2"}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{usuario.email}</p>
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-3">
+                            <p className="font-bold text-lg">{usuario.email}</p>
                             {usuario.success ? (
-                              <Badge variant="default" className="bg-green-500">Criado</Badge>
+                              <Badge className="bg-green-600 text-white">✅ CRIADO COM SUCESSO</Badge>
                             ) : (
-                              <Badge variant="destructive">Erro</Badge>
+                              <Badge variant="destructive" className="text-white">❌ ERRO / JÁ EXISTE</Badge>
                             )}
                           </div>
+                          
                           {usuario.success ? (
-                            <div className="space-y-1">
-                              <p className="text-sm text-muted-foreground">Senha: {usuario.password}</p>
-                              <p className="text-sm text-muted-foreground">Role: {usuario.role}</p>
+                            <div className="space-y-2 bg-green-50 dark:bg-green-950 p-3 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-sm">Senha:</span>
+                                <code className="bg-white dark:bg-gray-800 px-2 py-1 rounded font-mono text-sm border">
+                                  {usuario.password}
+                                </code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-sm">Role:</span>
+                                <Badge variant="outline">{usuario.role}</Badge>
+                              </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-red-500">{usuario.error}</p>
+                            <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg">
+                              <p className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                Motivo: {usuario.error}
+                              </p>
+                            </div>
                           )}
                         </div>
+                        
                         {usuario.success && (
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => copyToClipboard(`${usuario.email}\n${usuario.password}`, usuario.email)}
+                            variant="outline"
+                            size="sm"
+                            className="ml-4"
+                            onClick={() => copyToClipboard(`Email: ${usuario.email}\nSenha: ${usuario.password}\nRole: ${usuario.role}`, usuario.email)}
                           >
                             {copiedEmail === usuario.email ? (
-                              <Check className="h-4 w-4 text-green-500" />
+                              <>
+                                <Check className="h-4 w-4 mr-2 text-green-600" />
+                                Copiado!
+                              </>
                             ) : (
-                              <Copy className="h-4 w-4" />
+                              <>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copiar Credenciais
+                              </>
                             )}
                           </Button>
                         )}
