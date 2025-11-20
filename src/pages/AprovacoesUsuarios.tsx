@@ -41,7 +41,7 @@ const AprovacoesUsuarios = () => {
       .from('solicitacoes_acesso')
       .select(`
         *,
-        profiles!solicitacoes_acesso_user_id_fkey (
+        profiles (
           nome_completo,
           email
         )
