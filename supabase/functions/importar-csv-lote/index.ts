@@ -386,12 +386,11 @@ serve(async (req) => {
           continue;
         }
 
-        // Check duplicate
+        // Check duplicate - verificar em TODOS os status
         const { data: existing } = await supabase
           .from('agendamentos_obst')
           .select('id')
           .eq('carteirinha', carteirinha)
-          .eq('status', 'pendente')
           .maybeSingle();
 
         if (existing) {
