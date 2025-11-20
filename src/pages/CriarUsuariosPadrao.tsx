@@ -25,7 +25,7 @@ const CriarUsuariosPadrao = () => {
   const checkSystemSetup = async () => {
     try {
       // Simple GET request - no auth headers needed since verify_jwt is false
-      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+      const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://uoyzfzzjzhvcxfmpmufz.supabase.co';
       
       const response = await fetch(
         `${SUPABASE_URL}/functions/v1/create-default-users`,
