@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Upload, CheckCircle2, XCircle, AlertCircle, FileText, Info } from 'lucide-react';
+import { Upload, CheckCircle2, XCircle, AlertCircle, FileText, Info, Download } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -91,6 +91,27 @@ export default function ImportarPacientesPendentes() {
     { nome: 'centro_clinico', descricao: 'Centro clínico de origem', exemplo: 'CC São Paulo', obrigatorio: true },
   ];
 
+  const downloadTemplate = () => {
+    // Criar CSV com apenas os headers
+    const headers = colunas.map(col => col.nome).join(',');
+    const csvContent = headers + '\n';
+    
+    // Criar Blob e fazer download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'template_importacao_pacientes.csv');
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Template CSV baixado com sucesso!');
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <Card>
@@ -104,6 +125,13 @@ export default function ImportarPacientesPendentes() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="flex justify-end mb-4">
+            <Button variant="outline" onClick={downloadTemplate} className="gap-2">
+              <Download className="h-4 w-4" />
+              Baixar Template CSV
+            </Button>
+          </div>
+
           <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
             <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <label htmlFor="csv-upload" className="cursor-pointer">
