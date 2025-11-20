@@ -437,7 +437,10 @@ const AprovacoesAgendamentos = () => {
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">IG na Data Agendada</p>
-                    <p className="text-sm font-bold text-primary">{calcularIGNaDataAgendada(agendamento)}</p>
+                    <p className="text-sm font-bold text-primary">{calcularIGNaDataAgendada({
+                      ...agendamento,
+                      data_agendamento_calculada: datasAprovacao[agendamento.id] || agendamento.data_agendamento_calculada
+                    })}</p>
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Médico Responsável</p>
