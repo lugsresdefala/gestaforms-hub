@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -19,6 +19,7 @@ const ProtectedRoute = ({
   requireMedicoMaternidade 
 }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade } = useAuth();
+  const location = useLocation();
   const { toast } = useToast();
   const [hasShownError, setHasShownError] = useState(false);
 
@@ -33,26 +34,34 @@ const ProtectedRoute = ({
   // Show error toast when unauthorized
   useEffect(() => {
     if (isUnauthorized && !hasShownError) {
-      let message = "Esta página requer permissões especiais.";
+      let message = 'Esta página requer permissões especiais.';
       
       if (requireAdmin) {
-        message = "Esta página requer permissões de administrador.";
+        message = 'Esta página requer permissões de administrador.';
       } else if (requireAdminMed) {
-        message = "Esta página requer permissões de administrador médico.";
+        message = 'Esta página requer permissões de administrador médico.';
       } else if (requireMedicoUnidade) {
-        message = "Esta página requer permissões de médico de unidade.";
+        message = 'Esta página requer permissões de médico de unidade.';
       } else if (requireMedicoMaternidade) {
-        message = "Esta página requer permissões de médico de maternidade.";
+        message = 'Esta página requer permissões de médico de maternidade.';
       }
 
       toast({
-        variant: "destructive",
-        title: "Acesso negado",
+        variant: 'destructive',
+        title: 'Acesso negado',
         description: message,
       });
       setHasShownError(true);
     }
-  }, [isUnauthorized, hasShownError, requireAdmin, requireAdminMed, requireMedicoUnidade, requireMedicoMaternidade, toast]);
+  }, [
+    isUnauthorized,
+    hasShownError,
+    requireAdmin,
+    requireAdminMed,
+    requireMedicoUnidade,
+    requireMedicoMaternidade,
+    toast,
+  ]);
 
   if (loading) {
     return (
@@ -63,10 +72,12 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    // Save the attempted location for redirect after login
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   if (isUnauthorized) {
+    // Redirect home after showing toast
     return <Navigate to="/" replace />;
   }
 

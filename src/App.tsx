@@ -40,6 +40,8 @@ import FAQ from "./pages/FAQ";
 import Sobre from "./pages/Sobre";
 import LogsAuditoria from "./pages/LogsAuditoria";
 import ImportarPacientesPendentes from "./pages/ImportarPacientesPendentes";
+import Protocolos from "./pages/Protocolos";
+import Contato from "./pages/Contato";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -348,6 +350,26 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <LogsAuditoria />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/protocolos" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Protocolos />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/contato" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Contato />
                   </AppLayout>
                 </ProtectedRoute>
               } 
