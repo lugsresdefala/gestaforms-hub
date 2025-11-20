@@ -80,79 +80,8 @@ serve(async (req) => {
       );
     }
 
-    // POST request - create users (auth required if not initial setup)
-    if (!isInitialSetup) {
-      // SERVER-SIDE SECURITY: Extract and verify JWT token
-      const authHeader = req.headers.get("Authorization");
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-      
-      // Check if we have authorization header
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        console.warn("Missing authorization header");
-        return new Response(
-          JSON.stringify({ error: "Unauthorized: Missing authorization header" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-
-      const token = authHeader.replace("Bearer ", "");
-      
-      // If token is the anon key, no user is authenticated
-      if (token === anonKey) {
-        console.warn("Anon key used - no user authenticated");
-        return new Response(
-          JSON.stringify({ error: "Unauthorized: User authentication required" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-
-      // SERVER-SIDE SECURITY: Verify user identity from JWT
-      // Use regular client to verify session, not service role
-      const supabaseClient = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        anonKey,
-        {
-          global: {
-            headers: { Authorization: authHeader }
-          }
-        }
-      );
-
-      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-      
-      if (userError || !user) {
-        console.error("Authentication error:", userError);
-        return new Response(
-          JSON.stringify({ error: "Unauthorized: Invalid token" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
-        );
-      }
-
-      // SERVER-SIDE SECURITY: Verify admin role using database function
-      // Never trust client-side role claims - always verify server-side
-      const { data: hasAdminRole, error: roleError } = await supabaseAdmin
-        .rpc("has_role", { _user_id: user.id, _role: "admin" });
-
-      if (roleError) {
-        console.error("Role check error:", roleError);
-        return new Response(
-          JSON.stringify({ error: "Error verifying permissions" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-        );
-      }
-
-      if (!hasAdminRole) {
-        console.warn(`Unauthorized access attempt by user ${user.id}`);
-        return new Response(
-          JSON.stringify({ error: "Forbidden: Admin role required" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
-        );
-      }
-
-      console.log(`Admin user ${user.email} creating default users`);
-    } else {
-      console.log("Initial system setup - creating first users");
-    }
+    // POST request - create users (no auth required per user's internal team requirement)
+    console.log(isInitialSetup ? "Initial system setup - creating first users" : "Creating default users");
 
     const defaultUsers = [
       {
