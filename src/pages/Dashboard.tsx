@@ -20,7 +20,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { calcularIGAtual, calcularIGNaDataAgendada } from "@/lib/calcularIGAtual";
 import HistoricoAlteracoes from "@/components/HistoricoAlteracoes";
-
 interface Agendamento {
   id: string;
   carteirinha: string;
@@ -48,12 +47,10 @@ interface Agendamento {
   dum_status: string;
   data_dum: string | null;
 }
-
 const normalizeProcedimentos = (procedimentos: unknown): string[] => {
   if (Array.isArray(procedimentos)) {
     return procedimentos.filter((proc): proc is string => typeof proc === "string" && proc.trim().length > 0);
   }
-
   if (typeof procedimentos === "string" && procedimentos.trim().length > 0) {
     try {
       const parsed = JSON.parse(procedimentos);
@@ -61,26 +58,28 @@ const normalizeProcedimentos = (procedimentos: unknown): string[] => {
         return parsed.filter((proc): proc is string => typeof proc === "string" && proc.trim().length > 0);
       }
     } catch {
-      return procedimentos
-        .split(/[,;\n]/)
-        .map(proc => proc.trim())
-        .filter(Boolean);
+      return procedimentos.split(/[,;\n]/).map(proc => proc.trim()).filter(Boolean);
     }
-
     return [procedimentos];
   }
-
   return [];
 };
-
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { signOut, isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const {
+    signOut,
+    isAdmin,
+    isAdminMed,
+    isMedicoMaternidade,
+    getMaternidadesAcesso
+  } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
-  const { refreshKey } = useRealtimeAgendamentos();
-  
+  const {
+    refreshKey
+  } = useRealtimeAgendamentos();
+
   // Filtros
   const [searchNome, setSearchNome] = useState("");
   const [filterMedico, setFilterMedico] = useState("all");
@@ -89,13 +88,10 @@ const Dashboard = () => {
   const [filterDataFim, setFilterDataFim] = useState("");
   const [filterPatologia, setFilterPatologia] = useState("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-
   const fetchAgendamentos = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('agendamentos_obst')
-        .select('*');
+      let query = supabase.from('agendamentos_obst').select('*');
 
       // Aplicar filtros baseados no tipo de usuário
       if (isMedicoMaternidade() && !isAdmin() && !isAdminMed()) {
@@ -103,23 +99,29 @@ const Dashboard = () => {
         query = query.in('maternidade', maternidades).eq('status', 'aprovado');
       } else if (!isAdmin() && !isAdminMed() && !isMedicoMaternidade()) {
         // Médicos de unidade veem seus próprios agendamentos
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: {
+            user
+          }
+        } = await supabase.auth.getUser();
         if (user) {
           query = query.eq('created_by', user.id);
         }
       }
       // Admin e Admin_Med veem tudo (sem filtro adicional)
 
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-
+      query = query.order('created_at', {
+        ascending: false
+      });
+      const {
+        data,
+        error
+      } = await query;
       if (error) {
         console.error("Erro ao buscar agendamentos:", error);
         toast.error("Erro ao carregar dados: " + error.message);
         return;
       }
-
       setAgendamentos(data || []);
     } catch (error) {
       console.error("Erro ao buscar agendamentos:", error);
@@ -128,20 +130,16 @@ const Dashboard = () => {
       setLoading(false);
     }
   }, [isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso]);
-
   useEffect(() => {
     fetchAgendamentos();
   }, [fetchAgendamentos, refreshKey]);
-
   useEffect(() => {
     applyFilters();
   }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
-
   const handleLogout = async () => {
     await signOut();
     navigate('/auth');
   };
-
   const applyFilters = () => {
     let filtered = [...agendamentos];
 
@@ -153,10 +151,7 @@ const Dashboard = () => {
 
     // Filtro por nome
     if (searchNome) {
-      filtered = filtered.filter(a => 
-        a.nome_completo.toLowerCase().includes(searchNome.toLowerCase()) ||
-        a.carteirinha.includes(searchNome)
-      );
+      filtered = filtered.filter(a => a.nome_completo.toLowerCase().includes(searchNome.toLowerCase()) || a.carteirinha.includes(searchNome));
     }
 
     // Filtro por médico
@@ -182,57 +177,29 @@ const Dashboard = () => {
       filtered = filtered.filter(a => {
         const diagMat = a.diagnosticos_maternos || '';
         const diagFet = a.diagnosticos_fetais || '';
-        return diagMat.toLowerCase().includes(filterPatologia.toLowerCase()) || 
-               diagFet.toLowerCase().includes(filterPatologia.toLowerCase());
+        return diagMat.toLowerCase().includes(filterPatologia.toLowerCase()) || diagFet.toLowerCase().includes(filterPatologia.toLowerCase());
       });
     }
-
     setFilteredAgendamentos(filtered);
   };
-
   const getUniqueMedicos = () => {
     return [...new Set(agendamentos.map(a => a.medico_responsavel))];
   };
-
   const getUniqueMaternidades = () => {
     return [...new Set(agendamentos.map(a => a.maternidade))];
   };
-
   const exportToCSV = () => {
-    const headers = [
-      "Carteirinha", "Nome", "Data Nascimento", "Telefone", "Procedimentos",
-      "Médico", "Maternidade", "Centro Clínico", "Data Agendamento", "IG Calculada",
-      "Diagnósticos Maternos", "Diagnósticos Fetais", "Observações"
-    ];
-
-    const rows = filteredAgendamentos.map(a => [
-      a.carteirinha,
-      a.nome_completo,
-      a.data_nascimento,
-      a.telefones,
-      a.procedimentos.length ? a.procedimentos.join('; ') : 'Não informado',
-      a.medico_responsavel,
-      a.maternidade,
-      a.centro_clinico,
-      a.data_agendamento_calculada,
-      a.idade_gestacional_calculada || 'Não calculado',
-      formatDiagnosticos(a.diagnosticos_maternos || 'Não informado'),
-      formatDiagnosticos(a.diagnosticos_fetais || 'Não informado'),
-      a.observacoes_agendamento?.replace(/\n/g, ' ') || ''
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const headers = ["Carteirinha", "Nome", "Data Nascimento", "Telefone", "Procedimentos", "Médico", "Maternidade", "Centro Clínico", "Data Agendamento", "IG Calculada", "Diagnósticos Maternos", "Diagnósticos Fetais", "Observações"];
+    const rows = filteredAgendamentos.map(a => [a.carteirinha, a.nome_completo, a.data_nascimento, a.telefones, a.procedimentos.length ? a.procedimentos.join('; ') : 'Não informado', a.medico_responsavel, a.maternidade, a.centro_clinico, a.data_agendamento_calculada, a.idade_gestacional_calculada || 'Não calculado', formatDiagnosticos(a.diagnosticos_maternos || 'Não informado'), formatDiagnosticos(a.diagnosticos_fetais || 'Não informado'), a.observacoes_agendamento?.replace(/\n/g, ' ') || '']);
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
+    const blob = new Blob([csvContent], {
+      type: 'text/csv;charset=utf-8;'
+    });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `agendamentos_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
-
   const clearFilters = () => {
     setSearchNome("");
     setFilterMedico("all");
@@ -242,16 +209,13 @@ const Dashboard = () => {
     setFilterPatologia("all");
     setSelectedDate(undefined);
   };
-
   const getDatesWithAgendamentos = () => {
     return agendamentos.map(a => new Date(a.data_agendamento_calculada));
   };
-
   const getStatusBadge = (dataAgendamento: string) => {
     const hoje = new Date();
     const dataAgend = new Date(dataAgendamento);
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-
     if (diffDias < 0) {
       return <Badge variant="secondary" className="gap-1 bg-green-600 text-white">Resolvido</Badge>;
     } else if (diffDias <= 7) {
@@ -262,13 +226,11 @@ const Dashboard = () => {
       return <Badge variant="scheduled">Agendado</Badge>;
     }
   };
-
-  return (
-    <div className="min-h-screen gradient-subtle">
+  return <div className="min-h-screen gradient-subtle">
       <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
+            
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard - Agendamentos</h1>
               <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
@@ -321,38 +283,25 @@ const Dashboard = () => {
             </CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                locale={ptBR}
-                className="rounded-md border pointer-events-auto"
-                modifiers={{
-                  hasAgendamento: getDatesWithAgendamentos()
-                }}
-                modifiersStyles={{
-                  hasAgendamento: {
-                    fontWeight: 'bold',
-                    textDecoration: 'underline'
-                  }
-                }}
-              />
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={ptBR} className="rounded-md border pointer-events-auto" modifiers={{
+              hasAgendamento: getDatesWithAgendamentos()
+            }} modifiersStyles={{
+              hasAgendamento: {
+                fontWeight: 'bold',
+                textDecoration: 'underline'
+              }
+            }} />
             </CardContent>
-            {selectedDate && (
-              <CardContent className="pt-0">
+            {selectedDate && <CardContent className="pt-0">
                 <p className="text-sm text-center text-muted-foreground">
-                  Exibindo agendamentos de {format(selectedDate, "dd/MM/yyyy", { locale: ptBR })}
+                  Exibindo agendamentos de {format(selectedDate, "dd/MM/yyyy", {
+                locale: ptBR
+              })}
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full mt-2"
-                  onClick={() => setSelectedDate(undefined)}
-                >
+                <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => setSelectedDate(undefined)}>
                   Limpar data
                 </Button>
-              </CardContent>
-            )}
+              </CardContent>}
           </Card>
 
           {/* Estatísticas */}
@@ -367,9 +316,9 @@ const Dashboard = () => {
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-urgent">
                   {filteredAgendamentos.filter(a => {
-                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diff <= 7 && diff >= 0;
-                  }).length}
+                  const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return diff <= 7 && diff >= 0;
+                }).length}
                 </div>
                 <p className="text-sm text-muted-foreground">Urgentes</p>
               </CardContent>
@@ -386,9 +335,9 @@ const Dashboard = () => {
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-scheduled">
                   {filteredAgendamentos.filter(a => {
-                    const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    return diff > 7;
-                  }).length}
+                  const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                  return diff > 7;
+                }).length}
                 </div>
                 <p className="text-sm text-muted-foreground">Agendados</p>
               </CardContent>
@@ -408,12 +357,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="searchNome">Buscar por Nome/Carteirinha</Label>
-                <Input
-                  id="searchNome"
-                  placeholder="Digite nome ou carteirinha..."
-                  value={searchNome}
-                  onChange={(e) => setSearchNome(e.target.value)}
-                />
+                <Input id="searchNome" placeholder="Digite nome ou carteirinha..." value={searchNome} onChange={e => setSearchNome(e.target.value)} />
               </div>
 
               <div>
@@ -424,9 +368,7 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {getUniqueMedicos().map(medico => (
-                      <SelectItem key={medico} value={medico}>{medico}</SelectItem>
-                    ))}
+                    {getUniqueMedicos().map(medico => <SelectItem key={medico} value={medico}>{medico}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -439,31 +381,19 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
-                    {getUniqueMaternidades().map(maternidade => (
-                      <SelectItem key={maternidade} value={maternidade}>{maternidade}</SelectItem>
-                    ))}
+                    {getUniqueMaternidades().map(maternidade => <SelectItem key={maternidade} value={maternidade}>{maternidade}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <Label htmlFor="filterDataInicio">Data Início</Label>
-                <Input
-                  id="filterDataInicio"
-                  type="date"
-                  value={filterDataInicio}
-                  onChange={(e) => setFilterDataInicio(e.target.value)}
-                />
+                <Input id="filterDataInicio" type="date" value={filterDataInicio} onChange={e => setFilterDataInicio(e.target.value)} />
               </div>
 
               <div>
                 <Label htmlFor="filterDataFim">Data Fim</Label>
-                <Input
-                  id="filterDataFim"
-                  type="date"
-                  value={filterDataFim}
-                  onChange={(e) => setFilterDataFim(e.target.value)}
-                />
+                <Input id="filterDataFim" type="date" value={filterDataFim} onChange={e => setFilterDataFim(e.target.value)} />
               </div>
 
               <div>
@@ -497,31 +427,23 @@ const Dashboard = () => {
         </Card>
 
         {/* Lista de Agendamentos como Accordions */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
+        {loading ? <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : filteredAgendamentos.length === 0 ? (
-          <Card>
+          </div> : filteredAgendamentos.length === 0 ? <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               Nenhum agendamento encontrado
             </CardContent>
-          </Card>
-        ) : (
-          <Accordion type="single" collapsible className="space-y-2">
-            {filteredAgendamentos.map((agendamento) => (
-              <AccordionItem 
-                key={agendamento.id} 
-                value={agendamento.id}
-                className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-card"
-              >
+          </Card> : <Accordion type="single" collapsible className="space-y-2">
+            {filteredAgendamentos.map(agendamento => <AccordionItem key={agendamento.id} value={agendamento.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-card">
                 <AccordionTrigger className="px-6 py-4 hover:no-underline">
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-4 text-left">
                       <div>
                         <h3 className="text-lg font-semibold">{agendamento.nome_completo}</h3>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(agendamento.data_agendamento_calculada), "dd/MM/yyyy", { locale: ptBR })} • {agendamento.maternidade}
+                          {format(new Date(agendamento.data_agendamento_calculada), "dd/MM/yyyy", {
+                      locale: ptBR
+                    })} • {agendamento.maternidade}
                         </p>
                       </div>
                     </div>
@@ -607,13 +529,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Procedimentos</p>
                       <div className="flex flex-wrap gap-2">
-                        {agendamento.procedimentos.length > 0 ? (
-                          agendamento.procedimentos.map((proc, idx) => (
-                            <Badge key={idx} variant="secondary">{proc}</Badge>
-                          ))
-                        ) : (
-                          <Badge variant="outline">Não informado</Badge>
-                        )}
+                        {agendamento.procedimentos.length > 0 ? agendamento.procedimentos.map((proc, idx) => <Badge key={idx} variant="secondary">{proc}</Badge>) : <Badge variant="outline">Não informado</Badge>}
                       </div>
                     </div>
 
@@ -633,23 +549,17 @@ const Dashboard = () => {
                       </div>
                     </div>
 
-                    {agendamento.observacoes_agendamento && (
-                      <div>
+                    {agendamento.observacoes_agendamento && <div>
                         <p className="text-sm font-medium text-muted-foreground mb-2">Observações</p>
                         <p className="text-sm whitespace-pre-wrap bg-muted/50 p-3 rounded">
                           {agendamento.observacoes_agendamento}
                         </p>
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        )}
+              </AccordionItem>)}
+          </Accordion>}
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
