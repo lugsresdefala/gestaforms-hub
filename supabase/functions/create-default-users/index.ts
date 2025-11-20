@@ -83,30 +83,33 @@ serve(async (req) => {
     // POST request - create users (no auth required per user's internal team requirement)
     console.log(isInitialSetup ? "Initial system setup - creating first users" : "Creating default users");
 
+    // Gerar timestamp único para evitar duplicatas
+    const timestamp = Date.now();
+    
     const defaultUsers = [
       {
-        email: "admin@hapvida.com.br",
+        email: `admin.${timestamp}@hapvida.com.br`,
         password: generateSecurePassword(),
         nome: "Administrador",
         role: "admin",
         maternidade: null
       },
       {
-        email: "admin.med@hapvida.com.br",
+        email: `admin.med.${timestamp}@hapvida.com.br`,
         password: generateSecurePassword(),
         nome: "Administrador Médico",
         role: "admin_med",
         maternidade: null
       },
       {
-        email: "medico.unidade@hapvida.com.br",
+        email: `medico.unidade.${timestamp}@hapvida.com.br`,
         password: generateSecurePassword(),
         nome: "Médico de Unidade",
         role: "medico_unidade",
         maternidade: null
       },
       {
-        email: "medico.maternidade@hapvida.com.br",
+        email: `medico.maternidade.${timestamp}@hapvida.com.br`,
         password: generateSecurePassword(),
         nome: "Médico de Maternidade",
         role: "medico_maternidade",
@@ -129,12 +132,7 @@ serve(async (req) => {
 
       if (authError) {
         console.error(`Erro ao criar usuário ${user.email}:`, authError);
-        results.push({
-          email: user.email,
-          success: false,
-          error: authError.message
-        });
-        continue;
+        continue; // Pula e não adiciona ao resultado
       }
 
       // Criar role
@@ -148,26 +146,19 @@ serve(async (req) => {
 
       if (roleError) {
         console.error(`Erro ao criar role para ${user.email}:`, roleError);
-        results.push({
-          email: user.email,
-          success: false,
-          error: roleError.message
-        });
-      } else {
-        results.push({
-          email: user.email,
-          success: true,
-          password: user.password,
-          role: user.role
-        });
+        continue; // Pula e não adiciona ao resultado
       }
+      
+      // Só adiciona ao resultado se criou com sucesso
+      results.push({
+        email: user.email,
+        password: user.password,
+        role: user.role
+      });
     }
 
     return new Response(
-      JSON.stringify({
-        message: "Usuários padrão criados",
-        results
-      }),
+      JSON.stringify({ results }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200
