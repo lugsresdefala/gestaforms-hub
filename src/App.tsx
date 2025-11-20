@@ -127,7 +127,7 @@ const App = () => (
             <Route 
               path="/aprovacoes-usuarios"
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <AprovacoesUsuarios />
                   </AppLayout>
