@@ -37,7 +37,10 @@ export const calcularIGAtual = (agendamento: AgendamentoData): string => {
 
     // Se tiver DUM confiável, calcular IG por DUM também
     let igDum = null;
-    if (agendamento.dum_status === 'certa' && agendamento.data_dum) {
+    const dumConfiavel = agendamento.dum_status?.toLowerCase().includes('sim') || 
+                         agendamento.dum_status?.toLowerCase().includes('confiavel') ||
+                         agendamento.dum_status === 'certa';
+    if (dumConfiavel && agendamento.data_dum) {
       const dataDum = new Date(agendamento.data_dum);
       igDum = calcularIgPorDum(dataDum, dataReferencia);
     }
@@ -76,7 +79,10 @@ export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string =
 
     // Se tiver DUM confiável, calcular IG por DUM também
     let igDum = null;
-    if (agendamento.dum_status === 'certa' && agendamento.data_dum) {
+    const dumConfiavel = agendamento.dum_status?.toLowerCase().includes('sim') || 
+                         agendamento.dum_status?.toLowerCase().includes('confiavel') ||
+                         agendamento.dum_status === 'certa';
+    if (dumConfiavel && agendamento.data_dum) {
       const dataDum = new Date(agendamento.data_dum);
       igDum = calcularIgPorDum(dataDum, dataAgendamento);
     }
