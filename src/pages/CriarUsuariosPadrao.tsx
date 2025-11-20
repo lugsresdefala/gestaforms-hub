@@ -1,15 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, Copy, Check } from "lucide-react";
+import { Loader2, UserPlus, Copy, Check, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const CriarUsuariosPadrao = () => {
   const [loading, setLoading] = useState(false);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [isInitialSetup, setIsInitialSetup] = useState(false);
+  const [checkingSetup, setCheckingSetup] = useState(true);
+  const { user, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkSystemSetup();
+  }, [user, isAdmin]);
+
+  const checkSystemSetup = async () => {
+    try {
+      // Check if there are any users in the system
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      setIsInitialSetup(count === 0);
+      
+      // If not initial setup and user is not admin, redirect
+      if (count !== 0 && user && !isAdmin()) {
+        toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
+        navigate('/');
+      }
+    } catch (error) {
+      console.error("Erro ao verificar setup:", error);
+    } finally {
+      setCheckingSetup(false);
+    }
+  };
 
   const criarUsuarios = async () => {
     setLoading(true);
@@ -37,6 +69,30 @@ const CriarUsuariosPadrao = () => {
     setTimeout(() => setCopiedEmail(null), 2000);
   };
 
+  if (checkingSetup) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-8 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Se não é setup inicial e usuário não está autenticado ou não é admin
+  if (!isInitialSetup && (!user || !isAdmin())) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-8">
+        <div className="container mx-auto max-w-4xl">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Acesso negado. Você precisa estar autenticado como administrador para acessar esta página.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-8">
       <div className="container mx-auto max-w-4xl">
@@ -44,10 +100,20 @@ const CriarUsuariosPadrao = () => {
           <CardHeader>
             <CardTitle className="text-2xl">Criar Usuários Padrão</CardTitle>
             <CardDescription>
-              Crie usuários de teste para os 3 tipos de perfil do sistema
+              {isInitialSetup 
+                ? "Setup inicial: Crie os primeiros usuários do sistema" 
+                : "Crie usuários de teste para os 3 tipos de perfil do sistema"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isInitialSetup && (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Nenhum usuário encontrado no sistema. Esta é a configuração inicial.
+                </AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-4">
               <h3 className="font-semibold">Usuários que serão criados:</h3>
               
