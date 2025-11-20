@@ -46,7 +46,7 @@ export const calcularIGAtual = (agendamento: AgendamentoData): string => {
     }
 
     // Determinar qual IG usar conforme protocolo
-    const { igFinal } = determinarIgFinal(igDum, igUsg);
+    const { igFinal } = determinarIgFinal(igDum, igUsg, agendamento.semanas_usg);
 
     return igFinal.displayText;
   } catch (error) {
@@ -66,16 +66,7 @@ export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string =
       return 'Sem data definida';
     }
     
-    console.log('=== DEBUG IG na Data Agendada ===');
-    console.log('Data agendamento calculada:', agendamento.data_agendamento_calculada);
-    console.log('Data primeiro USG:', agendamento.data_primeiro_usg);
-    console.log('Semanas USG:', agendamento.semanas_usg);
-    console.log('Dias USG:', agendamento.dias_usg);
-    console.log('DUM Status:', agendamento.dum_status);
-    console.log('Data DUM:', agendamento.data_dum);
-    
     const dataAgendamento = new Date(agendamento.data_agendamento_calculada);
-    console.log('Data agendamento convertida:', dataAgendamento.toISOString());
     
     // Calcular IG por USG usando a data do agendamento
     const dataUsg = new Date(agendamento.data_primeiro_usg);
@@ -97,13 +88,7 @@ export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string =
     }
 
     // Determinar qual IG usar conforme protocolo
-    const { igFinal } = determinarIgFinal(igDum, igUsg);
-    
-    console.log('IG USG:', igUsg);
-    console.log('IG DUM:', igDum);
-    console.log('IG Final:', igFinal);
-    console.log('Display text:', igFinal.displayText);
-    console.log('=================================');
+    const { igFinal } = determinarIgFinal(igDum, igUsg, agendamento.semanas_usg);
 
     return igFinal.displayText;
   } catch (error) {
