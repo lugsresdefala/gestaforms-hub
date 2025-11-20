@@ -1,5 +1,5 @@
 // Script para processar o CSV enviado pelo usuário imediatamente
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 const CSV_CONTENT = `ID,Hora de início,Hora da conclusão,Email,Nome,Nome completo da paciente,Data de nascimento da gestante ,CARTEIRINHA (tem na guia que sai do sistema - não inserir CPF),Número de Gestações,Número de Partos Cesáreas,Número de Partos Normais,Número de Abortos,Informe dois telefones de contato com o paciente para que ele seja contato pelo hospital,Informe o procedimento(s) que será(ão) realizado(s),DUM ,Data da DUM,Data do Primeiro USG,"Numero de semanas no primeiro USG (inserir apenas o numero) - considerar o exame entre 8 e 12 semanas, embrião com BCF","Numero de dias no primeiro USG (inserir apenas o numero)- considerar o exame entre 8 e 12 semanas, embrião com BCF","USG mais recente (Inserir data, apresentação, PFE com percentil, ILA/MBV e doppler)","Informe IG pretendida para o procedimento 
 * Não confirmar essa data para a paciente, dependendo da agenda hospitalar poderemos ter uma variação

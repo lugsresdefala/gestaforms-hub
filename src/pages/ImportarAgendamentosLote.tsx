@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { importarAgendamentosLote } from '@/utils/importAgendamentosLote';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ImportarAgendamentosLote() {
