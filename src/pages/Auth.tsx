@@ -120,29 +120,47 @@ const Auth = () => {
     );
     
     if (!error) {
-      // Aguardar um pouco para garantir que o usuário foi criado
+      // Aguardar para garantir que o perfil foi criado
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Fazer login para obter o user_id
-      const { data: sessionData } = await supabase.auth.signInWithPassword({
+      const { data: sessionData, error: loginError } = await supabase.auth.signInWithPassword({
         email: signupData.email,
         password: signupData.password,
       });
 
+      if (loginError) {
+        console.error('Erro no login após cadastro:', loginError);
+        toast.error('Cadastro realizado mas não foi possível criar a solicitação. Entre em contato com o suporte.');
+        setLoading(false);
+        return;
+      }
+
       if (sessionData.user) {
+        console.log('Criando solicitação para user_id:', sessionData.user.id);
+        
         // Criar solicitação de acesso
-        const { error: solicitacaoError } = await supabase
+        const { error: solicitacaoError, data: solicitacaoData } = await supabase
           .from('solicitacoes_acesso')
           .insert({
             user_id: sessionData.user.id,
             tipo_acesso: signupData.tipoAcesso,
             maternidade: signupData.maternidade || null,
             justificativa: signupData.justificativa
-          });
+          })
+          .select();
 
         if (solicitacaoError) {
           console.error('Erro ao criar solicitação:', solicitacaoError);
+          toast.error(`Erro ao criar solicitação: ${solicitacaoError.message}. Entre em contato com o suporte.`);
+          
+          // Fazer logout mesmo com erro
+          await supabase.auth.signOut();
+          setLoading(false);
+          return;
         }
+
+        console.log('Solicitação criada com sucesso:', solicitacaoData);
 
         // Fazer logout
         await supabase.auth.signOut();
