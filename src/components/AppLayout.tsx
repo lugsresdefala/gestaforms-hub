@@ -102,6 +102,11 @@ const AppSidebar = () => {
     url: "/comparar-pacientes",
     icon: FileCheck,
     show: isAdmin()
+  }, {
+    title: "Corrigir Erros Importação",
+    url: "/corrigir-erros-importacao",
+    icon: FileCheck,
+    show: isAdmin()
   }].filter(item => item.show);
   return <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
