@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload, HelpCircle, Shield } from "lucide-react";
+import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload, HelpCircle, Shield, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
@@ -164,6 +164,14 @@ const AppSidebar = () => {
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
+                  <NavLink to="/protocolos" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                    <FileText className="h-4 w-4" />
+                    {!collapsed && <span className="text-sm">Protocolos</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
                   <NavLink to="/guia" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
                     <BookOpen className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Guia</span>}
@@ -183,6 +191,14 @@ const AppSidebar = () => {
                   <NavLink to="/sobre" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
                     <BookOpen className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Sobre</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/contato" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                    <Mail className="h-4 w-4" />
+                    {!collapsed && <span className="text-sm">Contato</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
