@@ -73,8 +73,17 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/termos" element={<TermosDeUso />} />
             <Route path="/privacidade" element={<PoliticaPrivacidade />} />
-            <Route path="/criar-usuarios-padrao" element={<CriarUsuariosPadrao />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route 
+              path="/criar-usuarios-padrao" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <CriarUsuariosPadrao />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/" 
               element={
