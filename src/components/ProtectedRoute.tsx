@@ -1,6 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -18,6 +19,40 @@ const ProtectedRoute = ({
   requireMedicoMaternidade 
 }: ProtectedRouteProps) => {
   const { user, loading, isAdmin, isAdminMed, isMedicoUnidade, isMedicoMaternidade } = useAuth();
+  const { toast } = useToast();
+  const [hasShownError, setHasShownError] = useState(false);
+
+  // Determine authorization status
+  const isUnauthorized = user && (
+    (requireAdmin && !isAdmin()) ||
+    (requireAdminMed && !isAdminMed() && !isAdmin()) ||
+    (requireMedicoUnidade && !isMedicoUnidade() && !isAdmin()) ||
+    (requireMedicoMaternidade && !isMedicoMaternidade() && !isAdmin())
+  );
+
+  // Show error toast when unauthorized
+  useEffect(() => {
+    if (isUnauthorized && !hasShownError) {
+      let message = "Esta página requer permissões especiais.";
+      
+      if (requireAdmin) {
+        message = "Esta página requer permissões de administrador.";
+      } else if (requireAdminMed) {
+        message = "Esta página requer permissões de administrador médico.";
+      } else if (requireMedicoUnidade) {
+        message = "Esta página requer permissões de médico de unidade.";
+      } else if (requireMedicoMaternidade) {
+        message = "Esta página requer permissões de médico de maternidade.";
+      }
+
+      toast({
+        variant: "destructive",
+        title: "Acesso negado",
+        description: message,
+      });
+      setHasShownError(true);
+    }
+  }, [isUnauthorized, hasShownError, requireAdmin, requireAdminMed, requireMedicoUnidade, requireMedicoMaternidade, toast]);
 
   if (loading) {
     return (
@@ -31,19 +66,7 @@ const ProtectedRoute = ({
     return <Navigate to="/auth" replace />;
   }
 
-  if (requireAdmin && !isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (requireAdminMed && !isAdminMed() && !isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (requireMedicoUnidade && !isMedicoUnidade() && !isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-
-  if (requireMedicoMaternidade && !isMedicoMaternidade() && !isAdmin()) {
+  if (isUnauthorized) {
     return <Navigate to="/" replace />;
   }
 
