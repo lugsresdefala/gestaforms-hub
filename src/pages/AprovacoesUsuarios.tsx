@@ -26,27 +26,15 @@ interface Solicitacao {
 }
 
 const AprovacoesUsuarios = () => {
-  const navigate = useNavigate();
-  const { user, isAdmin, isAdminMed } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
 
-  const podeAprovarUsuarios = isAdmin() || isAdminMed();
-
   useEffect(() => {
-    if (!podeAprovarUsuarios) {
-      toast({
-        variant: "destructive",
-        title: "Acesso negado",
-        description: "Apenas administradores gerais ou médicos administradores podem acessar esta página.",
-      });
-      navigate('/');
-      return;
-    }
     fetchSolicitacoesPendentes();
-  }, [podeAprovarUsuarios, navigate]);
+  }, []);
 
   const fetchSolicitacoesPendentes = async () => {
     setLoading(true);
