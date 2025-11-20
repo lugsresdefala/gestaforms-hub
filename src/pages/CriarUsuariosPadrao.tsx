@@ -24,20 +24,26 @@ const CriarUsuariosPadrao = () => {
 
   const checkSystemSetup = async () => {
     try {
-      // Check if there are any users in the system
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      // Call edge function to check if it's initial setup
+      const { data, error } = await supabase.functions.invoke('create-default-users', {
+        method: 'GET'
+      });
 
-      setIsInitialSetup(count === 0);
+      if (error) {
+        console.error("Erro ao verificar setup:", error);
+        setIsInitialSetup(false);
+      } else {
+        setIsInitialSetup(data?.isInitialSetup ?? false);
+      }
       
       // If not initial setup and user is not admin, redirect
-      if (count !== 0 && user && !isAdmin()) {
+      if (!data?.isInitialSetup && user && !isAdmin()) {
         toast.error("Acesso negado. Apenas administradores podem acessar esta página.");
         navigate('/');
       }
     } catch (error) {
       console.error("Erro ao verificar setup:", error);
+      setIsInitialSetup(false);
     } finally {
       setCheckingSetup(false);
     }
