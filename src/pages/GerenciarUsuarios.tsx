@@ -1,303 +1,372 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Check, X, Clock, UserCheck } from "lucide-react";
+import { Search, UserCog, UserX, UserCheck, Shield, Calendar, Building2, Stethoscope } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { EditUserRolesDialog } from "@/components/EditUserRolesDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-interface Solicitacao {
+interface UserData {
   id: string;
-  user_id: string;
-  tipo_acesso: string;
-  maternidade: string | null;
-  justificativa: string;
-  status: string;
-  created_at: string;
-}
-
-interface Profile {
   nome_completo: string;
   email: string;
+  status_aprovacao: string;
+  created_at: string;
+  roles: Array<{
+    id: string;
+    role: string;
+    maternidade: string | null;
+  }>;
 }
 
 const GerenciarUsuarios = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
-  const [profiles, setProfiles] = useState<{ [key: string]: Profile }>({});
+  const { isAdmin, isAdminMed } = useAuth();
+  const [usuarios, setUsuarios] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [userToToggleStatus, setUserToToggleStatus] = useState<UserData | null>(null);
 
   useEffect(() => {
-    fetchSolicitacoesPendentes();
+    fetchUsuarios();
   }, []);
 
-  const fetchSolicitacoesPendentes = async () => {
+  const fetchUsuarios = async () => {
     setLoading(true);
     
-    // Buscar solicitações
-    const { data: solicitacoesData, error: solicitacoesError } = await supabase
-      .from('solicitacoes_acesso')
-      .select('*')
-      .eq('status', 'pendente')
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, nome_completo, email, status_aprovacao, created_at')
       .order('created_at', { ascending: false });
 
-    if (solicitacoesError) {
-      toast.error("Erro ao carregar solicitações: " + solicitacoesError.message);
+    if (profilesError) {
+      toast.error("Erro ao carregar usuários: " + profilesError.message);
       setLoading(false);
       return;
     }
 
-    setSolicitacoes(solicitacoesData || []);
+    // Buscar roles de cada usuário
+    const usersWithRoles = await Promise.all(
+      (profilesData || []).map(async (profile) => {
+        const { data: rolesData } = await supabase
+          .from('user_roles')
+          .select('id, role, maternidade')
+          .eq('user_id', profile.id);
 
-    // Buscar profiles dos usuários
-    if (solicitacoesData && solicitacoesData.length > 0) {
-      const userIds = solicitacoesData.map(s => s.user_id);
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, nome_completo, email')
-        .in('id', userIds);
+        return {
+          ...profile,
+          roles: rolesData || []
+        };
+      })
+    );
 
-      if (profilesData) {
-        const profilesMap = profilesData.reduce((acc, profile) => {
-          acc[profile.id] = {
-            nome_completo: profile.nome_completo,
-            email: profile.email
-          };
-          return acc;
-        }, {} as { [key: string]: Profile });
-        setProfiles(profilesMap);
-      }
-    }
-
+    setUsuarios(usersWithRoles);
     setLoading(false);
   };
 
-  const handleAprovar = async (solicitacao: Solicitacao) => {
-    // Atualizar solicitação
-    const { error: solicitacaoError } = await supabase
-      .from('solicitacoes_acesso')
-      .update({
-        status: 'aprovado',
-        aprovado_por: user?.id,
-        aprovado_em: new Date().toISOString(),
-        observacoes_aprovacao: observacoes[solicitacao.id] || null,
-      })
-      .eq('id', solicitacao.id);
-
-    if (solicitacaoError) {
-      toast.error("Erro ao aprovar solicitação: " + solicitacaoError.message);
-      return;
-    }
-
-    // Criar role para o usuário
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert([{
-        user_id: solicitacao.user_id,
-        role: solicitacao.tipo_acesso as 'admin' | 'medico_unidade' | 'medico_maternidade',
-        maternidade: solicitacao.maternidade
-      }]);
-
-    if (roleError) {
-      toast.error("Erro ao criar role: " + roleError.message);
-      return;
-    }
-
-    // Atualizar profile
-    const { error: profileError } = await supabase
+  const handleToggleStatus = async (user: UserData) => {
+    const newStatus = user.status_aprovacao === 'ativo' ? 'inativo' : 'ativo';
+    
+    const { error } = await supabase
       .from('profiles')
-      .update({
-        status_aprovacao: 'ativo',
-        tipo_acesso_solicitado: solicitacao.tipo_acesso,
-        maternidade_solicitada: solicitacao.maternidade,
-        aprovado_por: user?.id,
-        aprovado_em: new Date().toISOString()
-      })
-      .eq('id', solicitacao.user_id);
+      .update({ status_aprovacao: newStatus })
+      .eq('id', user.id);
 
-    if (profileError) {
-      toast.error("Erro ao atualizar profile: " + profileError.message);
+    if (error) {
+      toast.error("Erro ao atualizar status: " + error.message);
       return;
     }
 
-    toast.success("Solicitação aprovada! O usuário agora pode acessar o sistema.");
-    fetchSolicitacoesPendentes();
+    toast.success(`Usuário ${newStatus === 'ativo' ? 'reativado' : 'desativado'} com sucesso`);
+    setUserToToggleStatus(null);
+    fetchUsuarios();
   };
 
-  const handleRejeitar = async (solicitacaoId: string, userId: string) => {
-    if (!observacoes[solicitacaoId]) {
-      toast.error("Por favor, adicione uma observação explicando o motivo da rejeição.");
-      return;
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Shield className="h-4 w-4" />;
+      case 'admin_med':
+        return <Stethoscope className="h-4 w-4" />;
+      case 'medico_unidade':
+        return <Calendar className="h-4 w-4" />;
+      case 'medico_maternidade':
+        return <Building2 className="h-4 w-4" />;
+      default:
+        return null;
     }
-
-    // Atualizar solicitação
-    const { error: solicitacaoError } = await supabase
-      .from('solicitacoes_acesso')
-      .update({
-        status: 'rejeitado',
-        aprovado_por: user?.id,
-        aprovado_em: new Date().toISOString(),
-        observacoes_aprovacao: observacoes[solicitacaoId],
-      })
-      .eq('id', solicitacaoId);
-
-    if (solicitacaoError) {
-      toast.error("Erro ao rejeitar solicitação: " + solicitacaoError.message);
-      return;
-    }
-
-    // Atualizar profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        status_aprovacao: 'inativo'
-      })
-      .eq('id', userId);
-
-    if (profileError) {
-      console.error("Erro ao atualizar profile:", profileError);
-    }
-
-    toast.success("Solicitação rejeitada.");
-    fetchSolicitacoesPendentes();
   };
 
-  const getTipoAcessoLabel = (tipo: string) => {
-    const labels: Record<string, string> = {
-      'admin': 'Administrador',
-      'medico_unidade': 'Médico de Unidade PGS',
-      'medico_maternidade': 'Médico de Maternidade'
-    };
-    return labels[tipo] || tipo;
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'admin_med':
+        return 'Admin Médico';
+      case 'medico_unidade':
+        return 'Médico Unidade';
+      case 'medico_maternidade':
+        return 'Médico Maternidade';
+      default:
+        return role;
+    }
   };
 
-  if (loading) {
+  const filteredUsuarios = usuarios.filter(user => {
+    const matchesSearch = 
+      user.nome_completo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = filterRole === "all" || user.roles.some(r => r.role === filterRole);
+    const matchesStatus = filterStatus === "all" || user.status_aprovacao === filterStatus;
+
+    return matchesSearch && matchesRole && matchesStatus;
+  });
+
+  if (!isAdmin() && !isAdminMed()) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              Você não tem permissão para acessar esta página.
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold">Gerenciar Usuários</h1>
-              <p className="text-muted-foreground">
-                {solicitacoes.length} solicitação(ões) pendente(s)
-              </p>
-            </div>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciar Usuários</h1>
+          <p className="text-muted-foreground mt-1">
+            Visualize e gerencie todos os usuários do sistema
+          </p>
         </div>
-
-        {solicitacoes.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <UserCheck className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-lg text-muted-foreground">
-                Não há solicitações de acesso pendentes
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {solicitacoes.map((solicitacao) => (
-              <Card key={solicitacao.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle>{profiles[solicitacao.user_id]?.nome_completo || 'Carregando...'}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {profiles[solicitacao.user_id]?.email || ''}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Solicitado em: {format(new Date(solicitacao.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                      </p>
-                    </div>
-                    <Badge variant="secondary">
-                      <Clock className="h-3 w-3 mr-1" />
-                      Pendente
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium">Tipo de Acesso Solicitado</p>
-                      <Badge variant="outline" className="mt-1">
-                        {getTipoAcessoLabel(solicitacao.tipo_acesso)}
-                      </Badge>
-                    </div>
-                    {solicitacao.maternidade && (
-                      <div>
-                        <p className="text-sm font-medium">Maternidade</p>
-                        <p className="text-sm text-muted-foreground mt-1">{solicitacao.maternidade}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-medium mb-1">Justificativa</p>
-                    <div className="bg-muted rounded-lg p-3">
-                      <p className="text-sm text-muted-foreground">{solicitacao.justificativa}</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor={`obs-${solicitacao.id}`} className="text-sm font-medium mb-2 block">
-                      Observações (opcional para aprovação, obrigatório para rejeição)
-                    </Label>
-                    <Textarea
-                      id={`obs-${solicitacao.id}`}
-                      placeholder="Adicione observações sobre esta solicitação"
-                      value={observacoes[solicitacao.id] || ''}
-                      onChange={(e) => setObservacoes({ ...observacoes, [solicitacao.id]: e.target.value })}
-                      rows={2}
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={() => handleAprovar(solicitacao)}
-                      className="flex-1"
-                      variant="default"
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Aprovar
-                    </Button>
-                    <Button
-                      onClick={() => handleRejeitar(solicitacao.id, solicitacao.user_id)}
-                      className="flex-1"
-                      variant="destructive"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Rejeitar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Filtros */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome ou email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            <Select value={filterRole} onValueChange={setFilterRole}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Roles</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="admin_med">Admin Médico</SelectItem>
+                <SelectItem value="medico_unidade">Médico Unidade</SelectItem>
+                <SelectItem value="medico_maternidade">Médico Maternidade</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="ativo">Ativos</SelectItem>
+                <SelectItem value="inativo">Inativos</SelectItem>
+                <SelectItem value="pendente">Pendentes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Total: {filteredUsuarios.length} usuários</span>
+            <span>•</span>
+            <span>Ativos: {filteredUsuarios.filter(u => u.status_aprovacao === 'ativo').length}</span>
+            <span>•</span>
+            <span>Inativos: {filteredUsuarios.filter(u => u.status_aprovacao === 'inativo').length}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela de Usuários */}
+      {loading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando usuários...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredUsuarios.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground py-8">
+              Nenhum usuário encontrado com os filtros aplicados.
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Usuário</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Roles</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Cadastrado em</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsuarios.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.nome_completo}</TableCell>
+                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {user.roles.length === 0 ? (
+                            <Badge variant="outline">Sem roles</Badge>
+                          ) : (
+                            user.roles.map((role) => (
+                              <Badge
+                                key={role.id}
+                                variant="secondary"
+                                className="flex items-center gap-1"
+                              >
+                                {getRoleIcon(role.role)}
+                                <span>{getRoleLabel(role.role)}</span>
+                                {role.maternidade && (
+                                  <span className="text-xs opacity-70">
+                                    ({role.maternidade})
+                                  </span>
+                                )}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            user.status_aprovacao === 'ativo'
+                              ? 'default'
+                              : user.status_aprovacao === 'inativo'
+                              ? 'destructive'
+                              : 'secondary'
+                          }
+                        >
+                          {user.status_aprovacao === 'ativo' ? 'Ativo' : 
+                           user.status_aprovacao === 'inativo' ? 'Inativo' : 'Pendente'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedUser(user)}
+                            disabled={!isAdmin()}
+                          >
+                            <UserCog className="h-4 w-4 mr-1" />
+                            Editar Roles
+                          </Button>
+                          
+                          <Button
+                            size="sm"
+                            variant={user.status_aprovacao === 'ativo' ? 'destructive' : 'default'}
+                            onClick={() => setUserToToggleStatus(user)}
+                            disabled={!isAdmin()}
+                          >
+                            {user.status_aprovacao === 'ativo' ? (
+                              <>
+                                <UserX className="h-4 w-4 mr-1" />
+                                Desativar
+                              </>
+                            ) : (
+                              <>
+                                <UserCheck className="h-4 w-4 mr-1" />
+                                Reativar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog para Editar Roles */}
+      {selectedUser && (
+        <EditUserRolesDialog
+          user={selectedUser}
+          open={!!selectedUser}
+          onOpenChange={(open) => !open && setSelectedUser(null)}
+          onSuccess={() => {
+            setSelectedUser(null);
+            fetchUsuarios();
+          }}
+        />
+      )}
+
+      {/* Dialog de Confirmação de Desativação/Reativação */}
+      <AlertDialog open={!!userToToggleStatus} onOpenChange={(open) => !open && setUserToToggleStatus(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {userToToggleStatus?.status_aprovacao === 'ativo' ? 'Desativar Usuário' : 'Reativar Usuário'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {userToToggleStatus?.status_aprovacao === 'ativo' 
+                ? `Tem certeza que deseja desativar o usuário "${userToToggleStatus?.nome_completo}"? Ele não poderá mais acessar o sistema até ser reativado.`
+                : `Tem certeza que deseja reativar o usuário "${userToToggleStatus?.nome_completo}"? Ele poderá acessar o sistema novamente com os roles atuais.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToToggleStatus && handleToggleStatus(userToToggleStatus)}
+              className={userToToggleStatus?.status_aprovacao === 'ativo' ? 'bg-destructive hover:bg-destructive/90' : ''}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
