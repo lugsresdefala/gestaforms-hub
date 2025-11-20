@@ -97,6 +97,11 @@ const AppSidebar = () => {
     url: "/logs-auditoria",
     icon: Shield,
     show: isAdmin()
+  }, {
+    title: "Comparar Pacientes",
+    url: "/comparar-pacientes",
+    icon: FileCheck,
+    show: isAdmin()
   }].filter(item => item.show);
   return <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
