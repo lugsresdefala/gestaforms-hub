@@ -22,20 +22,25 @@ export const validarProtocolo = (dados: {
   const igTotal = dados.igSemanas + (dados.igDias / 7);
   
   // VALIDAÇÃO CRÍTICA: DMG com repercussão fetal (FETO GIG / Macrossomia)
-  const temDMG = dados.diagnosticosMaternos.some(d => 
-    d.includes('dmg') || d.includes('dm') || d.includes('diabetes')
-  );
+  const temDMG = dados.diagnosticosMaternos.some(d => {
+    const lower = d.toLowerCase();
+    return lower.includes('dmg') || lower.includes('dm2') || lower.includes('dm 2') || 
+           lower.includes('diabetes') || lower.includes('diabete');
+  });
   
-  const temRepercussaoFetal = dados.diagnosticosFetais.some(d => 
-    d.includes('macrossomia') || d.includes('gig') || d.includes('feto_gig') ||
-    d.toLowerCase().includes('feto gig') || d.toLowerCase().includes('grande para idade')
-  );
+  const temRepercussaoFetal = [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].some(d => {
+    const lower = d.toLowerCase();
+    return lower.includes('macrossomia') || lower.includes('gig') || lower.includes('feto gig') ||
+           lower.includes('grande para idade') || lower.includes('grande para a idade') ||
+           lower.includes('repercussão fetal') || lower.includes('repercussao fetal') ||
+           lower.includes('peso fetal elevado') || lower.includes('feto grande');
+  });
   
   // DMG + Repercussão Fetal = protocolo DESCOMPENSADA (37-38 semanas MAX)
   if (temDMG && temRepercussaoFetal) {
     if (igTotal >= 39) {
       alertas.push('🚨 CRÍTICO: DMG com repercussão fetal (FETO GIG) - IG máxima recomendada: 37-38 semanas');
-      alertas.push('⚠️ IG atual ('+dados.igSemanas+'s'+dados.igDias+'d) está ACIMA do protocolo para DMG descompensada');
+      alertas.push('⚠️ IG atual ('+dados.igSemanas+'s'+dados.igDias+'d = '+igTotal.toFixed(1)+' semanas) está ACIMA do protocolo');
       compativel = false;
     } else if (igTotal >= 38) {
       alertas.push('⚠️ ATENÇÃO: DMG com repercussão fetal - IG no limite superior (38 semanas)');
@@ -105,18 +110,58 @@ export const validarProtocolo = (dados: {
   }
 
   // VALIDAÇÃO CRÍTICA: Múltiplas comorbidades de alta prioridade
-  const patologiasAltaPrioridade = [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais].filter(d => {
-    const protocolo = PROTOCOLS[d];
-    return protocolo && protocolo.prioridade <= 2;
+  // Detectar comorbidades graves no texto livre
+  const comorbidadesDetectadas: string[] = [];
+  const todosOsDiagnosticos = [...dados.diagnosticosMaternos, ...dados.diagnosticosFetais];
+  
+  todosOsDiagnosticos.forEach(d => {
+    const lower = d.toLowerCase();
+    
+    // Hipertensão grave
+    if (lower.includes('pré-eclâmpsia grave') || lower.includes('pre-eclampsia grave') || 
+        lower.includes('pe grave') || lower.includes('dheg') || lower.includes('eclâmpsia') ||
+        lower.includes('eclampsia') || lower.includes('hellp')) {
+      comorbidadesDetectadas.push('Distúrbio hipertensivo grave');
+    }
+    
+    // Diabetes descompensada
+    if ((lower.includes('dmg') || lower.includes('diabetes')) && 
+        (lower.includes('descomp') || lower.includes('descontrole') || lower.includes('insulina'))) {
+      comorbidadesDetectadas.push('Diabetes descompensada/insulinodependente');
+    }
+    
+    // Placenta prévia/acretismo
+    if (lower.includes('placenta') && (lower.includes('prévia') || lower.includes('previa') || 
+        lower.includes('acreta') || lower.includes('percreta') || lower.includes('acretismo'))) {
+      comorbidadesDetectadas.push('Patologia placentária grave');
+    }
+    
+    // Restrição de crescimento grave
+    if (lower.includes('rcf') || (lower.includes('restrição') && lower.includes('crescimento')) ||
+        lower.includes('restricao') || lower.includes('doppler crítico') || lower.includes('doppler critico')) {
+      comorbidadesDetectadas.push('Restrição de crescimento fetal');
+    }
+    
+    // Gestação gemelar monocoriônica
+    if ((lower.includes('gemelar') || lower.includes('gêmeos')) && 
+        (lower.includes('mono') || lower.includes('monocoriônica'))) {
+      comorbidadesDetectadas.push('Gestação gemelar monocoriônica');
+    }
   });
   
-  if (patologiasAltaPrioridade.length >= 2) {
-    alertas.push(`🚨 ATENÇÃO: ${patologiasAltaPrioridade.length} comorbidades de alta prioridade detectadas`);
+  // Remover duplicadas
+  const comorbidadesUnicas = [...new Set(comorbidadesDetectadas)];
+  
+  if (comorbidadesUnicas.length >= 2) {
+    alertas.push(`🚨 ATENÇÃO: ${comorbidadesUnicas.length} comorbidades graves detectadas: ${comorbidadesUnicas.join(', ')}`);
     recomendacoes.push('⚠️ Múltiplas comorbidades requerem avaliação médica criteriosa da IG de interrupção');
     
-    // Com múltiplas comorbidades, ser mais restritivo
-    if (igTotal >= 38) {
-      alertas.push('⚠️ Com múltiplas comorbidades, IG ≥38 semanas requer justificativa clínica');
+    // Com múltiplas comorbidades graves, ser mais restritivo
+    if (igTotal >= 38.5) {
+      alertas.push('⚠️ Com múltiplas comorbidades graves, IG ≥38.5 semanas requer justificativa clínica detalhada');
+      compativel = false;
+    } else if (igTotal >= 38) {
+      alertas.push('⚠️ Com múltiplas comorbidades graves, considerar antecipação para <38 semanas');
     }
   }
 
