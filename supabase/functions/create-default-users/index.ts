@@ -72,6 +72,15 @@ serve(async (req) => {
     // If there are no users, allow initial setup without authentication
     const isInitialSetup = !usersData.users || usersData.users.length === 0;
 
+    // GET request - just return setup status
+    if (req.method === "GET") {
+      return new Response(
+        JSON.stringify({ isInitialSetup }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
+    // POST request - create users
     if (!isInitialSetup) {
       // SERVER-SIDE SECURITY: Extract and verify JWT token
       const authHeader = req.headers.get("Authorization");
