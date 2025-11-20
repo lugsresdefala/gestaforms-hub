@@ -75,9 +75,11 @@ serve(async (req) => {
     if (!isInitialSetup) {
       // SERVER-SIDE SECURITY: Extract and verify JWT token
       const authHeader = req.headers.get("Authorization");
+      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
       
-      // Check if we have a proper Bearer token (not just the anon key)
+      // Check if we have authorization header
       if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        console.warn("Missing authorization header");
         return new Response(
           JSON.stringify({ error: "Unauthorized: Missing authorization header" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
@@ -86,9 +88,9 @@ serve(async (req) => {
 
       const token = authHeader.replace("Bearer ", "");
       
-      // Check if token looks like anon key (starts with "eyJ" and is the anon key)
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+      // If token is the anon key, no user is authenticated
       if (token === anonKey) {
+        console.warn("Anon key used - no user authenticated");
         return new Response(
           JSON.stringify({ error: "Unauthorized: User authentication required" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
@@ -96,7 +98,18 @@ serve(async (req) => {
       }
 
       // SERVER-SIDE SECURITY: Verify user identity from JWT
-      const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+      // Use regular client to verify session, not service role
+      const supabaseClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        anonKey,
+        {
+          global: {
+            headers: { Authorization: authHeader }
+          }
+        }
+      );
+
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
       
       if (userError || !user) {
         console.error("Authentication error:", userError);
