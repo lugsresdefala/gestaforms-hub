@@ -15,8 +15,8 @@ interface AuthContextType {
   session: Session | null;
   userRoles: UserRoleData[];
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, nomeCompleto: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, nomeCompleto: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   isAdmin: () => boolean;
   isAdminMed: () => boolean;
@@ -80,57 +80,85 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao fazer login",
+          description: error.message,
+        });
+      }
+      
+      return { error };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao fazer login';
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
-        description: error.message,
+        description: errorMessage,
       });
+      return { error: err };
     }
-    
-    return { error };
   };
 
   const signUp = async (email: string, password: string, nomeCompleto: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          nome_completo: nomeCompleto,
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            nome_completo: nomeCompleto,
+          },
         },
-      },
-    });
-    
-    if (error) {
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro ao cadastrar",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar o cadastro.",
+        });
+      }
+      
+      return { error };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao cadastrar';
       toast({
         variant: "destructive",
         title: "Erro ao cadastrar",
-        description: error.message,
+        description: errorMessage,
       });
-    } else {
-      toast({
-        title: "Cadastro realizado!",
-        description: "Verifique seu email para confirmar o cadastro.",
-      });
+      return { error: err };
     }
-    
-    return { error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setUserRoles([]);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setUserRoles([]);
+    } catch (err) {
+      console.error('Erro ao fazer logout:', err);
+      // Mesmo com erro, limpa o estado local
+      setUser(null);
+      setSession(null);
+      setUserRoles([]);
+    }
   };
 
   const isAdmin = () => userRoles.some(r => r.role === 'admin');
