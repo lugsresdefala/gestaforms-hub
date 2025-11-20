@@ -188,6 +188,10 @@ const AprovacoesAgendamentos = () => {
   };
 
   const handleDataChange = (agendamentoId: string, novaData: string) => {
+    console.log('=== handleDataChange ===');
+    console.log('Agendamento ID:', agendamentoId);
+    console.log('Nova data:', novaData);
+    
     setDatasAprovacao((prev) => ({
       ...prev,
       [agendamentoId]: novaData
@@ -195,8 +199,11 @@ const AprovacoesAgendamentos = () => {
     
     // Validar protocolo para esta nova data
     const agendamento = agendamentos.find(a => a.id === agendamentoId);
+    console.log('Agendamento encontrado:', agendamento?.nome_completo);
+    
     if (agendamento && novaData) {
       const validacao = validarProtocoloParaAgendamento(agendamento, novaData);
+      console.log('Validação resultado:', validacao);
       setValidacoesProtocolo((prev) => ({
         ...prev,
         [agendamentoId]: validacao
