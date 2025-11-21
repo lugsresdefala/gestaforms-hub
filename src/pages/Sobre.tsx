@@ -345,7 +345,7 @@ const Sobre = () => {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/guia-sistema')}
+                onClick={() => navigate('/guia')}
                 className="gap-2"
               >
                 <FileCheck className="h-4 w-4" />
