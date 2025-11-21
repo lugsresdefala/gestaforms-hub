@@ -27,83 +27,51 @@ const TutorialInterativo = ({ open, onOpenChange, userRole }: TutorialInterativo
 
   const steps = [
     {
-      title: 'Bem-vindo ao Sistema de Agendamentos Obstétricos!',
-      description: 'Vamos fazer um tour rápido para você conhecer as principais funcionalidades.',
+      title: 'Bem-vindo ao GestaForms Hub',
+      description: 'Sistema de agendamentos obstétricos simplificado',
       icon: Sparkles,
       content: (
         <div className="space-y-4">
           <p className="text-muted-foreground">
-            Este sistema foi desenvolvido para facilitar o gerenciamento de agendamentos de procedimentos 
-            obstétricos nas maternidades da rede Hapvida.
-          </p>
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-            <p className="text-sm">
-              <strong>Seu perfil:</strong> {userRole || 'Usuário'}
-            </p>
-          </div>
-        </div>
-      )
-    },
-    {
-      title: 'Dashboard Principal',
-      description: 'Visualize estatísticas e informações importantes em tempo real',
-      icon: Calendar,
-      content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            No dashboard você encontra:
+            Sistema para gerenciar agendamentos de procedimentos obstétricos nas maternidades Hapvida.
           </p>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Resumo de agendamentos pendentes, aprovados e rejeitados</span>
+              <span>Dashboard com estatísticas em tempo real</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Gráficos de ocupação por maternidade</span>
+              <span>Cálculo automático de idade gestacional</span>
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Próximos agendamentos programados</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Alertas de casos urgentes</span>
+              <span>Validação automática de protocolos</span>
             </li>
           </ul>
         </div>
       )
     },
     {
-      title: 'Criar Novo Agendamento',
-      description: 'Aprenda a criar agendamentos de forma rápida e eficiente',
+      title: 'Como Criar um Agendamento',
+      description: 'Processo rápido em 6 etapas guiadas',
       icon: FileText,
       content: (
         <div className="space-y-4">
-          <p className="text-muted-foreground">
-            O processo de criação de agendamento é dividido em 6 etapas:
-          </p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
             <div className="bg-muted/50 rounded-lg p-3">
-              <p className="font-medium text-sm mb-1">Etapa 1-2</p>
-              <p className="text-xs text-muted-foreground">Dados da paciente e histórico obstétrico</p>
+              <p className="font-medium text-sm">1. Dados da Paciente → 2. Histórico</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-3">
-              <p className="font-medium text-sm mb-1">Etapa 3-4</p>
-              <p className="text-xs text-muted-foreground">Idade gestacional e procedimentos</p>
+              <p className="font-medium text-sm">3. Idade Gestacional → 4. Procedimentos</p>
             </div>
             <div className="bg-muted/50 rounded-lg p-3">
-              <p className="font-medium text-sm mb-1">Etapa 5</p>
-              <p className="text-xs text-muted-foreground">Diagnósticos maternos e fetais</p>
-            </div>
-            <div className="bg-muted/50 rounded-lg p-3">
-              <p className="font-medium text-sm mb-1">Etapa 6</p>
-              <p className="text-xs text-muted-foreground">Dados finais e confirmação</p>
+              <p className="font-medium text-sm">5. Diagnósticos → 6. Confirmação</p>
             </div>
           </div>
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              💡 O sistema calcula automaticamente a idade gestacional e valida os protocolos obstétricos!
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+            <p className="text-sm">
+              💡 Sistema calcula IG e valida protocolos automaticamente
             </p>
           </div>
         </div>
@@ -111,115 +79,65 @@ const TutorialInterativo = ({ open, onOpenChange, userRole }: TutorialInterativo
     },
     {
       title: 'Fluxo de Aprovação',
-      description: 'Entenda como funciona o processo de aprovação',
+      description: 'Médico cria → Admin revisa → Aprovação',
       icon: Users,
       content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Todos os agendamentos passam por um fluxo de aprovação:
-          </p>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">
-                1
-              </div>
-              <div>
-                <p className="font-medium text-sm">Médico da Unidade cria o agendamento</p>
-                <p className="text-xs text-muted-foreground">Status: Pendente</p>
-              </div>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-sm">1</div>
+            <div>
+              <p className="font-medium text-sm">Médico da Unidade cria</p>
+              <p className="text-xs text-muted-foreground">Status: Pendente</p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-400 font-bold text-sm">
-                2
-              </div>
-              <div>
-                <p className="font-medium text-sm">Administrador Médico revisa</p>
-                <p className="text-xs text-muted-foreground">Valida dados e protocolos</p>
-              </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-400 font-bold text-sm">2</div>
+            <div>
+              <p className="font-medium text-sm">Admin Médico revisa</p>
+              <p className="text-xs text-muted-foreground">Valida dados</p>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-bold text-sm">
-                3
-              </div>
-              <div>
-                <p className="font-medium text-sm">Aprovação e definição de data</p>
-                <p className="text-xs text-muted-foreground">Status: Aprovado ou Rejeitado</p>
-              </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500/10 text-green-700 dark:text-green-400 font-bold text-sm">3</div>
+            <div>
+              <p className="font-medium text-sm">Aprovação</p>
+              <p className="text-xs text-muted-foreground">Aprovado ou Rejeitado</p>
             </div>
           </div>
         </div>
       )
     },
     {
-      title: 'Sistema de Ocupação',
-      description: 'Monitore a disponibilidade das maternidades',
-      icon: Building2,
-      content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            O sistema gerencia automaticamente as vagas:
-          </p>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Visualização de capacidade por maternidade</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Alertas automáticos de lotação</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Sugestão de datas alternativas</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-              <span>Calendário completo com visão mensal</span>
-            </li>
-          </ul>
-        </div>
-      )
-    },
-    {
-      title: 'Guia e Suporte',
-      description: 'Acesse recursos de ajuda a qualquer momento',
+      title: 'Precisa de Ajuda?',
+      description: 'Recursos disponíveis',
       icon: BookOpen,
       content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground">
-            Você sempre terá ajuda disponível:
-          </p>
-          <div className="space-y-3">
-            <Card className="bg-muted/50 border-primary/20">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-5 w-5 text-primary mt-1" />
-                  <div>
-                    <p className="font-medium text-sm mb-1">Guia do Sistema</p>
-                    <p className="text-xs text-muted-foreground">
-                      Documentação completa sobre fluxos e funcionalidades
-                    </p>
-                  </div>
+        <div className="space-y-3">
+          <Card className="bg-muted/50 border-primary/20">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <BookOpen className="h-5 w-5 text-primary mt-1" />
+                <div>
+                  <p className="font-medium text-sm">Guia do Sistema</p>
+                  <p className="text-xs text-muted-foreground">Documentação completa</p>
                 </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted/50 border-primary/20">
-              <CardContent className="pt-4">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="h-5 w-5 text-primary mt-1" />
-                  <div>
-                    <p className="font-medium text-sm mb-1">FAQ Integrado</p>
-                    <p className="text-xs text-muted-foreground">
-                      Perguntas frequentes e respostas rápidas
-                    </p>
-                  </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-muted/50 border-primary/20">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-3">
+                <Sparkles className="h-5 w-5 text-primary mt-1" />
+                <div>
+                  <p className="font-medium text-sm">FAQ</p>
+                  <p className="text-xs text-muted-foreground">Perguntas frequentes</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+              </div>
+            </CardContent>
+          </Card>
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3 mt-4">
             <p className="text-sm text-green-800 dark:text-green-200 text-center font-medium">
-              ✨ Pronto! Agora você já conhece o sistema. Boa sorte!
+              ✨ Pronto para começar!
             </p>
           </div>
         </div>
@@ -254,7 +172,7 @@ const TutorialInterativo = ({ open, onOpenChange, userRole }: TutorialInterativo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between mb-4">
             <Badge variant="outline" className="gap-1">

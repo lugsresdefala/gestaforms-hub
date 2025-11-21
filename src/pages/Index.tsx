@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -1252,13 +1252,7 @@ const Index = () => {
     }
   };
 
-  // Verifica se é a primeira vez do usuário
-  useEffect(() => {
-    const tutorialCompleted = localStorage.getItem('tutorial_completed');
-    if (!tutorialCompleted) {
-      setTimeout(() => setShowTutorial(true), 1000);
-    }
-  }, []);
+  // Tutorial não abre mais automaticamente - apenas via botão flutuante
   useEffect(() => {
     const styleElement = document.createElement("style");
     styleElement.innerHTML = COMPLETE_DESIGN_SYSTEM;
@@ -1457,6 +1451,26 @@ const Index = () => {
   }
   return <>
       <TutorialInterativo open={showTutorial} onOpenChange={setShowTutorial} userRole={userRoles?.[0]?.role} />
+      
+      {/* Botão Flutuante de Ajuda */}
+      <button
+        onClick={() => setShowTutorial(true)}
+        className="fixed bottom-6 right-6 z-50 group"
+        aria-label="Abrir tutorial"
+      >
+        <div className="relative">
+          <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all duration-300" />
+          <div className="relative bg-primary hover:bg-primary/90 text-primary-foreground p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
+            <HelpCircle className="h-6 w-6" />
+          </div>
+        </div>
+        <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          <div className="bg-popover text-popover-foreground text-sm px-3 py-1.5 rounded-md shadow-md whitespace-nowrap">
+            Precisa de ajuda?
+          </div>
+        </div>
+      </button>
+
       <div className="min-h-screen gradient-subtle">
         <main className="container mx-auto px-4 py-8 space-y-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-6 border-b-2 border-border/50">
