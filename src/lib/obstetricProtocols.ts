@@ -11,90 +11,90 @@ export interface ProtocolConfig {
 
 export const PROTOCOLS: Record<string, ProtocolConfig> = {
   // PROTOCOLOS HIPERTENSIVOS
-  desejo_materno: { igIdeal: "39", margemDias: 0, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas (PT-AON-097)" },
-  laqueadura: { igIdeal: "39", margemDias: 0, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "Exatamente 39 semanas (PT-AON-097)" },
-  hac: { igIdeal: "39-40", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada (PT-AON-097)" },
+  desejo_materno: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas (PT-AON-097)" },
+  laqueadura: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas (PT-AON-097)" },
+  hac: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada (PT-AON-097)" },
   hac_dificil: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "3 drogas - difícil controle (PT-AON-097)" },
   hipertensao_gestacional: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: ">36sem: Doppler+PBF semanal (PT-AON-097)" },
   pre_eclampsia_sem_deterioracao: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Sem deterioração clínica (PT-AON-097)" },
-  pre_eclampsia_grave: { igIdeal: "34", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Protocolo SHEG >28sem (PT-AON-097)" },
+  pre_eclampsia_grave: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Protocolo SHEG >28sem (PT-AON-097)" },
   eclampsia: { igIdeal: "Imediato", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Emergência obstétrica - interrupção imediata" },
-  sindrome_hellp: { igIdeal: "34", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Após estabilização materna" },
+  sindrome_hellp: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Após estabilização materna" },
   
   // PROTOCOLOS DIABETES
-  dmg_sem_insulina: { igIdeal: "39-40", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Bom controle, sem repercussão fetal (PT-AON-097)" },
-  dmg_sem_insulina_descomp: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Descontrole ou repercussão fetal (PT-AON-097)" },
+  dmg_sem_insulina: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Bom controle, sem repercussão fetal (PT-AON-097)" },
+  dmg_sem_insulina_descomp: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Descontrole ou repercussão fetal (PT-AON-097)" },
   dmg_insulina: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Com insulina, bom controle (PT-AON-097)" },
   dmg_insulina_descomp: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Descontrole glicêmico (PT-AON-097)" },
   dm_pregestacional: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "DM1/DM2 bom controle, sem complicações (PT-AON-097)" },
-  dm_pregestacional_descomp: { igIdeal: "36-37", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Descontrole ou complicações clínicas/obstétricas (PT-AON-097)" },
+  dm_pregestacional_descomp: { igIdeal: "36", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Descontrole ou complicações clínicas/obstétricas (PT-AON-097)" },
   
   // PROTOCOLOS PLACENTÁRIOS
-  placenta_previa_total: { igIdeal: "36-37", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Cesárea obrigatória - risco sangramento" },
+  placenta_previa_total: { igIdeal: "36", margemDias: 7, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Cesárea obrigatória - risco sangramento" },
   placenta_previa_parcial: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Avaliar distância colo - risco sangramento" },
-  placenta_baixa: { igIdeal: "38-39", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância por sangramento" },
-  placenta_acreta: { igIdeal: "34-36", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Equipe especializada - risco histerectomia" },
-  placenta_percreta: { igIdeal: "34", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Centro terciário - UTI - hemoderivados" },
+  placenta_baixa: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância por sangramento" },
+  placenta_acreta: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Equipe especializada - risco histerectomia" },
+  placenta_percreta: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Centro terciário - UTI - hemoderivados" },
   dpp: { igIdeal: "Imediato", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Emergência obstétrica" },
   
   // PROTOCOLOS GEMELARIDADE
-  gemelar_monocorionico: { igIdeal: "34-36", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância STFF - Doppler semanal" },
-  gemelar_bicorionico: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância crescimento fetal" },
-  gemelar_monoamniotico: { igIdeal: "32-34", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Alto risco entrelaçamento cordões" },
+  gemelar_monocorionico: { igIdeal: "34", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância STFF - Doppler semanal" },
+  gemelar_bicorionico: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância crescimento fetal" },
+  gemelar_monoamniotico: { igIdeal: "32", margemDias: 7, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "Alto risco entrelaçamento cordões" },
   
   // PROTOCOLOS APRESENTAÇÃO FETAL
-  pelvico: { igIdeal: "37-39", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "VCE até 37sem - cesárea se falha" },
-  cormica: { igIdeal: "37-39", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Cesárea indicada" },
+  pelvico: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "VCE até 37sem - cesárea se falha" },
+  cormica: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Cesárea indicada" },
   
   // PROTOCOLOS ROTURA MEMBRANAS
-  rpmo_pretermo: { igIdeal: "34", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Corticoide - antibiótico - vigilância" },
-  rpmo_termo: { igIdeal: "37-39", margemDias: 0, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Indução trabalho parto até 24h" },
+  rpmo_pretermo: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Corticoide - antibiótico - vigilância" },
+  rpmo_termo: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Indução trabalho parto até 24h" },
   
   // PROTOCOLOS CRESCIMENTO FETAL
   rcf: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Doppler alterado - vigilância fetal" },
-  rcf_grave: { igIdeal: "34", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Doppler crítico - diástole zero/reversa" },
-  macrossomia: { igIdeal: "38-39", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "PFE >4000g - avaliar via parto" },
-  macrossomia_severa: { igIdeal: "38", margemDias: 0, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "PFE >4500g - cesárea recomendada" },
+  rcf_grave: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Doppler crítico - diástole zero/reversa" },
+  macrossomia: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "PFE >4000g - avaliar via parto" },
+  macrossomia_severa: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "PFE >4500g - cesárea recomendada" },
   
   // PROTOCOLOS LÍQUIDO AMNIÓTICO
   oligodramnia: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "ILA <5 ou MBV <2 - vigilância fetal" },
-  oligodramnia_severa: { igIdeal: "34-36", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Anidramnia - interrupção indicada" },
-  polidramnia: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "ILA >24 - investigar causa" },
+  oligodramnia_severa: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Anidramnia - interrupção indicada" },
+  polidramnia: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "ILA >24 - investigar causa" },
   
   // PROTOCOLOS ITERATIVIDADE
   iteratividade_1cesarea: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Parto vaginal possível após avaliação" },
-  iteratividade_2cesarea: { igIdeal: "39", margemDias: 0, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "2 ou mais cesáreas prévias" },
-  cesarea_corporal: { igIdeal: "37-38", margemDias: 0, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Risco rotura uterina - cesárea obrigatória" },
+  iteratividade_2cesarea: { igIdeal: "39", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "2 ou mais cesáreas prévias" },
+  cesarea_corporal: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Risco rotura uterina - cesárea obrigatória" },
   
   // PROTOCOLOS MALFORMAÇÕES FETAIS
-  malformacao_grave: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Equipe neonatal especializada" },
-  cardiopatia_fetal: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Centro com cardiologia pediátrica" },
+  malformacao_grave: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Equipe neonatal especializada" },
+  cardiopatia_fetal: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Centro com cardiologia pediátrica" },
   hidrocefalia: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "PC >40cm - cesárea indicada" },
   
   // PROTOCOLOS DOENÇAS MATERNAS
-  cardiopatia_materna: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Classe funcional III/IV - parto assistido" },
-  cardiopatia_grave: { igIdeal: "36-37", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "UTI - equipe cardiologia" },
+  cardiopatia_materna: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Classe funcional III/IV - parto assistido" },
+  cardiopatia_grave: { igIdeal: "36", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "UTI - equipe cardiologia" },
   doenca_renal: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Creatinina >1.5 - vigilância materna-fetal" },
   lupus: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância atividade doença" },
-  epilepsia: { igIdeal: "38-39", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Controle medicamentoso" },
-  trombofilia: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Anticoagulação - vigilância Doppler" },
+  epilepsia: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Controle medicamentoso" },
+  trombofilia: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Anticoagulação - vigilância Doppler" },
   
   // PROTOCOLOS INFECÇÕES
   hiv: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "CV <1000 parto vaginal - CV >1000 cesárea" },
-  hepatite_b: { igIdeal: "39-40", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Imunoglobulina RN nas primeiras 12h" },
-  hepatite_c: { igIdeal: "39-40", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Sem indicação cesárea profilática" },
-  herpes_ativo: { igIdeal: "38-40", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Lesões ativas - cesárea indicada" },
+  hepatite_b: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Imunoglobulina RN nas primeiras 12h" },
+  hepatite_c: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Sem indicação cesárea profilática" },
+  herpes_ativo: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Lesões ativas - cesárea indicada" },
   
   // PROTOCOLOS CIRURGIAS UTERINAS
-  miomatose: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Miomas grandes ou múltiplos - avaliar via" },
-  miomectomia_previa: { igIdeal: "37-38", margemDias: 0, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Miomectomia com abertura cavidade - cesárea" },
+  miomatose: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Miomas grandes ou múltiplos - avaliar via" },
+  miomectomia_previa: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Cesárea", observacoes: "Miomectomia com abertura cavidade - cesárea" },
   
   // PROTOCOLOS ESPECIAIS
-  tpp_atual: { igIdeal: "34-37", margemDias: 0, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Corticoide - tocólise - antibiótico" },
-  obito_fetal_anterior: { igIdeal: "37-38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância intensiva - Doppler" },
-  gestacao_prolongada: { igIdeal: "41", margemDias: 0, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Indução 41sem - vigilância fetal" },
+  tpp_atual: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Corticoide - tocólise - antibiótico" },
+  obito_fetal_anterior: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância intensiva - Doppler" },
+  gestacao_prolongada: { igIdeal: "41", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Indução 41sem - vigilância fetal" },
   idade_materna_avancada: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: ">35 anos - vigilância fetal" },
-  obesidade_morbida: { igIdeal: "38-39", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "IMC >40 - avaliar comorbidades" },
+  obesidade_morbida: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "IMC >40 - avaliar comorbidades" },
   aloimunizacao_rh: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Vigilância anemia fetal - MCA Doppler" }
 };
 

@@ -118,15 +118,10 @@ export const determinarIgFinal = (
 };
 
 /**
- * Converte string de IG ideal para semanas (suporta "37" ou "37-38")
+ * Converte string de IG ideal para número de semanas
  */
-const parseIgIdeal = (igIdeal: string): { min: number; max: number } => {
-  if (igIdeal.includes('-')) {
-    const [min, max] = igIdeal.split('-').map(s => parseInt(s));
-    return { min, max };
-  }
-  const value = parseInt(igIdeal);
-  return { min: value, max: value };
+const parseIgIdeal = (igIdeal: string): number => {
+  return parseInt(igIdeal);
 };
 
 /**
@@ -266,7 +261,7 @@ export const calcularDataAgendamento = (
     if (!protocoloSelecionado || 
         protocolo.prioridade < protocoloSelecionado.prioridade ||
         (protocolo.prioridade === protocoloSelecionado.prioridade && 
-         parseIgIdeal(protocolo.igIdeal).min < parseIgIdeal(protocoloSelecionado.igIdeal).min)) {
+         parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))) {
       protocoloSelecionado = protocolo;
       patologiaSelecionada = patologia;
     }
@@ -285,9 +280,8 @@ export const calcularDataAgendamento = (
     };
   }
   
-  // Calcular IG alvo (usar o mínimo da faixa)
-  const igRange = parseIgIdeal(protocoloSelecionado.igIdeal);
-  const igAlvo = igRange.min;
+  // Calcular IG alvo (usar valor fixo do protocolo)
+  const igAlvo = parseIgIdeal(protocoloSelecionado.igIdeal);
   
   // Calcular data ideal: DPP - (40 - IG_recomendada) semanas
   const semanasAntesDpp = 40 - igAlvo;
