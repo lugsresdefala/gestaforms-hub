@@ -69,7 +69,7 @@ export default function CalendarioCompleto() {
   const [capacity, setCapacity] = useState<MaternityCapacity | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const maternidades = ['Cruzeiro', 'Guarulhos', 'Notrecare', 'Salvalus', 'Rosário'];
+  const maternidades = ['Cruzeiro', 'Guarulhos', 'NotreCare', 'Salvalus', 'Rosário'];
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
   const months = [
     { value: '1', label: 'Janeiro' },
@@ -99,6 +99,33 @@ export default function CalendarioCompleto() {
       loadWeeklyOccupation();
     }
   }, [selectedMaternidade, selectedMonth, selectedYear, selectedDate, visualizacao]);
+
+  // Realtime updates para agendamentos
+  useEffect(() => {
+    const channel = supabase
+      .channel('agendamentos-calendar-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'agendamentos_obst'
+        },
+        () => {
+          // Recarregar ocupação quando houver mudanças
+          if (visualizacao === 'mensal') {
+            loadMonthlyOccupation();
+          } else {
+            loadWeeklyOccupation();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [visualizacao, selectedMaternidade, selectedMonth, selectedYear, selectedDate]);
 
   const loadCapacities = async () => {
     const { data: caps } = await supabase
