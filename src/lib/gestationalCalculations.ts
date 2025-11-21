@@ -84,22 +84,25 @@ export const determinarIgFinal = (
   let limiteMaximo: number;
   let observacoes = '';
 
-  // Protocolo: determinar qual IG usar baseado na diferença
-  if (semanasUsg <= 8) {
+  // Protocolo PR-DIMEP-PGS-01: determinar limite de tolerância
+  if (semanasUsg >= 8 && semanasUsg <= 9) {
     limiteMaximo = 5;
-    observacoes = 'Gestação até 8 6/7 sem';
-  } else if (semanasUsg >= 9 && semanasUsg <= 15) {
+    observacoes = 'IG USG 8-9 semanas';
+  } else if (semanasUsg >= 10 && semanasUsg <= 11) {
     limiteMaximo = 7;
-    observacoes = 'Gestação de 9 a 15 6/7 sem';
-  } else if (semanasUsg >= 16 && semanasUsg <= 21) {
+    observacoes = 'IG USG 10-11 semanas';
+  } else if (semanasUsg >= 12 && semanasUsg <= 13) {
     limiteMaximo = 10;
-    observacoes = 'Gestação de 16 a 21 6/7 sem';
-  } else if (semanasUsg >= 22 && semanasUsg <= 27) {
+    observacoes = 'IG USG 12-13 semanas';
+  } else if (semanasUsg >= 14 && semanasUsg <= 15) {
     limiteMaximo = 14;
-    observacoes = 'Gestação de 22 a 27 6/7 sem';
+    observacoes = 'IG USG 14-15 semanas';
+  } else if (semanasUsg >= 16 && semanasUsg <= 19) {
+    limiteMaximo = 21;
+    observacoes = 'IG USG 16-19 semanas';
   } else {
     limiteMaximo = 21;
-    observacoes = 'Gestação > 28 semanas';
+    observacoes = 'IG USG > 19 semanas';
   }
 
   if (diferencaDias > limiteMaximo) {
@@ -157,11 +160,24 @@ const isDomingo = (data: Date): boolean => {
 };
 
 /**
- * Encontra a próxima data disponível (não domingo, >= hoje + 10 dias)
+ * Encontra a próxima data disponível (não domingo, >= hoje + 10 dias úteis)
  */
 export const encontrarProximaDataDisponivel = (dataIdeal: Date): Date => {
   const hoje = new Date();
-  const dataMinima = addDays(hoje, 10); // Antecedência mínima de 10 dias
+  hoje.setHours(0, 0, 0, 0);
+  
+  // Calcular data mínima: 10 DIAS ÚTEIS (Segunda a Sábado, Domingo não conta)
+  let dataMinima = new Date(hoje);
+  let diasUteisContados = 0;
+  
+  while (diasUteisContados < 10) {
+    dataMinima = addDays(dataMinima, 1);
+    
+    // Domingo (dia 0) não conta como dia útil
+    if (getDay(dataMinima) !== 0) {
+      diasUteisContados++;
+    }
+  }
   
   // Se data ideal é antes do mínimo, usar o mínimo
   let dataCandidata = dataIdeal < dataMinima ? dataMinima : dataIdeal;

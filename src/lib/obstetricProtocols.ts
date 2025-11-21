@@ -10,10 +10,13 @@ export interface ProtocolConfig {
 }
 
 export const PROTOCOLS: Record<string, ProtocolConfig> = {
+  // PROTOCOLO CRÍTICO
+  cerclagem: { igIdeal: "15", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "PRIORIDADE CRÍTICA - Cerclagem / Incompetência Istmo-Cervical (IIC)" },
+  
   // PROTOCOLOS HIPERTENSIVOS
   desejo_materno: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas (PT-AON-097)" },
   laqueadura: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas (PT-AON-097)" },
-  hac: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada (PT-AON-097)" },
+  hac: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada - 37 semanas (PT-AON-097)" },
   hac_dificil: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "3 drogas - difícil controle (PT-AON-097)" },
   hipertensao_gestacional: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: ">36sem: Doppler+PBF semanal (PT-AON-097)" },
   pre_eclampsia_sem_deterioracao: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Sem deterioração clínica (PT-AON-097)" },
@@ -22,7 +25,7 @@ export const PROTOCOLS: Record<string, ProtocolConfig> = {
   sindrome_hellp: { igIdeal: "34", margemDias: 7, prioridade: 1, viaPreferencial: "Via obstétrica", observacoes: "Após estabilização materna" },
   
   // PROTOCOLOS DIABETES
-  dmg_sem_insulina: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Bom controle, sem repercussão fetal (PT-AON-097)" },
+  dmg_sem_insulina: { igIdeal: "40", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Bom controle, sem repercussão fetal - 40 semanas (PT-AON-097)" },
   dmg_sem_insulina_descomp: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Descontrole ou repercussão fetal (PT-AON-097)" },
   dmg_insulina: { igIdeal: "38", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Com insulina, bom controle (PT-AON-097)" },
   dmg_insulina_descomp: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Descontrole glicêmico (PT-AON-097)" },
@@ -103,6 +106,14 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
   
   diagnosticos.forEach(d => {
     const diag = d.toLowerCase().trim();
+    
+    // PRIORIDADE CRÍTICA: CERCLAGEM / IIC (verificar primeiro)
+    if (diag.includes('cerclagem') || diag.includes('iic') || 
+        diag.includes('incompetencia') || diag.includes('incompetência') || 
+        diag.includes('istmo')) {
+      mapped.push('cerclagem');
+      return; // Retornar imediatamente - protocolo crítico
+    }
     
     // HIPERTENSÃO
     if (diag.includes('eclampsia') && !diag.includes('pré')) {
