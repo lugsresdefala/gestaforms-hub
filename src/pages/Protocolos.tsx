@@ -24,6 +24,9 @@ const getPrioridadeLabel = (prioridade: number) => {
 
 const getProtocolLabel = (key: string): string => {
   const labels: Record<string, string> = {
+    // Prioridade Crítica
+    'cerclagem': 'Cerclagem / IIC',
+    
     // Cesárea eletiva
     'desejo_materno': 'Desejo Materno',
     'laqueadura': 'Laqueadura',
@@ -61,6 +64,7 @@ const getProtocolLabel = (key: string): string => {
 };
 
 const categorias = {
+  'Prioridade Crítica': ['cerclagem'],
   'Cesárea Eletiva': ['desejo_materno', 'laqueadura'],
   'Hipertensão': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_grave'],
   'Diabetes': ['dmg_sem_insulina', 'dmg_sem_insulina_descomp', 'dmg_insulina', 'dmg_insulina_descomp', 'dm_pregestacional', 'dm_pregestacional_descomp'],
