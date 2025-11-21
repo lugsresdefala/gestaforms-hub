@@ -6,6 +6,16 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { 
+  parseDateDMY, 
+  extractProcedimentos, 
+  verificarDuplicado,
+  formatDateISO,
+  normalizeDUMStatus,
+  normalizeSimNao
+} from "@/lib/importHelpers";
+import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
+import { verificarDisponibilidade } from "@/lib/vagasValidation";
 
 interface FormRecord {
   carteirinha: string;
@@ -71,24 +81,7 @@ export default function ProcessarFormsParto() {
       if (!nome || !carteirinha) continue;
       
       const procedimentosText = cols[13]?.trim() || '';
-      const procedimentos: string[] = [];
-      
-      if (procedimentosText.toLowerCase().includes('cesárea') || procedimentosText.toLowerCase().includes('cesarea')) {
-        procedimentos.push('Parto cesárea');
-      }
-      if (procedimentosText.toLowerCase().includes('laqueadura')) {
-        procedimentos.push('Laqueadura tubária');
-      }
-      if (procedimentosText.toLowerCase().includes('indução') || procedimentosText.toLowerCase().includes('inducao')) {
-        procedimentos.push('Indução de parto');
-      }
-      if (procedimentosText.toLowerCase().includes('cerclagem')) {
-        procedimentos.push('Cerclagem');
-      }
-      
-      if (procedimentos.length === 0) {
-        procedimentos.push('Parto cesárea');
-      }
+      const procedimentos = extractProcedimentos(procedimentosText);
       
       records.push({
         carteirinha,
@@ -100,7 +93,7 @@ export default function ProcessarFormsParto() {
         abortos: parseInt(cols[11]) || 0,
         telefones: cols[12]?.trim() || '',
         procedimentos,
-        dum_status: cols[14]?.trim() === 'Sim - Confiavel' ? 'Certa' : 'Incerta',
+        dum_status: normalizeDUMStatus(cols[14]?.trim() || ''),
         data_dum: cols[15]?.trim() || undefined,
         data_primeiro_usg: cols[16]?.trim() || '',
         semanas_usg: parseInt(cols[17]) || 0,
@@ -125,64 +118,6 @@ export default function ProcessarFormsParto() {
     return records;
   };
 
-  const parseDateDMY = (dateStr: string): Date | null => {
-    if (!dateStr) return null;
-    
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    let year = parseInt(parts[2]);
-    
-    // Se o ano tem apenas 2 dígitos, assumir 20XX
-    if (year < 100) {
-      year += 2000;
-    }
-    
-    const date = new Date(year, month, day);
-    
-    if (isNaN(date.getTime())) return null;
-    
-    return date;
-  };
-
-  const calcularDataAgendamento = (
-    dumStatus: string,
-    dataDum: string | undefined,
-    dataPrimeiroUSG: string,
-    semanasUSG: number,
-    diasUSG: number,
-    igPretendida: string
-  ): Date | null => {
-    const igSemanas = parseInt(igPretendida) || 39;
-    
-    if (dumStatus === 'Certa' && dataDum) {
-      const dumDate = parseDateDMY(dataDum);
-      if (dumDate) {
-        const dataAgendamento = new Date(dumDate);
-        dataAgendamento.setDate(dataAgendamento.getDate() + (igSemanas * 7));
-        return dataAgendamento;
-      }
-    }
-    
-    const usgDate = parseDateDMY(dataPrimeiroUSG);
-    if (usgDate && semanasUSG > 0) {
-      const diasDesdeUSG = Math.floor((new Date().getTime() - usgDate.getTime()) / (1000 * 60 * 60 * 24));
-      const semanasGestacionaisAtual = semanasUSG + Math.floor(diasDesdeUSG / 7);
-      const diasGestacionaisAtual = diasUSG + (diasDesdeUSG % 7);
-      
-      const semanasRestantes = igSemanas - semanasGestacionaisAtual;
-      const diasRestantes = -diasGestacionaisAtual;
-      
-      const dataAgendamento = new Date();
-      dataAgendamento.setDate(dataAgendamento.getDate() + (semanasRestantes * 7) + diasRestantes);
-      
-      return dataAgendamento;
-    }
-    
-    return null;
-  };
 
   const processarRegistros = async () => {
     setProcessing(true);
@@ -206,35 +141,10 @@ export default function ProcessarFormsParto() {
 
         try {
           // Verificar se já existe
-          const { data: existing } = await supabase
-            .from('agendamentos_obst')
-            .select('id')
-            .eq('carteirinha', record.carteirinha)
-            .maybeSingle();
-
-          if (existing) {
+          const isDuplicado = await verificarDuplicado(record.carteirinha);
+          if (isDuplicado) {
             skipped.push(`${record.nome_completo} (${record.carteirinha}) - já existe`);
             continue;
-          }
-
-          // Calcular data de agendamento
-          let dataAgendamento = calcularDataAgendamento(
-            record.dum_status,
-            record.data_dum,
-            record.data_primeiro_usg,
-            record.semanas_usg,
-            record.dias_usg,
-            record.ig_pretendida
-          );
-
-          // Se não conseguiu calcular e tem data agendada no CSV
-          if (!dataAgendamento && record.data_agendada) {
-            const match = record.data_agendada.match(/agendada\s+(\d{1,2})\/(\d{1,2})/i);
-            if (match) {
-              const dia = parseInt(match[1]);
-              const mes = parseInt(match[2]) - 1;
-              dataAgendamento = new Date(2025, mes, dia);
-            }
           }
 
           const dataNascimento = parseDateDMY(record.data_nascimento);
@@ -246,13 +156,46 @@ export default function ProcessarFormsParto() {
             continue;
           }
 
+          // Usar calcularAgendamentoCompleto para consistência
+          const dadosCalculo = {
+            dumStatus: record.dum_status,
+            dataDum: formatDateISO(dataDUM),
+            dataPrimeiroUsg: formatDateISO(dataPrimeiroUSG),
+            semanasUsg: record.semanas_usg.toString(),
+            diasUsg: record.dias_usg.toString(),
+            procedimentos: record.procedimentos,
+            diagnosticosMaternos: record.diagnosticos_maternos ? [record.diagnosticos_maternos] : undefined,
+            diagnosticosFetais: record.diagnosticos_fetais ? [record.diagnosticos_fetais] : undefined,
+            placentaPrevia: record.placenta_previa !== 'Não' ? record.placenta_previa : undefined
+          };
+
+          const resultado = calcularAgendamentoCompleto(dadosCalculo);
+
+          // Garantir que a data está em 2025
+          let dataAgendamento = new Date(resultado.dataAgendamento);
+          if (dataAgendamento.getFullYear() < 2025) {
+            dataAgendamento.setFullYear(2025);
+          }
+
+          const isUrgente = resultado.observacoes.toLowerCase().includes('urgente');
+
+          const disponibilidade = await verificarDisponibilidade(
+            record.maternidade,
+            dataAgendamento,
+            isUrgente
+          );
+
+          if (!disponibilidade.disponivel) {
+            errors.push(`${record.nome_completo} - ${disponibilidade.mensagem}`);
+          }
+
           // Inserir agendamento
           const { error: insertError } = await supabase
             .from('agendamentos_obst')
             .insert({
               carteirinha: record.carteirinha,
               nome_completo: record.nome_completo,
-              data_nascimento: dataNascimento.toISOString().split('T')[0],
+              data_nascimento: formatDateISO(dataNascimento),
               numero_gestacoes: record.gestacoes,
               numero_partos_cesareas: record.partos_cesareas,
               numero_partos_normais: record.partos_normais,
@@ -260,24 +203,26 @@ export default function ProcessarFormsParto() {
               telefones: record.telefones,
               procedimentos: record.procedimentos,
               dum_status: record.dum_status,
-              data_dum: dataDUM?.toISOString().split('T')[0] || null,
-              data_primeiro_usg: dataPrimeiroUSG.toISOString().split('T')[0],
+              data_dum: formatDateISO(dataDUM),
+              data_primeiro_usg: formatDateISO(dataPrimeiroUSG),
               semanas_usg: record.semanas_usg,
               dias_usg: record.dias_usg,
               usg_recente: record.usg_recente,
-              ig_pretendida: record.ig_pretendida,
+              ig_pretendida: resultado.igAgendamento,
               indicacao_procedimento: record.indicacao,
               medicacao: record.medicacao,
               diagnosticos_maternos: record.diagnosticos_maternos,
-              placenta_previa: record.placenta_previa,
+              placenta_previa: record.placenta_previa !== 'Não' ? record.placenta_previa : null,
               diagnosticos_fetais: record.diagnosticos_fetais,
               historia_obstetrica: record.historia_obstetrica,
-              necessidade_uti_materna: record.reserva_uti,
-              necessidade_reserva_sangue: record.reserva_sangue,
+              necessidade_uti_materna: normalizeSimNao(record.reserva_uti),
+              necessidade_reserva_sangue: normalizeSimNao(record.reserva_sangue),
               maternidade: record.maternidade,
               medico_responsavel: record.medico_responsavel,
               email_paciente: record.email_paciente,
-              data_agendamento_calculada: dataAgendamento?.toISOString().split('T')[0] || null,
+              data_agendamento_calculada: formatDateISO(dataAgendamento),
+              idade_gestacional_calculada: resultado.igFinal.displayText,
+              observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}`,
               status: 'pendente',
               centro_clinico: 'HAPVIDA'
             });
