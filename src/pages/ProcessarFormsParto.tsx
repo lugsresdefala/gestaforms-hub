@@ -1,377 +1,410 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
-
-interface FormRecord {
-  carteirinha: string;
-  nome_completo: string;
-  data_nascimento: string;
-  gestacoes: number;
-  partos_cesareas: number;
-  partos_normais: number;
-  abortos: number;
-  telefones: string;
-  procedimentos: string[];
-  dum_status: string;
-  data_dum?: string;
-  data_primeiro_usg: string;
-  semanas_usg: number;
-  dias_usg: number;
-  usg_recente: string;
-  ig_pretendida: string;
-  indicacao: string;
-  medicacao: string;
-  diagnosticos_maternos: string;
-  placenta_previa: string;
-  diagnosticos_fetais: string;
-  historia_obstetrica: string;
-  reserva_uti: string;
-  reserva_sangue: string;
-  maternidade: string;
-  medico_responsavel: string;
-  email_paciente: string;
-  data_agendada: string;
-}
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Upload, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import { processarFormsPartoFluxoNovo } from '@/utils/importFormsPartoFluxoNovo';
 
 export default function ProcessarFormsParto() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [processing, setProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<{
     success: number;
+    failed: number;
+    skipped: number;
     errors: string[];
-    skipped: string[];
-  }>({
-    success: 0,
-    errors: [],
-    skipped: []
-  });
+    warnings: string[];
+  } | null>(null);
 
-  const parseCSV = (text: string): FormRecord[] => {
-    const lines = text.split('\n');
-    const records: FormRecord[] = [];
-    
-    // Pular cabeçalho (linhas 1-3)
-    for (let i = 3; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      const cols = line.split(',');
-      
-      // ID está na coluna 0, se vazio, pular
-      if (!cols[0] || cols[0] === '') continue;
-      
-      const nome = cols[5]?.trim();
-      const carteirinha = cols[7]?.trim();
-      
-      if (!nome || !carteirinha) continue;
-      
-      const procedimentosText = cols[13]?.trim() || '';
-      const procedimentos: string[] = [];
-      
-      if (procedimentosText.toLowerCase().includes('cesárea') || procedimentosText.toLowerCase().includes('cesarea')) {
-        procedimentos.push('Parto cesárea');
-      }
-      if (procedimentosText.toLowerCase().includes('laqueadura')) {
-        procedimentos.push('Laqueadura tubária');
-      }
-      if (procedimentosText.toLowerCase().includes('indução') || procedimentosText.toLowerCase().includes('inducao')) {
-        procedimentos.push('Indução de parto');
-      }
-      if (procedimentosText.toLowerCase().includes('cerclagem')) {
-        procedimentos.push('Cerclagem');
-      }
-      
-      if (procedimentos.length === 0) {
-        procedimentos.push('Parto cesárea');
-      }
-      
-      records.push({
-        carteirinha,
-        nome_completo: nome,
-        data_nascimento: cols[6]?.trim() || '',
-        gestacoes: parseInt(cols[8]) || 0,
-        partos_cesareas: parseInt(cols[9]) || 0,
-        partos_normais: parseInt(cols[10]) || 0,
-        abortos: parseInt(cols[11]) || 0,
-        telefones: cols[12]?.trim() || '',
-        procedimentos,
-        dum_status: cols[14]?.trim() === 'Sim - Confiavel' ? 'Certa' : 'Incerta',
-        data_dum: cols[15]?.trim() || undefined,
-        data_primeiro_usg: cols[16]?.trim() || '',
-        semanas_usg: parseInt(cols[17]) || 0,
-        dias_usg: parseInt(cols[18]) || 0,
-        usg_recente: cols[19]?.trim() || '',
-        ig_pretendida: cols[20]?.trim() || '39',
-        indicacao: cols[22]?.trim() || 'Desejo materno',
-        medicacao: cols[23]?.trim() || 'Não informado',
-        diagnosticos_maternos: cols[24]?.trim() || 'Não informado',
-        placenta_previa: cols[25]?.trim() || 'Não',
-        diagnosticos_fetais: cols[26]?.trim() || 'Não informado',
-        historia_obstetrica: cols[27]?.trim() || 'Não informado',
-        reserva_uti: cols[28]?.trim() || 'Não',
-        reserva_sangue: cols[29]?.trim() || 'Não',
-        maternidade: cols[30]?.trim() || '',
-        medico_responsavel: cols[31]?.trim() || '',
-        email_paciente: cols[32]?.trim() || '',
-        data_agendada: cols[36]?.trim() || ''
+  const handleProcess = async () => {
+    if (!user) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar autenticado',
+        variant: 'destructive',
       });
+      return;
     }
-    
-    return records;
-  };
 
-  const parseDateDMY = (dateStr: string): Date | null => {
-    if (!dateStr) return null;
-    
-    const parts = dateStr.split('/');
-    if (parts.length !== 3) return null;
-    
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    let year = parseInt(parts[2]);
-    
-    // Se o ano tem apenas 2 dígitos, assumir 20XX
-    if (year < 100) {
-      year += 2000;
-    }
-    
-    const date = new Date(year, month, day);
-    
-    if (isNaN(date.getTime())) return null;
-    
-    return date;
-  };
-
-  const calcularDataAgendamento = (
-    dumStatus: string,
-    dataDum: string | undefined,
-    dataPrimeiroUSG: string,
-    semanasUSG: number,
-    diasUSG: number,
-    igPretendida: string
-  ): Date | null => {
-    const igSemanas = parseInt(igPretendida) || 39;
-    
-    if (dumStatus === 'Certa' && dataDum) {
-      const dumDate = parseDateDMY(dataDum);
-      if (dumDate) {
-        const dataAgendamento = new Date(dumDate);
-        dataAgendamento.setDate(dataAgendamento.getDate() + (igSemanas * 7));
-        return dataAgendamento;
-      }
-    }
-    
-    const usgDate = parseDateDMY(dataPrimeiroUSG);
-    if (usgDate && semanasUSG > 0) {
-      const diasDesdeUSG = Math.floor((new Date().getTime() - usgDate.getTime()) / (1000 * 60 * 60 * 24));
-      const semanasGestacionaisAtual = semanasUSG + Math.floor(diasDesdeUSG / 7);
-      const diasGestacionaisAtual = diasUSG + (diasDesdeUSG % 7);
-      
-      const semanasRestantes = igSemanas - semanasGestacionaisAtual;
-      const diasRestantes = -diasGestacionaisAtual;
-      
-      const dataAgendamento = new Date();
-      dataAgendamento.setDate(dataAgendamento.getDate() + (semanasRestantes * 7) + diasRestantes);
-      
-      return dataAgendamento;
-    }
-    
-    return null;
-  };
-
-  const processarRegistros = async () => {
     setProcessing(true);
-    setProgress(0);
-    setResults({ success: 0, errors: [], skipped: [] });
+    setResults(null);
 
     try {
-      const response = await fetch('/csv-temp/forms_parto_pending.csv');
-      const text = await response.text();
-      const records = parseCSV(text);
-
-      console.log(`Total de registros encontrados: ${records.length}`);
-
-      let successCount = 0;
-      const errors: string[] = [];
-      const skipped: string[] = [];
-
-      for (let i = 0; i < records.length; i++) {
-        const record = records[i];
-        setProgress(((i + 1) / records.length) * 100);
-
-        try {
-          // Verificar se já existe
-          const { data: existing } = await supabase
-            .from('agendamentos_obst')
-            .select('id')
-            .eq('carteirinha', record.carteirinha)
-            .maybeSingle();
-
-          if (existing) {
-            skipped.push(`${record.nome_completo} (${record.carteirinha}) - já existe`);
-            continue;
-          }
-
-          // Calcular data de agendamento
-          let dataAgendamento = calcularDataAgendamento(
-            record.dum_status,
-            record.data_dum,
-            record.data_primeiro_usg,
-            record.semanas_usg,
-            record.dias_usg,
-            record.ig_pretendida
-          );
-
-          // Se não conseguiu calcular e tem data agendada no CSV
-          if (!dataAgendamento && record.data_agendada) {
-            const match = record.data_agendada.match(/agendada\s+(\d{1,2})\/(\d{1,2})/i);
-            if (match) {
-              const dia = parseInt(match[1]);
-              const mes = parseInt(match[2]) - 1;
-              dataAgendamento = new Date(2025, mes, dia);
-            }
-          }
-
-          const dataNascimento = parseDateDMY(record.data_nascimento);
-          const dataPrimeiroUSG = parseDateDMY(record.data_primeiro_usg);
-          const dataDUM = record.data_dum ? parseDateDMY(record.data_dum) : null;
-
-          if (!dataNascimento || !dataPrimeiroUSG) {
-            errors.push(`${record.nome_completo} - datas inválidas`);
-            continue;
-          }
-
-          // Inserir agendamento
-          const { error: insertError } = await supabase
-            .from('agendamentos_obst')
-            .insert({
-              carteirinha: record.carteirinha,
-              nome_completo: record.nome_completo,
-              data_nascimento: dataNascimento.toISOString().split('T')[0],
-              numero_gestacoes: record.gestacoes,
-              numero_partos_cesareas: record.partos_cesareas,
-              numero_partos_normais: record.partos_normais,
-              numero_abortos: record.abortos,
-              telefones: record.telefones,
-              procedimentos: record.procedimentos,
-              dum_status: record.dum_status,
-              data_dum: dataDUM?.toISOString().split('T')[0] || null,
-              data_primeiro_usg: dataPrimeiroUSG.toISOString().split('T')[0],
-              semanas_usg: record.semanas_usg,
-              dias_usg: record.dias_usg,
-              usg_recente: record.usg_recente,
-              ig_pretendida: record.ig_pretendida,
-              indicacao_procedimento: record.indicacao,
-              medicacao: record.medicacao,
-              diagnosticos_maternos: record.diagnosticos_maternos,
-              placenta_previa: record.placenta_previa,
-              diagnosticos_fetais: record.diagnosticos_fetais,
-              historia_obstetrica: record.historia_obstetrica,
-              necessidade_uti_materna: record.reserva_uti,
-              necessidade_reserva_sangue: record.reserva_sangue,
-              maternidade: record.maternidade,
-              medico_responsavel: record.medico_responsavel,
-              email_paciente: record.email_paciente,
-              data_agendamento_calculada: dataAgendamento?.toISOString().split('T')[0] || null,
-              status: 'pendente',
-              centro_clinico: 'HAPVIDA'
-            });
-
-          if (insertError) {
-            errors.push(`${record.nome_completo} - ${insertError.message}`);
-          } else {
-            successCount++;
-          }
-        } catch (err: any) {
-          errors.push(`${record.nome_completo} - ${err.message}`);
+      // Dados extraídos manualmente do Excel (pacientes das últimas linhas que ainda não foram agendadas)
+      const pacientes = [
+        {
+          id: '2567',
+          horaInicio: '11/19/2025 15:20:52',
+          nomeCompleto: 'Tatiane de Souza Rocha',
+          dataNascimento: '5/2/84',
+          carteirinha: '1QWMV000034010',
+          numeroGestacoes: 3,
+          numeroCesareas: 2,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11 957606950// 11 966697319',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Incerta',
+          dataDum: null,
+          dataPrimeiroUsg: '5/13/25',
+          semanasUsg: 8,
+          diasUsg: 2,
+          usgRecente: '17/11 ig35 sem 1/7 cef pesi2341g p21 mbv6,4 Doppler normal',
+          igPretendida: '37',
+          indicacaoProcedimento: 'Iteratividade + pre eclampsia sobreposta',
+          medicacao: 'Metildipa 1g , AAS 100 mg, cálcio 1g ,ofertam gold , neutrofer 500',
+          diagnosticosMaternos: 'Pré eclâmpsia sobreposta a HAC, iteratividade',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Sem diagnóstico',
+          historiaObstetrica: 'OFIu gestação anterior ( t 21)',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'Cruzeiro',
+          medicoResponsavel: 'Bruna Mariano',
+          emailPaciente: 'tatycaetano84@gmail.com'
+        },
+        {
+          id: '2568',
+          horaInicio: '11/19/2025 16:20:14',
+          nomeCompleto: 'Léa dos Santis Silva',
+          dataNascimento: '3/27/87',
+          carteirinha: '1M0BI000001007',
+          numeroGestacoes: 2,
+          numeroCesareas: 0,
+          numeroPartosNormais: 1,
+          numeroAbortos: 0,
+          telefones: '11 970457927// 11 939455306',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Incerta',
+          dataDum: null,
+          dataPrimeiroUsg: '6/18/25',
+          semanasUsg: 12,
+          diasUsg: 0,
+          usgRecente: '11/11 8Ig33 sem 1/7 cef peso 2313g p66 mbv5,1 Doppler normal',
+          igPretendida: '38',
+          indicacaoProcedimento: 'Diabetes gestacional em uso insulina',
+          medicacao: 'Insulina nos (28-20-22) , insulina regular (4-4-4), ogestam gold, metildipa 1,5g, cálcio 1g , AAS 100 mg , sulfato ferroso 40mg',
+          diagnosticosMaternos: 'HAC , DM II em uso de insulina , obesidade',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Feto AIG',
+          historiaObstetrica: 'DMG',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'Cruzeiro',
+          medicoResponsavel: 'Bruna Mariano',
+          emailPaciente: 'lea_stos@hotmail.com'
+        },
+        {
+          id: '2569',
+          horaInicio: '11/19/2025 20:36:21',
+          nomeCompleto: 'Beatriz dos Santos Pacheco',
+          dataNascimento: '1/21/96',
+          carteirinha: '0T9EJ000299006',
+          numeroGestacoes: 1,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11 954599156 11 954534561',
+          procedimentos: 'Indução Programada',
+          dumStatus: 'Sim - Confiavel',
+          dataDum: '3/15/25',
+          dataPrimeiroUsg: '5/24/25',
+          semanasUsg: 10,
+          diasUsg: 1,
+          usgRecente: '21/10- fuv, cefalico, peso 1728,15g, placenta posterior grau II, líquido normal, doppler normal, IG 31 2/8',
+          igPretendida: '38',
+          indicacaoProcedimento: 'Desejo materno',
+          medicacao: 'Requinol, enoxaparina 40mg',
+          diagnosticosMaternos: 'Em acompanhamento e investigação para LES',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Não há',
+          historiaObstetrica: 'G1p0',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'Guarulhos',
+          medicoResponsavel: 'Joara Almeida',
+          emailPaciente: 'pacheccobeatriz@gmail.com'
+        },
+        {
+          id: '2570',
+          horaInicio: '11/21/2025 7:15:22',
+          nomeCompleto: 'Driely Júlia Silva Gusmão',
+          dataNascimento: '12/1/92',
+          carteirinha: '1PH26000001007',
+          numeroGestacoes: 1,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11982472622. 11991113526',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Sim - Confiavel',
+          dataDum: '2/26/25',
+          dataPrimeiroUsg: '4/16/25',
+          semanasUsg: 6,
+          diasUsg: 3,
+          usgRecente: '18/11 Ig 37 semana2 d peso 3428 g p97',
+          igPretendida: '39',
+          indicacaoProcedimento: 'Gig',
+          medicacao: 'Vitaminas',
+          diagnosticosMaternos: 'Diabetes gestacional',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Macrossomia',
+          historiaObstetrica: 'Dg',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Renata Daura Lanzone',
+          emailPaciente: 'drielyjulia_01@hotmail.com'
+        },
+        {
+          id: '2571',
+          horaInicio: '11/21/2025 7:22:09',
+          nomeCompleto: 'Jeniffer dos Santos Dantas Nascimento',
+          dataNascimento: '5/5/94',
+          carteirinha: '0ZXAZ000010006',
+          numeroGestacoes: 1,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11 953040084/ 11958242787',
+          procedimentos: 'Indução Programada',
+          dumStatus: 'Não sabe',
+          dataDum: null,
+          dataPrimeiroUsg: '5/16/25',
+          semanasUsg: 6,
+          diasUsg: 4,
+          usgRecente: 'Usg 12/11 FULC BCF160, pfe 2353g p90, CA 320(p98), MBV 5,3 Doppler normal',
+          igPretendida: '37',
+          indicacaoProcedimento: 'HAC+ DMG em uso de insulina + PFE p90 e CAp98',
+          medicacao: 'NPH 16-14-12',
+          diagnosticosMaternos: 'DMG EM USO DE INSULINA + HAC',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'GIG pfe p90 e CÁ p98',
+          historiaObstetrica: '-',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Fernanda Taniguchi Falleiros',
+          emailPaciente: 'jenifferdantas2@gmail.com'
+        },
+        {
+          id: '2572',
+          horaInicio: '11/21/2025 7:51:07',
+          nomeCompleto: 'Lucilene Aparecida de Almeida Santos',
+          dataNascimento: '12/31/83',
+          carteirinha: '0Y44C002151014',
+          numeroGestacoes: 2,
+          numeroCesareas: 0,
+          numeroPartosNormais: 1,
+          numeroAbortos: 0,
+          telefones: '11 998660316/ 11 972223935',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Sim - Confiavel',
+          dataDum: '3/5/25',
+          dataPrimeiroUsg: '5/6/25',
+          semanasUsg: 9,
+          diasUsg: 1,
+          usgRecente: 'Usg 17/11 FUL CEF BCF 152bpm PFE 3081(p57), MBV 5,2cm, placa anterior II Doppler normal',
+          igPretendida: '39',
+          indicacaoProcedimento: 'IMA + desejo materno',
+          medicacao: 'Materna',
+          diagnosticosMaternos: 'Idade materna avançada',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: '—-',
+          historiaObstetrica: '—-',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Fernanda Taniguchi Falleiros',
+          emailPaciente: 'reisfranscisco15@gmail.com'
+        },
+        {
+          id: '2573',
+          horaInicio: '11/21/2025 8:33:41',
+          nomeCompleto: 'Adriana Aparecida dos Reis',
+          dataNascimento: '4/14/90',
+          carteirinha: '1TK3M001759000',
+          numeroGestacoes: 1,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11 941081775/ 11 942411039',
+          procedimentos: 'Indução Programada',
+          dumStatus: 'Sim - Confiavel',
+          dataDum: '3/13/25',
+          dataPrimeiroUsg: '5/9/25',
+          semanasUsg: 8,
+          diasUsg: 6,
+          usgRecente: 'Usg 31+5 FULC BCF 129, PFE 1937(p78) plac anterior Grau I, mbv 6,1cm,doppler normal',
+          igPretendida: '40',
+          indicacaoProcedimento: 'Pós datismo + asma',
+          medicacao: 'Simbicort',
+          diagnosticosMaternos: 'Pós data + asma',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: '-',
+          historiaObstetrica: 'IMA + asma',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Fernanda Taniguchi Falleiros',
+          emailPaciente: 'areis873@gmail.com'
+        },
+        {
+          id: '2574',
+          horaInicio: '11/21/2025 10:15:07',
+          nomeCompleto: 'Tamires Teodoro',
+          dataNascimento: '3/3/98',
+          carteirinha: '1ZUNX000885010',
+          numeroGestacoes: 1,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 0,
+          telefones: '11989577248/ 1174693420',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Não sabe',
+          dataDum: null,
+          dataPrimeiroUsg: '6/1/25',
+          semanasUsg: 9,
+          diasUsg: 1,
+          usgRecente: 'Usg 16/10 gemelar Didi feto 1 CEF BCF+, PFE 1135g, lá 5,8plac post I/ Feto 2 pélvico BCF+ pfe 1120, m v 5,1cm, plac ant I, Doppler normal diferença de peso 1%',
+          igPretendida: '37',
+          indicacaoProcedimento: 'Gemelar Didi',
+          medicacao: '-',
+          diagnosticosMaternos: 'Gemelar Didi',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Gemelar Didi',
+          historiaObstetrica: 'Gemelar Didi',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Fernanda Taniguchi Falleiros',
+          emailPaciente: 'tamires.teodoro0324@gmail.com'
+        },
+        {
+          id: '2575',
+          horaInicio: '11/21/2025 10:43:57',
+          nomeCompleto: 'Sandra da Silva Martins',
+          dataNascimento: '9/19/87',
+          carteirinha: '1SRCQ000194000',
+          numeroGestacoes: 4,
+          numeroCesareas: 0,
+          numeroPartosNormais: 0,
+          numeroAbortos: 3,
+          telefones: '11 980589124/ 11945387110',
+          procedimentos: 'Cesárea',
+          dumStatus: 'Sim - Confiavel',
+          dataDum: '3/28/25',
+          dataPrimeiroUsg: '6/16/25',
+          semanasUsg: 11,
+          diasUsg: 5,
+          usgRecente: '19/11 - FUL pélvico BCF+, PFE 2488g p71, plac post I, Doppler normal MBV 4,9 Doppler normal',
+          igPretendida: '39',
+          indicacaoProcedimento: 'Pélvico',
+          medicacao: 'Enoxaparina 40mg/d',
+          diagnosticosMaternos: 'Trombofilia + IMA',
+          placentaPrevia: 'Não',
+          diagnosticosFetais: 'Pélvico',
+          historiaObstetrica: 'SAAAF / IMA',
+          necessidadeUtiMaterna: 'Não',
+          necessidadeReservaSangue: 'Não',
+          maternidade: 'NotreCare',
+          medicoResponsavel: 'Fernanda Taniguchi Falleiros',
+          emailPaciente: 'douglas.souza.f@hotmail.com'
         }
+      ];
+
+      const resultado = await processarFormsPartoFluxoNovo(pacientes, user.id);
+      setResults(resultado);
+
+      if (resultado.success > 0) {
+        toast({
+          title: 'Processamento concluído!',
+          description: `${resultado.success} pacientes inseridas com sucesso`,
+        });
       }
 
-      setResults({ success: successCount, errors, skipped });
-      
-      if (successCount > 0) {
-        toast.success(`${successCount} agendamentos processados com sucesso!`);
-      }
-      if (errors.length > 0) {
-        toast.error(`${errors.length} erros encontrados`);
-      }
-      if (skipped.length > 0) {
-        toast.info(`${skipped.length} registros já existem`);
-      }
-    } catch (error: any) {
-      toast.error(`Erro ao processar arquivo: ${error.message}`);
+    } catch (error) {
+      console.error('Erro no processamento:', error);
+      toast({
+        title: 'Erro no processamento',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
     } finally {
       setProcessing(false);
     }
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Processar Forms de Parto</h1>
+          <p className="text-muted-foreground">
+            Importar pacientes do Forms de Parto - Fluxo Novo 2025
+          </p>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-6 w-6" />
-            Processar Formulários de Parto
-          </CardTitle>
+          <CardTitle>Importação de Pacientes</CardTitle>
           <CardDescription>
-            Importar agendamentos do arquivo CSV de formulários de parto
+            Este processo irá importar as pacientes das últimas linhas do Excel que ainda não foram agendadas
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Este processador irá importar os agendamentos do arquivo CSV.
-              Registros duplicados serão ignorados automaticamente.
-            </AlertDescription>
-          </Alert>
-
+        <CardContent className="space-y-4">
           <Button
-            onClick={processarRegistros}
+            onClick={handleProcess}
             disabled={processing}
             className="w-full"
-            size="lg"
           >
-            {processing ? "Processando..." : "Processar Arquivo"}
+            <Upload className="h-4 w-4 mr-2" />
+            {processing ? 'Processando...' : 'Processar Pacientes'}
           </Button>
 
-          {processing && (
-            <div className="space-y-2">
-              <Progress value={progress} className="w-full" />
-              <p className="text-sm text-center text-muted-foreground">
-                {progress.toFixed(0)}% concluído
-              </p>
-            </div>
-          )}
-
-          {(results.success > 0 || results.errors.length > 0 || results.skipped.length > 0) && (
-            <div className="space-y-4">
-              {results.success > 0 && (
-                <Alert className="border-green-500 bg-green-50">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+          {results && (
+            <div className="space-y-4 mt-6">
+              <div className="grid grid-cols-3 gap-4">
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    <strong>{results.success}</strong> agendamentos inseridos com sucesso
+                    <strong>{results.success}</strong> inseridas
                   </AlertDescription>
                 </Alert>
-              )}
+                
+                <Alert className="bg-yellow-50 border-yellow-200">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800">
+                    <strong>{results.skipped}</strong> já existentes
+                  </AlertDescription>
+                </Alert>
+                
+                <Alert className="bg-red-50 border-red-200">
+                  <XCircle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">
+                    <strong>{results.failed}</strong> com erro
+                  </AlertDescription>
+                </Alert>
+              </div>
 
-              {results.skipped.length > 0 && (
+              {results.warnings.length > 0 && (
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>{results.skipped.length}</strong> registros já existem:
+                    <strong>Avisos:</strong>
                     <ul className="mt-2 space-y-1 text-sm">
-                      {results.skipped.slice(0, 5).map((msg, idx) => (
-                        <li key={idx}>• {msg}</li>
+                      {results.warnings.map((warning, i) => (
+                        <li key={i}>{warning}</li>
                       ))}
-                      {results.skipped.length > 5 && (
-                        <li>... e mais {results.skipped.length - 5}</li>
-                      )}
                     </ul>
                   </AlertDescription>
                 </Alert>
@@ -379,16 +412,13 @@ export default function ProcessarFormsParto() {
 
               {results.errors.length > 0 && (
                 <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
+                  <XCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>{results.errors.length}</strong> erros encontrados:
+                    <strong>Erros:</strong>
                     <ul className="mt-2 space-y-1 text-sm">
-                      {results.errors.slice(0, 5).map((msg, idx) => (
-                        <li key={idx}>• {msg}</li>
+                      {results.errors.map((error, i) => (
+                        <li key={i}>{error}</li>
                       ))}
-                      {results.errors.length > 5 && (
-                        <li>... e mais {results.errors.length - 5}</li>
-                      )}
                     </ul>
                   </AlertDescription>
                 </Alert>
