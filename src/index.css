@@ -86,21 +86,14 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 215 18% 97%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 210 100% 25%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 100% 85%;
+    --sidebar-primary-foreground: 210 100% 15%;
+    --sidebar-accent: 210 100% 30%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 210 100% 35%;
+    --sidebar-ring: 210 100% 50%;
   }
 
   .dark {
@@ -158,14 +151,14 @@ All colors MUST be HSL.
     --glass-border: hsl(208 75% 34% / 0.18);
     --glass-shadow: 0 8px 32px 0 hsl(208 75% 34% / 0.12);
     --backdrop-blur: blur(20px);
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 210 100% 20%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 100% 75%;
+    --sidebar-primary-foreground: 210 100% 10%;
+    --sidebar-accent: 210 100% 25%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 210 100% 30%;
+    --sidebar-ring: 210 100% 50%;
   }
 }
 
@@ -267,5 +260,28 @@ All colors MUST be HSL.
   
   *::-webkit-scrollbar-corner {
     background: transparent;
+  }
+
+  /* Sidebar Glass Effect with Deep Sky Blue Gradient */
+  .sidebar-glass {
+    background: linear-gradient(
+      180deg,
+      hsl(210 100% 25% / 0.95) 0%,
+      hsl(210 100% 20% / 0.95) 50%,
+      hsl(210 100% 15% / 0.98) 100%
+    );
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid hsl(210 100% 35% / 0.3);
+  }
+
+  .dark .sidebar-glass {
+    background: linear-gradient(
+      180deg,
+      hsl(210 100% 20% / 0.95) 0%,
+      hsl(210 100% 15% / 0.95) 50%,
+      hsl(210 100% 10% / 0.98) 100%
+    );
+    border-right: 1px solid hsl(210 100% 30% / 0.3);
   }
 }
