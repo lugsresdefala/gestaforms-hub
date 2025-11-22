@@ -238,7 +238,7 @@ const App = () => (
             <Route 
               path="/analisar-form1" 
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <AnalisarForm1 />
                   </AppLayout>
