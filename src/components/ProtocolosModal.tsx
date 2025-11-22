@@ -5,35 +5,38 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { PROTOCOLS, ProtocolConfig } from "@/lib/obstetricProtocols";
 import { BookOpen, AlertCircle, Calendar, Route } from "lucide-react";
-
 interface ProtocolosModalProps {
   trigger?: React.ReactNode;
 }
-
 const getPrioridadeColor = (prioridade: number) => {
   switch (prioridade) {
-    case 1: return "destructive";
-    case 2: return "default";
-    case 3: return "secondary";
-    default: return "outline";
+    case 1:
+      return "destructive";
+    case 2:
+      return "default";
+    case 3:
+      return "secondary";
+    default:
+      return "outline";
   }
 };
-
 const getPrioridadeLabel = (prioridade: number) => {
   switch (prioridade) {
-    case 1: return "Crítico";
-    case 2: return "Alto";
-    case 3: return "Moderado";
-    default: return "Normal";
+    case 1:
+      return "Crítico";
+    case 2:
+      return "Alto";
+    case 3:
+      return "Moderado";
+    default:
+      return "Normal";
   }
 };
-
 const getProtocolLabel = (key: string): string => {
   const labels: Record<string, string> = {
     // Cesárea eletiva
     'desejo_materno': 'Desejo Materno',
     'laqueadura': 'Laqueadura',
-    
     // Hipertensão
     'hac': 'HAC Compensada',
     'hac_dificil': 'HAC Difícil Controle',
@@ -42,7 +45,6 @@ const getProtocolLabel = (key: string): string => {
     'pre_eclampsia_grave': 'Pré-eclâmpsia Grave',
     'eclampsia': 'Eclâmpsia',
     'sindrome_hellp': 'Síndrome HELLP',
-    
     // Diabetes
     'dmg_sem_insulina': 'DMG sem Insulina',
     'dmg_sem_insulina_descomp': 'DMG sem Insulina Descompensada',
@@ -50,7 +52,6 @@ const getProtocolLabel = (key: string): string => {
     'dmg_insulina_descomp': 'DMG com Insulina Descompensada',
     'dm_pregestacional': 'DM Pré-gestacional',
     'dm_pregestacional_descomp': 'DM Pré-gestacional Descompensada',
-    
     // Placenta
     'placenta_previa_total': 'Placenta Prévia Total',
     'placenta_previa_parcial': 'Placenta Prévia Parcial',
@@ -58,41 +59,33 @@ const getProtocolLabel = (key: string): string => {
     'placenta_acreta': 'Placenta Acreta',
     'placenta_percreta': 'Placenta Percreta',
     'dpp': 'Descolamento Prematuro Placenta',
-    
     // Gemelar
     'gemelar_monocorionico': 'Gemelar Monocoriônica',
     'gemelar_bicorionico': 'Gemelar Bicoriônica',
     'gemelar_monoamniotico': 'Gemelar Monoamniótica',
-    
     // Apresentação Fetal
     'pelvico': 'Apresentação Pélvica',
     'cormica': 'Apresentação Córmica',
-    
     // Rotura de Membranas
     'rpmo_pretermo': 'RPMO Pré-termo',
     'rpmo_termo': 'RPMO a Termo',
-    
     // Crescimento Fetal
     'rcf': 'Restrição de Crescimento Fetal',
     'rcf_grave': 'RCF Grave',
     'macrossomia': 'Macrossomia',
     'macrossomia_severa': 'Macrossomia Severa',
-    
     // Líquido Amniótico
     'oligodramnia': 'Oligodrâmnia',
     'oligodramnia_severa': 'Oligodrâmnia Severa',
     'polidramnia': 'Polidrâmnia',
-    
     // Iteratividade
     'iteratividade_1cesarea': 'Iteratividade 1 Cesárea',
     'iteratividade_2cesarea': 'Iteratividade 2+ Cesáreas',
     'cesarea_corporal': 'Cesárea Corporal Prévia',
-    
     // Malformações Fetais
     'malformacao_grave': 'Malformação Fetal Grave',
     'cardiopatia_fetal': 'Cardiopatia Fetal',
     'hidrocefalia': 'Hidrocefalia',
-    
     // Doenças Maternas
     'cardiopatia_materna': 'Cardiopatia Materna',
     'cardiopatia_grave': 'Cardiopatia Grave',
@@ -100,7 +93,6 @@ const getProtocolLabel = (key: string): string => {
     'lupus': 'Lúpus',
     'epilepsia': 'Epilepsia',
     'trombofilia': 'Trombofilia',
-    
     // Infecções
     'hiv': 'HIV',
     'hepatite_b': 'Hepatite B',
@@ -109,16 +101,14 @@ const getProtocolLabel = (key: string): string => {
     'toxoplasmose': 'Toxoplasmose',
     'cmv': 'Citomegalovírus',
     'herpes': 'Herpes Genital',
-    
     // Condições Especiais
     'colestase': 'Colestase Gravídica',
     'obesidade': 'Obesidade Mórbida',
     'pos_datismo': 'Pós-datismo',
-    'obito_fetal': 'Óbito Fetal',
+    'obito_fetal': 'Óbito Fetal'
   };
   return labels[key] || key;
 };
-
 const categorias = {
   'Cesárea Eletiva': ['desejo_materno', 'laqueadura'],
   'Distúrbios Hipertensivos': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_sem_deterioracao', 'pre_eclampsia_grave', 'eclampsia', 'sindrome_hellp'],
@@ -133,19 +123,17 @@ const categorias = {
   'Malformações Fetais': ['malformacao_grave', 'cardiopatia_fetal', 'hidrocefalia'],
   'Doenças Maternas': ['cardiopatia_materna', 'cardiopatia_grave', 'doenca_renal', 'lupus', 'epilepsia', 'trombofilia'],
   'Infecções Maternas': ['hiv', 'hepatite_b', 'hepatite_c', 'sifilis', 'toxoplasmose', 'cmv', 'herpes'],
-  'Outras Condições': ['colestase', 'obesidade', 'pos_datismo', 'obito_fetal'],
+  'Outras Condições': ['colestase', 'obesidade', 'pos_datismo', 'obito_fetal']
 };
-
-export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
-  return (
-    <Dialog>
+export const ProtocolosModal = ({
+  trigger
+}: ProtocolosModalProps) => {
+  return <Dialog>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="outline" className="gap-2">
+        {trigger || <Button variant="outline" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            Ver Protocolos Obstétricos
-          </Button>
-        )}
+            Protocolos Obstétricos
+          </Button>}
       </DialogTrigger>
       <DialogContent className="max-w-5xl max-h-[90vh]">
         <DialogHeader>
@@ -160,18 +148,15 @@ export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
         
         <ScrollArea className="h-[70vh] pr-4">
           <div className="space-y-6">
-            {Object.entries(categorias).map(([categoria, protocolKeys]) => (
-              <div key={categoria}>
+            {Object.entries(categorias).map(([categoria, protocolKeys]) => <div key={categoria}>
                 <h3 className="text-lg font-semibold mb-3 text-primary border-b pb-2">
                   {categoria}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {protocolKeys.map((key) => {
-                    const protocol = PROTOCOLS[key];
-                    if (!protocol) return null;
-                    
-                    return (
-                      <Card key={key} className="hover:shadow-md transition-shadow">
+                  {protocolKeys.map(key => {
+                const protocol = PROTOCOLS[key];
+                if (!protocol) return null;
+                return <Card key={key} className="hover:shadow-md transition-shadow">
                         <CardHeader className="pb-3">
                           <CardTitle className="text-base flex items-start justify-between gap-2">
                             <span>{getProtocolLabel(key)}</span>
@@ -185,9 +170,7 @@ export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
                             <Calendar className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                             <div className="text-sm">
                               <span className="font-medium">IG Ideal:</span> {protocol.igIdeal} semanas
-                              {protocol.margemDias > 0 && (
-                                <span className="text-muted-foreground"> (+{protocol.margemDias} dias)</span>
-                              )}
+                              {protocol.margemDias > 0 && <span className="text-muted-foreground"> (+{protocol.margemDias} dias)</span>}
                             </div>
                           </div>
                           
@@ -198,21 +181,17 @@ export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
                             </div>
                           </div>
                           
-                          {protocol.observacoes && (
-                            <div className="flex items-start gap-2">
+                          {protocol.observacoes && <div className="flex items-start gap-2">
                               <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
                               <div className="text-sm text-muted-foreground">
                                 {protocol.observacoes}
                               </div>
-                            </div>
-                          )}
+                            </div>}
                         </CardContent>
-                      </Card>
-                    );
-                  })}
+                      </Card>;
+              })}
                 </div>
-              </div>
-            ))}
+              </div>)}
             
             <div className="bg-muted/50 rounded-lg p-4 mt-6 border">
               <h4 className="font-semibold mb-2 flex items-center gap-2">
@@ -231,6 +210,5 @@ export const ProtocolosModal = ({ trigger }: ProtocolosModalProps) => {
           </div>
         </ScrollArea>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
