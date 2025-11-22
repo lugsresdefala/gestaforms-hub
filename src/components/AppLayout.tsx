@@ -108,7 +108,7 @@ const AppSidebar = () => {
     icon: FileCheck,
     show: isAdmin()
   }].filter(item => item.show);
-  return <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
+  return <Sidebar className={`${collapsed ? "w-14" : "w-60"} sidebar-glass`} collapsible="icon">
       <SidebarContent>
         <div className="p-4 border-b border-border/50">
           {!collapsed && <div className="flex flex-col gap-1">
