@@ -317,7 +317,7 @@ const NovoAgendamento = () => {
                     â Anterior
                   </Button>}
                 {currentStep < totalSteps ? <Button type="button" onClick={nextStep} className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold transition-smooth hover:scale-105 shadow-md hover:shadow-lg">
-                    PrÃ³xima â
+                    ​Avançar
                   </Button> : <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto ml-auto px-8 py-6 text-base font-semibold gradient-primary transition-smooth hover:scale-105 shadow-md hover:shadow-xl">
                     {isSubmitting ? "Salvando..." : "Enviar FormulÃ¡rio â"}
                   </Button>}
