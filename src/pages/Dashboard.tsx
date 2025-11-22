@@ -232,7 +232,7 @@ const Dashboard = () => {
           <div className="flex items-center gap-4">
             
             <div className="border-l border-border pl-4">
-              <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard - Agendamentos</h1>
+              <h1 className="text-xl text-blue-800 font-extrabold md:text-3xl">Procedimentos Agendados  </h1>
               <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
             </div>
           </div>
