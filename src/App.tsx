@@ -26,6 +26,7 @@ import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CalendarioCompleto from "./pages/CalendarioCompleto";
 import CompararCSVs from "./pages/CompararCSVs";
 import CompararPacientes from "./pages/CompararPacientes";
+import AnalisarForm1 from "./pages/AnalisarForm1";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
@@ -230,6 +231,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <CompararPacientes />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/analisar-form1" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <AnalisarForm1 />
                   </AppLayout>
                 </ProtectedRoute>
               } 
