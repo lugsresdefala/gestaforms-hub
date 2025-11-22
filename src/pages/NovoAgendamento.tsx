@@ -97,7 +97,7 @@ const NovoAgendamento = () => {
     const dataAgendamentoCalculada = resultado.dataAgendamento;
     const maternidade = values.maternidade;
 
-    // Detectar se Ã© urgente (menos de 7 dias atÃ© o agendamento)
+    // Detectar se é urgente (menos de 7 dias até o agendamento)
     const diasAteAgendamento = Math.floor((dataAgendamentoCalculada.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     const isUrgente = diasAteAgendamento <= 7;
     const disponibilidade = await verificarDisponibilidade(maternidade, dataAgendamentoCalculada, isUrgente);
@@ -105,7 +105,7 @@ const NovoAgendamento = () => {
     // Combinar alertas de protocolo e disponibilidade
     const alertasCombinados = [...validacao.alertas, ...(disponibilidade.disponivel ? [] : [disponibilidade.mensagem])];
 
-    // Se nÃ£o for compatÃ­vel ou houver alertas, mostrar diÃ¡logo
+    // Se não for compatível ou houver alertas, mostrar diálogo
     if (!validacao.compativel || alertasCombinados.length > 0 || validacao.recomendacoes.length > 0) {
       setProtocoloValidacao(validacao);
       setAlertaVagas(disponibilidade.mensagem);
@@ -114,7 +114,7 @@ const NovoAgendamento = () => {
       return;
     }
 
-    // Se passou na validaÃ§Ã£o, salvar direto
+    // Se passou na validação, salvar direto
     await salvarAgendamento(values);
   };
   const salvarAgendamento = async (values: z.infer<typeof formSchema>) => {
@@ -141,7 +141,7 @@ const NovoAgendamento = () => {
       const igNoAgendamentoDias = igNoAgendamentoTotal % 7;
       const igNoAgendamentoTexto = `${igNoAgendamentoSemanas} semanas e ${igNoAgendamentoDias} dias`;
 
-      // Preparar dados para inserÃ§Ã£o
+      // Preparar dados para inserção
       const agendamentoData = {
         carteirinha: values.carteirinha,
         nome_completo: values.nomeCompleto,
@@ -174,7 +174,7 @@ const NovoAgendamento = () => {
         email_paciente: values.email,
         data_agendamento_calculada: resultado.dataAgendamento.toISOString().split('T')[0],
         status: "pendente",
-        // Aguardando aprovao do admin mdico
+        // Aguardando aprovação do admin médico
         idade_gestacional_calculada: resultado.igFinal.displayText,
         created_by: user?.id,
         observacoes_agendamento: `IG HOJE: ${resultado.igFinal.displayText}\n` + `IG NO DIA DO AGENDAMENTO: ${igNoAgendamentoTexto}\n` + `DATA DO AGENDAMENTO: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')}\n\n` + `METODOLOGIA: ${resultado.metodologiaUtilizada}\n\n` + `IG pela DUM: ${resultado.igByDum?.displayText || 'N/A'}\n` + `IG pelo USG: ${resultado.igByUsg.displayText}\n` + `IG FINAL (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n\n` + `IG para agendamento: ${resultado.igAgendamento}\n\n` + resultado.observacoes
@@ -198,7 +198,7 @@ const NovoAgendamento = () => {
         console.error("Message:", error.message);
         console.error("Details:", error.details);
         console.error("Hint:", error.hint);
-        toast.error(`ERRO AO SALVAR AGENDAMENTO:\n\n` + `${error.message}\n\n` + `CÃ³digo: ${error.code}\n` + `Por favor, copie esta mensagem e reporte o erro.`, {
+        toast.error(`ERRO AO SALVAR AGENDAMENTO:\n\n` + `${error.message}\n\n` + `Código: ${error.code}\n` + `Por favor, copie esta mensagem e reporte o erro.`, {
           duration: 10000
         });
         return;
@@ -206,18 +206,18 @@ const NovoAgendamento = () => {
       console.log("=== SUCESSO NO SALVAMENTO ===");
       console.log("Dados inseridos:", JSON.stringify(insertedData, null, 2));
 
-      // CÃ³digo de auditoria removido - tabela nÃ£o existe
+      // Código de auditoria removido - tabela não existe
 
-      toast.success(`Agendamento salvo com sucesso!\n\n` + `Paciente: ${values.nomeCompleto}\n` + `IG Atual (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n` + `Data sugerida: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')} (${resultado.igAgendamento})\n\n` + `Verifique as observaÃ§Ãµes no backend para mais detalhes.`);
+      toast.success(`Agendamento salvo com sucesso!\n\n` + `Paciente: ${values.nomeCompleto}\n` + `IG Atual (${resultado.metodologiaUtilizada}): ${resultado.igFinal.displayText}\n` + `Data sugerida: ${resultado.dataAgendamento.toLocaleDateString('pt-BR')} (${resultado.igAgendamento})\n\n` + `Verifique as observações no backend para mais detalhes.`);
 
-      // Resetar formulÃ¡rio
+      // Resetar formulário
       form.reset();
       setCurrentStep(1);
       setShowProtocolAlert(false);
       setPendingFormData(null);
     } catch (error) {
       console.error("Erro inesperado:", error);
-      toast.error("Ocorreu um erro ao processar o formulÃ¡rio.");
+      toast.error("Ocorreu um erro ao processar o formulário.");
     } finally {
       setIsSubmitting(false);
     }
@@ -238,7 +238,7 @@ const NovoAgendamento = () => {
         behavior: "smooth"
       });
     } else {
-      toast.error("Por favor, preencha todos os campos obrigatÃ³rios.");
+      toast.error("Por favor, preencha todos os campos obrigatórios.");
     }
   };
   const prevStep = () => {
@@ -267,7 +267,7 @@ const NovoAgendamento = () => {
             <img src="/hapvida-logo.png" alt="Hapvida NotreDame" className="h-12 md:h-16 transition-transform hover:scale-105" />
             <div className="border-l border-border pl-4">
               <h1 className="text-xl md:text-2xl font-bold text-foreground">PGS - PROGRAMA GESTAÇÃO SEGURA</h1>
-              <p className="text-sm text-muted-foreground">Hapvida NotreDame IntermÃ©dica</p>
+              <p className="text-sm text-muted-foreground">Hapvida NotreDame Intermédica</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -327,16 +327,16 @@ const NovoAgendamento = () => {
         </div>
       </main>
 
-      {/* Alert Dialog para validaÃ§Ã£o de protocolo */}
+      {/* Alert Dialog para validação de protocolo */}
       <AlertDialog open={showProtocolAlert} onOpenChange={setShowProtocolAlert}>
         <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <AlertDialogHeader>
             <div className="flex items-center gap-2">
               <AlertCircle className="h-6 w-6 text-orange-500" />
-              <AlertDialogTitle>ValidaÃ§Ã£o de Protocolo ObstÃ©trico</AlertDialogTitle>
+              <AlertDialogTitle>Validação de Protocolo Obstétrico</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="text-base">
-              O sistema detectou pontos que requerem atenÃ§Ã£o conforme o protocolo obstÃ©trico:
+              O sistema detectou pontos que requerem atenção conforme o protocolo obstétrico:
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -354,10 +354,10 @@ const NovoAgendamento = () => {
                   </ul>
                 </div>}
 
-              {/* RecomendaÃ§Ãµes */}
+              {/* Recomendações */}
               {protocoloValidacao.recomendacoes.length > 0 && <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                    RecomendaÃ§Ãµes:
+                    Recomendações:
                   </h4>
                   <ul className="space-y-2">
                     {protocoloValidacao.recomendacoes.map((rec, idx) => <li key={idx} className="text-sm text-blue-700 dark:text-blue-300 flex items-start gap-2">
