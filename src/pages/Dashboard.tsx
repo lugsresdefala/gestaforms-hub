@@ -219,7 +219,7 @@ const Dashboard = () => {
     if (diffDias < 0) {
       return <Badge variant="secondary" className="gap-1 text-white bg-cyan-700">Resolvido</Badge>;
     } else if (diffDias <= 7) {
-      return <Badge variant="urgent">Urgente</Badge>;
+      return <Badge variant="urgent" className="bg-red-900">Urgente</Badge>;
     } else if (diffDias <= 14) {
       return <Badge variant="warning">Próximo</Badge>;
     } else {
