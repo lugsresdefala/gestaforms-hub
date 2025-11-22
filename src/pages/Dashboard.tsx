@@ -217,7 +217,7 @@ const Dashboard = () => {
     const dataAgend = new Date(dataAgendamento);
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDias < 0) {
-      return <Badge variant="secondary" className="gap-1 bg-green-600 text-white">Resolvido</Badge>;
+      return <Badge variant="secondary" className="gap-1 text-white bg-cyan-700">Resolvido</Badge>;
     } else if (diffDias <= 7) {
       return <Badge variant="urgent">Urgente</Badge>;
     } else if (diffDias <= 14) {
