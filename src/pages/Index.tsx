@@ -1529,7 +1529,7 @@ const Index = () => {
           }}>
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
-              <div className="metric-icon-badge metric-icon-badge--success">
+              <div className="metric-icon-badge metric-icon-badge--success text-cyan-700">
                 <CheckCircle className="h-5 w-5" />
               </div>
             </CardHeader>
