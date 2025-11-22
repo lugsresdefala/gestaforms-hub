@@ -27,6 +27,7 @@ import CalendarioCompleto from "./pages/CalendarioCompleto";
 import CompararCSVs from "./pages/CompararCSVs";
 import CompararPacientes from "./pages/CompararPacientes";
 import AnalisarForm1 from "./pages/AnalisarForm1";
+import ListaAgendamentos from "./pages/ListaAgendamentos";
 import Onboarding from "./pages/Onboarding";
 import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
@@ -241,6 +242,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <AnalisarForm1 />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/lista-agendamentos" 
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ListaAgendamentos />
                   </AppLayout>
                 </ProtectedRoute>
               } 
