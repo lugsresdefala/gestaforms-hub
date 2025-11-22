@@ -1501,10 +1501,10 @@ const Index = () => {
           </div>
 
         <div className="dashboard-grid dashboard-grid--metrics">
-          <Card className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up" style={{
+          <Card style={{
             animationDelay: "0ms",
             opacity: 0
-          }}>
+          }} className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up rounded-sm opacity-60 shadow-2xl">
             <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
               <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
               <div className="metric-icon-badge metric-icon-badge--warning">
