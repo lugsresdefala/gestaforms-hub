@@ -1466,6 +1466,12 @@ const Index = () => {
                           <Download className="h-4 w-4 mr-2 text-primary" />
                           <span>Exportar Relatórios</span>
                         </div>} />}
+                  {(isAdmin() || isAdminMed()) && (
+                    <DropdownMenuItem onClick={() => navigate("/agendamentos-rejeitados")} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                      <XCircle className="h-4 w-4 mr-2 text-destructive" />
+                      <span>Agendamentos Rejeitados</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem onClick={() => navigate("/guia-sistema")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                     <Info className="h-4 w-4 mr-2 text-primary" />
