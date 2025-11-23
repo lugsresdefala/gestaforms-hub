@@ -172,7 +172,7 @@ const MenuContent = ({
               {items.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} end onClick={onItemClick} className="group relative transition-all duration-300 hover:bg-white/10 hover:backdrop-blur-md rounded-lg text-sky-50/90 hover:text-white hover:shadow-lg hover:shadow-orange-500/20" activeClassName="bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-white font-semibold shadow-xl shadow-orange-500/30 backdrop-blur-sm border border-orange-400/30">
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 to-amber-400/0 group-hover:from-sky-400/10 group-hover:to-amber-400/10 transition-all duration-300 shadow-lg rounded-sm opacity-90" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 to-amber-400/0 group-hover:from-sky-400/10 group-hover:to-amber-400/20 transition-all duration-300 shadow-lg rounded-sm opacity-90" />
                       <item.icon className="h-4 w-4 transition-colors duration-300" />
                       {!collapsed && <span className="text-sm flex-1">{item.title}</span>}
                       {!collapsed && item.badge && <Badge variant="destructive" className="ml-auto h-5 px-2 text-xs bg-red-500 hover:bg-red-600 animate-pulse">
