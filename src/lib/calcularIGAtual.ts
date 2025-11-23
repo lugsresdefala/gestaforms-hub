@@ -12,19 +12,32 @@ interface AgendamentoData {
 /**
  * Calcula a idade gestacional atual baseada nos dados do agendamento
  * Esta função recalcula a IG em tempo real, não usa o valor armazenado
+ * IMPORTANTE: A IG nunca ultrapassa 40 semanas e para de contar na data do parto
  */
 export const calcularIGAtual = (agendamento: AgendamentoData): string => {
   try {
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
     const dataAgendamento = agendamento.data_agendamento_calculada 
       ? new Date(agendamento.data_agendamento_calculada) 
       : null;
     
-    // Se a data do agendamento já passou, usar a data do agendamento como referência
+    if (dataAgendamento) {
+      dataAgendamento.setHours(0, 0, 0, 0);
+    }
+    
+    // REGRA 1: Se a data do agendamento já passou ou é hoje, a IG é a da data do agendamento
     // (o cálculo de IG se encerra no dia do parto)
-    const dataReferencia = dataAgendamento && dataAgendamento < hoje 
-      ? dataAgendamento 
-      : hoje;
+    let dataReferencia: Date;
+    
+    if (dataAgendamento && dataAgendamento <= hoje) {
+      dataReferencia = dataAgendamento;
+    } else {
+      // REGRA 2: Se ainda não chegou a data do parto, calcular IG atual
+      // mas limitar a no máximo 40 semanas (280 dias)
+      dataReferencia = hoje;
+    }
     
     // Calcular IG por USG usando a data de referência adequada
     const dataUsg = new Date(agendamento.data_primeiro_usg);
@@ -47,6 +60,14 @@ export const calcularIGAtual = (agendamento: AgendamentoData): string => {
 
     // Determinar qual IG usar conforme protocolo
     const { igFinal } = determinarIgFinal(igDum, igUsg, agendamento.semanas_usg);
+
+    // REGRA 3: Limitar a IG a no máximo 40 semanas
+    const semanasMaximas = 40;
+    const diasMaximos = 280; // 40 semanas * 7 dias
+    
+    if (igFinal.totalDays > diasMaximos) {
+      return `${semanasMaximas} semanas e 0 dias`;
+    }
 
     return igFinal.displayText;
   } catch (error) {
