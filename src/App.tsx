@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
@@ -70,7 +71,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <DataProvider>
+            <Routes>
             <Route path="/auth" element={<AuthRedirect />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/termos" element={<TermosDeUso />} />
@@ -418,7 +420,8 @@ const App = () => (
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
+            </Routes>
+          </DataProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
