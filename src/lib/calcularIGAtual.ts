@@ -79,6 +79,7 @@ export const calcularIGAtual = (agendamento: AgendamentoData): string => {
 /**
  * Calcula a idade gestacional especificamente para a data do agendamento
  * Esta função SEMPRE usa a data_agendamento_calculada como referência
+ * IMPORTANTE: A IG nunca ultrapassa 40 semanas
  */
 export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string => {
   try {
@@ -88,6 +89,7 @@ export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string =
     }
     
     const dataAgendamento = new Date(agendamento.data_agendamento_calculada);
+    dataAgendamento.setHours(0, 0, 0, 0);
     
     // Calcular IG por USG usando a data do agendamento
     const dataUsg = new Date(agendamento.data_primeiro_usg);
@@ -110,6 +112,13 @@ export const calcularIGNaDataAgendada = (agendamento: AgendamentoData): string =
 
     // Determinar qual IG usar conforme protocolo
     const { igFinal } = determinarIgFinal(igDum, igUsg, agendamento.semanas_usg);
+
+    // REGRA: Limitar a IG a no máximo 40 semanas
+    const diasMaximos = 280; // 40 semanas * 7 dias
+    
+    if (igFinal.totalDays > diasMaximos) {
+      return '40 semanas e 0 dias';
+    }
 
     return igFinal.displayText;
   } catch (error) {

@@ -137,17 +137,23 @@ export const calcularDPP = (igAtual: GestationalAge, dataReferencia: Date = new 
 
 /**
  * Calcula IG que a paciente terá em uma data específica
+ * IMPORTANTE: A IG nunca ultrapassa 40 semanas (280 dias)
  */
 export const calcularIgNaData = (igAtual: GestationalAge, dataAlvo: Date, dataReferencia: Date = new Date()): GestationalAge => {
   const diasAte = differenceInDays(dataAlvo, dataReferencia);
   const totalDias = igAtual.totalDays + diasAte;
-  const semanas = Math.floor(totalDias / 7);
-  const dias = totalDias % 7;
+  
+  // Limitar a no máximo 40 semanas (280 dias)
+  const diasMaximos = 280;
+  const diasFinais = Math.min(totalDias, diasMaximos);
+  
+  const semanas = Math.floor(diasFinais / 7);
+  const dias = diasFinais % 7;
   
   return {
     weeks: semanas,
     days: dias,
-    totalDays: totalDias,
+    totalDays: diasFinais,
     displayText: `${semanas} semanas e ${dias} dias`
   };
 };
@@ -241,6 +247,7 @@ export const identificarPatologias = (dados: {
 /**
  * Calcula data de agendamento baseada em protocolos obstétricos
  * Aplica regras: DPP, antecedência mínima 10 dias, excluir domingos
+ * IMPORTANTE: Garante que a IG no agendamento não ultrapasse 40 semanas
  */
 export const calcularDataAgendamento = (
   igAtual: GestationalAge,
@@ -248,19 +255,47 @@ export const calcularDataAgendamento = (
   dataReferencia: Date = new Date()
 ): { data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date } => {
   const dpp = calcularDPP(igAtual, dataReferencia);
+  const diasMaximos = 280; // 40 semanas
+  
+  // Calcular quantos dias faltam para 40 semanas
+  const diasRestantesAte40Sem = diasMaximos - igAtual.totalDays;
+  const dataLimite40Semanas = addDays(dataReferencia, diasRestantesAte40Sem);
   
   // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
   if (patologias.length === 0) {
     const igAlvo = 39;
     const semanasAntesDpp = 40 - igAlvo;
-    const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
+    let dataIdeal = addWeeks(dpp, -semanasAntesDpp);
+    
+    // Se a data ideal ultrapassaria 40 semanas, ajustar
+    if (dataIdeal > dataLimite40Semanas) {
+      dataIdeal = dataLimite40Semanas;
+    }
+    
     const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
-    const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+    
+    // Verificar novamente se a data final não ultrapassa 40 semanas
+    let dataFinalAjustada = dataFinal;
+    if (dataFinal > dataLimite40Semanas) {
+      dataFinalAjustada = dataLimite40Semanas;
+      // Ajustar para não ser domingo
+      while (isDomingo(dataFinalAjustada)) {
+        dataFinalAjustada = addDays(dataFinalAjustada, -1);
+      }
+    }
+    
+    const igNaData = calcularIgNaData(igAtual, dataFinalAjustada, dataReferencia);
+    
+    let obs = `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}`;
+    
+    if (dataFinal !== dataFinalAjustada) {
+      obs += `\n⚠️ ATENÇÃO: Data ajustada para não ultrapassar 40 semanas de gestação`;
+    }
     
     return {
-      data: dataFinal,
+      data: dataFinalAjustada,
       igAgendamento: igNaData.displayText,
-      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}`,
+      observacoes: obs,
       protocoloAplicado: 'baixo_risco',
       dpp
     };
@@ -284,7 +319,16 @@ export const calcularDataAgendamento = (
   }
   
   if (!protocoloSelecionado) {
-    const dataFinal = encontrarProximaDataDisponivel(dataReferencia);
+    let dataFinal = encontrarProximaDataDisponivel(dataReferencia);
+    
+    // Garantir que não ultrapasse 40 semanas
+    if (dataFinal > dataLimite40Semanas) {
+      dataFinal = dataLimite40Semanas;
+      while (isDomingo(dataFinal)) {
+        dataFinal = addDays(dataFinal, -1);
+      }
+    }
+    
     const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
     
     return {
@@ -301,18 +345,42 @@ export const calcularDataAgendamento = (
   
   // Calcular data ideal: DPP - (40 - IG_recomendada) semanas
   const semanasAntesDpp = 40 - igAlvo;
-  const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
+  let dataIdeal = addWeeks(dpp, -semanasAntesDpp);
+  
+  // Se a data ideal ultrapassaria 40 semanas, ajustar
+  if (dataIdeal > dataLimite40Semanas) {
+    dataIdeal = dataLimite40Semanas;
+  }
   
   // Aplicar regras de disponibilidade
-  const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
+  let dataFinal = encontrarProximaDataDisponivel(dataIdeal);
+  
+  // Verificar novamente se a data final não ultrapassa 40 semanas
+  let alertaAjuste40Sem = false;
+  if (dataFinal > dataLimite40Semanas) {
+    dataFinal = dataLimite40Semanas;
+    alertaAjuste40Sem = true;
+    // Ajustar para não ser domingo
+    while (isDomingo(dataFinal)) {
+      dataFinal = addDays(dataFinal, -1);
+    }
+  }
+  
   const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
   
   let observacoes = `${protocoloSelecionado.observacoes}\nVia preferencial: ${protocoloSelecionado.viaPreferencial}`;
   observacoes += `\n📅 DPP: ${dpp.toLocaleDateString('pt-BR')}`;
+  observacoes += `\n📅 IG atual: ${igAtual.displayText}`;
   observacoes += `\n📅 IG ideal protocolo: ${protocoloSelecionado.igIdeal} semanas`;
   observacoes += `\n📅 Data ideal calculada: ${dataIdeal.toLocaleDateString('pt-BR')}`;
   observacoes += `\n📅 Data final (após regras): ${dataFinal.toLocaleDateString('pt-BR')}`;
   observacoes += `\n📅 IG no dia do agendamento: ${igNaData.displayText}`;
+  
+  // Alerta se ajustou por limite de 40 semanas
+  if (alertaAjuste40Sem) {
+    observacoes += `\n🚨 CRÍTICO: Data ajustada para não ultrapassar 40 semanas de gestação`;
+    observacoes += `\n   Paciente com IG avançada - priorizar agendamento`;
+  }
   
   // Verificar urgência
   const hoje = new Date();
