@@ -58,9 +58,12 @@ interface Notificacao {
 interface DataContextType {
   agendamentos: Agendamento[];
   notificacoes: Notificacao[];
+  solicitacoesPendentes: number;
+  agendamentosPendentes: number;
   loading: boolean;
   refreshAgendamentos: () => Promise<void>;
   refreshNotificacoes: () => Promise<void>;
+  refreshContadores: () => Promise<void>;
   marcarNotificacaoComoLida: (notificacaoId: string) => Promise<void>;
 }
 
@@ -70,6 +73,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const { user, isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
+  const [solicitacoesPendentes, setSolicitacoesPendentes] = useState(0);
+  const [agendamentosPendentes, setAgendamentosPendentes] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const refreshAgendamentos = useCallback(async () => {
@@ -116,6 +121,30 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isAdmin]);
 
+  const refreshContadores = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      // Contar solicitações de usuários pendentes (apenas para admin e admin_med)
+      if (isAdmin() || isAdminMed()) {
+        const { count: solicitacoesCount } = await supabase
+          .from('solicitacoes_acesso')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pendente');
+        setSolicitacoesPendentes(solicitacoesCount || 0);
+
+        // Contar agendamentos pendentes de aprovação
+        const { count: agendamentosCount } = await supabase
+          .from('agendamentos_obst')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pendente');
+        setAgendamentosPendentes(agendamentosCount || 0);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar contadores:', error);
+    }
+  }, [user, isAdmin, isAdminMed]);
+
   const marcarNotificacaoComoLida = useCallback(async (notificacaoId: string) => {
     try {
       const { error } = await supabase
@@ -141,13 +170,14 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       await Promise.all([
         refreshAgendamentos(),
-        refreshNotificacoes()
+        refreshNotificacoes(),
+        refreshContadores()
       ]);
       setLoading(false);
     };
 
     loadData();
-  }, [refreshAgendamentos, refreshNotificacoes]);
+  }, [refreshAgendamentos, refreshNotificacoes, refreshContadores]);
 
   // Realtime subscriptions - ÚNICA INSTÂNCIA
   useEffect(() => {
@@ -184,6 +214,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
           // Refresh dos dados
           refreshAgendamentos();
+          refreshContadores();
         }
       )
       .subscribe();
@@ -222,22 +253,47 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
         .subscribe();
     }
 
+    // Subscription para solicitações de acesso (só admins)
+    let solicitacoesChannel: any;
+    if (isAdmin() || isAdminMed()) {
+      solicitacoesChannel = supabase
+        .channel('solicitacoes-sync')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'solicitacoes_acesso',
+          },
+          () => {
+            refreshContadores();
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
       supabase.removeChannel(agendamentosChannel);
       if (notificacoesChannel) {
         supabase.removeChannel(notificacoesChannel);
       }
+      if (solicitacoesChannel) {
+        supabase.removeChannel(solicitacoesChannel);
+      }
     };
-  }, [user, isAdmin, refreshAgendamentos, refreshNotificacoes]);
+  }, [user, isAdmin, isAdminMed, refreshAgendamentos, refreshContadores]);
 
   return (
-    <DataContext.Provider
-      value={{
-        agendamentos,
-        notificacoes,
+    <DataContext.Provider 
+      value={{ 
+        agendamentos, 
+        notificacoes, 
+        solicitacoesPendentes,
+        agendamentosPendentes,
         loading,
         refreshAgendamentos,
         refreshNotificacoes,
+        refreshContadores,
         marcarNotificacaoComoLida,
       }}
     >
