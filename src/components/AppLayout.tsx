@@ -267,9 +267,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50">
         <AppSidebar />
 
-        <div className="flex-1 flex flex-col w-full">
+        <div className="flex-1 flex flex-col min-h-screen">
           <header
-            className={`h-16 flex items-center justify-between border-b px-6 sticky top-0 z-50 transition-all duration-300 ${
+            className={`h-16 flex items-center justify-between border-b px-6 sticky top-0 z-30 transition-all duration-300 ${
               isScrolled
                 ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-sky-900/5 border-sky-200/50"
                 : "bg-white/80 backdrop-blur-md border-sky-200/30"
@@ -303,8 +303,8 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             </div>
           </header>
 
-          <main className="flex-1 flex flex-col overflow-y-auto">
-            <div className="flex-1 p-6">{children}</div>
+          <main className="flex-1 overflow-y-auto">
+            <div className="min-h-[calc(100vh-4rem-120px)] p-6">{children}</div>
             <Footer />
           </main>
         </div>
