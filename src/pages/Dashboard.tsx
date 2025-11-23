@@ -513,7 +513,6 @@ const Dashboard = () => {
                 </AccordionContent>
               </AccordionItem>)}
           </Accordion>}
-      </main>
-    </div>;
+  </div>;
 };
 export default Dashboard;
