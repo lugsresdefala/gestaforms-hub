@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -27,6 +28,7 @@ interface Solicitacao {
 const AprovacoesUsuarios = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { refreshContadores } = useData();
   const [solicitacoes, setSolicitacoes] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [observacoes, setObservacoes] = useState<{ [key: string]: string }>({});
@@ -115,7 +117,8 @@ const AprovacoesUsuarios = () => {
       title: "✅ Solicitação aprovada",
       description: `${solicitacao.profiles?.nome_completo} agora tem acesso como ${getRoleLabel(solicitacao.tipo_acesso)}.`,
     });
-    fetchSolicitacoesPendentes();
+    await fetchSolicitacoesPendentes();
+    await refreshContadores();
   };
 
   const handleRejeitar = async (solicitacao: Solicitacao) => {
@@ -149,7 +152,8 @@ const AprovacoesUsuarios = () => {
         title: "❌ Solicitação rejeitada",
         description: "A solicitação foi rejeitada.",
       });
-      fetchSolicitacoesPendentes();
+      await fetchSolicitacoesPendentes();
+      await refreshContadores();
     }
   };
 

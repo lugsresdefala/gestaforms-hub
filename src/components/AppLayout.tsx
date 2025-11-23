@@ -42,6 +42,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useData } from "@/contexts/DataContext";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -50,6 +51,7 @@ interface AppLayoutProps {
 // Componente de conteúdo do menu (reutilizável para desktop e mobile)
 const MenuContent = ({ collapsed = false, onItemClick }: { collapsed?: boolean; onItemClick?: () => void }) => {
   const { isAdmin, isAdminMed } = useAuth();
+  const { solicitacoesPendentes, agendamentosPendentes } = useData();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["principal", "agendamentos"]));
 
   const toggleGroup = (groupName: string) => {
@@ -81,14 +83,14 @@ const MenuContent = ({ collapsed = false, onItemClick }: { collapsed?: boolean; 
       url: "/aprovacoes-agendamentos",
       icon: CheckCircle,
       show: isAdminMed() || isAdmin(),
-      badge: 3,
+      badge: agendamentosPendentes > 0 ? agendamentosPendentes : undefined,
     },
     {
       title: "Aprovações Usuários",
       url: "/aprovacoes-usuarios",
       icon: Users,
       show: isAdmin() || isAdminMed(),
-      badge: 5,
+      badge: solicitacoesPendentes > 0 ? solicitacoesPendentes : undefined,
     },
     { title: "Criar Usuários Padrão", url: "/criar-usuarios-padrao", icon: UserPlus, show: isAdmin() || isAdminMed() },
     { title: "Importar Agendamentos 2025", url: "/importar-agendamentos-2025", icon: Upload, show: isAdmin() },
