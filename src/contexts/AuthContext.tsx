@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logAuthEvent } from '@/lib/auditLogger';
 
 type UserRole = 'admin' | 'admin_med' | 'medico_unidade' | 'medico_maternidade';
 
@@ -52,6 +53,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         
+        // Log token refresh events
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setTimeout(() => {
+            logAuthEvent('token_refresh', {
+              success: true,
+              email: session.user.email,
+            });
+          }, 0);
+        }
+        
         if (session?.user) {
           setTimeout(() => {
             fetchUserRoles(session.user.id);
@@ -81,22 +92,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        // Log failed login attempt
+        await logAuthEvent('login', {
+          success: false,
+          error: error.message,
+          email,
+        });
+        
         toast({
           variant: "destructive",
           title: "Erro ao fazer login",
           description: error.message,
+        });
+      } else {
+        // Log successful login
+        await logAuthEvent('login', {
+          success: true,
+          email,
+          session_id: data.session?.access_token.substring(0, 10) + '...',
         });
       }
       
       return { error };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao fazer login';
+      
+      // Log exception during login
+      await logAuthEvent('login', {
+        success: false,
+        error: errorMessage,
+        email,
+      });
+      
       toast({
         variant: "destructive",
         title: "Erro ao fazer login",
@@ -122,12 +155,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       if (error) {
+        // Log failed signup
+        await logAuthEvent('signup', {
+          success: false,
+          error: error.message,
+          email,
+        });
+        
         toast({
           variant: "destructive",
           title: "Erro ao cadastrar",
           description: error.message,
         });
       } else {
+        // Log successful signup
+        await logAuthEvent('signup', {
+          success: true,
+          email,
+          nome_completo: nomeCompleto,
+        });
+        
         toast({
           title: "Cadastro realizado!",
           description: "Verifique seu email para confirmar o cadastro.",
@@ -137,6 +184,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao cadastrar';
+      
+      // Log exception during signup
+      await logAuthEvent('signup', {
+        success: false,
+        error: errorMessage,
+        email,
+      });
+      
       toast({
         variant: "destructive",
         title: "Erro ao cadastrar",
@@ -147,13 +202,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    const currentEmail = user?.email;
+    
     try {
       await supabase.auth.signOut();
+      
+      // Log successful logout
+      await logAuthEvent('logout', {
+        success: true,
+        email: currentEmail,
+      });
+      
       setUser(null);
       setSession(null);
       setUserRoles([]);
     } catch (err) {
       console.error('Erro ao fazer logout:', err);
+      
+      // Log failed logout
+      await logAuthEvent('logout', {
+        success: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+        email: currentEmail,
+      });
+      
       // Mesmo com erro, limpa o estado local
       setUser(null);
       setSession(null);

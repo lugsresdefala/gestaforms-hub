@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { logAuthorizationEvent } from '@/lib/auditLogger';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -35,16 +36,32 @@ const ProtectedRoute = ({
   useEffect(() => {
     if (isUnauthorized && !hasShownError) {
       let message = 'Esta página requer permissões especiais.';
+      const requiredRoles = [];
       
       if (requireAdmin) {
         message = 'Esta página requer permissões de administrador.';
-      } else if (requireAdminMed) {
-        message = 'Esta página requer permissões de administrador médico.';
-      } else if (requireMedicoUnidade) {
-        message = 'Esta página requer permissões de médico de unidade.';
-      } else if (requireMedicoMaternidade) {
-        message = 'Esta página requer permissões de médico de maternidade.';
+        requiredRoles.push('admin');
       }
+      if (requireAdminMed) {
+        message = 'Esta página requer permissões de administrador médico.';
+        requiredRoles.push('admin_med');
+      }
+      if (requireMedicoUnidade) {
+        message = 'Esta página requer permissões de médico de unidade.';
+        requiredRoles.push('medico_unidade');
+      }
+      if (requireMedicoMaternidade) {
+        message = 'Esta página requer permissões de médico de maternidade.';
+        requiredRoles.push('medico_maternidade');
+      }
+
+      // Log access denied
+      logAuthorizationEvent('access_denied', {
+        user_id: user?.id,
+        email: user?.email,
+        required_roles: requiredRoles,
+        attempted_route: location.pathname,
+      });
 
       toast({
         variant: 'destructive',
@@ -61,6 +78,8 @@ const ProtectedRoute = ({
     requireMedicoUnidade,
     requireMedicoMaternidade,
     toast,
+    user,
+    location,
   ]);
 
   if (loading) {
