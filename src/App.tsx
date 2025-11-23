@@ -46,6 +46,7 @@ import LogsAuditoria from "./pages/LogsAuditoria";
 import ImportarPacientesPendentes from "./pages/ImportarPacientesPendentes";
 import Protocolos from "./pages/Protocolos";
 import Contato from "./pages/Contato";
+import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -129,7 +130,17 @@ const App = () => (
               } 
             />
             <Route 
-              path="/editar-agendamento/:id" 
+              path="/agendamentos-rejeitados" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <AgendamentosRejeitados />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/editar-agendamento/:id"
               element={
                 <ProtectedRoute requireAdminMed>
                   <AppLayout>
