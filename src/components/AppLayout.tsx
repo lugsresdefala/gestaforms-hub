@@ -137,11 +137,11 @@ const AppSidebar = () => {
                     <NavLink
                       to={item.url}
                       end
-                      className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/10"
-                      activeClassName="bg-gradient-to-r from-sky-500/30 to-blue-500/30 text-white font-semibold shadow-xl shadow-sky-500/20 backdrop-blur-sm border border-sky-400/30 scale-[1.02]"
+                      className="group relative transition-all duration-300 hover:bg-white/10 hover:backdrop-blur-md rounded-lg text-sky-50/90 hover:text-white hover:shadow-lg hover:shadow-orange-500/20"
+                      activeClassName="bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-white font-semibold shadow-xl shadow-orange-500/30 backdrop-blur-sm border border-orange-400/30"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-sky-400/0 to-blue-400/0 group-hover:from-sky-400/5 group-hover:to-blue-400/5 rounded-xl transition-all duration-300" />
-                      <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-400/0 to-amber-400/0 group-hover:from-orange-400/10 group-hover:to-amber-400/10 rounded-lg transition-all duration-300" />
+                      <item.icon className="h-4 w-4 transition-colors duration-300" />
                       {!collapsed && <span className="text-sm flex-1">{item.title}</span>}
                       {!collapsed && item.badge && (
                         <Badge
@@ -164,7 +164,7 @@ const AppSidebar = () => {
 
   return (
     <Sidebar className={`${collapsed ? "w-16" : "w-72"} transition-all duration-300`} collapsible="icon">
-      <div className="absolute inset-0 bg-gradient-to-br from-sky-600 via-blue-700 to-indigo-800" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
 
       <SidebarContent className="relative">
@@ -175,7 +175,7 @@ const AppSidebar = () => {
         >
           {!collapsed ? (
             <div className="flex flex-col gap-3">
-              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl shadow-sky-900/20 border border-sky-200/30">
+              <div className="bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-2xl shadow-sky-900/20 border border-sky-200/30">
                 <img src="/hapvida-logo.png" alt="Hapvida" className="h-16 w-full object-contain drop-shadow-lg" />
               </div>
               <div className="text-center">
@@ -185,7 +185,7 @@ const AppSidebar = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-2 shadow-xl">
+            <div className="bg-white/95 backdrop-blur-sm rounded-lg p-2 shadow-xl">
               <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain" />
             </div>
           )}
@@ -212,10 +212,10 @@ const AppSidebar = () => {
                       <NavLink
                         to={item.url}
                         end
-                        className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02]"
-                        activeClassName="bg-gradient-to-r from-sky-500/30 to-blue-500/30 text-white font-semibold shadow-xl shadow-sky-500/20 backdrop-blur-sm border border-sky-400/30"
+                        className="group relative transition-all duration-300 hover:bg-white/10 hover:backdrop-blur-md rounded-lg text-sky-50/90 hover:text-white hover:shadow-lg hover:shadow-orange-500/20"
+                        activeClassName="bg-gradient-to-r from-orange-500/20 to-amber-500/20 text-white font-semibold shadow-xl shadow-orange-500/30 backdrop-blur-sm border border-orange-400/30"
                       >
-                        <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                        <item.icon className="h-4 w-4 transition-colors duration-300" />
                         {!collapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
@@ -225,9 +225,9 @@ const AppSidebar = () => {
                   <SidebarMenuButton asChild>
                     <a
                       href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR"
-                      className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02]"
+                      className="group relative transition-all duration-300 hover:bg-white/10 hover:backdrop-blur-md rounded-lg text-sky-50/90 hover:text-white hover:shadow-lg hover:shadow-orange-500/20"
                     >
-                      <Mail className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      <Mail className="h-4 w-4 transition-colors duration-300" />
                       {!collapsed && <span className="text-sm">Contato</span>}
                     </a>
                   </SidebarMenuButton>
@@ -276,12 +276,12 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             }`}
           >
             <div className="flex items-center gap-4">
-              <SidebarTrigger className="h-9 w-9 hover:bg-sky-100 transition-all rounded-xl hover:scale-105 active:scale-95" />
+              <SidebarTrigger className="h-9 w-9 hover:bg-orange-50 hover:shadow-md hover:shadow-orange-500/20 transition-all duration-300 rounded-lg" />
               <div className="flex flex-col">
-                <h1 className="text-lg font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent tracking-tight">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-800 to-blue-900 bg-clip-text text-transparent tracking-tight">
                   PGS
                 </h1>
-                <p className="text-xs text-sky-600/70 font-medium hidden sm:block">Programa Gestação Segura</p>
+                <p className="text-xs text-blue-700/70 font-medium hidden sm:block">Programa Gestação Segura</p>
               </div>
             </div>
 
@@ -295,10 +295,10 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
                 onClick={handleLogout}
                 variant="ghost"
                 size="icon"
-                className="relative h-9 w-9 hover:bg-red-50 hover:text-red-600 transition-all rounded-xl group hover:scale-105 active:scale-95"
+                className="relative h-9 w-9 hover:bg-red-50 hover:text-red-600 hover:shadow-md hover:shadow-red-500/20 transition-all duration-300 rounded-lg group"
                 title="Sair"
               >
-                <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                <LogOut className="h-4 w-4 transition-colors duration-300" />
               </Button>
             </div>
           </header>
