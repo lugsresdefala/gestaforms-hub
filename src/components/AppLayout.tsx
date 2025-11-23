@@ -110,14 +110,14 @@ const AppSidebar = () => {
   }].filter(item => item.show);
   return <Sidebar className={`${collapsed ? "w-14" : "w-60"} sidebar-glass`} collapsible="icon">
       <SidebarContent>
-        <div className="p-4 border-b border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm">
+        <div className="p-4 border-b border-sky-200/30 bg-gradient-to-br from-white/98 to-sky-50/95 backdrop-blur-sm shadow-sm">
           {!collapsed && <div className="flex flex-col gap-1">
-              <img src="/hapvida-logo.png" alt="Hapvida" className="h-24 object-contain drop-shadow-lg" />
-              <span className="text-xs text-white/70 font-medium tracking-wide">
+              <img src="/hapvida-logo.png" alt="Hapvida" className="h-24 object-contain drop-shadow-md" />
+              <span className="text-xs text-sky-700/80 font-medium tracking-wide">
                 Gestação Segura
               </span>
             </div>}
-          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain drop-shadow-lg" />}
+          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain drop-shadow-md" />}
         </div>
 
         <SidebarGroup>
