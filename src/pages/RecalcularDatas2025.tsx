@@ -107,7 +107,7 @@ const RecalcularDatas2025 = () => {
           const diagnosticosFetais = normalizeOptionalArray(agendamento.diagnosticos_fetais);
 
           // Recalcular usando a função existente
-          const resultado = calcularAgendamentoCompleto({
+          const resultado = await calcularAgendamentoCompleto({
             dumStatus: agendamento.dum_status,
             dataDum: agendamento.data_dum || undefined,
             dataPrimeiroUsg: agendamento.data_primeiro_usg,
@@ -116,7 +116,8 @@ const RecalcularDatas2025 = () => {
             procedimentos,
             diagnosticosMaternos,
             diagnosticosFetais,
-            placentaPrevia: agendamento.placenta_previa || undefined
+            placentaPrevia: agendamento.placenta_previa || undefined,
+            maternidade: agendamento.maternidade
           });
 
           // Atualizar no banco

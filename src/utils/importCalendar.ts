@@ -125,7 +125,7 @@ export const importCalendarToAgendamentos = async (csvContent: string, createdBy
       const procedimentos = extractProcedimentos(row.viaParto);
       
       // Calcular idade gestacional usando os dados disponíveis
-      const resultado = calcularAgendamentoCompleto({
+      const resultado = await calcularAgendamentoCompleto({
         dumStatus: 'Sim - Confiavel',
         dataDum: dataNascimento.toISOString().split('T')[0],
         dataPrimeiroUsg: dataNascimento.toISOString().split('T')[0],
@@ -134,7 +134,8 @@ export const importCalendarToAgendamentos = async (csvContent: string, createdBy
         procedimentos: procedimentos,
         diagnosticosMaternos: [row.diagnostico || 'Não informado'],
         diagnosticosFetais: ['Sem alterações'],
-        placentaPrevia: 'Não'
+        placentaPrevia: 'Não',
+        maternidade: 'Cruzeiro' // Arquivo de calendário
       });
       
       const agendamento = {

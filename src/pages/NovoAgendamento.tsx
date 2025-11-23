@@ -70,8 +70,8 @@ const NovoAgendamento = () => {
     }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Calcular dados de agendamento
-    const resultado = calcularAgendamentoCompleto({
+    // Calcular dados de agendamento COM verificação automática de vagas
+    const resultado = await calcularAgendamentoCompleto({
       dumStatus: values.dum,
       dataDum: values.dataDum,
       dataPrimeiroUsg: values.dataPrimeiroUsg,
@@ -80,7 +80,8 @@ const NovoAgendamento = () => {
       procedimentos: values.procedimento,
       diagnosticosMaternos: values.diagnosticosMaternos,
       diagnosticosFetais: values.diagnosticosFetais,
-      placentaPrevia: values.placentaPrevia
+      placentaPrevia: values.placentaPrevia,
+      maternidade: values.maternidade
     });
 
     // Validar protocolo
@@ -120,8 +121,8 @@ const NovoAgendamento = () => {
   const salvarAgendamento = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Calcular dados de agendamento usando o sistema completo
-      const resultado = calcularAgendamentoCompleto({
+      // Calcular dados de agendamento usando o sistema completo COM verificação de vagas
+      const resultado = await calcularAgendamentoCompleto({
         dumStatus: values.dum,
         dataDum: values.dataDum,
         dataPrimeiroUsg: values.dataPrimeiroUsg,
@@ -130,7 +131,8 @@ const NovoAgendamento = () => {
         procedimentos: values.procedimento,
         diagnosticosMaternos: values.diagnosticosMaternos,
         diagnosticosFetais: values.diagnosticosFetais,
-        placentaPrevia: values.placentaPrevia
+        placentaPrevia: values.placentaPrevia,
+        maternidade: values.maternidade
       });
 
       // Calcular IG no dia do agendamento

@@ -223,7 +223,7 @@ export const extractDiagnosticos = (diagnostico: string): {
   };
 };
 
-export const processGuarulhosRow = (row: GuarulhosRow) => {
+export const processGuarulhosRow = async (row: GuarulhosRow) => {
   // Skip empty rows
   if (!row.carteirinha || !row.nome) return null;
   
@@ -237,7 +237,7 @@ export const processGuarulhosRow = (row: GuarulhosRow) => {
   const diagnosticos = extractDiagnosticos(row.diagnostico);
   
   // Calcular IG usando a biblioteca existente
-  const resultado = calcularAgendamentoCompleto({
+  const resultado = await calcularAgendamentoCompleto({
     dumStatus: 'Não lembro',
     dataDum: dataNascimento.toISOString().split('T')[0],
     dataPrimeiroUsg: dataNascimento.toISOString().split('T')[0],
@@ -246,7 +246,8 @@ export const processGuarulhosRow = (row: GuarulhosRow) => {
     procedimentos: procedimentos,
     diagnosticosMaternos: diagnosticos.maternos,
     diagnosticosFetais: diagnosticos.fetais,
-    placentaPrevia: diagnosticos.fetais.includes('Placenta prévia') ? 'Sim' : 'Não'
+    placentaPrevia: diagnosticos.fetais.includes('Placenta prévia') ? 'Sim' : 'Não',
+    maternidade: 'Guarulhos'
   });
   
   return {

@@ -169,7 +169,10 @@ export default function ProcessarFormsParto() {
             placentaPrevia: record.placenta_previa !== 'Não' ? record.placenta_previa : undefined
           };
 
-          const resultado = calcularAgendamentoCompleto(dadosCalculo);
+          const resultado = await calcularAgendamentoCompleto({
+            ...dadosCalculo,
+            maternidade: record.maternidade
+          });
 
           // Garantir que a data está em 2025
           let dataAgendamento = new Date(resultado.dataAgendamento);

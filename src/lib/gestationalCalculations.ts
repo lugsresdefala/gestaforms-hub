@@ -16,8 +16,9 @@ export interface CalculationResult {
   observacoes: string;
   dataAgendamento: Date;
   igAgendamento: string;
-  protocoloAplicado?: string;
+  protocoloAplicado: string;
   dpp: Date;
+  vagaConfirmada: boolean;
 }
 
 /**
@@ -241,12 +242,14 @@ export const identificarPatologias = (dados: {
 /**
  * Calcula data de agendamento baseada em protocolos obstétricos
  * Aplica regras: DPP, antecedência mínima 10 dias, excluir domingos
+ * NOVO: Verifica disponibilidade de vagas e busca alternativa se necessário
  */
-export const calcularDataAgendamento = (
+export const calcularDataAgendamento = async (
   igAtual: GestationalAge,
   patologias: string[],
+  maternidade: string,
   dataReferencia: Date = new Date()
-): { data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date } => {
+): Promise<{ data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date; vagaConfirmada: boolean }> => {
   const dpp = calcularDPP(igAtual, dataReferencia);
   
   // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
@@ -255,14 +258,24 @@ export const calcularDataAgendamento = (
     const semanasAntesDpp = 40 - igAlvo;
     const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
     const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
-    const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+    
+    // Verificar disponibilidade de vagas
+    const { verificarDisponibilidade } = await import('./vagasValidation');
+    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
+    const isUrgente = diasAteDataFinal <= 7;
+    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
+    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
+    const vagaConfirmada = disponibilidade.disponivel;
+    
+    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
     
     return {
-      data: dataFinal,
+      data: dataComVaga,
       igAgendamento: igNaData.displayText,
-      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}`,
+      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
       protocoloAplicado: 'baixo_risco',
-      dpp
+      dpp,
+      vagaConfirmada
     };
   }
   
@@ -285,14 +298,24 @@ export const calcularDataAgendamento = (
   
   if (!protocoloSelecionado) {
     const dataFinal = encontrarProximaDataDisponivel(dataReferencia);
-    const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+    
+    // Verificar disponibilidade de vagas
+    const { verificarDisponibilidade } = await import('./vagasValidation');
+    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
+    const isUrgente = diasAteDataFinal <= 7;
+    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
+    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
+    const vagaConfirmada = disponibilidade.disponivel;
+    
+    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
     
     return {
-      data: dataFinal,
+      data: dataComVaga,
       igAgendamento: igNaData.displayText,
-      observacoes: 'Não foi possível determinar protocolo específico',
+      observacoes: `Não foi possível determinar protocolo específico${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
       protocoloAplicado: 'indefinido',
-      dpp
+      dpp,
+      vagaConfirmada
     };
   }
   
@@ -303,16 +326,32 @@ export const calcularDataAgendamento = (
   const semanasAntesDpp = 40 - igAlvo;
   const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
   
-  // Aplicar regras de disponibilidade
+  // Aplicar regras de disponibilidade (10 dias úteis + pular domingo)
   const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
-  const igNaData = calcularIgNaData(igAtual, dataFinal, dataReferencia);
+  
+  // NOVO: Verificar disponibilidade de vagas na maternidade
+  const { verificarDisponibilidade } = await import('./vagasValidation');
+  const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
+  const isUrgente = diasAteDataFinal <= 7;
+  
+  const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
+  
+  // Se não houver vaga na data final, a função já retorna uma alternativa dentro da tolerância
+  const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
+  const vagaConfirmada = disponibilidade.disponivel;
+  
+  const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
   
   let observacoes = `${protocoloSelecionado.observacoes}\nVia preferencial: ${protocoloSelecionado.viaPreferencial}`;
   observacoes += `\n📅 DPP: ${dpp.toLocaleDateString('pt-BR')}`;
   observacoes += `\n📅 IG ideal protocolo: ${protocoloSelecionado.igIdeal} semanas`;
   observacoes += `\n📅 Data ideal calculada: ${dataIdeal.toLocaleDateString('pt-BR')}`;
-  observacoes += `\n📅 Data final (após regras): ${dataFinal.toLocaleDateString('pt-BR')}`;
+  observacoes += `\n📅 Data proposta (com vaga ${vagaConfirmada ? 'CONFIRMADA' : 'SUJEITA A CONFIRMAÇÃO'}): ${dataComVaga.toLocaleDateString('pt-BR')}`;
   observacoes += `\n📅 IG no dia do agendamento: ${igNaData.displayText}`;
+  
+  if (disponibilidade.dataAlternativa) {
+    observacoes += `\n⚠️ Data ajustada: ${disponibilidade.mensagem}`;
+  }
   
   // Verificar urgência
   const hoje = new Date();
@@ -331,18 +370,20 @@ export const calcularDataAgendamento = (
   }
   
   return {
-    data: dataFinal,
+    data: dataComVaga,
     igAgendamento: igNaData.displayText,
     observacoes,
     protocoloAplicado: patologiaSelecionada,
-    dpp
+    dpp,
+    vagaConfirmada
   };
 };
 
 /**
  * Função principal que calcula tudo
+ * NOVO: Aceita maternidade para verificar disponibilidade de vagas
  */
-export const calcularAgendamentoCompleto = (dados: {
+export const calcularAgendamentoCompleto = async (dados: {
   dumStatus: string;
   dataDum?: string;
   dataPrimeiroUsg: string;
@@ -352,7 +393,8 @@ export const calcularAgendamentoCompleto = (dados: {
   diagnosticosMaternos?: string[];
   diagnosticosFetais?: string[];
   placentaPrevia?: string;
-}): CalculationResult => {
+  maternidade: string;
+}): Promise<CalculationResult> => {
   const hoje = new Date();
   
   // Calcular IG pelo USG
@@ -381,9 +423,9 @@ export const calcularAgendamentoCompleto = (dados: {
   // Identificar patologias
   const patologias = identificarPatologias(dados);
   
-  // Calcular data de agendamento
-  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp } = 
-    calcularDataAgendamento(igFinal, patologias, hoje);
+  // Calcular data de agendamento COM verificação de vagas
+  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp, vagaConfirmada } = 
+    await calcularDataAgendamento(igFinal, patologias, dados.maternidade, hoje);
   
   let observacoesFinais = `METODOLOGIA: ${obsMetodologia}\n\n`;
   
@@ -405,6 +447,7 @@ export const calcularAgendamentoCompleto = (dados: {
     dataAgendamento,
     igAgendamento,
     protocoloAplicado,
-    dpp
+    dpp,
+    vagaConfirmada
   };
 };

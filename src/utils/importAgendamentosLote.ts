@@ -227,7 +227,10 @@ export async function importarAgendamentosLote(
           : undefined
       };
       
-      const resultado = calcularAgendamentoCompleto(dadosCalculo);
+      const resultado = await calcularAgendamentoCompleto({
+        ...dadosCalculo,
+        maternidade: maternidade
+      });
       
       // Garantir que a data está em 2025
       let dataAgendamento = new Date(resultado.dataAgendamento);
