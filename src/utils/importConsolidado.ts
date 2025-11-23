@@ -197,7 +197,7 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
       const paridade = extractParidade(row.diagnostico);
       
       // Calcular idade gestacional usando os dados disponíveis
-      const resultado = calcularAgendamentoCompleto({
+      const resultado = await calcularAgendamentoCompleto({
         dumStatus: 'Sim - Confiavel',
         dataDum: dataNascimento.toISOString().split('T')[0],
         dataPrimeiroUsg: dataNascimento.toISOString().split('T')[0],
@@ -206,7 +206,8 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         procedimentos: procedimentos,
         diagnosticosMaternos: [row.diagnostico || 'Não informado'],
         diagnosticosFetais: ['Sem alterações'],
-        placentaPrevia: 'Não'
+        placentaPrevia: 'Não',
+        maternidade: 'Consolidado' // Arquivo consolidado
       });
       
       const agendamento = {

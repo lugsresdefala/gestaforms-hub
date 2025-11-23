@@ -202,7 +202,7 @@ function extractDiagnosticos(diagnostico: string): {
   return { maternos, fetais };
 }
 
-function processNotrecareRow(row: NotrecareRow) {
+async function processNotrecareRow(row: NotrecareRow) {
   if (!row.carteirinha || !row.nome) return null;
 
   const dataNascimento = parseDate(row.dataNascimento);
@@ -217,7 +217,7 @@ function processNotrecareRow(row: NotrecareRow) {
 
   if (!semanas || !dataUsg) return null;
 
-  const calculado = calcularAgendamentoCompleto({
+  const calculado = await calcularAgendamentoCompleto({
     dumStatus: 'Confiável',
     dataPrimeiroUsg: dataUsg.toISOString().split('T')[0],
     semanasUsg: semanas.toString(),
@@ -225,6 +225,7 @@ function processNotrecareRow(row: NotrecareRow) {
     procedimentos: procedimentos,
     diagnosticosMaternos: maternos,
     diagnosticosFetais: fetais,
+    maternidade: 'NotreCare'
   });
 
   return {
