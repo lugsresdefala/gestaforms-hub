@@ -4,9 +4,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 export const Footer = () => {
   return (
-    <footer className="border-t border-border bg-gradient-subtle mt-auto">
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <footer className="border-t border-border bg-gradient-subtle w-full">
+      <div className="px-6 py-8 w-full">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 w-full max-w-[1600px] mx-auto">
           {/* Informações do médico - Hierarquia visual clara */}
           <div className="flex flex-col gap-2">
             <div className="flex flex-col">
