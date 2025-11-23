@@ -3,11 +3,49 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  Loader2,
+  Plus,
+  Calendar,
+  Building2,
+  Activity,
+  Stethoscope,
+  Baby,
+  Filter,
+  CheckCircle,
+  Clock,
+  XCircle,
+  AlertCircle,
+  ArrowUpRight,
+  Menu,
+  Info,
+  LogOut,
+  Download,
+  HelpCircle,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
@@ -1140,47 +1178,56 @@ const COMPLETE_DESIGN_SYSTEM = `
 // CUSTOM TOOLTIP COMPONENT
 // ==========================================
 
-const CustomTooltip = ({
-  active,
-  payload,
-  label
-}: any) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    return <div style={{
-      background: "rgba(255, 255, 255, 0.95)",
-      backdropFilter: "blur(24px)",
-      WebkitBackdropFilter: "blur(24px)",
-      border: "2px solid rgba(255, 255, 255, 0.4)",
-      borderRadius: "1rem",
-      padding: "1rem 1.25rem",
-      boxShadow: `
+    return (
+      <div
+        style={{
+          background: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "2px solid rgba(255, 255, 255, 0.4)",
+          borderRadius: "1rem",
+          padding: "1rem 1.25rem",
+          boxShadow: `
             0 8px 32px rgba(15, 23, 42, 0.15),
             0 16px 64px rgba(15, 23, 42, 0.1),
             inset 0 1px 0 0 rgba(255, 255, 255, 0.9)
-          `
-    }}>
+          `,
+        }}
+      >
         <p className="font-bold text-foreground mb-3 text-base">{label}</p>
-        {payload.map((entry: any, index: number) => <p key={index} className="text-sm flex items-center gap-3 mb-1.5">
-            <span style={{
-          width: "14px",
-          height: "14px",
-          borderRadius: "50%",
-          background: entry.color,
-          display: "inline-block",
-          boxShadow: `0 0 8px ${entry.color}40`
-        }} />
-            <span style={{
-          color: "hsl(var(--foreground))"
-        }}>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} className="text-sm flex items-center gap-3 mb-1.5">
+            <span
+              style={{
+                width: "14px",
+                height: "14px",
+                borderRadius: "50%",
+                background: entry.color,
+                display: "inline-block",
+                boxShadow: `0 0 8px ${entry.color}40`,
+              }}
+            />
+            <span
+              style={{
+                color: "hsl(var(--foreground))",
+              }}
+            >
               {entry.name}:{" "}
-              <span className="font-bold" style={{
-            color: entry.color
-          }}>
+              <span
+                className="font-bold"
+                style={{
+                  color: entry.color,
+                }}
+              >
                 {entry.value}
               </span>
             </span>
-          </p>)}
-      </div>;
+          </p>
+        ))}
+      </div>
+    );
   }
   return null;
 };
@@ -1189,38 +1236,42 @@ const CustomTooltip = ({
 // CHART COLOR PALETTE
 // ==========================================
 
-const COLORS = ["hsl(210, 100%, 35%)",
-// Azul Hapvida (primary)
-"hsl(25, 95%, 55%)",
-// Laranja NotreDame (accent)
-"hsl(210, 80%, 45%)",
-// Azul mais claro
-"hsl(25, 85%, 60%)",
-// Laranja mais claro
-"hsl(210, 60%, 55%)",
-// Azul intermediário
-"hsl(25, 75%, 65%)",
-// Laranja suave
-"hsl(210, 70%, 40%)",
-// Azul escuro
-"hsl(25, 80%, 50%)" // Laranja profundo
+const COLORS = [
+  "hsl(210, 100%, 35%)",
+  // Azul Hapvida (primary)
+  "hsl(25, 95%, 55%)",
+  // Laranja NotreDame (accent)
+  "hsl(210, 80%, 45%)",
+  // Azul mais claro
+  "hsl(25, 85%, 60%)",
+  // Laranja mais claro
+  "hsl(210, 60%, 55%)",
+  // Azul intermediário
+  "hsl(25, 75%, 65%)",
+  // Laranja suave
+  "hsl(210, 70%, 40%)",
+  // Azul escuro
+  "hsl(25, 80%, 50%)", // Laranja profundo
 ];
-const STATUS_CONFIG: Record<string, {
-  label: string;
-  className: string;
-}> = {
+const STATUS_CONFIG: Record<
+  string,
+  {
+    label: string;
+    className: string;
+  }
+> = {
   pendente: {
     label: "Pendente",
-    className: "status-pill status-pill--pending"
+    className: "status-pill status-pill--pending",
   },
   aprovado: {
     label: "Aprovado",
-    className: "status-pill status-pill--approved"
+    className: "status-pill status-pill--approved",
   },
   rejeitado: {
     label: "Rejeitado",
-    className: "status-pill status-pill--rejected"
-  }
+    className: "status-pill status-pill--rejected",
+  },
 };
 
 // ==========================================
@@ -1229,13 +1280,7 @@ const STATUS_CONFIG: Record<string, {
 
 const Index = () => {
   const navigate = useNavigate();
-  const {
-    isAdmin,
-    isAdminMed,
-    getMaternidadesAcesso,
-    userRoles,
-    signOut
-  } = useAuth();
+  const { isAdmin, isAdminMed, getMaternidadesAcesso, userRoles, signOut } = useAuth();
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -1244,10 +1289,10 @@ const Index = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/auth');
-      toast.success('Logout realizado com sucesso');
+      navigate("/auth");
+      toast.success("Logout realizado com sucesso");
     } catch (error) {
-      toast.error('Erro ao fazer logout');
+      toast.error("Erro ao fazer logout");
     }
   };
 
@@ -1273,12 +1318,9 @@ const Index = () => {
       // Outros usuários veem apenas dados agregados sem informações individuais
 
       query = query.order("created_at", {
-        ascending: false
+        ascending: false,
       });
-      const {
-        data,
-        error
-      } = await query;
+      const { data, error } = await query;
       if (error) throw error;
       setAgendamentos(data || []);
     } catch (error) {
@@ -1293,41 +1335,51 @@ const Index = () => {
     const todayDate = new Date();
     return {
       total: agendamentos.length,
-      pendentes: agendamentos.filter(a => a.status === "pendente").length,
-      aprovados: agendamentos.filter(a => a.status === "aprovado").length,
-      rejeitados: agendamentos.filter(a => a.status === "rejeitado").length,
-      hoje: agendamentos.filter(a => a.data_agendamento_calculada === today).length,
-      proximos: agendamentos.filter(a => {
+      pendentes: agendamentos.filter((a) => a.status === "pendente").length,
+      aprovados: agendamentos.filter((a) => a.status === "aprovado").length,
+      rejeitados: agendamentos.filter((a) => a.status === "rejeitado").length,
+      hoje: agendamentos.filter((a) => a.data_agendamento_calculada === today).length,
+      proximos: agendamentos.filter((a) => {
         const dataAgend = new Date(a.data_agendamento_calculada);
         const diffDias = Math.ceil((dataAgend.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
         return diffDias >= 0 && diffDias <= 7;
-      }).length
+      }).length,
     };
   }, [agendamentos]);
   const dadosPorUnidade = useMemo(() => {
-    const contagem = agendamentos.reduce((acc, a) => {
-      acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce(
+      (acc, a) => {
+        acc[a.centro_clinico] = (acc[a.centro_clinico] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.entries(contagem)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
   const dadosPorMaternidade = useMemo(() => {
-    const contagem = agendamentos.reduce((acc, a) => {
-      acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+    const contagem = agendamentos.reduce(
+      (acc, a) => {
+        acc[a.maternidade] = (acc[a.maternidade] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+    return Object.entries(contagem)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
   const dadosPorPatologia = useMemo(() => {
     const contagem: Record<string, number> = {};
-    const dadosNaoDiagnosticos = ['paridade', 'ig', 'idade gestacional', 'semanas', 'dum'];
-    agendamentos.forEach(a => {
+    const dadosNaoDiagnosticos = ["paridade", "ig", "idade gestacional", "semanas", "dum"];
+    agendamentos.forEach((a) => {
       try {
         let diagsMat: string[] = [];
         let diagsFet: string[] = [];
@@ -1338,21 +1390,27 @@ const Index = () => {
             diagsMat = JSON.parse(a.diagnosticos_maternos);
           } catch {
             // Se não for JSON, tratar como texto simples separado por vírgula ou ponto e vírgula
-            diagsMat = a.diagnosticos_maternos.split(/[,;]/).map(d => d.trim()).filter(d => d.length > 0);
+            diagsMat = a.diagnosticos_maternos
+              .split(/[,;]/)
+              .map((d) => d.trim())
+              .filter((d) => d.length > 0);
           }
         }
         if (a.diagnosticos_fetais) {
           try {
             diagsFet = JSON.parse(a.diagnosticos_fetais);
           } catch {
-            diagsFet = a.diagnosticos_fetais.split(/[,;]/).map(d => d.trim()).filter(d => d.length > 0);
+            diagsFet = a.diagnosticos_fetais
+              .split(/[,;]/)
+              .map((d) => d.trim())
+              .filter((d) => d.length > 0);
           }
         }
         [...diagsMat, ...diagsFet].forEach((diag: string) => {
           if (diag && diag.length > 0) {
             // Filtrar dados que não são diagnósticos (paridade, IG, etc)
             const diagLower = diag.toLowerCase();
-            const ehNaoDiagnostico = dadosNaoDiagnosticos.some(termo => diagLower.includes(termo));
+            const ehNaoDiagnostico = dadosNaoDiagnosticos.some((termo) => diagLower.includes(termo));
             if (!ehNaoDiagnostico) {
               contagem[diag] = (contagem[diag] || 0) + 1;
             }
@@ -1362,22 +1420,27 @@ const Index = () => {
         console.warn("Erro ao processar diagnósticos:", e);
       }
     });
-    return Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, value]) => ({
-      name,
-      value
-    }));
+    return Object.entries(contagem)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }));
   }, [agendamentos]);
   const dadosPorProcedimento = useMemo(() => {
     const contagem: Record<string, number> = {};
-    agendamentos.forEach(a => {
-      a.procedimentos.forEach(proc => {
+    agendamentos.forEach((a) => {
+      a.procedimentos.forEach((proc) => {
         contagem[proc] = (contagem[proc] || 0) + 1;
       });
     });
-    return Object.entries(contagem).map(([name, value]) => ({
-      name,
-      value
-    })).sort((a, b) => b.value - a.value);
+    return Object.entries(contagem)
+      .map(([name, value]) => ({
+        name,
+        value,
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [agendamentos]);
   const dadosPorIG = useMemo(() => {
     const faixas: Record<string, number> = {
@@ -1385,43 +1448,58 @@ const Index = () => {
       "28-32 sem": 0,
       "33-36 sem": 0,
       "37-40 sem": 0,
-      "> 40 sem": 0
+      "> 40 sem": 0,
     };
-    agendamentos.forEach(a => {
+    agendamentos.forEach((a) => {
       if (a.idade_gestacional_calculada) {
         const match = a.idade_gestacional_calculada.match(/(\d+)s/);
         if (match) {
           const semanas = parseInt(match[1]);
-          if (semanas < 28) faixas["< 28 sem"]++;else if (semanas <= 32) faixas["28-32 sem"]++;else if (semanas <= 36) faixas["33-36 sem"]++;else if (semanas <= 40) faixas["37-40 sem"]++;else faixas["> 40 sem"]++;
+          if (semanas < 28) faixas["< 28 sem"]++;
+          else if (semanas <= 32) faixas["28-32 sem"]++;
+          else if (semanas <= 36) faixas["33-36 sem"]++;
+          else if (semanas <= 40) faixas["37-40 sem"]++;
+          else faixas["> 40 sem"]++;
         }
       }
     });
     return Object.entries(faixas).map(([name, value]) => ({
       name,
       value,
-      color: "hsl(var(--primary))"
+      color: "hsl(var(--primary))",
     }));
   }, [agendamentos]);
-  const dadosPorStatus = useMemo(() => [{
-    name: "Pendente",
-    value: metrics.pendentes,
-    color: "hsl(38, 92%, 50%)",
-    // Warning
-    gradient: "url(#gradientPendente)"
-  }, {
-    name: "Aprovado",
-    value: metrics.aprovados,
-    color: "hsl(25, 95%, 55%)",
-    // Accent/Success
-    gradient: "url(#gradientAprovado)"
-  }, {
-    name: "Rejeitado",
-    value: metrics.rejeitados,
-    color: "hsl(0, 72%, 51%)",
-    // Destructive
-    gradient: "url(#gradientRejeitado)"
-  }].filter(item => item.value > 0), [metrics]);
-  const agendamentosFiltrados = useMemo(() => filtroStatus === "todos" ? agendamentos : agendamentos.filter(a => a.status === filtroStatus), [agendamentos, filtroStatus]);
+  const dadosPorStatus = useMemo(
+    () =>
+      [
+        {
+          name: "Pendente",
+          value: metrics.pendentes,
+          color: "hsl(38, 92%, 50%)",
+          // Warning
+          gradient: "url(#gradientPendente)",
+        },
+        {
+          name: "Aprovado",
+          value: metrics.aprovados,
+          color: "hsl(25, 95%, 55%)",
+          // Accent/Success
+          gradient: "url(#gradientAprovado)",
+        },
+        {
+          name: "Rejeitado",
+          value: metrics.rejeitados,
+          color: "hsl(0, 72%, 51%)",
+          // Destructive
+          gradient: "url(#gradientRejeitado)",
+        },
+      ].filter((item) => item.value > 0),
+    [metrics],
+  );
+  const agendamentosFiltrados = useMemo(
+    () => (filtroStatus === "todos" ? agendamentos : agendamentos.filter((a) => a.status === filtroStatus)),
+    [agendamentos, filtroStatus],
+  );
   const handleChartHover = useCallback((chartId: string) => {
     setHoveredChart(chartId);
   }, []);
@@ -1429,7 +1507,8 @@ const Index = () => {
     setHoveredChart(null);
   }, []);
   if (loading) {
-    return <div className="min-h-screen gradient-subtle flex items-center justify-center">
+    return (
+      <div className="min-h-screen gradient-subtle flex items-center justify-center">
         <div className="loading-state-advanced">
           <div className="loading-spinner-wrapper">
             <Loader2 className="loading-spinner h-16 w-16 text-primary" />
@@ -1440,13 +1519,19 @@ const Index = () => {
             <p className="text-sm text-muted-foreground">Processando dados em tempo real...</p>
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <>
+  return (
+    <>
       <TutorialInterativo open={showTutorial} onOpenChange={setShowTutorial} userRole={userRoles?.[0]?.role} />
-      
+
       {/* Botão Flutuante de Ajuda */}
-      <button onClick={() => setShowTutorial(true)} className="fixed bottom-6 right-6 z-50 group" aria-label="Abrir tutorial">
+      <button
+        onClick={() => setShowTutorial(true)}
+        className="fixed bottom-6 right-6 z-50 group"
+        aria-label="Abrir tutorial"
+      >
         <div className="relative">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/30 transition-all duration-300" />
           <div className="relative bg-primary hover:bg-primary/90 text-primary-foreground p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
@@ -1478,20 +1563,35 @@ const Index = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 bg-popover border-border shadow-lg z-[100]">
-                  <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/novo-agendamento")}
+                    className="cursor-pointer hover:bg-accent focus:bg-accent"
+                  >
                     <Plus className="h-4 w-4 mr-2 text-primary" />
                     <span>Novo Agendamento</span>
                   </DropdownMenuItem>
-                  {(isAdmin() || isAdminMed()) && <ExportarRelatorios trigger={<div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
+                  {(isAdmin() || isAdminMed()) && (
+                    <ExportarRelatorios
+                      trigger={
+                        <div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
                           <Download className="h-4 w-4 mr-2 text-primary" />
                           <span>Exportar Relatórios</span>
-                        </div>} />}
+                        </div>
+                      }
+                    />
+                  )}
                   <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                  <DropdownMenuItem
+                    onClick={() => navigate("/guia-sistema")}
+                    className="cursor-pointer hover:bg-accent focus:bg-accent"
+                  >
                     <Info className="h-4 w-4 mr-2 text-primary" />
                     <span>Sobre</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10">
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10"
+                  >
                     <LogOut className="h-4 w-4 mr-2 text-destructive" />
                     <span className="text-destructive">Sair</span>
                   </DropdownMenuItem>
@@ -1500,474 +1600,719 @@ const Index = () => {
             </div>
           </div>
 
-        <div className="dashboard-grid dashboard-grid--metrics">
-          <Card style={{
-            animationDelay: "0ms",
-            opacity: 0
-          }} className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up rounded-sm opacity-60 shadow-2xl">
-            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
-              <div className="metric-icon-badge metric-icon-badge--warning">
-                <Clock className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                  color: "hsl(38, 92%, 50%)"
-                }}>
-                  {metrics.pendentes}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 font-medium">Aguardando aprovação</p>
-            </CardContent>
-          </Card>
-
-          <Card className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up" style={{
-            animationDelay: "100ms",
-            opacity: 0
-          }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
-              <div className="metric-icon-badge metric-icon-badge--success text-cyan-700">
-                <CheckCircle className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="flex items-baseline gap-3">
-                <div style={{
-                  color: "hsl(25, 95%, 55%)"
-                }} className="metric-value text-cyan-700">
-                  {metrics.aprovados}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 font-medium">Confirmados</p>
-            </CardContent>
-          </Card>
-
-          <Card className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up" style={{
-            animationDelay: "200ms",
-            opacity: 0
-          }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
-              <div className="metric-icon-badge metric-icon-badge--destructive">
-                <XCircle className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                  color: "hsl(0, 72%, 51%)"
-                }}>
-                  {metrics.rejeitados}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 font-medium">Não aprovados</p>
-            </CardContent>
-          </Card>
-
-          <Card className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up" style={{
-            animationDelay: "300ms",
-            opacity: 0
-          }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
-              <div className="metric-icon-badge metric-icon-badge--primary">
-                <Calendar className="h-5 w-5" />
-              </div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="flex items-baseline gap-3">
-                <div className="metric-value" style={{
-                  color: "hsl(210, 100%, 35%)"
-                }}>
-                  {metrics.total}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 font-medium">Todos os registros</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {agendamentos.length > 0 && <Card className="filter-bar-advanced shadow-elegant">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3 flex-1">
-                  <div className="filter-icon-badge">
-                    <Filter className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                      <SelectTrigger className="w-full sm:w-[280px] border border-slate-200 rounded-2xl bg-white focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
-                        <SelectValue placeholder="Filtrar por status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="todos">Todos os Status</SelectItem>
-                        <SelectItem value="pendente">Pendentes</SelectItem>
-                        <SelectItem value="aprovado">Aprovados</SelectItem>
-                        <SelectItem value="rejeitado">Rejeitados</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <Badge className="badge-advanced">
-                  <span className="text-primary font-bold text-lg">{agendamentosFiltrados.length}</span>
-                  <span className="text-muted-foreground">
-                    {agendamentosFiltrados.length === 1 ? "agendamento" : "agendamentos"}
-                  </span>
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>}
-
-        {agendamentos.length === 0 ? <Card className="shadow-elegant border-2">
-            <CardContent className="empty-state-advanced">
-              <div className="empty-state-icon-wrapper">
-                <Calendar className="empty-state-icon" />
-                <div className="empty-state-glow bg-primary/10" />
-              </div>
-              <div className="space-y-3">
-                <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
-                <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
-                  Não há agendamentos cadastrados no sistema.
-                </p>
-              </div>
-              {isAdmin() && <Button onClick={() => navigate("/novo-agendamento")} className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors mt-8" size="lg">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Criar Primeiro Agendamento
-                </Button>}
-            </CardContent>
-          </Card> : <div className="dashboard-grid dashboard-grid--charts">
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "status" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("status")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--accent">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Distribuição por Status</CardTitle>
-                    <CardDescription className="text-xs mt-1">Situação dos agendamentos</CardDescription>
-                  </div>
+          <div className="dashboard-grid dashboard-grid--metrics">
+            <Card
+              style={{
+                animationDelay: "0ms",
+                opacity: 0,
+              }}
+              className="metric-card-advanced metric-card-advanced--warning shadow-elegant animate-fade-in-up rounded-sm opacity-60 shadow-2xl"
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
+                <div className="metric-icon-badge metric-icon-badge--warning">
+                  <Clock className="h-5 w-5" />
                 </div>
               </CardHeader>
-              <CardContent>
-                {dadosPorStatus.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <PieChart>
-                      <defs>
-                        <linearGradient id="gradientPendente" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.95} />
-                          <stop offset="100%" stopColor="hsl(38, 92%, 40%)" stopOpacity={0.85} />
-                        </linearGradient>
-                        <linearGradient id="gradientAprovado" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
-                          <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.85} />
-                        </linearGradient>
-                        <linearGradient id="gradientRejeitado" x1="0" y1="0" x2="1" y2="1">
-                          <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.95} />
-                          <stop offset="100%" stopColor="hsl(0, 72%, 41%)" stopOpacity={0.85} />
-                        </linearGradient>
-                      </defs>
-                      <Pie data={dadosPorStatus} cx="50%" cy="50%" labelLine={true} label={({
-                    name,
-                    percent,
-                    value
-                  }) => {
-                    const percentFormatted = (percent * 100).toFixed(1);
-                    return percentFormatted === "100.0" ? `${name}\n${value} (100%)` : `${name}\n${value} (${percentFormatted}%)`;
-                  }} outerRadius={100} innerRadius={50} dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out" paddingAngle={dadosPorStatus.length > 1 ? 3 : 0}>
-                        {dadosPorStatus.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.gradient} stroke="rgba(255, 255, 255, 0.8)" strokeWidth={2} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                  }} />
-                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry: any) => <span style={{
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '13px',
-                    fontWeight: 500
-                  }}>
-                            {value}: {entry.payload.value}
-                          </span>} />
-                    </PieChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Nenhum dado disponível</p>
-                  </div>}
+              <CardContent className="relative z-10">
+                <div className="flex items-baseline gap-3">
+                  <div
+                    className="metric-value"
+                    style={{
+                      color: "hsl(38, 92%, 50%)",
+                    }}
+                  >
+                    {metrics.pendentes}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">Aguardando aprovação</p>
               </CardContent>
             </Card>
 
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "unidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("unidade")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--primary">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Agendamentos por Unidade</CardTitle>
-                    <CardDescription className="text-xs mt-1">Distribuição por Centro Clínico</CardDescription>
-                  </div>
+            <Card
+              className="metric-card-advanced metric-card-advanced--success shadow-elegant animate-fade-in-up"
+              style={{
+                animationDelay: "100ms",
+                opacity: 0,
+              }}
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Aprovados</CardTitle>
+                <div className="metric-icon-badge metric-icon-badge--success text-cyan-700">
+                  <CheckCircle className="h-5 w-5" />
                 </div>
               </CardHeader>
-              <CardContent>
-                {dadosPorUnidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                     <BarChart data={dadosPorUnidade}>
-                      <defs>
-                        <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.95} />
-                          <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.85} />
-                          <stop offset="100%" stopColor="hsl(210, 100%, 30%)" stopOpacity={0.75} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
-                      <XAxis dataKey="name" tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.3)"
-                  }} />
-                      <YAxis tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.3)"
-                  }} />
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                  }} />
-                      <Bar dataKey="value" fill="url(#colorUnidade)" radius={[12, 12, 0, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
-                    </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+              <CardContent className="relative z-10">
+                <div className="flex items-baseline gap-3">
+                  <div
+                    style={{
+                      color: "hsl(25, 95%, 55%)",
+                    }}
+                    className="metric-value text-cyan-700"
+                  >
+                    {metrics.aprovados}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">Confirmados</p>
               </CardContent>
             </Card>
 
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("maternidade")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--accent">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Agendamentos por Maternidade</CardTitle>
-                    <CardDescription className="text-xs mt-1">Distribuição por Maternidade</CardDescription>
-                  </div>
+            <Card
+              className="metric-card-advanced metric-card-advanced--destructive shadow-elegant animate-fade-in-up"
+              style={{
+                animationDelay: "200ms",
+                opacity: 0,
+              }}
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Rejeitados</CardTitle>
+                <div className="metric-icon-badge metric-icon-badge--destructive">
+                  <XCircle className="h-5 w-5" />
                 </div>
               </CardHeader>
-              <CardContent>
-                {dadosPorMaternidade.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <PieChart>
-                      <defs>
-                        {dadosPorMaternidade.map((entry, index) => <linearGradient key={`gradient-${index}`} id={`gradientMat${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
-                            <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
-                          </linearGradient>)}
-                      </defs>
-                      <Pie data={dadosPorMaternidade} cx="50%" cy="50%" labelLine={true} label={({
-                    name,
-                    percent
-                  }) => `${name}\n${(percent * 100).toFixed(0)}%`} outerRadius={100} innerRadius={50} dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out" paddingAngle={2}>
-                        {dadosPorMaternidade.map((entry, index) => <Cell key={`cell-${index}`} fill={`url(#gradientMat${index})`} stroke="rgba(255, 255, 255, 0.8)" strokeWidth={2} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                  }} />
-                      <Legend verticalAlign="bottom" height={36} formatter={value => <span style={{
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '13px',
-                    fontWeight: 500
-                  }}>
-                            {value}
-                          </span>} />
-                    </PieChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+              <CardContent className="relative z-10">
+                <div className="flex items-baseline gap-3">
+                  <div
+                    className="metric-value"
+                    style={{
+                      color: "hsl(0, 72%, 51%)",
+                    }}
+                  >
+                    {metrics.rejeitados}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">Não aprovados</p>
               </CardContent>
             </Card>
 
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "patologia" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("patologia")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--accent">
-                    <Stethoscope className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Principais Diagnósticos</CardTitle>
-                    <CardDescription className="text-xs mt-1">Distribuição por frequência</CardDescription>
-                  </div>
+            <Card
+              className="metric-card-advanced metric-card-advanced--primary shadow-elegant animate-fade-in-up"
+              style={{
+                animationDelay: "300ms",
+                opacity: 0,
+              }}
+            >
+              <CardHeader className="flex flex-row items-center justify-between pb-3 relative z-10">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                <div className="metric-icon-badge metric-icon-badge--primary">
+                  <Calendar className="h-5 w-5" />
                 </div>
               </CardHeader>
-              <CardContent>
-                {dadosPorPatologia.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={dadosPorPatologia} layout="vertical">
-                      <defs>
-                        <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
-                          <stop offset="50%" stopColor="hsl(25, 95%, 50%)" stopOpacity={0.85} />
-                          <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.75} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
-                      <XAxis type="number" tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.3)"
-                  }} />
-                      <YAxis dataKey="name" type="category" width={160} tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 11
-                  }} axisLine={{
-                    stroke: "rgba(148, 163, 184, 0.3)"
-                  }} />
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                  }} />
-                      <Bar dataKey="value" fill="url(#colorPatologia)" radius={[0, 12, 12, 0]} animationBegin={0} animationDuration={1000} animationEasing="ease-out" />
-                    </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
+              <CardContent className="relative z-10">
+                <div className="flex items-baseline gap-3">
+                  <div
+                    className="metric-value"
+                    style={{
+                      color: "hsl(210, 100%, 35%)",
+                    }}
+                  >
+                    {metrics.total}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">Todos os registros</p>
               </CardContent>
             </Card>
+          </div>
 
-            <Card className={`chart-card-advanced shadow-elegant ${hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("procedimento")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--primary">
-                    <Activity className="h-5 w-5" />
+          {agendamentos.length > 0 && (
+            <Card className="filter-bar-advanced shadow-elegant">
+              <CardContent className="py-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="filter-icon-badge">
+                      <Filter className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                        <SelectTrigger className="w-full sm:w-[280px] border border-slate-200 rounded-2xl bg-white focus:ring-2 focus:ring-slate-400 focus:border-slate-400 transition-colors">
+                          <SelectValue placeholder="Filtrar por status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="todos">Todos os Status</SelectItem>
+                          <SelectItem value="pendente">Pendentes</SelectItem>
+                          <SelectItem value="aprovado">Aprovados</SelectItem>
+                          <SelectItem value="rejeitado">Rejeitados</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Distribuição por Procedimento</CardTitle>
-                    <CardDescription className="text-xs mt-1">Tipos de parto/procedimento</CardDescription>
-                  </div>
+                  <Badge className="badge-advanced">
+                    <span className="text-primary font-bold text-lg">{agendamentosFiltrados.length}</span>
+                    <span className="text-muted-foreground">
+                      {agendamentosFiltrados.length === 1 ? "agendamento" : "agendamentos"}
+                    </span>
+                  </Badge>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {dadosPorProcedimento.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <PieChart>
-                      <defs>
-                        {dadosPorProcedimento.map((entry, index) => <linearGradient key={`gradProc-${index}`} id={`gradientProc${index}`} x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
-                            <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
-                          </linearGradient>)}
-                      </defs>
-                      <Pie data={dadosPorProcedimento} cx="50%" cy="50%" labelLine={true} label={({
-                    name,
-                    percent
-                  }) => `${name}\n${(percent * 100).toFixed(0)}%`} outerRadius={100} innerRadius={50} dataKey="value" animationBegin={0} animationDuration={1000} animationEasing="ease-out" paddingAngle={2}>
-                        {dadosPorProcedimento.map((entry, index) => <Cell key={`cell-${index}`} fill={`url(#gradientProc${index})`} stroke="rgba(255, 255, 255, 0.8)" strokeWidth={2} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} contentStyle={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    border: '1px solid rgba(148, 163, 184, 0.2)',
-                    borderRadius: '12px',
-                    padding: '12px',
-                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                  }} />
-                      <Legend verticalAlign="bottom" height={36} formatter={value => <span style={{
-                    color: 'hsl(var(--foreground))',
-                    fontSize: '13px',
-                    fontWeight: 500
-                  }}>
-                            {value}
-                          </span>} />
-                    </PieChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Dados insuficientes</p>
-                  </div>}
               </CardContent>
             </Card>
+          )}
 
-            <Card className={`chart-card-advanced shadow-elegant lg:col-span-2 ${hoveredChart === "ig" ? "chart-card-advanced--active" : ""}`} onMouseEnter={() => handleChartHover("ig")} onMouseLeave={handleChartLeave}>
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="chart-icon-badge chart-icon-badge--primary">
-                    <Baby className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-bold">Distribuição por Idade Gestacional</CardTitle>
-                    <CardDescription className="text-xs mt-1">Faixas de IG dos agendamentos</CardDescription>
-                  </div>
+          {agendamentos.length === 0 ? (
+            <Card className="shadow-elegant border-2">
+              <CardContent className="empty-state-advanced">
+                <div className="empty-state-icon-wrapper">
+                  <Calendar className="empty-state-icon" />
+                  <div className="empty-state-glow bg-primary/10" />
                 </div>
-              </CardHeader>
-              <CardContent>
-                {dadosPorIG.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                    <BarChart data={dadosPorIG} margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5
-                }}>
-                      <defs>
-                        <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                      <XAxis dataKey="name" tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "hsl(var(--border))"
-                  }} tickLine={{
-                    stroke: "hsl(var(--border))"
-                  }} />
-                      <YAxis tick={{
-                    fill: "hsl(var(--muted-foreground))",
-                    fontSize: 12
-                  }} axisLine={{
-                    stroke: "hsl(var(--border))"
-                  }} tickLine={{
-                    stroke: "hsl(var(--border))"
-                  }} allowDecimals={false} />
-                      <Tooltip contentStyle={{
-                    background: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    padding: '12px'
-                  }} cursor={{
-                    fill: 'hsl(var(--accent))'
-                  }} />
-                      <Bar dataKey="value" fill="url(#colorIG)" radius={[8, 8, 0, 0]}>
-                        <LabelList dataKey="value" position="top" style={{
-                      fill: "hsl(var(--primary))",
-                      fontSize: "14px",
-                      fontWeight: 600
-                    }} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer> : <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
-                    <AlertCircle className="h-16 w-16 opacity-20" />
-                    <p className="text-sm font-medium">Nenhum dado disponível</p>
-                  </div>}
+                <div className="space-y-3">
+                  <h3 className="text-3xl font-bold text-foreground">Nenhum agendamento visível</h3>
+                  <p className="text-muted-foreground leading-relaxed max-w-lg text-lg">
+                    Não há agendamentos cadastrados no sistema.
+                  </p>
+                </div>
+                {isAdmin() && (
+                  <Button
+                    onClick={() => navigate("/novo-agendamento")}
+                    className="bg-slate-900 text-white hover:bg-slate-800 focus-visible:ring-slate-700 rounded-2xl px-6 py-5 shadow-md transition-colors mt-8"
+                    size="lg"
+                  >
+                    <Plus className="h-5 w-5 mr-2" />
+                    Criar Primeiro Agendamento
+                  </Button>
+                )}
               </CardContent>
             </Card>
-          </div>}
+          ) : (
+            <div className="dashboard-grid dashboard-grid--charts">
+              <Card
+                className={`chart-card-advanced shadow-elegant ${hoveredChart === "status" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("status")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--accent">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Distribuição por Status</CardTitle>
+                      <CardDescription className="text-xs mt-1">Situação dos agendamentos</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorStatus.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <defs>
+                          <linearGradient id="gradientPendente" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.95} />
+                            <stop offset="100%" stopColor="hsl(38, 92%, 40%)" stopOpacity={0.85} />
+                          </linearGradient>
+                          <linearGradient id="gradientAprovado" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
+                            <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.85} />
+                          </linearGradient>
+                          <linearGradient id="gradientRejeitado" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.95} />
+                            <stop offset="100%" stopColor="hsl(0, 72%, 41%)" stopOpacity={0.85} />
+                          </linearGradient>
+                        </defs>
+                        <Pie
+                          data={dadosPorStatus}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent, value }) => {
+                            const percentFormatted = (percent * 100).toFixed(1);
+                            return percentFormatted === "100.0"
+                              ? `${name}\n${value} (100%)`
+                              : `${name}\n${value} (${percentFormatted}%)`;
+                          }}
+                          outerRadius={100}
+                          innerRadius={50}
+                          dataKey="value"
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                          paddingAngle={dadosPorStatus.length > 1 ? 3 : 0}
+                        >
+                          {dadosPorStatus.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={entry.gradient}
+                              stroke="rgba(255, 255, 255, 0.8)"
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(148, 163, 184, 0.2)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          formatter={(value, entry: any) => (
+                            <span
+                              style={{
+                                color: "hsl(var(--foreground))",
+                                fontSize: "13px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {value}: {entry.payload.value}
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Nenhum dado disponível</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`chart-card-advanced shadow-elegant ${hoveredChart === "unidade" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("unidade")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--primary">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Agendamentos por Unidade</CardTitle>
+                      <CardDescription className="text-xs mt-1">Distribuição por Centro Clínico</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorUnidade.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={dadosPorUnidade}>
+                        <defs>
+                          <linearGradient id="colorUnidade" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(210, 100%, 35%)" stopOpacity={0.95} />
+                            <stop offset="50%" stopColor="hsl(210, 100%, 40%)" stopOpacity={0.85} />
+                            <stop offset="100%" stopColor="hsl(210, 100%, 30%)" stopOpacity={0.75} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                        <XAxis
+                          dataKey="name"
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                          axisLine={{
+                            stroke: "rgba(148, 163, 184, 0.3)",
+                          }}
+                        />
+                        <YAxis
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                          axisLine={{
+                            stroke: "rgba(148, 163, 184, 0.3)",
+                          }}
+                        />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(148, 163, 184, 0.2)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill="url(#colorUnidade)"
+                          radius={[12, 12, 0, 0]}
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Dados insuficientes</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`chart-card-advanced shadow-elegant ${hoveredChart === "maternidade" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("maternidade")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--accent">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Agendamentos por Maternidade</CardTitle>
+                      <CardDescription className="text-xs mt-1">Distribuição por Maternidade</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorMaternidade.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <defs>
+                          {dadosPorMaternidade.map((entry, index) => (
+                            <linearGradient
+                              key={`gradient-${index}`}
+                              id={`gradientMat${index}`}
+                              x1="0"
+                              y1="0"
+                              x2="1"
+                              y2="1"
+                            >
+                              <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
+                              <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <Pie
+                          data={dadosPorMaternidade}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          innerRadius={50}
+                          dataKey="value"
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                          paddingAngle={2}
+                        >
+                          {dadosPorMaternidade.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={`url(#gradientMat${index})`}
+                              stroke="rgba(255, 255, 255, 0.8)"
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(148, 163, 184, 0.2)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          formatter={(value) => (
+                            <span
+                              style={{
+                                color: "hsl(var(--foreground))",
+                                fontSize: "13px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {value}
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Dados insuficientes</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`chart-card-advanced shadow-elegant ${hoveredChart === "patologia" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("patologia")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--accent">
+                      <Stethoscope className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Principais Diagnósticos</CardTitle>
+                      <CardDescription className="text-xs mt-1">Distribuição por frequência</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorPatologia.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={dadosPorPatologia} layout="vertical">
+                        <defs>
+                          <linearGradient id="colorPatologia" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="hsl(25, 95%, 55%)" stopOpacity={0.95} />
+                            <stop offset="50%" stopColor="hsl(25, 95%, 50%)" stopOpacity={0.85} />
+                            <stop offset="100%" stopColor="hsl(25, 95%, 45%)" stopOpacity={0.75} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.15)" />
+                        <XAxis
+                          type="number"
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                          axisLine={{
+                            stroke: "rgba(148, 163, 184, 0.3)",
+                          }}
+                        />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={160}
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 11,
+                          }}
+                          axisLine={{
+                            stroke: "rgba(148, 163, 184, 0.3)",
+                          }}
+                        />
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(148, 163, 184, 0.2)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill="url(#colorPatologia)"
+                          radius={[0, 12, 12, 0]}
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Dados insuficientes</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`chart-card-advanced shadow-elegant ${hoveredChart === "procedimento" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("procedimento")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--primary">
+                      <Activity className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Distribuição por Procedimento</CardTitle>
+                      <CardDescription className="text-xs mt-1">Tipos de parto/procedimento</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorProcedimento.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <defs>
+                          {dadosPorProcedimento.map((entry, index) => (
+                            <linearGradient
+                              key={`gradProc-${index}`}
+                              id={`gradientProc${index}`}
+                              x1="0"
+                              y1="0"
+                              x2="1"
+                              y2="1"
+                            >
+                              <stop offset="0%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.9} />
+                              <stop offset="100%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                            </linearGradient>
+                          ))}
+                        </defs>
+                        <Pie
+                          data={dadosPorProcedimento}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percent }) => `${name}\n${(percent * 100).toFixed(0)}%`}
+                          outerRadius={100}
+                          innerRadius={50}
+                          dataKey="value"
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
+                          paddingAngle={2}
+                        >
+                          {dadosPorProcedimento.map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={`url(#gradientProc${index})`}
+                              stroke="rgba(255, 255, 255, 0.8)"
+                              strokeWidth={2}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          content={<CustomTooltip />}
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            border: "1px solid rgba(148, 163, 184, 0.2)",
+                            borderRadius: "12px",
+                            padding: "12px",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          formatter={(value) => (
+                            <span
+                              style={{
+                                color: "hsl(var(--foreground))",
+                                fontSize: "13px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              {value}
+                            </span>
+                          )}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Dados insuficientes</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card
+                className={`chart-card-advanced shadow-elegant lg:col-span-2 ${hoveredChart === "ig" ? "chart-card-advanced--active" : ""}`}
+                onMouseEnter={() => handleChartHover("ig")}
+                onMouseLeave={handleChartLeave}
+              >
+                <CardHeader className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="chart-icon-badge chart-icon-badge--primary">
+                      <Baby className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold">Distribuição por Idade Gestacional</CardTitle>
+                      <CardDescription className="text-xs mt-1">Faixas de IG dos agendamentos</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {dadosPorIG.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart
+                        data={dadosPorIG}
+                        margin={{
+                          top: 20,
+                          right: 30,
+                          left: 20,
+                          bottom: 5,
+                        }}
+                      >
+                        <defs>
+                          <linearGradient id="colorIG" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                        <XAxis
+                          dataKey="name"
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                          axisLine={{
+                            stroke: "hsl(var(--border))",
+                          }}
+                          tickLine={{
+                            stroke: "hsl(var(--border))",
+                          }}
+                        />
+                        <YAxis
+                          tick={{
+                            fill: "hsl(var(--muted-foreground))",
+                            fontSize: 12,
+                          }}
+                          axisLine={{
+                            stroke: "hsl(var(--border))",
+                          }}
+                          tickLine={{
+                            stroke: "hsl(var(--border))",
+                          }}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(var(--popover))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                            padding: "12px",
+                          }}
+                          cursor={{
+                            fill: "hsl(var(--accent))",
+                          }}
+                        />
+                        <Bar dataKey="value" fill="url(#colorIG)" radius={[8, 8, 0, 0]}>
+                          <LabelList
+                            dataKey="value"
+                            position="top"
+                            style={{
+                              fill: "hsl(var(--primary))",
+                              fontSize: "14px",
+                              fontWeight: 600,
+                            }}
+                          />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-[320px] flex flex-col items-center justify-center text-muted-foreground space-y-4">
+                      <AlertCircle className="h-16 w-16 opacity-20" />
+                      <p className="text-sm font-medium">Nenhum dado disponível</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </main>
       </div>
-    </>;
+    </>
+  );
 };
 export default Index;
