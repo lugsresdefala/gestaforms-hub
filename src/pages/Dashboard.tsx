@@ -226,53 +226,7 @@ const Dashboard = () => {
       return <Badge variant="scheduled">Agendado</Badge>;
     }
   };
-  return <div className="min-h-screen gradient-subtle">
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border/50 py-6 shadow-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            
-            <div className="border-l border-border pl-4">
-              <h1 className="text-xl text-blue-800 font-extrabold font-sans md:text-2xl">Procedimentos Agendados  </h1>
-              <p className="text-sm text-muted-foreground">PGS - Programa Gestação Segura</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin() && <NotificationBell />}
-            <Button onClick={() => navigate('/')} variant="outline" className="hover-lift">
-              ← Dashboard
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="hover-lift">
-                  <Menu className="h-5 w-5 text-primary" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-popover border-border shadow-lg z-[100]">
-                <DropdownMenuItem onClick={() => navigate('/novo-agendamento')} className="cursor-pointer hover:bg-accent focus:bg-accent">
-                  <Plus className="h-4 w-4 mr-2 text-primary" />
-                  <span>Novo Agendamento</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer hover:bg-accent focus:bg-accent">
-                  <Download className="h-4 w-4 mr-2 text-primary" />
-                  <span>Exportar Relatório</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border" />
-                <DropdownMenuItem onClick={() => navigate('/guia-sistema')} className="cursor-pointer hover:bg-accent focus:bg-accent">
-                  <Info className="h-4 w-4 mr-2 text-primary" />
-                  <span>Sobre</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer hover:bg-destructive/10 focus:bg-destructive/10">
-                  <LogOut className="h-4 w-4 mr-2 text-destructive" />
-                  <span className="text-destructive">Sair</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
+  return <div className="space-y-8">
         {/* Calendário */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <Card className="lg:col-span-1">
