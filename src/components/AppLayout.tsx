@@ -194,7 +194,7 @@ const MenuContent = ({
               <img src="/hapvida-logo.png" alt="Hapvida" className="h-12 sm:h-16 w-full object-contain drop-shadow-lg" />
             </div>
             <div className="text-center">
-              <span className="text-xs text-sky-100 font-semibold tracking-wider uppercase bg-sky-500/20 px-3 py-1.5 rounded-full border border-sky-400/30 backdrop-blur-sm">
+              <span className="text-xs text-sky-100 tracking-wider uppercase bg-sky-500/20 px-3 py-1.5 rounded-full border border-sky-400/30 backdrop-blur-md font-medium text-center">
                 Gestação Segura
               </span>
             </div>
