@@ -179,8 +179,10 @@ export default function CalendarioCompleto() {
             data_dum: apt.data_dum,
             data_agendamento_calculada: apt.data_agendamento_calculada
           });
+          
+          // Urgente apenas se for pendente e tiver data próxima
           const diasAteAgendamento = Math.floor((parseISO(apt.data_agendamento_calculada as string).getTime() - new Date(apt.created_at).getTime()) / (1000 * 60 * 60 * 24));
-          if (diasAteAgendamento <= 7) {
+          if (apt.status === 'pendente' && diasAteAgendamento <= 7) {
             urgentesByDay[apt.data_agendamento_calculada]++;
           }
         }
@@ -236,7 +238,7 @@ export default function CalendarioCompleto() {
       const fimStr = format(fimSemana, 'yyyy-MM-dd');
       const {
         data: agendamentos
-      } = await supabase.from('agendamentos_obst').select('maternidade, data_agendamento_calculada, created_at').gte('data_agendamento_calculada', inicioStr).lte('data_agendamento_calculada', fimStr).neq('status', 'rejeitado');
+      } = await supabase.from('agendamentos_obst').select('maternidade, data_agendamento_calculada, created_at, status').gte('data_agendamento_calculada', inicioStr).lte('data_agendamento_calculada', fimStr).neq('status', 'rejeitado');
       const weekOccData: WeekOccupation[] = [];
       capacities.forEach(cap => {
         const dias = [];
@@ -250,7 +252,7 @@ export default function CalendarioCompleto() {
           totalSemana += total;
           const urgentes = agendamentosDia.filter(a => {
             const diasAte = Math.floor((parseISO(a.data_agendamento_calculada as string).getTime() - new Date(a.created_at).getTime()) / (1000 * 60 * 60 * 24));
-            return diasAte <= 7;
+            return a.status === 'pendente' && diasAte <= 7;
           }).length;
           const diaSemana = dia.getDay();
           let capacidade = cap.vagas_dia_util;

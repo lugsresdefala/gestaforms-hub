@@ -1280,7 +1280,7 @@ const Index = () => {
       proximos: agendamentos.filter(a => {
         const dataAgend = new Date(a.data_agendamento_calculada);
         const diffDias = Math.ceil((dataAgend.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
-        return diffDias >= 0 && diffDias <= 7;
+        return a.status === 'pendente' && diffDias >= 0 && diffDias <= 7;
       }).length
     };
   }, [agendamentos]);

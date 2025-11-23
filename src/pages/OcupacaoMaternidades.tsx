@@ -53,7 +53,7 @@ const OcupacaoMaternidades = () => {
 
     const { data: agendamentos } = await supabase
       .from('agendamentos_obst')
-      .select('maternidade, data_agendamento_calculada, created_at')
+      .select('maternidade, data_agendamento_calculada, created_at, status')
       .gte('data_agendamento_calculada', inicioStr)
       .lte('data_agendamento_calculada', fimStr)
       .neq('status', 'rejeitado');
@@ -78,7 +78,7 @@ const OcupacaoMaternidades = () => {
         (parseISO(ag.data_agendamento_calculada as string).getTime() - new Date(ag.created_at).getTime()) / 
         (1000 * 60 * 60 * 24)
       );
-      const isUrgente = diasAteAgendamento <= 7;
+      const isUrgente = ag.status === 'pendente' && diasAteAgendamento <= 7;
 
       if (existente) {
         existente.total += 1;

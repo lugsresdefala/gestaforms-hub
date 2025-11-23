@@ -46,6 +46,7 @@ interface Agendamento {
   dias_usg: number;
   dum_status: string;
   data_dum: string | null;
+  status: string;
 }
 const normalizeProcedimentos = (procedimentos: unknown): string[] => {
   if (Array.isArray(procedimentos)) {
@@ -164,14 +165,23 @@ const Dashboard = () => {
   const getDatesWithAgendamentos = () => {
     return allAgendamentos.map(a => new Date(a.data_agendamento_calculada));
   };
-  const getStatusBadge = (dataAgendamento: string) => {
+  const getStatusBadge = (dataAgendamento: string, status: string) => {
     const hoje = new Date();
     const dataAgend = new Date(dataAgendamento);
     const diffDias = Math.ceil((dataAgend.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    
     if (diffDias < 0) {
       return <Badge variant="secondary" className="gap-1 text-white bg-cyan-700">Resolvido</Badge>;
-    } else if (diffDias <= 7) {
+    }
+    
+    // Urgente APENAS se estiver pendente de aprovação E com data próxima
+    if (status === 'pendente' && diffDias <= 7) {
       return <Badge variant="urgent" className="bg-red-900">Urgente</Badge>;
+    }
+    
+    // Agendamentos já aprovados nunca são "urgentes"
+    if (diffDias <= 7) {
+      return <Badge variant="warning">Esta Semana</Badge>;
     } else if (diffDias <= 14) {
       return <Badge variant="warning">Próximo</Badge>;
     } else {
@@ -269,10 +279,10 @@ const Dashboard = () => {
                 <div className="text-2xl font-bold text-urgent">
                   {filteredAgendamentos.filter(a => {
                   const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  return diff <= 7 && diff >= 0;
+                  return a.status === 'pendente' && diff <= 7 && diff >= 0;
                 }).length}
                 </div>
-                <p className="text-sm text-muted-foreground">Urgentes</p>
+                <p className="text-sm text-muted-foreground">Pendentes Urgentes</p>
               </CardContent>
             </Card>
             <Card className="glass-card">
@@ -400,7 +410,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {getStatusBadge(agendamento.data_agendamento_calculada)}
+                      {getStatusBadge(agendamento.data_agendamento_calculada, agendamento.status)}
                     </div>
                   </div>
                 </AccordionTrigger>
