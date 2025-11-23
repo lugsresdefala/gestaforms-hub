@@ -1,262 +1,314 @@
-import { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { ReactNode, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, LayoutDashboard, PlusCircle, CheckCircle, Users, Building2, LogOut, BookOpen, FileCheck, Upload, HelpCircle, Shield, FileText, Mail, UserPlus } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import {
+  Calendar,
+  LayoutDashboard,
+  PlusCircle,
+  CheckCircle,
+  Users,
+  Building2,
+  LogOut,
+  BookOpen,
+  FileCheck,
+  Upload,
+  HelpCircle,
+  Shield,
+  FileText,
+  Mail,
+  UserPlus,
+  ChevronDown,
+  Bell,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { NavLink } from "@/components/NavLink";
 import NotificationBell from "@/components/NotificationBell";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
 interface AppLayoutProps {
   children: ReactNode;
 }
-const AppSidebar = () => {
-  const {
-    state
-  } = useSidebar();
-  const {
-    isAdmin,
-    isAdminMed,
-    isMedicoUnidade
-  } = useAuth();
-  const collapsed = state === "collapsed";
-  const principalItems = [{
-    title: "Início",
-    url: "/",
-    icon: LayoutDashboard,
-    show: true
-  }, {
-    title: "Listagem de Agendamentos",
-    url: "/dashboard",
-    icon: Calendar,
-    show: true
-  }, {
-    title: "Sistema de Ocupação",
-    url: "/calendario-completo",
-    icon: Building2,
-    show: true
-  }].filter(item => item.show);
-  const agendamentoItems = [{
-    title: "Novo",
-    url: "/novo-agendamento",
-    icon: PlusCircle,
-    show: true
-  }, {
-    title: "Meus",
-    url: "/meus-agendamentos",
-    icon: Calendar,
-    show: true
-  }].filter(item => item.show);
-  const adminItems = [{
-    title: "Aprovações Médicas",
-    url: "/aprovacoes-agendamentos",
-    icon: CheckCircle,
-    show: isAdminMed() || isAdmin()
-  }, {
-    title: "Aprovações Usuários",
-    url: "/aprovacoes-usuarios",
-    icon: Users,
-    show: isAdmin() || isAdminMed()
-  }, {
-    title: "Criar Usuários Padrão",
-    url: "/criar-usuarios-padrao",
-    icon: UserPlus,
-    show: isAdmin() || isAdminMed()
-  }, {
-    title: "Importar Agendamentos 2025",
-    url: "/importar-agendamentos-2025",
-    icon: Upload,
-    show: isAdmin()
-  }, {
-    title: "Importar Lote (Com Base Cálculo)",
-    url: "/importar-agendamentos-lote",
-    icon: Upload,
-    show: isAdmin()
-  }, {
-    title: "Processar CSV Enviado",
-    url: "/processar-csv-upload",
-    icon: Upload,
-    show: isAdmin()
-  }, {
-    title: "Importar Pacientes Pendentes",
-    url: "/importar-pacientes-pendentes",
-    icon: Upload,
-    show: isAdminMed()
-  }, {
-    title: "Atualizar IG",
-    url: "/atualizar-ig",
-    icon: Calendar,
-    show: isAdmin()
-  }, {
-    title: "Corrigir Paridade",
-    url: "/corrigir-paridade",
-    icon: FileCheck,
-    show: isAdmin()
-  }, {
-    title: "Gerenciar Usuários",
-    url: "/gerenciar-usuarios",
-    icon: Users,
-    show: isAdmin()
-  }, {
-    title: "Logs de Auditoria",
-    url: "/logs-auditoria",
-    icon: Shield,
-    show: isAdmin()
-  }, {
-    title: "Comparar Pacientes",
-    url: "/comparar-pacientes",
-    icon: FileCheck,
-    show: isAdmin()
-  }].filter(item => item.show);
-  return <Sidebar className={`${collapsed ? "w-14" : "w-60"} sidebar-glass`} collapsible="icon">
-      <SidebarContent>
-        <div className="p-4 border-b border-sky-200/30 bg-gradient-to-br from-white/98 to-sky-50/95 backdrop-blur-sm shadow-sm">
-          {!collapsed && <div className="flex flex-col gap-1 bg-sky-50 shadow-inner">
-              <img src="/hapvida-logo.png" alt="Hapvida" className="h-24 object-contain drop-shadow-md" />
-              <span className="text-xs text-sky-700/80 font-medium tracking-wide">
-                Gestação Segura
-              </span>
-            </div>}
-          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain drop-shadow-md" />}
-        </div>
 
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Principal</SidebarGroupLabel>}
+const AppSidebar = () => {
+  const { state } = useSidebar();
+  const { isAdmin, isAdminMed, isMedicoUnidade } = useAuth();
+  const location = useLocation();
+  const collapsed = state === "collapsed";
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["principal", "agendamentos"]));
+
+  const toggleGroup = (groupName: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupName)) {
+        next.delete(groupName);
+      } else {
+        next.add(groupName);
+      }
+      return next;
+    });
+  };
+
+  const principalItems = [
+    { title: "Início", url: "/", icon: LayoutDashboard, show: true },
+    { title: "Listagem de Agendamentos", url: "/dashboard", icon: Calendar, show: true },
+    { title: "Sistema de Ocupação", url: "/calendario-completo", icon: Building2, show: true },
+  ].filter((item) => item.show);
+
+  const agendamentoItems = [
+    { title: "Novo", url: "/novo-agendamento", icon: PlusCircle, show: true },
+    { title: "Meus", url: "/meus-agendamentos", icon: Calendar, show: true },
+  ].filter((item) => item.show);
+
+  const adminItems = [
+    {
+      title: "Aprovações Médicas",
+      url: "/aprovacoes-agendamentos",
+      icon: CheckCircle,
+      show: isAdminMed() || isAdmin(),
+      badge: 3,
+    },
+    {
+      title: "Aprovações Usuários",
+      url: "/aprovacoes-usuarios",
+      icon: Users,
+      show: isAdmin() || isAdminMed(),
+      badge: 5,
+    },
+    { title: "Criar Usuários Padrão", url: "/criar-usuarios-padrao", icon: UserPlus, show: isAdmin() || isAdminMed() },
+    { title: "Importar Agendamentos 2025", url: "/importar-agendamentos-2025", icon: Upload, show: isAdmin() },
+    { title: "Importar Lote", url: "/importar-agendamentos-lote", icon: Upload, show: isAdmin() },
+    { title: "Processar CSV", url: "/processar-csv-upload", icon: Upload, show: isAdmin() },
+    { title: "Pacientes Pendentes", url: "/importar-pacientes-pendentes", icon: Upload, show: isAdminMed() },
+    { title: "Atualizar IG", url: "/atualizar-ig", icon: Calendar, show: isAdmin() },
+    { title: "Corrigir Paridade", url: "/corrigir-paridade", icon: FileCheck, show: isAdmin() },
+    { title: "Gerenciar Usuários", url: "/gerenciar-usuarios", icon: Users, show: isAdmin() },
+    { title: "Logs de Auditoria", url: "/logs-auditoria", icon: Shield, show: isAdmin() },
+    { title: "Comparar Pacientes", url: "/comparar-pacientes", icon: FileCheck, show: isAdmin() },
+  ].filter((item) => item.show);
+
+  const suporteItems = [
+    { title: "Protocolos", url: "/protocolos", icon: FileText },
+    { title: "Guia do Sistema", url: "/guia", icon: BookOpen },
+    { title: "FAQ", url: "/faq", icon: HelpCircle },
+    { title: "Sobre", url: "/sobre", icon: BookOpen },
+  ];
+
+  const MenuGroup = ({ title, items, groupKey }: { title: string; items: any[]; groupKey: string }) => {
+    const isExpanded = expandedGroups.has(groupKey);
+
+    return (
+      <SidebarGroup className="mb-2">
+        {!collapsed && (
+          <button
+            onClick={() => toggleGroup(groupKey)}
+            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold tracking-wider uppercase text-sky-200/70 hover:text-sky-100 transition-all duration-200 group"
+          >
+            <span>{title}</span>
+            <ChevronDown
+              className={`h-3 w-3 transition-transform duration-300 ${isExpanded ? "rotate-0" : "-rotate-90"}`}
+            />
+          </button>
+        )}
+
+        <div
+          className={`overflow-hidden transition-all duration-300 ${
+            collapsed || isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+          }`}
+        >
           <SidebarGroupContent>
-            <SidebarMenu>
-              {principalItems.map(item => <SidebarMenuItem key={item.title}>
+            <SidebarMenu className="space-y-1">
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span className="text-sm">{item.title}</span>}
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/10"
+                      activeClassName="bg-gradient-to-r from-sky-500/30 to-blue-500/30 text-white font-semibold shadow-xl shadow-sky-500/20 backdrop-blur-sm border border-sky-400/30 scale-[1.02]"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-sky-400/0 to-blue-400/0 group-hover:from-sky-400/5 group-hover:to-blue-400/5 rounded-xl transition-all duration-300" />
+                      <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      {!collapsed && <span className="text-sm flex-1">{item.title}</span>}
+                      {!collapsed && item.badge && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-5 px-2 text-xs bg-red-500 hover:bg-red-600 animate-pulse"
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
-                </SidebarMenuItem>)}
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </div>
+      </SidebarGroup>
+    );
+  };
 
-        {agendamentoItems.length > 0 && <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Agendamentos</SidebarGroupLabel>}
+  return (
+    <Sidebar className={`${collapsed ? "w-16" : "w-72"} transition-all duration-300`} collapsible="icon">
+      <div className="absolute inset-0 bg-gradient-to-br from-sky-600 via-blue-700 to-indigo-800" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
+
+      <SidebarContent className="relative">
+        <div
+          className={`p-6 border-b border-sky-400/20 bg-gradient-to-br from-white/5 to-sky-400/5 backdrop-blur-xl transition-all duration-300 ${
+            collapsed ? "px-3" : ""
+          }`}
+        >
+          {!collapsed ? (
+            <div className="flex flex-col gap-3">
+              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-2xl shadow-sky-900/20 border border-sky-200/30">
+                <img src="/hapvida-logo.png" alt="Hapvida" className="h-16 w-full object-contain drop-shadow-lg" />
+              </div>
+              <div className="text-center">
+                <span className="text-xs text-sky-100 font-semibold tracking-wider uppercase bg-sky-500/20 px-3 py-1.5 rounded-full border border-sky-400/30 backdrop-blur-sm">
+                  Gestação Segura
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl p-2 shadow-xl">
+              <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain" />
+            </div>
+          )}
+        </div>
+
+        <div className="py-4 space-y-2">
+          <MenuGroup title="Principal" items={principalItems} groupKey="principal" />
+          {agendamentoItems.length > 0 && (
+            <MenuGroup title="Agendamentos" items={agendamentoItems} groupKey="agendamentos" />
+          )}
+          {adminItems.length > 0 && <MenuGroup title="Administração" items={adminItems} groupKey="administracao" />}
+
+          <SidebarGroup className="mb-2">
+            {!collapsed && (
+              <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-sky-200/70 px-3">
+                Suporte
+              </SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
-              <SidebarMenu>
-                {agendamentoItems.map(item => <SidebarMenuItem key={item.title}>
+              <SidebarMenu className="space-y-1">
+                {suporteItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                        <item.icon className="h-4 w-4" />
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02]"
+                        activeClassName="bg-gradient-to-r from-sky-500/30 to-blue-500/30 text-white font-semibold shadow-xl shadow-sky-500/20 backdrop-blur-sm border border-sky-400/30"
+                      >
+                        <item.icon className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
                         {!collapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
                     </SidebarMenuButton>
-                  </SidebarMenuItem>)}
+                  </SidebarMenuItem>
+                ))}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a
+                      href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR"
+                      className="group relative transition-all duration-200 hover:bg-gradient-to-r hover:from-sky-500/20 hover:to-blue-500/20 rounded-xl text-sky-50/90 hover:text-white hover:scale-[1.02]"
+                    >
+                      <Mail className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                      {!collapsed && <span className="text-sm">Contato</span>}
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
-          </SidebarGroup>}
-
-        {adminItems.length > 0 && <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Administração</SidebarGroupLabel>}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminItems.map(item => <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span className="text-sm">{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>}
-
-        <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Suporte</SidebarGroupLabel>}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/protocolos" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                    <FileText className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Protocolos</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/guia" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                    <BookOpen className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Guia do Sistema</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/faq" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                    <HelpCircle className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">FAQ</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR" className="transition-all hover:bg-white/10 rounded-lg text-white/90">
-                    <Mail className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Contato</span>}
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink to="/sobre" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                    <BookOpen className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Sobre</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+          </SidebarGroup>
+        </div>
       </SidebarContent>
-    </Sidebar>;
+    </Sidebar>
+  );
 };
-export const AppLayout = ({
-  children
-}: AppLayoutProps) => {
+
+export const AppLayout = ({ children }: AppLayoutProps) => {
   const navigate = useNavigate();
-  const {
-    signOut,
-    isAdmin,
-    isAdminMed
-  } = useAuth();
+  const { signOut, isAdmin, isAdminMed } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      const target = e.target as HTMLElement;
+      setIsScrolled(target.scrollTop > 10);
+    };
+
+    const mainElement = document.querySelector("main");
+    mainElement?.addEventListener("scroll", handleScroll);
+    return () => mainElement?.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleLogout = async () => {
     await signOut();
     navigate("/auth");
   };
-  return <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50">
         <AppSidebar />
 
         <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center justify-between border-b border-border/50 glass-surface px-4 sticky top-0 z-40">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="h-8 w-8 hover:bg-accent/20 transition-all rounded-lg" />
-              <h1 className="tracking-tight hidden sm:block font-medium text-blue-900 text-lg">
-                PGS - Programa Gestação Segura
-              </h1>
+          <header
+            className={`h-16 flex items-center justify-between border-b px-6 sticky top-0 z-40 transition-all duration-300 ${
+              isScrolled
+                ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-sky-900/5 border-sky-200/50"
+                : "bg-white/80 backdrop-blur-md border-sky-200/30"
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="h-9 w-9 hover:bg-sky-100 transition-all rounded-xl hover:scale-105 active:scale-95" />
+              <div className="flex flex-col">
+                <h1 className="text-lg font-bold bg-gradient-to-r from-sky-700 to-blue-700 bg-clip-text text-transparent tracking-tight">
+                  PGS
+                </h1>
+                <p className="text-xs text-sky-600/70 font-medium hidden sm:block">Programa Gestação Segura</p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {(isAdmin() || isAdminMed()) && <NotificationBell />}
-              <Button onClick={handleLogout} variant="ghost" size="icon" className="hover:bg-destructive/10 hover:text-destructive transition-all rounded-lg" title="Sair">
-                <LogOut className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              {(isAdmin() || isAdminMed()) && (
+                <div className="relative">
+                  <NotificationBell />
+                </div>
+              )}
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                size="icon"
+                className="relative h-9 w-9 hover:bg-red-50 hover:text-red-600 transition-all rounded-xl group hover:scale-105 active:scale-95"
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </Button>
             </div>
           </header>
 
           <main className="flex-1 overflow-auto flex flex-col">
-            <div className="flex-1">{children}</div>
+            <div className="flex-1 p-6">{children}</div>
             <Footer />
           </main>
         </div>
       </div>
-    </SidebarProvider>;
+    </SidebarProvider>
+  );
 };
