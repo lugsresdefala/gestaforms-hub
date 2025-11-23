@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { useData } from '@/contexts/DataContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,19 +15,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-interface Notificacao {
-  id: string;
-  mensagem: string;
-  tipo: string;
-  lida: boolean;
-  created_at: string;
-  agendamento_id: string;
-}
-
 const NotificationBell = () => {
   const navigate = useNavigate();
   const { isAdmin, isAdminMed } = useAuth();
-  const { notificacoes, marcarComoLida } = useRealtimeNotifications();
+  const { notificacoes, marcarNotificacaoComoLida } = useData();
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Animar sino quando chegar nova notificação
@@ -44,14 +35,14 @@ const NotificationBell = () => {
   const naoLidas = notificacoes.filter(n => !n.lida).length;
   const temUrgente = notificacoes.some(n => !n.lida && n.tipo === 'agendamento_urgente');
 
-  const handleNotificationClick = async (notificacao: Notificacao) => {
-    marcarComoLida(notificacao.id);
+  const handleNotificationClick = async (notificacaoId: string, agendamentoId: string) => {
+    marcarNotificacaoComoLida(notificacaoId);
     
     // Buscar o agendamento para ver seu status
     const { data: agendamento } = await supabase
       .from('agendamentos_obst')
       .select('status')
-      .eq('id', notificacao.agendamento_id)
+      .eq('id', agendamentoId)
       .single();
     
     // Se está aprovado, vai para Meus Agendamentos, senão vai para Aprovações
@@ -103,7 +94,7 @@ const NotificationBell = () => {
                 return (
                   <button
                     key={notificacao.id}
-                    onClick={() => handleNotificationClick(notificacao)}
+                    onClick={() => handleNotificationClick(notificacao.id, notificacao.agendamento_id)}
                     className={`w-full p-4 text-left hover:bg-accent transition-colors ${
                       !notificacao.lida 
                         ? isUrgente 

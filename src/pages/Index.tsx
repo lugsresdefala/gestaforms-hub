@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1281,11 +1281,16 @@ const STATUS_CONFIG: Record<
 const Index = () => {
   const navigate = useNavigate();
   const { isAdmin, isAdminMed, getMaternidadesAcesso, userRoles, signOut } = useAuth();
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const { agendamentos, loading: dataLoading } = useData();
   const [loading, setLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [hoveredChart, setHoveredChart] = useState<string | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // Sincronizar com dados centralizados
+  useEffect(() => {
+    setLoading(dataLoading);
+  }, [dataLoading]);
   const handleLogout = async () => {
     try {
       await signOut();
@@ -1305,31 +1310,6 @@ const Index = () => {
       document.head.removeChild(styleElement);
     };
   }, []);
-  useEffect(() => {
-    fetchAgendamentos();
-  }, []);
-  const fetchAgendamentos = async () => {
-    setLoading(true);
-    try {
-      let query = supabase.from("agendamentos_obst").select("*");
-
-      // Todos os usuários autenticados podem ver estatísticas agregadas
-      // Admin e Admin_Med veem tudo para estatísticas
-      // Outros usuários veem apenas dados agregados sem informações individuais
-
-      query = query.order("created_at", {
-        ascending: false,
-      });
-      const { data, error } = await query;
-      if (error) throw error;
-      setAgendamentos(data || []);
-    } catch (error) {
-      console.error("Erro ao buscar agendamentos:", error);
-      toast.error("Não foi possível carregar os agendamentos");
-    } finally {
-      setLoading(false);
-    }
-  };
   const metrics = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
     const todayDate = new Date();

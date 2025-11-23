@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import NotificationBell from "@/components/NotificationBell";
-import { useRealtimeAgendamentos } from "@/hooks/useRealtimeAgendamentos";
 import { formatDiagnosticos } from "@/lib/diagnosticoLabels";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { calcularIGAtual, calcularIGNaDataAgendada } from "@/lib/calcularIGAtual";
 import HistoricoAlteracoes from "@/components/HistoricoAlteracoes";
+
 interface Agendamento {
   id: string;
   carteirinha: string;
@@ -66,19 +66,10 @@ const normalizeProcedimentos = (procedimentos: unknown): string[] => {
 };
 const Dashboard = () => {
   const navigate = useNavigate();
-  const {
-    signOut,
-    isAdmin,
-    isAdminMed,
-    isMedicoMaternidade,
-    getMaternidadesAcesso
-  } = useAuth();
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const { signOut, isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso } = useAuth();
+  const { agendamentos: allAgendamentos, loading: dataLoading } = useData();
   const [filteredAgendamentos, setFilteredAgendamentos] = useState<Agendamento[]>([]);
   const [loading, setLoading] = useState(true);
-  const {
-    refreshKey
-  } = useRealtimeAgendamentos();
 
   // Filtros
   const [searchNome, setSearchNome] = useState("");
@@ -88,60 +79,21 @@ const Dashboard = () => {
   const [filterDataFim, setFilterDataFim] = useState("");
   const [filterPatologia, setFilterPatologia] = useState("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const fetchAgendamentos = useCallback(async () => {
-    setLoading(true);
-    try {
-      let query = supabase.from('agendamentos_obst').select('*');
 
-      // Aplicar filtros baseados no tipo de usuário
-      if (isMedicoMaternidade() && !isAdmin() && !isAdminMed()) {
-        const maternidades = getMaternidadesAcesso();
-        query = query.in('maternidade', maternidades).eq('status', 'aprovado');
-      } else if (!isAdmin() && !isAdminMed() && !isMedicoMaternidade()) {
-        // Médicos de unidade veem seus próprios agendamentos
-        const {
-          data: {
-            user
-          }
-        } = await supabase.auth.getUser();
-        if (user) {
-          query = query.eq('created_by', user.id);
-        }
-      }
-      // Admin e Admin_Med veem tudo (sem filtro adicional)
-
-      query = query.order('created_at', {
-        ascending: false
-      });
-      const {
-        data,
-        error
-      } = await query;
-      if (error) {
-        console.error("Erro ao buscar agendamentos:", error);
-        toast.error("Erro ao carregar dados: " + error.message);
-        return;
-      }
-      setAgendamentos(data || []);
-    } catch (error) {
-      console.error("Erro ao buscar agendamentos:", error);
-      toast.error("Não foi possível carregar os agendamentos");
-    } finally {
-      setLoading(false);
-    }
-  }, [isAdmin, isAdminMed, isMedicoMaternidade, getMaternidadesAcesso]);
+  // Sincronizar com dados centralizados
   useEffect(() => {
-    fetchAgendamentos();
-  }, [fetchAgendamentos, refreshKey]);
+    setLoading(dataLoading);
+  }, [dataLoading]);
+
   useEffect(() => {
     applyFilters();
-  }, [agendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
+  }, [allAgendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
   const handleLogout = async () => {
     await signOut();
     navigate('/auth');
   };
   const applyFilters = () => {
-    let filtered = [...agendamentos];
+    let filtered = [...allAgendamentos];
 
     // Filtro por data selecionada no calendário
     if (selectedDate) {
@@ -183,10 +135,10 @@ const Dashboard = () => {
     setFilteredAgendamentos(filtered);
   };
   const getUniqueMedicos = () => {
-    return [...new Set(agendamentos.map(a => a.medico_responsavel))];
+    return [...new Set(allAgendamentos.map(a => a.medico_responsavel))];
   };
   const getUniqueMaternidades = () => {
-    return [...new Set(agendamentos.map(a => a.maternidade))];
+    return [...new Set(allAgendamentos.map(a => a.maternidade))];
   };
   const exportToCSV = () => {
     const headers = ["Carteirinha", "Nome", "Data Nascimento", "Telefone", "Procedimentos", "Médico", "Maternidade", "Centro Clínico", "Data Agendamento", "IG Calculada", "Diagnósticos Maternos", "Diagnósticos Fetais", "Observações"];
@@ -210,7 +162,7 @@ const Dashboard = () => {
     setSelectedDate(undefined);
   };
   const getDatesWithAgendamentos = () => {
-    return agendamentos.map(a => new Date(a.data_agendamento_calculada));
+    return allAgendamentos.map(a => new Date(a.data_agendamento_calculada));
   };
   const getStatusBadge = (dataAgendamento: string) => {
     const hoje = new Date();
