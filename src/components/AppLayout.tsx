@@ -163,7 +163,7 @@ const AppSidebar = () => {
   };
 
   return (
-    <Sidebar className={`${collapsed ? "w-16" : "w-72"} transition-all duration-300`} collapsible="icon">
+    <Sidebar className={`${collapsed ? "w-16" : "w-64"} transition-all duration-300`} collapsible="icon">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
 
@@ -264,12 +264,12 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50">
+      <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/50 flex">
         <AppSidebar />
 
         <div className="flex-1 flex flex-col min-h-screen">
           <header
-            className={`h-16 flex items-center justify-between border-b px-6 sticky top-0 z-30 transition-all duration-300 ${
+            className={`h-16 flex items-center justify-between border-b px-6 sticky top-0 z-50 transition-all duration-300 ${
               isScrolled
                 ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-sky-900/5 border-sky-200/50"
                 : "bg-white/80 backdrop-blur-md border-sky-200/30"
@@ -303,8 +303,10 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             </div>
           </header>
 
-          <main className="flex-1 overflow-y-auto">
-            <div className="min-h-[calc(100vh-4rem-120px)] p-6">{children}</div>
+          <main className="flex-1 overflow-y-auto flex flex-col">
+            <div className="flex-1 p-6">
+              {children}
+            </div>
             <Footer />
           </main>
         </div>
