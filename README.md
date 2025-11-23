@@ -8,6 +8,10 @@
 
 Sistema integrado para gestão de agendamentos e procedimentos obstétricos do Programa Gestação Segura da Hapvida NotreDame.
 
+### Documentação Complementar
+
+- [Protocolo de validação de algoritmos e workflows](PROTOCOLO_VALIDACAO_WORKFLOWS.md): diretrizes para modelagem, auditoria e observabilidade de regras e fluxos críticos.
+
 ### Principais Funcionalidades
 
 #### Páginas Principais
