@@ -110,23 +110,23 @@ const AppSidebar = () => {
   }].filter(item => item.show);
   return <Sidebar className={`${collapsed ? "w-14" : "w-60"} sidebar-glass`} collapsible="icon">
       <SidebarContent>
-        <div className="p-4 border-b border-border/50 bg-blue-50 shadow-lg">
+        <div className="p-4 border-b border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm">
           {!collapsed && <div className="flex flex-col gap-1">
-              <img src="/hapvida-logo.png" alt="Hapvida" className="h-24 object-contain" />
-              <span className="text-xs text-muted-foreground/80 font-medium tracking-wide">
+              <img src="/hapvida-logo.png" alt="Hapvida" className="h-24 object-contain drop-shadow-lg" />
+              <span className="text-xs text-white/70 font-medium tracking-wide">
                 Gestação Segura
               </span>
             </div>}
-          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain" />}
+          {collapsed && <img src="/hapvida-logo.png" alt="Hapvida" className="h-8 object-contain drop-shadow-lg" />}
         </div>
 
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase opacity-60">Principal</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Principal</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               {principalItems.map(item => <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                    <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span className="text-sm">{item.title}</span>}
                     </NavLink>
@@ -137,12 +137,12 @@ const AppSidebar = () => {
         </SidebarGroup>
 
         {agendamentoItems.length > 0 && <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase opacity-60">Agendamentos</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Agendamentos</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>
                 {agendamentoItems.map(item => <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink to={item.url} end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                      <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
@@ -153,12 +153,12 @@ const AppSidebar = () => {
           </SidebarGroup>}
 
         {adminItems.length > 0 && <SidebarGroup>
-            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase opacity-60">Administração</SidebarGroupLabel>}
+            {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Administração</SidebarGroupLabel>}
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminItems.map(item => <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
-                      <NavLink to={item.url} end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                      <NavLink to={item.url} end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                         <item.icon className="h-4 w-4" />
                         {!collapsed && <span className="text-sm">{item.title}</span>}
                       </NavLink>
@@ -169,12 +169,12 @@ const AppSidebar = () => {
           </SidebarGroup>}
 
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase opacity-60">Suporte</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel className="text-xs font-semibold tracking-wider uppercase text-white/50">Suporte</SidebarGroupLabel>}
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/protocolos" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                  <NavLink to="/protocolos" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                     <FileText className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Protocolos</span>}
                   </NavLink>
@@ -182,7 +182,7 @@ const AppSidebar = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/guia" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                  <NavLink to="/guia" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                     <BookOpen className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Guia do Sistema</span>}
                   </NavLink>
@@ -190,7 +190,7 @@ const AppSidebar = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/faq" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                  <NavLink to="/faq" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                     <HelpCircle className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">FAQ</span>}
                   </NavLink>
@@ -198,7 +198,7 @@ const AppSidebar = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <a href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR" className="transition-all hover:bg-accent/20 rounded-lg">
+                  <a href="mailto:T_TIAGO.OLIVEIRA@HAPVIDA.COM.BR" className="transition-all hover:bg-white/10 rounded-lg text-white/90">
                     <Mail className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Contato</span>}
                   </a>
@@ -206,7 +206,7 @@ const AppSidebar = () => {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <NavLink to="/sobre" end className="transition-all hover:bg-accent/20 rounded-lg" activeClassName="glass-card text-primary font-semibold shadow-sm">
+                  <NavLink to="/sobre" end className="transition-all hover:bg-white/10 rounded-lg text-white/90" activeClassName="bg-white/15 text-white font-semibold shadow-lg backdrop-blur-sm border border-white/20">
                     <BookOpen className="h-4 w-4" />
                     {!collapsed && <span className="text-sm">Sobre</span>}
                   </NavLink>
