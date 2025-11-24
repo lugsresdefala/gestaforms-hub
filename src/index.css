@@ -86,7 +86,7 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-subtle: all 0.25s cubic-bezier(0.4, 0, 0.6, 1);
 
-    --radius: 0.5rem;
+    --radius: 0.25rem;
 
     --sidebar-background: 210 100% 25%;
     --sidebar-foreground: 210 40% 98%;
@@ -163,6 +163,7 @@ All colors MUST be HSL.
     --sidebar-border: 210 100% 30%;
     --sidebar-ring: 210 100% 50%;
     --font-sans: Outfit, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+    --radius: 0.25rem;
   }
 }
 
