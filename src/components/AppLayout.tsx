@@ -316,7 +316,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
             className={`sticky top-0 z-50 h-16 flex items-center justify-between px-4 lg:px-6 border-b transition-all ${isScrolled ? "bg-white/90 backdrop-blur-xl shadow-md" : "bg-white/70 backdrop-blur-md"}`}
           >
             <div className="flex items-center gap-3">
-              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="lg:hidden">
                     <Menu className="w-5 h-5" />
@@ -324,12 +324,17 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
                 </SheetTrigger>
                 <SheetContent
                   side="left"
-                  className="w-72 p-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900"
+                  className="w-72 p-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900 z-[100]"
                 >
                   <SheetHeader className="p-4 border-b border-sky-200/10">
                     <div className="flex justify-between items-center text-white">
-                      <SheetTitle>Menu</SheetTitle>
-                      <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                      <SheetTitle className="text-white">Menu</SheetTitle>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="text-white hover:bg-white/10"
+                      >
                         <X className="w-5 h-5" />
                       </Button>
                     </div>
@@ -340,7 +345,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
                 </SheetContent>
               </Sheet>
 
-              <SidebarTrigger className="hidden lg:inline-flex" />
+              <SidebarTrigger className="hidden lg:flex" />
 
               <div className="flex flex-col">
                 <h1 className="text-lg font-bold bg-gradient-to-r from-blue-800 to-sky-800 bg-clip-text text-transparent">
