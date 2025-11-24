@@ -51,11 +51,11 @@ Este documento resume as alterações implementadas para sincronizar melhorias d
   - Sem permissão: redirect para / + toast de erro
   - Autorizado: renderiza componente protegido
 
-**Arquivo:** `src/utils/authHelpers.ts` (NOVO)
+**Arquivo:** `src/lib/authHelpers.ts` (NOVO)
 
 - ✅ Helper utilities centralizadas para verificação de roles
 - ✅ Funções TypeScript tipadas para consistência
-- ✅ Suporte para verificação de múltiplas permissões
+- ✅ Rotas mapeadas com permissões padrão para evitar divergências
 
 ### 3. Ajustes de Layout e Encoding (✅ Completo)
 
@@ -89,7 +89,13 @@ Este documento resume as alterações implementadas para sincronizar melhorias d
 - ✅ Documentação inline sobre variáveis necessárias
 - ✅ Instruções para obter credenciais do Supabase
 
-### 5. Fluxo de Autenticação/Autorização (✅ Completo)
+### 5. Limpeza de Duplicidades (✅ Completo)
+
+- ✅ Removido CSV legado fora do diretório `public/calendars`
+- ✅ Removida cópia duplicada do logo em `src/assets`
+- ✅ Eliminado helper antigo em `src/utils/authHelpers.ts` em favor da versão em `src/lib`
+
+### 6. Fluxo de Autenticação/Autorização (✅ Completo)
 
 **Arquivo:** `src/contexts/AuthContext.tsx`
 

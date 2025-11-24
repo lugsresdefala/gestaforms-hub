@@ -30,11 +30,11 @@ export default function ImportarCalendario() {
     setResults(null);
 
     try {
-      // Fetch the CSV file from public folder
-      const response = await fetch('/public/calendars/Consolidado_Novembro_Dezembro.csv');
-      
+      // Fetch the CSV file from the public calendars directory
+      const response = await fetch('/calendars/Calendario_Nov_Dez.csv');
+
       if (!response.ok) {
-        throw new Error('Arquivo não encontrado. Verifique se o arquivo está em /public/calendars/');
+        throw new Error('Arquivo não encontrado. Verifique se o arquivo está em /calendars/');
       }
       
       const csvContent = await response.text();

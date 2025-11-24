@@ -57,13 +57,13 @@ const AtualizarIG = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <Card>
           <CardHeader>
-            <CardTitle>Upload do CSV Consolidado</CardTitle>
+            <CardTitle>Upload do CSV do Calendário</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
               <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground mb-4">
-                Faça upload do arquivo CSV original (Consolidado_Novembro_Dezembro.csv) para extrair as idades gestacionais
+                Faça upload do arquivo CSV atualizado (Calendario_Nov_Dez.csv) para extrair as idades gestacionais
               </p>
               <label htmlFor="csv-upload" className="cursor-pointer">
                 <Button asChild disabled={loading}>
@@ -136,7 +136,7 @@ const AtualizarIG = () => {
             <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Instruções:</strong><br />
-                1. Use o arquivo CSV original (Consolidado_Novembro_Dezembro.csv)<br />
+                1. Use o arquivo CSV atualizado (Calendario_Nov_Dez.csv)<br />
                 2. O script irá extrair as IGs do campo DIAGNÓSTICO<br />
                 3. Apenas registros sem IG serão atualizados<br />
                 4. Formatos reconhecidos: "33;5 semans", "38 semanas", "IG 37+3", etc.

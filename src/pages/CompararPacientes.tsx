@@ -153,7 +153,7 @@ export default function CompararPacientes() {
           <div className="flex gap-4 items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium mb-2">
-                CSV Original (Consolidado_Novembro_Dezembro.csv)
+                CSV Original (Calendario_Nov_Dez.csv)
               </label>
               <Input
                 type="file"

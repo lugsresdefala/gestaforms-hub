@@ -168,19 +168,19 @@ O menu lateral exibe itens baseado nas permissões do usuário:
 
 ### Arquivo de Utilitários
 
-**Arquivo:** `src/utils/authHelpers.ts`
+**Arquivo:** `src/lib/authHelpers.ts`
 
-Funções auxiliares para verificação de permissões:
+Funções auxiliares para verificação de permissões e rotas centralizadas:
 
 ```typescript
-hasAdminRole(userRoles): boolean
-hasAdminMedRole(userRoles): boolean
-hasMedicoUnidadeRole(userRoles): boolean
-hasMedicoMaternidadeRole(userRoles): boolean
-getUserMaternidades(userRoles): string[]
-canAccessAdminFeatures(userRoles): boolean
-canAccessAdminMedFeatures(userRoles): boolean
-getHighestPriorityRole(userRoles): UserRole | null
+hasAnyRole(userRoles, requiredRoles): boolean
+hasAllRoles(userRoles, requiredRoles): boolean
+isAdmin(userRoles): boolean
+isAdminMed(userRoles): boolean
+isAdminOrAdminMed(userRoles): boolean
+useCanAccessAdmin(): boolean
+useCanAccessAdminMed(): boolean
+canAccessRoute(path, userRoles): boolean
 ```
 
 ## Fluxo de Acesso
