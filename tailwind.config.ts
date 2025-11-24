@@ -33,7 +33,7 @@ export default {
   	extend: {
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Outfit',
   				'ui-sans-serif',
   				'system-ui',
   				'sans-serif',
@@ -168,7 +168,7 @@ export default {
   					opacity: '1'
   				}
   			},
-  			'float': {
+  			float: {
   				'0%, 100%': {
   					transform: 'translateY(0px)',
   					opacity: '1'
@@ -178,7 +178,7 @@ export default {
   					opacity: '0.95'
   				}
   			},
-  			'glow': {
+  			glow: {
   				'0%, 100%': {
   					opacity: '0.6'
   				},
@@ -192,8 +192,8 @@ export default {
   			'accordion-up': 'accordion-up 0.2s ease-out',
   			'fade-in': 'fade-in 0.5s ease-out',
   			'slide-in': 'slide-in 0.4s ease-out',
-  			'float': 'float 8s ease-in-out infinite',
-  			'glow': 'glow 3s ease-in-out infinite'
+  			float: 'float 8s ease-in-out infinite',
+  			glow: 'glow 3s ease-in-out infinite'
   		}
   	}
   },
