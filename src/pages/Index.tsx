@@ -1466,12 +1466,10 @@ const Index = () => {
                           <Download className="h-4 w-4 mr-2 text-primary" />
                           <span>Exportar Relatórios</span>
                         </div>} />}
-                  {(isAdmin() || isAdminMed()) && (
-                    <DropdownMenuItem onClick={() => navigate("/agendamentos-rejeitados")} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                  {(isAdmin() || isAdminMed()) && <DropdownMenuItem onClick={() => navigate("/agendamentos-rejeitados")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                       <XCircle className="h-4 w-4 mr-2 text-destructive" />
                       <span>Agendamentos Rejeitados</span>
-                    </DropdownMenuItem>
-                  )}
+                    </DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem onClick={() => navigate("/guia-sistema")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                     <Info className="h-4 w-4 mr-2 text-primary" />
@@ -1639,7 +1637,7 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   {dadosPorStatus.length > 0 ? <ResponsiveContainer width="100%" height={320}>
-                      <PieChart>
+                      <PieChart className="opacity-95 shadow-xl rounded-md">
                         <defs>
                           <linearGradient id="gradientPendente" x1="0" y1="0" x2="1" y2="1">
                             <stop offset="0%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.95} />
