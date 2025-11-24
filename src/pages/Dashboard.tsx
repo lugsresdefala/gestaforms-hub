@@ -296,10 +296,7 @@ const Dashboard = () => {
             <Card className="glass-card">
               <CardContent className="pt-6">
                 <div className="text-2xl font-bold text-scheduled">
-                  {filteredAgendamentos.filter(a => {
-                  const diff = Math.ceil((new Date(a.data_agendamento_calculada).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                  return diff > 7;
-                }).length}
+                  {filteredAgendamentos.filter(a => new Date(a.data_agendamento_calculada) >= new Date(new Date().setHours(0,0,0,0))).length}
                 </div>
                 <p className="text-sm text-muted-foreground">Agendados</p>
               </CardContent>
