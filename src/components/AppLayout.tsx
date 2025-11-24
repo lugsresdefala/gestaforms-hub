@@ -220,7 +220,7 @@ const AppSidebar = () => {
   return <Sidebar className={`hidden lg:flex ${collapsed ? "w-16" : "w-64"} transition-all duration-300`} collapsible="icon">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900" />
       <SidebarContent className="relative z-10 bg-opacity-80 backdrop-blur-xl shadow-2xl">
-        <MenuContent collapsed={collapsed} />
+        <MenuContent collapsed={collapsed} className="rounded-none shadow-inner" />
       </SidebarContent>
     </Sidebar>;
 };
