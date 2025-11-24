@@ -248,7 +248,7 @@ const AppSidebar = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900" />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjAzIiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40" />
 
-      <SidebarContent className="relative opacity-95 bg-[linear-gradient(135deg,theme('colors.blue.900')_0%,theme('colors.sky.700')_100%)] shadow-xl rounded-none\n">
+      <SidebarContent className="relative opacity-95 bg-[linear-gradient(\n135deg,\nrgba(15,23,42,0.92) 0%,\nrgba(30,58,138,0.88) 28%,\nrgba(56,189,248,0.55) 100%\n)] shadow-2xl shadow-black/40 rounded-none">
         <MenuContent collapsed={collapsed} />
       </SidebarContent>
     </Sidebar>;
