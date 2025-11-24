@@ -175,7 +175,7 @@ const MenuContent = ({
           <div className="p-3 bg-blue-50 border border-sky-100 rounded-lg shadow-inner">
             <img src="/hapvida-logo.png" alt="Logo" className="h-16 object-cover shadow-2xl" />
           </div>
-          {!collapsed && <span className="text-xs uppercase text-sky-100 bg-sky-500/20 px-3 py-1 rounded-full border border-sky-400/30">
+          {!collapsed && <span className="text-xs uppercase text-sky-100 bg-sky-500/20 px-3 py-1 border border-sky-400/10 font-extralight text-center">
               Gestação Segura
             </span>}
         </div>
