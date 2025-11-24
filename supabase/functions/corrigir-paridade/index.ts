@@ -86,12 +86,12 @@ Deno.serve(async (req) => {
     console.log('🔄 Iniciando correção de paridade...');
 
     // Buscar o CSV do public folder
-    const csvUrl = `${supabaseUrl}/storage/v1/object/public/calendars/Consolidado_Novembro_Dezembro.csv`;
+    const csvUrl = `${supabaseUrl}/storage/v1/object/public/calendars/Calendario_Nov_Dez.csv`;
     const csvResponse = await fetch(csvUrl);
     
     if (!csvResponse.ok) {
       // Tentar path alternativo
-      const altCsvResponse = await fetch(`${req.url.split('/functions/')[0]}/calendars/Consolidado_Novembro_Dezembro.csv`);
+      const altCsvResponse = await fetch(`${req.url.split('/functions/')[0]}/calendars/Calendario_Nov_Dez.csv`);
       if (!altCsvResponse.ok) {
         throw new Error('CSV não encontrado');
       }

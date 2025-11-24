@@ -114,8 +114,8 @@ export default function CorrigirParidade() {
     setAutoExecutado(true);
 
     try {
-      // Buscar o CSV
-      const response = await fetch('/calendars/Consolidado_Novembro_Dezembro.csv');
+      // Buscar o CSV atualizado
+      const response = await fetch('/calendars/Calendario_Nov_Dez.csv');
       const csvText = await response.text();
       
       const lines = csvText.split('\n');
@@ -219,7 +219,7 @@ export default function CorrigirParidade() {
           <CardTitle>Corrigir Paridade dos Dados Importados</CardTitle>
           <CardDescription>
             Esta ferramenta corrige a paridade (gestações, partos normais, cesáreas, abortos) 
-            de TODOS os pacientes importados do arquivo Consolidado_Novembro_Dezembro.csv
+            de TODOS os pacientes importados do arquivo Calendario_Nov_Dez.csv
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

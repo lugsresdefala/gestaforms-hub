@@ -43,77 +43,24 @@ function parseAndCountCSV(content: string, fileName: string): Map<string, CSVRec
 }
 
 export async function analyzeCSVFiles() {
-  console.log('🔍 ANALISANDO ARQUIVOS CSV...\n');
-  
-  // Carregar os dois arquivos
+  console.log('🔍 ANALISANDO CALENDARIO_NOV_DEZ.CSV...\n');
+
   const calendarioResponse = await fetch('/calendars/Calendario_Nov_Dez.csv');
   const calendarioContent = await calendarioResponse.text();
-  
-  const consolidadoResponse = await fetch('/calendars/Consolidado_Novembro_Dezembro.csv');
-  const consolidadoContent = await consolidadoResponse.text();
-  
-  // Processar ambos
+
   const calendarioRecords = parseAndCountCSV(calendarioContent, 'Calendario');
-  const consolidadoRecords = parseAndCountCSV(consolidadoContent, 'Consolidado');
-  
-  console.log('📊 RESUMO POR MATERNIDADE:\n');
-  console.log('Maternidade          | Calendario | Consolidado | Diferença');
-  console.log('---------------------|------------|-------------|----------');
-  
-  // Coletar todas as maternidades
-  const allMaternidades = new Set([
-    ...Array.from(calendarioRecords.keys()),
-    ...Array.from(consolidadoRecords.keys())
-  ]);
-  
-  const differences = new Map<string, {
-    calendario: CSVRecord[];
-    consolidado: CSVRecord[];
-    onlyInConsolidado: CSVRecord[];
-  }>();
-  
-  allMaternidades.forEach(mat => {
-    const calRecords = calendarioRecords.get(mat) || [];
-    const conRecords = consolidadoRecords.get(mat) || [];
-    
-    const diff = conRecords.length - calRecords.length;
-    const diffStr = diff > 0 ? `+${diff}` : `${diff}`;
-    
-    console.log(`${mat.padEnd(20)} | ${String(calRecords.length).padStart(10)} | ${String(conRecords.length).padStart(11)} | ${diffStr.padStart(9)}`);
-    
-    // Encontrar registros que estão apenas no Consolidado
-    const calKeys = new Set(calRecords.map(r => `${r.carteirinha}-${r.nome}`));
-    const onlyInConsolidado = conRecords.filter(r => 
-      !calKeys.has(`${r.carteirinha}-${r.nome}`)
-    );
-    
-    differences.set(mat, {
-      calendario: calRecords,
-      consolidado: conRecords,
-      onlyInConsolidado
-    });
+
+  console.log('📊 REGISTROS POR MATERNIDADE:\n');
+  console.log('Maternidade          | Registros');
+  console.log('---------------------|----------');
+
+  calendarioRecords.forEach((records, mat) => {
+    console.log(`${mat.padEnd(20)} | ${String(records.length).padStart(8)}`);
   });
-  
-  console.log('\n\n🔎 REGISTROS EXTRAS NO CONSOLIDADO:\n');
-  
-  differences.forEach((diff, mat) => {
-    if (diff.onlyInConsolidado.length > 0) {
-      console.log(`\n${mat.toUpperCase()} (${diff.onlyInConsolidado.length} registros extras):`);
-      console.log('─'.repeat(80));
-      
-      diff.onlyInConsolidado.slice(0, 10).forEach((record, idx) => {
-        console.log(`${idx + 1}. Linha ${record.linha}: ${record.carteirinha} - ${record.nome}`);
-      });
-      
-      if (diff.onlyInConsolidado.length > 10) {
-        console.log(`... e mais ${diff.onlyInConsolidado.length - 10} registros`);
-      }
-    }
-  });
-  
+
   console.log('\n\n✅ ANÁLISE COMPLETA!');
-  
-  return differences;
+
+  return calendarioRecords;
 }
 
 // Disponibilizar no console

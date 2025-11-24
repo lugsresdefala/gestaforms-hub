@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, AlertCircle } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface CSVRecord {
@@ -13,40 +13,33 @@ interface CSVRecord {
   maternidade: string;
 }
 
-interface MaternidadeComparison {
-  calendario: number;
-  consolidado: number;
-  diferenca: number;
-  extras: CSVRecord[];
-}
-
 export default function CompararCSVs() {
   const [loading, setLoading] = useState(false);
-  const [comparison, setComparison] = useState<Map<string, MaternidadeComparison> | null>(null);
+  const [registrosPorMaternidade, setRegistrosPorMaternidade] = useState<Map<string, CSVRecord[]> | null>(null);
   const [selectedMaternidade, setSelectedMaternidade] = useState<string | null>(null);
 
   const parseCSV = (content: string): Map<string, CSVRecord[]> => {
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     const recordsByMaternidade = new Map<string, CSVRecord[]>();
-    
+
     lines.forEach((line, index) => {
       if (index === 0) return;
-      
-      const parts = line.split(';').map(p => p.trim());
+
+      const parts = line.split(";").map(p => p.trim());
       if (parts.length < 6) return;
-      
+
       const maternidade = parts[0];
       const carteirinha = parts[4];
       const nome = parts[5];
-      
-      if (!maternidade || !carteirinha || !nome || maternidade === 'Maternidade') {
+
+      if (!maternidade || !carteirinha || !nome || maternidade === "Maternidade") {
         return;
       }
-      
+
       if (!recordsByMaternidade.has(maternidade)) {
         recordsByMaternidade.set(maternidade, []);
       }
-      
+
       recordsByMaternidade.get(maternidade)!.push({
         linha: index + 1,
         carteirinha,
@@ -54,7 +47,7 @@ export default function CompararCSVs() {
         maternidade
       });
     });
-    
+
     return recordsByMaternidade;
   };
 
@@ -63,40 +56,11 @@ export default function CompararCSVs() {
     try {
       const calendarioResponse = await fetch('/calendars/Calendario_Nov_Dez.csv');
       const calendarioContent = await calendarioResponse.text();
-      
-      const consolidadoResponse = await fetch('/calendars/Consolidado_Novembro_Dezembro.csv');
-      const consolidadoContent = await consolidadoResponse.text();
-      
+
       const calendarioRecords = parseCSV(calendarioContent);
-      const consolidadoRecords = parseCSV(consolidadoContent);
-      
-      const allMaternidades = new Set([
-        ...Array.from(calendarioRecords.keys()),
-        ...Array.from(consolidadoRecords.keys())
-      ]);
-      
-      const result = new Map<string, MaternidadeComparison>();
-      
-      allMaternidades.forEach(mat => {
-        const calRecords = calendarioRecords.get(mat) || [];
-        const conRecords = consolidadoRecords.get(mat) || [];
-        
-        const calKeys = new Set(calRecords.map(r => `${r.carteirinha}-${r.nome}`));
-        const onlyInConsolidado = conRecords.filter(r => 
-          !calKeys.has(`${r.carteirinha}-${r.nome}`)
-        );
-        
-        result.set(mat, {
-          calendario: calRecords.length,
-          consolidado: conRecords.length,
-          diferenca: conRecords.length - calRecords.length,
-          extras: onlyInConsolidado
-        });
-      });
-      
-      setComparison(result);
+      setRegistrosPorMaternidade(calendarioRecords);
     } catch (error) {
-      console.error('Erro ao analisar arquivos:', error);
+      console.error('Erro ao analisar arquivo:', error);
     } finally {
       setLoading(false);
     }
@@ -106,71 +70,62 @@ export default function CompararCSVs() {
     analyzeFiles();
   }, []);
 
-  const getTotalExtras = () => {
-    if (!comparison) return 0;
-    return Array.from(comparison.values()).reduce((sum, comp) => sum + comp.extras.length, 0);
+  const getTotalRegistros = () => {
+    if (!registrosPorMaternidade) return 0;
+    return Array.from(registrosPorMaternidade.values()).reduce((sum, comp) => sum + comp.length, 0);
   };
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Comparação de Arquivos CSV</h1>
+        <h1 className="text-3xl font-bold mb-2">Resumo do CSV do Calendário</h1>
         <p className="text-muted-foreground">
-          Análise detalhada das diferenças entre Calendario_Nov_Dez.csv e Consolidado_Novembro_Dezembro.csv
+          Visão geral do arquivo Calendario_Nov_Dez.csv distribuída por maternidade
         </p>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-3 text-lg">Analisando arquivos...</span>
+          <span className="ml-3 text-lg">Analisando arquivo...</span>
         </div>
-      ) : comparison ? (
+      ) : registrosPorMaternidade ? (
         <>
           <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Foram encontrados <strong>{getTotalExtras()} registros extras</strong> no arquivo Consolidado que não existem no Calendario.
+              O calendário atualizado possui <strong>{getTotalRegistros()} registros</strong>.
             </AlertDescription>
           </Alert>
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Resumo por Maternidade</CardTitle>
-              <CardDescription>Comparação de registros válidos em cada arquivo</CardDescription>
+              <CardTitle>Registros por Maternidade</CardTitle>
+              <CardDescription>Totais de agendamentos encontrados no arquivo</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Maternidade</TableHead>
-                    <TableHead className="text-center">Calendario</TableHead>
-                    <TableHead className="text-center">Consolidado</TableHead>
-                    <TableHead className="text-center">Diferença</TableHead>
+                    <TableHead className="text-center">Registros</TableHead>
                     <TableHead className="text-center">Ação</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {Array.from(comparison.entries()).map(([mat, comp]) => (
+                  {Array.from(registrosPorMaternidade.entries()).map(([mat, registros]) => (
                     <TableRow key={mat}>
                       <TableCell className="font-medium">{mat}</TableCell>
-                      <TableCell className="text-center">{comp.calendario}</TableCell>
-                      <TableCell className="text-center">{comp.consolidado}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={comp.diferenca > 0 ? "destructive" : "secondary"}>
-                          {comp.diferenca > 0 ? `+${comp.diferenca}` : comp.diferenca}
-                        </Badge>
+                        <Badge variant="secondary">{registros.length}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        {comp.extras.length > 0 && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setSelectedMaternidade(mat)}
-                          >
-                            Ver {comp.extras.length} extras
-                          </Button>
-                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedMaternidade(mat)}
+                        >
+                          Ver amostra
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -179,15 +134,15 @@ export default function CompararCSVs() {
             </CardContent>
           </Card>
 
-          {selectedMaternidade && comparison.get(selectedMaternidade) && (
+          {selectedMaternidade && registrosPorMaternidade.get(selectedMaternidade) && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Registros Extras em {selectedMaternidade}
+                  Registros em {selectedMaternidade}
                 </CardTitle>
                 <CardDescription>
-                  Estes {comparison.get(selectedMaternidade)!.extras.length} pacientes estão no Consolidado mas não no Calendario
+                  Amostra dos primeiros registros encontrados no calendário atualizado
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -200,25 +155,27 @@ export default function CompararCSVs() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {comparison.get(selectedMaternidade)!.extras.map((record, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-mono text-sm">{record.linha}</TableCell>
-                        <TableCell className="font-mono text-sm">{record.carteirinha}</TableCell>
-                        <TableCell>{record.nome}</TableCell>
-                      </TableRow>
-                    ))}
+                    {registrosPorMaternidade
+                      .get(selectedMaternidade)!
+                      .slice(0, 20)
+                      .map((record) => (
+                        <TableRow key={`${record.carteirinha}-${record.linha}`}>
+                          <TableCell>{record.linha}</TableCell>
+                          <TableCell>{record.carteirinha}</TableCell>
+                          <TableCell className="capitalize">{record.nome}</TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
-                <div className="mt-4">
-                  <Button variant="ghost" onClick={() => setSelectedMaternidade(null)}>
-                    Fechar
-                  </Button>
-                </div>
               </CardContent>
             </Card>
           )}
         </>
-      ) : null}
+      ) : (
+        <div className="text-center text-muted-foreground py-12">
+          Não foi possível carregar o arquivo do calendário.
+        </div>
+      )}
     </div>
   );
 }
