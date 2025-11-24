@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useData } from "@/contexts/DataContext";
 import { LayoutDashboard, Calendar, Building2, PlusCircle, Users, LogOut, CheckCircle, Upload, FileCheck, HelpCircle, Shield, BookOpen, FileText, Mail, UserPlus, ChevronDown, Menu, X } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -217,10 +216,10 @@ const AppSidebar = () => {
     state
   } = useSidebar();
   const collapsed = state === "collapsed";
-  return <Sidebar className={`hidden lg:flex ${collapsed ? "w-16" : "w-64"} transition-all duration-300`} collapsible="icon">
+  return <Sidebar className={`${collapsed ? "w-16" : "w-64"} transition-all duration-300`} collapsible="icon">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900" />
       <SidebarContent className="relative z-10 bg-opacity-80 backdrop-blur-xl shadow-2xl">
-        <MenuContent collapsed={collapsed} className="rounded-none shadow-inner" />
+        <MenuContent collapsed={collapsed} />
       </SidebarContent>
     </Sidebar>;
 };
@@ -233,7 +232,6 @@ export const AppLayout = ({
     isAdmin,
     isAdminMed
   } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   useEffect(() => {
     const main = document.querySelector("main");
@@ -247,32 +245,7 @@ export const AppLayout = ({
         <div className="flex flex-col flex-1">
           <header className={`sticky top-0 z-50 h-16 flex items-center justify-between px-4 lg:px-6 border-b transition-all ${isScrolled ? "bg-white/90 backdrop-blur-xl shadow-md" : "bg-white/70 backdrop-blur-md"}`}>
             <div className="flex items-center gap-3">
-              {/* Mobile menu - only render on mobile */}
-              <div className="lg:hidden">
-                <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen} modal>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <Menu className="w-5 h-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-72 p-0 bg-gradient-to-br from-blue-800 via-blue-900 to-slate-900 z-[100]">
-                    <SheetHeader className="p-4 border-b border-sky-200/10">
-                      <div className="flex justify-between items-center text-white">
-                        <SheetTitle className="text-white">Menu</SheetTitle>
-                        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} className="text-white hover:bg-white/10">
-                          <X className="w-5 h-5" />
-                        </Button>
-                      </div>
-                    </SheetHeader>
-                    <ScrollArea className="h-[calc(100vh-80px)]">
-                      <MenuContent onItemClick={() => setMobileMenuOpen(false)} />
-                    </ScrollArea>
-                  </SheetContent>
-                </Sheet>
-              </div>
-
-              {/* Desktop sidebar trigger */}
-              <SidebarTrigger className="hidden lg:flex" />
+              <SidebarTrigger />
 
               <div className="flex flex-col">
                 <h1 className="text-lg font-bold bg-gradient-to-r from-blue-800 to-sky-800 bg-clip-text text-transparent">
