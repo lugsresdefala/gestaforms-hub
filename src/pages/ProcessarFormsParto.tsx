@@ -51,6 +51,9 @@ interface FormRecord {
 export default function ProcessarFormsParto() {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [parsedRecords, setParsedRecords] = useState<FormRecord[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
   const [results, setResults] = useState<{
     success: number;
     errors: string[];
@@ -60,24 +63,32 @@ export default function ProcessarFormsParto() {
     errors: [],
     skipped: []
   });
-
   const parseCSV = (text: string): FormRecord[] => {
     const lines = text.split('\n');
     const records: FormRecord[] = [];
     
-    // Pular cabeçalho (linhas 1-3)
-    for (let i = 3; i < lines.length; i++) {
+    // Detectar delimitador (vírgula ou ponto-e-vírgula)
+    const delimiter = text.includes(';') && !text.split('\n')[0].includes(',') ? ';' : ',';
+    console.log(`Usando delimitador: "${delimiter}"`);
+    console.log(`Total de linhas no arquivo: ${lines.length}`);
+    
+    // Pular cabeçalho (linha 1)
+    for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       
-      const cols = line.split(',');
+      const cols = line.split(delimiter);
       
       // ID está na coluna 0, se vazio, pular
       if (!cols[0] || cols[0] === '') continue;
       
-      const nome = cols[5]?.trim();
-      const carteirinha = cols[7]?.trim();
+      const nome = cols[5]?.trim().replace(/^[?�]*|[?�]*$/g, ''); // Remove ? e � no início/fim
+      const carteirinha = cols[7]?.trim().replace(/^[?�]*|[?�]*$/g, '');
       
+      if (!nome || !carteirinha) {
+        console.warn(`Linha ${i + 1}: Nome ou carteirinha ausente`);
+        continue;
+      }
       if (!nome || !carteirinha) continue;
       
       const procedimentosText = cols[13]?.trim() || '';
@@ -110,34 +121,73 @@ export default function ProcessarFormsParto() {
         reserva_sangue: cols[29]?.trim() || 'Não',
         maternidade: cols[30]?.trim() || '',
         medico_responsavel: cols[31]?.trim() || '',
-        email_paciente: cols[32]?.trim() || '',
-        data_agendada: cols[36]?.trim() || ''
+        email_paciente: cols[33]?.trim() || '',
+        data_agendada: cols[37]?.trim() || ''
       });
+    }
+    
+    console.log(`${records.length} registros parseados`);
+    if (records.length > 0) {
+      console.log('Exemplo do primeiro registro:', records[0]);
     }
     
     return records;
   };
 
+  const carregarPreview = async () => {
+    setProcessing(true);
+    setProgress(0);
 
-  const processarRegistros = async () => {
+    try {
+      let text: string;
+      
+      // Se um arquivo foi selecionado, usar ele
+      if (selectedFile) {
+        text = await selectedFile.text();
+      } else {
+        // Caso contrário, tentar o arquivo padrão
+        const response = await fetch('/csv-temp/forms_parto_pending.csv');
+        text = await response.text();
+      }
+      
+      const records = parseCSV(text);
+
+      console.log(`Total de registros encontrados: ${records.length}`);
+      
+      if (records.length === 0) {
+        toast.error('Nenhum registro válido encontrado no arquivo CSV');
+        setProcessing(false);
+        return;
+      }
+
+      setParsedRecords(records);
+      setShowPreview(true);
+      toast.success(`${records.length} registros carregados para validação`);
+    } catch (error: any) {
+      toast.error(`Erro ao carregar arquivo: ${error.message}`);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const inserirNoBanco = async () => {
+    if (parsedRecords.length === 0) {
+      toast.error('Nenhum registro para inserir');
+      return;
+    }
+
     setProcessing(true);
     setProgress(0);
     setResults({ success: 0, errors: [], skipped: [] });
 
     try {
-      const response = await fetch('/csv-temp/forms_parto_pending.csv');
-      const text = await response.text();
-      const records = parseCSV(text);
-
-      console.log(`Total de registros encontrados: ${records.length}`);
-
       let successCount = 0;
       const errors: string[] = [];
       const skipped: string[] = [];
 
-      for (let i = 0; i < records.length; i++) {
-        const record = records[i];
-        setProgress(((i + 1) / records.length) * 100);
+      for (let i = 0; i < parsedRecords.length; i++) {
+        const record = parsedRecords[i];
+        setProgress(((i + 1) / parsedRecords.length) * 100);
 
         try {
           // Verificar se já existe
@@ -260,23 +310,70 @@ export default function ProcessarFormsParto() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-6 w-6" />
-            Processar Formulários de Parto
-          </CardTitle>
-          <CardDescription>
-            Importar agendamentos do arquivo CSV de formulários de parto
-          </CardDescription>
-        </CardHeader>
         <CardContent className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Este processador irá importar os agendamentos do arquivo CSV.
               Registros duplicados serão ignorados automaticamente.
+              Suporta arquivos delimitados por vírgula ou ponto-e-vírgula.
             </AlertDescription>
+          </Alert>
+
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="csv-file" className="block text-sm font-medium mb-2">
+                Selecionar Arquivo CSV (opcional)
+              </label>
+              <input
+                id="csv-file"
+                type="file"
+                accept=".csv,.CSV"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                    toast.success(`Arquivo "${file.name}" selecionado`);
+                  }
+                }}
+                className="block w-full text-sm text-slate-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-primary file:text-primary-foreground
+                  hover:file:bg-primary/90
+                  cursor-pointer"
+              />
+              {selectedFile && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Arquivo selecionado: <strong>{selectedFile.name}</strong> ({(selectedFile.size / 1024).toFixed(1)} KB)
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={carregarPreview}
+                disabled={processing}
+                className="flex-1"
+                size="lg"
+                variant="outline"
+              >
+                {processing ? "Carregando..." : "Carregar e Visualizar"}
+              </Button>
+              
+              {showPreview && parsedRecords.length > 0 && (
+                <Button
+                  onClick={inserirNoBanco}
+                  disabled={processing}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Confirmar e Inserir ({parsedRecords.length})
+                </Button>
+              )}
+            </div>
+          </div>Description>
           </Alert>
 
           <Button
@@ -294,6 +391,48 @@ export default function ProcessarFormsParto() {
               <p className="text-sm text-center text-muted-foreground">
                 {progress.toFixed(0)}% concluído
               </p>
+            </div>
+          )}
+
+          {showPreview && parsedRecords.length > 0 && (
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted p-3 border-b">
+                <h3 className="font-semibold text-sm">
+                  Preview dos Registros ({parsedRecords.length} encontrados)
+                </h3>
+              </div>
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="p-2 text-left border-r">#</th>
+                      <th className="p-2 text-left border-r">Nome</th>
+                      <th className="p-2 text-left border-r">Carteirinha</th>
+                      <th className="p-2 text-left border-r">Nascimento</th>
+                      <th className="p-2 text-left border-r">Procedimentos</th>
+                      <th className="p-2 text-left border-r">Maternidade</th>
+                      <th className="p-2 text-left border-r">Médico</th>
+                      <th className="p-2 text-left">Indicação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedRecords.map((record, idx) => (
+                      <tr key={idx} className="border-b hover:bg-muted/50">
+                        <td className="p-2 border-r text-muted-foreground">{idx + 1}</td>
+                        <td className="p-2 border-r font-medium">{record.nome_completo}</td>
+                        <td className="p-2 border-r text-xs">{record.carteirinha}</td>
+                        <td className="p-2 border-r text-xs">{record.data_nascimento}</td>
+                        <td className="p-2 border-r text-xs">
+                          {record.procedimentos.join(', ') || 'N/A'}
+                        </td>
+                        <td className="p-2 border-r text-xs">{record.maternidade || 'N/A'}</td>
+                        <td className="p-2 border-r text-xs">{record.medico_responsavel || 'N/A'}</td>
+                        <td className="p-2 text-xs">{record.indicacao}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
