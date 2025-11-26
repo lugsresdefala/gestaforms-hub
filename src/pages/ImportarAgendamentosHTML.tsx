@@ -41,9 +41,18 @@ export default function ImportarAgendamentosHTML() {
   const extrairDadosHTML = async () => {
     setProcessando(true);
     try {
+      console.log('Iniciando extração do HTML...');
+      
       // Buscar o arquivo HTML
       const response = await fetch('/agendamentos_final_pro.html');
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const html = await response.text();
+      console.log('HTML carregado, tamanho:', html.length);
       
       // Criar parser DOM
       const parser = new DOMParser();
@@ -51,13 +60,15 @@ export default function ImportarAgendamentosHTML() {
       
       // Extrair dados das linhas da tabela
       const linhas = doc.querySelectorAll('tbody tr');
+      console.log('Linhas encontradas:', linhas.length);
+      
       const registros: HTMLRecord[] = [];
       
-      linhas.forEach((linha) => {
+      linhas.forEach((linha, index) => {
         const colunas = linha.querySelectorAll('td');
         if (colunas.length >= 16) {
           const carteirinhaAttr = colunas[0].getAttribute('data-carteirinha') || '';
-          const carteirinha = carteirinhaAttr.replace('Carteirinha:', '').trim();
+          const carteirinha = carteirinhaAttr.replace('Carteirinha:', '').replace('Carteirinha: ', '').trim();
           const status = linha.getAttribute('data-status') || 'agendado';
           
           registros.push({
@@ -79,14 +90,22 @@ export default function ImportarAgendamentosHTML() {
             ig_na_data: colunas[14].textContent?.trim() || '',
             status: status
           });
+        } else {
+          console.log(`Linha ${index} tem apenas ${colunas.length} colunas`);
         }
       });
       
+      console.log('Registros extraídos:', registros.length);
       setDadosHTML(registros);
-      toast.success(`${registros.length} registros extraídos do HTML`);
+      
+      if (registros.length > 0) {
+        toast.success(`${registros.length} registros extraídos do HTML`);
+      } else {
+        toast.error('Nenhum registro encontrado no HTML');
+      }
     } catch (error) {
       console.error('Erro ao extrair dados:', error);
-      toast.error('Erro ao processar HTML');
+      toast.error(`Erro ao processar HTML: ${error}`);
     } finally {
       setProcessando(false);
     }
