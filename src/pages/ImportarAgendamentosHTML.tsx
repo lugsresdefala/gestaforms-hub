@@ -216,7 +216,8 @@ export default function ImportarAgendamentosHTML() {
       const mesNum = parseInt(mes, 10);
       const anoNum = parseInt(ano, 10);
       
-      if (diaNum >= 1 && diaNum <= 31 && mesNum >= 1 && mesNum <= 12 && anoNum >= 2020 && anoNum <= 2030) {
+      const currentYear = new Date().getFullYear();
+      if (diaNum >= 1 && diaNum <= 31 && mesNum >= 1 && mesNum <= 12 && anoNum >= 2020 && anoNum <= currentYear + 5) {
         return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
       }
     }
