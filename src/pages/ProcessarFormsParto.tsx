@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle2, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { z } from "zod";
 import { 
   parseDateDMY, 
   extractProcedimentos, 
@@ -17,35 +18,105 @@ import {
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
 
-interface FormRecord {
-  carteirinha: string;
-  nome_completo: string;
-  data_nascimento: string;
-  gestacoes: number;
-  partos_cesareas: number;
-  partos_normais: number;
-  abortos: number;
-  telefones: string;
-  procedimentos: string[];
-  dum_status: string;
-  data_dum?: string;
-  data_primeiro_usg: string;
-  semanas_usg: number;
-  dias_usg: number;
-  usg_recente: string;
-  ig_pretendida: string;
-  indicacao: string;
-  medicacao: string;
-  diagnosticos_maternos: string;
-  placenta_previa: string;
-  diagnosticos_fetais: string;
-  historia_obstetrica: string;
-  reserva_uti: string;
-  reserva_sangue: string;
-  maternidade: string;
-  medico_responsavel: string;
-  email_paciente: string;
-  data_agendada: string;
+// Schema de validação para campos obrigatórios
+const formRecordSchema = z.object({
+  carteirinha: z.string()
+    .trim()
+    .min(1, "Carteirinha é obrigatória")
+    .max(50, "Carteirinha muito longa"),
+  nome_completo: z.string()
+    .trim()
+    .min(3, "Nome deve ter no mínimo 3 caracteres")
+    .max(200, "Nome muito longo"),
+  data_nascimento: z.string()
+    .trim()
+    .min(8, "Data de nascimento inválida"),
+  gestacoes: z.number()
+    .int()
+    .min(0, "Número de gestações inválido")
+    .max(20, "Número de gestações muito alto"),
+  partos_cesareas: z.number()
+    .int()
+    .min(0, "Número de cesáreas inválido")
+    .max(20, "Número de cesáreas muito alto"),
+  partos_normais: z.number()
+    .int()
+    .min(0, "Número de partos normais inválido")
+    .max(20, "Número de partos normais muito alto"),
+  abortos: z.number()
+    .int()
+    .min(0, "Número de abortos inválido")
+    .max(20, "Número de abortos muito alto"),
+  telefones: z.string()
+    .trim()
+    .min(8, "Telefone inválido")
+    .max(100, "Telefone muito longo"),
+  procedimentos: z.array(z.string())
+    .min(1, "Pelo menos um procedimento é obrigatório"),
+  dum_status: z.enum(['certa', 'duvidosa', 'desconhecida', 'ignorada'], {
+    errorMap: () => ({ message: "Status DUM inválido" })
+  }),
+  data_dum: z.string().optional(),
+  data_primeiro_usg: z.string()
+    .trim()
+    .min(8, "Data do primeiro USG é obrigatória"),
+  semanas_usg: z.number()
+    .int()
+    .min(0, "Semanas USG inválidas")
+    .max(42, "Semanas USG devem ser entre 0 e 42"),
+  dias_usg: z.number()
+    .int()
+    .min(0, "Dias USG inválidos")
+    .max(6, "Dias USG devem ser entre 0 e 6"),
+  usg_recente: z.string()
+    .trim()
+    .min(1, "Data do USG recente é obrigatória"),
+  ig_pretendida: z.string()
+    .trim()
+    .min(2, "IG pretendida é obrigatória"),
+  indicacao: z.string()
+    .trim()
+    .min(3, "Indicação do procedimento é obrigatória")
+    .max(500, "Indicação muito longa"),
+  medicacao: z.string()
+    .trim()
+    .max(500, "Medicação muito longa"),
+  diagnosticos_maternos: z.string()
+    .trim()
+    .max(1000, "Diagnósticos maternos muito longos"),
+  placenta_previa: z.string()
+    .trim()
+    .max(100, "Placenta prévia muito longo"),
+  diagnosticos_fetais: z.string()
+    .trim()
+    .max(1000, "Diagnósticos fetais muito longos"),
+  historia_obstetrica: z.string()
+    .trim()
+    .max(2000, "História obstétrica muito longa"),
+  reserva_uti: z.string().trim(),
+  reserva_sangue: z.string().trim(),
+  maternidade: z.string()
+    .trim()
+    .min(3, "Maternidade é obrigatória")
+    .max(200, "Nome da maternidade muito longo"),
+  medico_responsavel: z.string()
+    .trim()
+    .min(3, "Médico responsável é obrigatório")
+    .max(200, "Nome do médico muito longo"),
+  email_paciente: z.string()
+    .trim()
+    .email("Email inválido")
+    .max(255, "Email muito longo"),
+  data_agendada: z.string().trim()
+});
+
+type FormRecord = z.infer<typeof formRecordSchema>;
+
+interface ValidationError {
+  linha: number;
+  campo: string;
+  erro: string;
+  valor: any;
 }
 
 export default function ProcessarFormsParto() {
@@ -54,6 +125,7 @@ export default function ProcessarFormsParto() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [parsedRecords, setParsedRecords] = useState<FormRecord[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [results, setResults] = useState<{
     success: number;
     errors: string[];
@@ -63,9 +135,10 @@ export default function ProcessarFormsParto() {
     errors: [],
     skipped: []
   });
-  const parseCSV = (text: string): FormRecord[] => {
+  const parseCSV = (text: string): { records: FormRecord[], errors: ValidationError[] } => {
     const lines = text.split('\n');
     const records: FormRecord[] = [];
+    const errors: ValidationError[] = [];
     
     // Detectar delimitador (vírgula ou ponto-e-vírgula)
     const delimiter = text.includes(';') && !text.split('\n')[0].includes(',') ? ';' : ',';
@@ -82,19 +155,14 @@ export default function ProcessarFormsParto() {
       // ID está na coluna 0, se vazio, pular
       if (!cols[0] || cols[0] === '') continue;
       
-      const nome = cols[5]?.trim().replace(/^[?�]*|[?�]*$/g, ''); // Remove ? e � no início/fim
+      const nome = cols[5]?.trim().replace(/^[?�]*|[?�]*$/g, '');
       const carteirinha = cols[7]?.trim().replace(/^[?�]*|[?�]*$/g, '');
-      
-      if (!nome || !carteirinha) {
-        console.warn(`Linha ${i + 1}: Nome ou carteirinha ausente`);
-        continue;
-      }
-      if (!nome || !carteirinha) continue;
       
       const procedimentosText = cols[13]?.trim() || '';
       const procedimentos = extractProcedimentos(procedimentosText);
       
-      records.push({
+      // Criar objeto não validado
+      const rawRecord = {
         carteirinha,
         nome_completo: nome,
         data_nascimento: cols[6]?.trim() || '',
@@ -123,20 +191,39 @@ export default function ProcessarFormsParto() {
         medico_responsavel: cols[31]?.trim() || '',
         email_paciente: cols[33]?.trim() || '',
         data_agendada: cols[37]?.trim() || ''
-      });
+      };
+      
+      // Validar com Zod
+      try {
+        const validatedRecord = formRecordSchema.parse(rawRecord);
+        records.push(validatedRecord);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach(err => {
+            errors.push({
+              linha: i + 1,
+              campo: err.path.join('.'),
+              erro: err.message,
+              valor: err.path.reduce((obj: any, key) => obj?.[key], rawRecord)
+            });
+          });
+        }
+      }
     }
     
-    console.log(`${records.length} registros parseados`);
+    console.log(`${records.length} registros válidos parseados`);
+    console.log(`${errors.length} erros de validação encontrados`);
     if (records.length > 0) {
-      console.log('Exemplo do primeiro registro:', records[0]);
+      console.log('Exemplo do primeiro registro válido:', records[0]);
     }
     
-    return records;
+    return { records, errors };
   };
 
   const carregarPreview = async () => {
     setProcessing(true);
     setProgress(0);
+    setValidationErrors([]);
 
     try {
       let text: string;
@@ -150,19 +237,29 @@ export default function ProcessarFormsParto() {
         text = await response.text();
       }
       
-      const records = parseCSV(text);
+      const { records, errors } = parseCSV(text);
 
-      console.log(`Total de registros encontrados: ${records.length}`);
+      console.log(`Total de registros válidos: ${records.length}`);
+      console.log(`Total de erros de validação: ${errors.length}`);
       
-      if (records.length === 0) {
-        toast.error('Nenhum registro válido encontrado no arquivo CSV');
+      setValidationErrors(errors);
+      
+      if (records.length === 0 && errors.length === 0) {
+        toast.error('Nenhum registro encontrado no arquivo CSV');
         setProcessing(false);
         return;
       }
 
+      if (errors.length > 0) {
+        toast.warning(`${errors.length} erros de validação encontrados. Verifique os detalhes abaixo.`);
+      }
+
       setParsedRecords(records);
       setShowPreview(true);
-      toast.success(`${records.length} registros carregados para validação`);
+      
+      if (records.length > 0) {
+        toast.success(`${records.length} registros válidos carregados para processamento`);
+      }
     } catch (error: any) {
       toast.error(`Erro ao carregar arquivo: ${error.message}`);
     } finally {
@@ -387,6 +484,51 @@ export default function ProcessarFormsParto() {
                 {progress.toFixed(0)}% concluído
               </p>
             </div>
+          )}
+
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive" className="border-red-500 bg-red-50">
+              <XCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <div className="space-y-2">
+                  <p className="font-semibold">
+                    {validationErrors.length} erros de validação encontrados
+                  </p>
+                  <div className="max-h-60 overflow-y-auto border rounded p-2 bg-white">
+                    <table className="w-full text-xs">
+                      <thead className="sticky top-0 bg-red-50">
+                        <tr className="border-b">
+                          <th className="p-1 text-left">Linha</th>
+                          <th className="p-1 text-left">Campo</th>
+                          <th className="p-1 text-left">Erro</th>
+                          <th className="p-1 text-left">Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {validationErrors.slice(0, 50).map((error, idx) => (
+                          <tr key={idx} className="border-b hover:bg-red-50">
+                            <td className="p-1">{error.linha}</td>
+                            <td className="p-1 font-mono">{error.campo}</td>
+                            <td className="p-1 text-red-700">{error.erro}</td>
+                            <td className="p-1 font-mono text-xs truncate max-w-[200px]">
+                              {String(error.valor || 'vazio')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {validationErrors.length > 50 && (
+                      <p className="text-center text-xs text-red-600 mt-2">
+                        ... e mais {validationErrors.length - 50} erros
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-xs mt-2">
+                    Corrija os erros no arquivo CSV e carregue novamente.
+                  </p>
+                </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           {showPreview && parsedRecords.length > 0 && (
