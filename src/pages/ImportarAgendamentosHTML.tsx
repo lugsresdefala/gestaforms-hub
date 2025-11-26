@@ -227,7 +227,7 @@ export default function ImportarAgendamentosHTML() {
       return;
     }
 
-    if (!confirm(`Deseja importar ${dadosHTML.length} registros para o banco de dados?`)) {
+    if (!confirm(`Deseja substituir ${dadosHTML.length} registros no banco de dados pelos dados do HTML?`)) {
       return;
     }
 
@@ -236,6 +236,7 @@ export default function ImportarAgendamentosHTML() {
 
     try {
       let importados = 0;
+      let atualizados = 0;
       let erros = 0;
 
       for (let i = 0; i < dadosHTML.length; i++) {
@@ -244,59 +245,82 @@ export default function ImportarAgendamentosHTML() {
         const dataDum = parseDataBR(registro.data_dum);
         const dataAgendada = parseDataBR(registro.data_agendada);
 
-        // Extrair procedimentos como array
         const procedimentos = [registro.procedimentos];
 
-        // Mapear status corretamente - apenas "pendente", "aprovado", "realizado", "rejeitado"
-        let statusMapeado = 'aprovado'; // padrão
+        let statusMapeado = 'aprovado';
         if (registro.status === 'realizado') {
           statusMapeado = 'realizado';
         } else if (registro.status === 'agendado') {
-          statusMapeado = 'aprovado'; // agendado = aprovado
+          statusMapeado = 'aprovado';
         }
 
-        try {
-          const { error } = await supabase
-            .from('agendamentos_obst')
-            .insert({
-              carteirinha: registro.carteirinha,
-              nome_completo: registro.nome_completo,
-              telefones: registro.telefones,
-              data_nascimento: '2000-01-01', // Não temos essa info no HTML
-              numero_gestacoes: paridade.gestacoes,
-              numero_partos_cesareas: paridade.cesareas,
-              numero_partos_normais: paridade.normais,
-              numero_abortos: paridade.abortos,
-              dum_status: dataDum ? 'Sim - Confiavel' : 'Não sabe',
-              data_dum: dataDum,
-              data_primeiro_usg: dataDum || '2025-01-01', // Fallback se DUM for null
-              semanas_usg: 0,
-              dias_usg: 0,
-              usg_recente: 'Sim',
-              idade_gestacional_calculada: registro.ig_atual,
-              ig_pretendida: registro.ig_ideal || '37-40 semanas',
-              procedimentos,
-              indicacao_procedimento: registro.diagnosticos_maternos,
-              diagnosticos_maternos: registro.diagnosticos_maternos,
-              diagnosticos_fetais: registro.diagnosticos_fetais,
-              medicacao: 'Não informado',
-              placenta_previa: 'Não',
-              necessidade_uti_materna: 'Não',
-              necessidade_reserva_sangue: 'Não',
-              historia_obstetrica: registro.usg_ultimo,
-              maternidade: registro.maternidade,
-              medico_responsavel: 'Importado do HTML',
-              centro_clinico: 'Importado',
-              email_paciente: 'nao-informado@example.com',
-              data_agendamento_calculada: dataAgendada,
-              status: statusMapeado
-            });
+        const dadosAgendamento = {
+          carteirinha: registro.carteirinha,
+          nome_completo: registro.nome_completo,
+          telefones: registro.telefones,
+          data_nascimento: '2000-01-01',
+          numero_gestacoes: paridade.gestacoes,
+          numero_partos_cesareas: paridade.cesareas,
+          numero_partos_normais: paridade.normais,
+          numero_abortos: paridade.abortos,
+          dum_status: dataDum ? 'Sim - Confiavel' : 'Não sabe',
+          data_dum: dataDum,
+          data_primeiro_usg: dataDum || '2025-01-01',
+          semanas_usg: 0,
+          dias_usg: 0,
+          usg_recente: 'Sim',
+          idade_gestacional_calculada: registro.ig_atual,
+          ig_pretendida: registro.ig_ideal || '37-40 semanas',
+          procedimentos,
+          indicacao_procedimento: registro.diagnosticos_maternos,
+          diagnosticos_maternos: registro.diagnosticos_maternos,
+          diagnosticos_fetais: registro.diagnosticos_fetais,
+          medicacao: 'Não informado',
+          placenta_previa: 'Não',
+          necessidade_uti_materna: 'Não',
+          necessidade_reserva_sangue: 'Não',
+          historia_obstetrica: registro.usg_ultimo,
+          maternidade: registro.maternidade,
+          medico_responsavel: 'Importado do HTML',
+          centro_clinico: 'Importado',
+          email_paciente: 'nao-informado@example.com',
+          data_agendamento_calculada: dataAgendada,
+          status: statusMapeado
+        };
 
-          if (error) {
-            console.error('Erro ao importar:', registro.nome_completo, error);
-            erros++;
+        try {
+          // Verificar se existe
+          const { data: existente } = await supabase
+            .from('agendamentos_obst')
+            .select('id')
+            .eq('carteirinha', registro.carteirinha)
+            .maybeSingle();
+
+          if (existente) {
+            // Atualizar registro existente
+            const { error } = await supabase
+              .from('agendamentos_obst')
+              .update(dadosAgendamento)
+              .eq('id', existente.id);
+
+            if (error) {
+              console.error('Erro ao atualizar:', registro.nome_completo, error);
+              erros++;
+            } else {
+              atualizados++;
+            }
           } else {
-            importados++;
+            // Inserir novo registro
+            const { error } = await supabase
+              .from('agendamentos_obst')
+              .insert(dadosAgendamento);
+
+            if (error) {
+              console.error('Erro ao inserir:', registro.nome_completo, error);
+              erros++;
+            } else {
+              importados++;
+            }
           }
         } catch (err) {
           console.error('Erro ao processar:', registro.nome_completo, err);
@@ -306,8 +330,8 @@ export default function ImportarAgendamentosHTML() {
         setProgresso(Math.round(((i + 1) / dadosHTML.length) * 100));
       }
 
-      toast.success(`${importados} registros importados, ${erros} erros`);
-      setComparacao(prev => prev ? { ...prev, atualizados: importados } : null);
+      toast.success(`${importados} novos, ${atualizados} atualizados, ${erros} erros`);
+      setComparacao(prev => prev ? { ...prev, atualizados: importados + atualizados } : null);
     } catch (error) {
       console.error('Erro geral:', error);
       toast.error('Erro durante importação');
