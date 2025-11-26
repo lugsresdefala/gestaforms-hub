@@ -196,7 +196,7 @@ function calcularDataIdeal(igAtualDias: number, igIdealDias: number, dataReferen
   return addDays(dataReferencia, diasAteIdeal);
 }
 
-function ajustarDataParaDiaUtil(data: Date): Date {
+function ajustarDataParaNaoDomingo(data: Date): Date {
   // Se for domingo (0), avançar para segunda (1)
   let dataAjustada = new Date(data);
   while (dataAjustada.getDay() === 0) {
@@ -270,14 +270,14 @@ export default function ImportarPacientes() {
           // Calcular data ideal
           const dataIdeal = calcularDataIdeal(igAtualDias, igIdealDias, hoje);
           
-          // Ajustar para dia útil (não domingo)
-          const dataAgendada = ajustarDataParaDiaUtil(dataIdeal);
+          // Ajustar para não domingo
+          const dataAgendada = ajustarDataParaNaoDomingo(dataIdeal);
           
           // Garantir antecedência mínima de 10 dias
           const diasAteAgendamento = differenceInDays(dataAgendada, hoje);
           let dataFinal = dataAgendada;
           if (diasAteAgendamento < 10) {
-            dataFinal = ajustarDataParaDiaUtil(addDays(hoje, 10));
+            dataFinal = ajustarDataParaNaoDomingo(addDays(hoje, 10));
           }
           
           // Calcular IG na data agendada
@@ -422,7 +422,7 @@ export default function ImportarPacientes() {
             carteirinha: parsed.carteirinha,
             data_nascimento: dataNascimento ? format(dataNascimento, 'yyyy-MM-dd') : '2000-01-01',
             telefones: parsed.telefones || 'Não informado',
-            email_paciente: parsed.email_paciente || 'nao.informado@email.com',
+            email_paciente: parsed.email_paciente || 'nao-informado@example.com',
             maternidade: parsed.maternidade,
             centro_clinico: 'Importado via TSV',
             medico_responsavel: parsed.medico_responsavel || 'Médico Importado',
@@ -461,10 +461,11 @@ export default function ImportarPacientes() {
             .maybeSingle();
 
           if (existente) {
-            // Atualizar registro existente
+            // Atualizar registro existente (não atualiza created_by para preservar criador original)
+            const { created_by: _, ...dadosAtualizacao } = agendamentoData;
             const { error } = await supabase
               .from('agendamentos_obst')
-              .update(agendamentoData)
+              .update(dadosAtualizacao)
               .eq('id', existente.id);
 
             if (error) throw error;
