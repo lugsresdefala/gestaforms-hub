@@ -240,9 +240,9 @@ export const AppLayout = ({
     return () => main?.removeEventListener("scroll", onScroll);
   }, []);
   return <SidebarProvider>
-      <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/40">
+      <div className="flex min-h-screen w-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-sky-50/40">
         <AppSidebar />
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 min-w-0">
           <header className={`sticky top-0 z-50 h-16 flex items-center justify-between px-4 lg:px-6 border-b transition-all ${isScrolled ? "bg-white/90 backdrop-blur-xl shadow-md" : "bg-white/70 backdrop-blur-md"}`}>
             <div className="flex items-center gap-3">
               <SidebarTrigger />
