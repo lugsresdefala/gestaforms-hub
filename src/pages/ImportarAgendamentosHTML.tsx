@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { FileText, Database, RefreshCw, Upload } from 'lucide-react';
+import { FileText, Database, RefreshCw, Upload, Wrench } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface HTMLRecord {
@@ -52,6 +52,7 @@ export default function ImportarAgendamentosHTML() {
   } | null>(null);
   const [progresso, setProgresso] = useState(0);
   const [detalhesExistentes, setDetalhesExistentes] = useState<PacienteComparacao[]>([]);
+  const [datasCorrigidas, setDatasCorrigidas] = useState<number | null>(null);
 
   const extrairDadosHTML = async () => {
     setProcessando(true);
@@ -198,12 +199,28 @@ export default function ImportarAgendamentosHTML() {
   };
 
   const parseDataBR = (dataBR: string): string | null => {
-    // Formato: DD/MM/YYYY
-    const partes = dataBR.split('/');
+    if (!dataBR) return null;
+    const trimmed = dataBR.trim();
+    
+    // Se já está no formato ISO (YYYY-MM-DD), retornar como está
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+    
+    // Formato DD/MM/YYYY
+    const partes = trimmed.split('/');
     if (partes.length === 3) {
       const [dia, mes, ano] = partes;
-      return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      // Validar que são números válidos
+      const diaNum = parseInt(dia, 10);
+      const mesNum = parseInt(mes, 10);
+      const anoNum = parseInt(ano, 10);
+      
+      if (diaNum >= 1 && diaNum <= 31 && mesNum >= 1 && mesNum <= 12 && anoNum >= 2020 && anoNum <= 2030) {
+        return `${ano}-${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`;
+      }
     }
+    
     return null;
   };
 
@@ -219,6 +236,62 @@ export default function ImportarAgendamentosHTML() {
       };
     }
     return { gestacoes: 1, cesareas: 0, normais: 0, abortos: 0 };
+  };
+
+  const corrigirDatasExistentes = async () => {
+    if (!confirm('Deseja corrigir todas as datas no formato DD/MM/YYYY para o formato ISO (YYYY-MM-DD)?')) {
+      return;
+    }
+
+    setProcessando(true);
+    setDatasCorrigidas(null);
+    
+    try {
+      // Buscar todos os registros com data no formato errado (contém "/")
+      const { data: registros, error } = await supabase
+        .from('agendamentos_obst')
+        .select('id, data_agendamento_calculada')
+        .like('data_agendamento_calculada', '%/%');
+
+      if (error) throw error;
+
+      console.log(`Encontrados ${registros?.length || 0} registros com datas no formato DD/MM/YYYY`);
+      
+      let corrigidos = 0;
+      let erros = 0;
+      
+      for (const registro of registros || []) {
+        const dataOriginal = registro.data_agendamento_calculada;
+        const dataCorrigida = parseDataBR(dataOriginal);
+        
+        if (dataCorrigida) {
+          console.log(`Corrigindo: ${dataOriginal} -> ${dataCorrigida}`);
+          
+          const { error: updateError } = await supabase
+            .from('agendamentos_obst')
+            .update({ data_agendamento_calculada: dataCorrigida })
+            .eq('id', registro.id);
+          
+          if (updateError) {
+            console.error(`Erro ao corrigir registro ${registro.id}:`, updateError);
+            erros++;
+          } else {
+            corrigidos++;
+          }
+        } else {
+          console.warn(`Não foi possível converter a data: ${dataOriginal}`);
+          erros++;
+        }
+      }
+      
+      setDatasCorrigidas(corrigidos);
+      toast.success(`${corrigidos} datas corrigidas${erros > 0 ? `, ${erros} erros` : ''}`);
+    } catch (error) {
+      console.error('Erro ao corrigir datas:', error);
+      toast.error('Erro ao corrigir datas existentes');
+    } finally {
+      setProcessando(false);
+    }
   };
 
   const importarParaBanco = async () => {
@@ -244,6 +317,9 @@ export default function ImportarAgendamentosHTML() {
         const paridade = parseParidade(registro.paridade);
         const dataDum = parseDataBR(registro.data_dum);
         const dataAgendada = parseDataBR(registro.data_agendada);
+
+        // Log detalhado para debug
+        console.log(`Processando [${i + 1}/${dadosHTML.length}]: ${registro.nome_completo}, Carteirinha: ${registro.carteirinha}, Data: ${registro.data_agendada} -> ${dataAgendada}`);
 
         const procedimentos = [registro.procedimentos];
 
@@ -382,6 +458,18 @@ export default function ImportarAgendamentosHTML() {
             </Button>
           </div>
 
+          <div className="flex gap-4">
+            <Button
+              onClick={corrigirDatasExistentes}
+              disabled={processando}
+              variant="secondary"
+              className="flex-1"
+            >
+              <Wrench className="mr-2 h-4 w-4" />
+              Corrigir Datas Existentes (DD/MM/YYYY → YYYY-MM-DD)
+            </Button>
+          </div>
+
           {progresso > 0 && (
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -390,6 +478,18 @@ export default function ImportarAgendamentosHTML() {
               </div>
               <Progress value={progresso} />
             </div>
+          )}
+
+          {datasCorrigidas !== null && (
+            <Alert>
+              <AlertDescription>
+                <div className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  <strong>Datas corrigidas:</strong>
+                  <Badge variant="outline">{datasCorrigidas} registros</Badge>
+                </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           {dadosHTML.length > 0 && (
