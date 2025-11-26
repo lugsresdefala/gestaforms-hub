@@ -119,14 +119,6 @@ interface ValidationError {
   valor: any;
 }
 
-interface DuplicateInfo {
-  carteirinha: string;
-  nome_completo: string;
-  isDuplicate: boolean;
-  existingId?: string;
-  existingStatus?: string;
-}
-
 export default function ProcessarFormsParto() {
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -134,8 +126,6 @@ export default function ProcessarFormsParto() {
   const [parsedRecords, setParsedRecords] = useState<FormRecord[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
-  const [duplicates, setDuplicates] = useState<Map<string, DuplicateInfo>>(new Map());
-  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const [results, setResults] = useState<{
     success: number;
     errors: string[];
@@ -230,62 +220,10 @@ export default function ProcessarFormsParto() {
     return { records, errors };
   };
 
-  const verificarDuplicatasEmLote = async (records: FormRecord[]) => {
-    setCheckingDuplicates(true);
-    const duplicateMap = new Map<string, DuplicateInfo>();
-
-    try {
-      // Buscar todas as carteirinhas de uma vez
-      const carteirinhas = records.map(r => r.carteirinha);
-      
-      const { data: existingRecords, error } = await supabase
-        .from('agendamentos_obst')
-        .select('id, carteirinha, nome_completo, status')
-        .in('carteirinha', carteirinhas);
-
-      if (error) {
-        console.error('Erro ao verificar duplicatas:', error);
-        toast.error('Erro ao verificar duplicatas no banco');
-        return;
-      }
-
-      // Criar mapa de duplicatas
-      existingRecords?.forEach(existing => {
-        duplicateMap.set(existing.carteirinha, {
-          carteirinha: existing.carteirinha,
-          nome_completo: existing.nome_completo,
-          isDuplicate: true,
-          existingId: existing.id,
-          existingStatus: existing.status
-        });
-      });
-
-      setDuplicates(duplicateMap);
-
-      const duplicateCount = duplicateMap.size;
-      const newCount = records.length - duplicateCount;
-
-      if (duplicateCount > 0) {
-        toast.warning(
-          `${duplicateCount} registros já existem no banco. ${newCount} registros novos serão processados.`,
-          { duration: 5000 }
-        );
-      } else {
-        toast.success('Nenhuma duplicata encontrada! Todos os registros são novos.');
-      }
-    } catch (error: any) {
-      console.error('Erro ao verificar duplicatas:', error);
-      toast.error(`Erro ao verificar duplicatas: ${error.message}`);
-    } finally {
-      setCheckingDuplicates(false);
-    }
-  };
-
   const carregarPreview = async () => {
     setProcessing(true);
     setProgress(0);
     setValidationErrors([]);
-    setDuplicates(new Map());
 
     try {
       let text: string;
@@ -320,9 +258,7 @@ export default function ProcessarFormsParto() {
       setShowPreview(true);
       
       if (records.length > 0) {
-        toast.success(`${records.length} registros válidos carregados`);
-        // Verificar duplicatas automaticamente após carregar
-        await verificarDuplicatasEmLote(records);
+        toast.success(`${records.length} registros válidos carregados para processamento`);
       }
     } catch (error: any) {
       toast.error(`Erro ao carregar arquivo: ${error.message}`);
@@ -337,21 +273,6 @@ export default function ProcessarFormsParto() {
       return;
     }
 
-    // Filtrar apenas registros não duplicados
-    const recordsToInsert = parsedRecords.filter(
-      record => !duplicates.has(record.carteirinha)
-    );
-
-    if (recordsToInsert.length === 0) {
-      toast.error('Todos os registros já existem no banco. Não há nada para inserir.');
-      return;
-    }
-
-    const duplicateCount = parsedRecords.length - recordsToInsert.length;
-    if (duplicateCount > 0) {
-      toast.info(`${duplicateCount} registros duplicados serão ignorados automaticamente`);
-    }
-
     setProcessing(true);
     setProgress(0);
     setResults({ success: 0, errors: [], skipped: [] });
@@ -361,12 +282,17 @@ export default function ProcessarFormsParto() {
       const errors: string[] = [];
       const skipped: string[] = [];
 
-      for (let i = 0; i < recordsToInsert.length; i++) {
-        const record = recordsToInsert[i];
-        setProgress(((i + 1) / recordsToInsert.length) * 100);
+      for (let i = 0; i < parsedRecords.length; i++) {
+        const record = parsedRecords[i];
+        setProgress(((i + 1) / parsedRecords.length) * 100);
 
         try {
-          // Não precisa verificar duplicado novamente pois já foi filtrado
+          // Verificar se já existe
+          const isDuplicado = await verificarDuplicado(record.carteirinha);
+          if (isDuplicado) {
+            skipped.push(`${record.nome_completo} (${record.carteirinha}) - já existe`);
+            continue;
+          }
 
           const dataNascimento = parseDateDMY(record.data_nascimento);
           const dataPrimeiroUSG = parseDateDMY(record.data_primeiro_usg);
@@ -461,11 +387,6 @@ export default function ProcessarFormsParto() {
         }
       }
 
-      // Adicionar duplicatas ao skipped para o relatório
-      duplicates.forEach((info, carteirinha) => {
-        skipped.push(`${info.nome_completo} (${carteirinha}) - já existe no banco (${info.existingStatus})`);
-      });
-
       setResults({ success: successCount, errors, skipped });
       
       if (successCount > 0) {
@@ -475,7 +396,7 @@ export default function ProcessarFormsParto() {
         toast.error(`${errors.length} erros encontrados`);
       }
       if (skipped.length > 0) {
-        toast.info(`${skipped.length} registros ignorados (duplicados)`);
+        toast.info(`${skipped.length} registros já existem`);
       }
     } catch (error: any) {
       toast.error(`Erro ao processar arquivo: ${error.message}`);
@@ -611,108 +532,43 @@ export default function ProcessarFormsParto() {
           )}
 
           {showPreview && parsedRecords.length > 0 && (
-            <div className="space-y-4">
-              {checkingDuplicates && (
-                <Alert className="border-blue-500 bg-blue-50">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-800">
-                    Verificando duplicatas no banco de dados...
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {!checkingDuplicates && duplicates.size > 0 && (
-                <Alert className="border-yellow-500 bg-yellow-50">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <AlertDescription className="text-yellow-800">
-                    <div className="space-y-1">
-                      <p className="font-semibold">
-                        {duplicates.size} duplicatas encontradas
-                      </p>
-                      <p className="text-sm">
-                        {parsedRecords.length - duplicates.size} registros novos serão processados
-                      </p>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {!checkingDuplicates && duplicates.size === 0 && parsedRecords.length > 0 && (
-                <Alert className="border-green-500 bg-green-50">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    Nenhuma duplicata encontrada! Todos os {parsedRecords.length} registros são novos.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="border rounded-lg overflow-hidden">
-                <div className="bg-muted p-3 border-b flex items-center justify-between">
-                  <h3 className="font-semibold text-sm">
-                    Preview dos Registros ({parsedRecords.length} total)
-                  </h3>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-green-600 font-medium">
-                      ● {parsedRecords.length - duplicates.size} Novos
-                    </span>
-                    <span className="text-yellow-600 font-medium">
-                      ● {duplicates.size} Duplicados
-                    </span>
-                  </div>
-                </div>
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted sticky top-0">
-                      <tr>
-                        <th className="p-2 text-left border-r">Status</th>
-                        <th className="p-2 text-left border-r">#</th>
-                        <th className="p-2 text-left border-r">Nome</th>
-                        <th className="p-2 text-left border-r">Carteirinha</th>
-                        <th className="p-2 text-left border-r">Nascimento</th>
-                        <th className="p-2 text-left border-r">Procedimentos</th>
-                        <th className="p-2 text-left border-r">Maternidade</th>
-                        <th className="p-2 text-left border-r">Médico</th>
-                        <th className="p-2 text-left">Indicação</th>
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted p-3 border-b">
+                <h3 className="font-semibold text-sm">
+                  Preview dos Registros ({parsedRecords.length} encontrados)
+                </h3>
+              </div>
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="p-2 text-left border-r">#</th>
+                      <th className="p-2 text-left border-r">Nome</th>
+                      <th className="p-2 text-left border-r">Carteirinha</th>
+                      <th className="p-2 text-left border-r">Nascimento</th>
+                      <th className="p-2 text-left border-r">Procedimentos</th>
+                      <th className="p-2 text-left border-r">Maternidade</th>
+                      <th className="p-2 text-left border-r">Médico</th>
+                      <th className="p-2 text-left">Indicação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parsedRecords.map((record, idx) => (
+                      <tr key={idx} className="border-b hover:bg-muted/50">
+                        <td className="p-2 border-r text-muted-foreground">{idx + 1}</td>
+                        <td className="p-2 border-r font-medium">{record.nome_completo}</td>
+                        <td className="p-2 border-r text-xs">{record.carteirinha}</td>
+                        <td className="p-2 border-r text-xs">{record.data_nascimento}</td>
+                        <td className="p-2 border-r text-xs">
+                          {record.procedimentos.join(', ') || 'N/A'}
+                        </td>
+                        <td className="p-2 border-r text-xs">{record.maternidade || 'N/A'}</td>
+                        <td className="p-2 border-r text-xs">{record.medico_responsavel || 'N/A'}</td>
+                        <td className="p-2 text-xs">{record.indicacao}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {parsedRecords.map((record, idx) => {
-                        const isDuplicate = duplicates.has(record.carteirinha);
-                        const duplicateInfo = duplicates.get(record.carteirinha);
-                        return (
-                          <tr 
-                            key={idx} 
-                            className={`border-b hover:bg-muted/50 ${
-                              isDuplicate ? 'bg-yellow-50' : 'bg-white'
-                            }`}
-                          >
-                            <td className="p-2 border-r">
-                              {isDuplicate ? (
-                                <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded font-medium" title={`Status existente: ${duplicateInfo?.existingStatus}`}>
-                                  Duplicado
-                                </span>
-                              ) : (
-                                <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded font-medium">
-                                  Novo
-                                </span>
-                              )}
-                            </td>
-                            <td className="p-2 border-r text-muted-foreground">{idx + 1}</td>
-                            <td className="p-2 border-r font-medium">{record.nome_completo}</td>
-                            <td className="p-2 border-r text-xs font-mono">{record.carteirinha}</td>
-                            <td className="p-2 border-r text-xs">{record.data_nascimento}</td>
-                            <td className="p-2 border-r text-xs">
-                              {record.procedimentos.join(', ') || 'N/A'}
-                            </td>
-                            <td className="p-2 border-r text-xs">{record.maternidade || 'N/A'}</td>
-                            <td className="p-2 border-r text-xs">{record.medico_responsavel || 'N/A'}</td>
-                            <td className="p-2 text-xs">{record.indicacao}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}
