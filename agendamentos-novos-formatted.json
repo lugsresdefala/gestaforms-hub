@@ -1,0 +1,1001 @@
+{
+  "metadados": {
+    "dataExtracao": "2025-11-25",
+    "totalRegistros": 30,
+    "fonte": "Untitled-1 CSV"
+  },
+  "agendamentos": [
+    {
+      "id": "2550",
+      "timestamp": "2025-11-18T15:07:50",
+      "paciente": {
+        "nome": "Dalila Pedro da Silva",
+        "nascimento": "1987-03-02",
+        "idade": 38,
+        "carteirinha": "1ar9LA000042005",
+        "contatos": {
+          "telefones": ["11 988371894", "11 993487165"],
+          "email": "dalilapedro96@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Indução Programada",
+      "agendamento": {
+        "data": "2025-12-02",
+        "maternidade": "Cruzeiro",
+        "medico": "Bruna Mariano"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-01",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-22",
+            "ig": "9s 6d"
+          },
+          "recente": "11/11 if 35 sem 5/7 cef peso 3003g p93 mbv4,2 pa(I) Doppler normal"
+        },
+        "dpp": {
+          "dum": "2025-12-06",
+          "usg": "2025-12-19"
+        },
+        "ig": {
+          "ideal": "37s",
+          "naData": null,
+          "atual": "34s 0d",
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "DM II em uso insulina e descompensado com feto gog",
+        "maternos": "DM Ii em uso de insulina, descompensado /// indução agendada para Jundiaí, mas paciente deseja realizar em osasco",
+        "fetais": "Feto GIG",
+        "placentaPrevia": false,
+        "medicacoes": "Insulina NPh (36-22-20), cálcio, AAS, megamather / Lt4 50 mcg"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Controle pessimo! de que mes é? hj é 24 e ja tem anotacao ate 29, precisa ajustar insulnina, passar p/ meninas do DM. Primigesta"
+    },
+    {
+      "id": "2576",
+      "timestamp": "2025-11-22T09:25:33",
+      "paciente": {
+        "nome": "JANAINA NUNES DE ABREU",
+        "nascimento": "2004-09-19",
+        "idade": 21,
+        "carteirinha": "NB5X8000012009",
+        "contatos": {
+          "telefones": ["11963399427", "11981765695"],
+          "email": "JANAABREU720@GMAIL.COM"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Renata Daura Lanzone"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Incerta"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-16",
+            "ig": "10s 1d"
+          },
+          "recente": "10/11 IG 35SEM 1 DIA CEFALICO PESO 2924 G P67 DOPPLER NL"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-11"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "DESEJO DA PACIENTE",
+        "maternos": "DIABETES GESTACIONAL",
+        "fetais": "NDN",
+        "placentaPrevia": false,
+        "medicacoes": "VITAMINAS"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "NDN"
+    },
+    {
+      "id": "2577",
+      "timestamp": "2025-11-24T08:36:54",
+      "paciente": {
+        "nome": "INGRID GONCALVES CAMPOS LIMA",
+        "nascimento": "1999-10-21",
+        "idade": 26,
+        "carteirinha": "1QB8R024734004",
+        "contatos": {
+          "telefones": ["11932209794", "11913740300"],
+          "email": "ingridgoncalves2110@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Cilmário Filho"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-13",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2024-05-16",
+            "ig": "8s 4d"
+          },
+          "recente": "17/11 CEF 2999G P90 MB NL DP NL"
+        },
+        "dpp": {
+          "dum": "2025-12-18",
+          "usg": "2024-12-22"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "DESEJO MATERNO",
+        "maternos": "OBESIDADE GRAU 3 (PESO 126 KG) + HAC",
+        "fetais": "FETO GIG P90",
+        "placentaPrevia": false,
+        "medicacoes": "METILDOPA 750 MG/DIA"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "NDN"
+    },
+    {
+      "id": "2578",
+      "timestamp": "2025-11-24T08:31:36",
+      "paciente": {
+        "nome": "GILMARA SAMPAIO FABELICIO",
+        "nascimento": "1988-04-26",
+        "idade": 37,
+        "carteirinha": "3010T064847004",
+        "contatos": {
+          "telefones": ["11 94211-6116"],
+          "email": "gilmara.sanpao@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 2,
+          "cesareas": 1,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Wilson Loike"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-28",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-22",
+            "ig": "8s 0d"
+          },
+          "recente": "19/11/2025 - 33S5D / CEF / 1559G / P1 / MBV 4,5 / DOPPLER NORMAL"
+        },
+        "dpp": {
+          "dum": "2026-01-02",
+          "usg": "2026-01-01"
+        },
+        "ig": {
+          "ideal": "37s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "RESTRIÇÃO DE CRESCIMENTO FETAL PRECOCE / HIPERT GESTACIONAL",
+        "maternos": "HIPERT GESTACIONAL (PODE-SE CONSIDERAR PRE ECLAMPSIA TENDO EM VISTA RCF) / SIFILIS TRATADA / IMA",
+        "fetais": "RESTRIÇÃO DE CRESCIMENTO FETAL PRECOCE - EM SEGUIMENTO DESDE 21 SEMANAS / TORCHS APRESENTOU HERPES POSITIVO - REALIZADO TTO",
+        "placentaPrevia": false,
+        "medicacoes": "METILDOPA 750MG/D"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "--"
+    },
+    {
+      "id": "2579",
+      "timestamp": "2025-11-24T10:26:25",
+      "paciente": {
+        "nome": "ALESSANDRA FRANCA DA SILVA",
+        "nascimento": "1990-07-11",
+        "idade": 35,
+        "carteirinha": "0UIFP000001007",
+        "contatos": {
+          "telefones": ["982698952"],
+          "email": "alessandrafranca11@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 2,
+          "cesareas": 1,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Juliana Fazio"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Não sabe"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-06-18",
+            "ig": "12s 0d"
+          },
+          "recente": "19/11/25 34 SEM 2305G P 41 - ILA E DOPPLER NORMAIS"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-31"
+        },
+        "ig": {
+          "ideal": "38s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "ASMA GRAVE + DESEJO MATERNO",
+        "maternos": "HAS/ DMG / HIPERTIREOIDISMO/ ASMA / ARTRITE REUMATOIDE",
+        "fetais": "-",
+        "placentaPrevia": false,
+        "medicacoes": "ALENIA 2 X DIA/ TAPAZOL 5 MG/ DIA METILDOPA 750 MG"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "HAS/ ARTRITE REUMATOIDE/ HIPERTIREOIDISMO / ASMA"
+    },
+    {
+      "id": "2580",
+      "timestamp": "2025-11-24T11:38:09",
+      "paciente": {
+        "nome": "Ana Carolina dos Santos Silva Dias Acad",
+        "nascimento": "1995-03-06",
+        "idade": 30,
+        "carteirinha": "3010T088529002",
+        "contatos": {
+          "telefones": ["11 993865456"],
+          "email": "anacarolina.diasacad@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 3,
+          "cesareas": 2,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Sandra Regina Gonçalves"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-25",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-08",
+            "ig": "5s 5d"
+          },
+          "recente": "18/11 - 34 semanas, 2352g (p43), mbv e doppler normais"
+        },
+        "dpp": {
+          "dum": "2025-12-30",
+          "usg": "2026-01-03"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Iteratividade",
+        "maternos": "Hipertensão crônica sem pre-eclampsia",
+        "fetais": "Nenhum",
+        "placentaPrevia": false,
+        "medicacoes": "Metildopa 2g, anlodipino 5mg"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Ndn"
+    },
+    {
+      "id": "2581",
+      "timestamp": "2025-11-24T12:24:56",
+      "paciente": {
+        "nome": "Paloma Eduarda Batista Braga",
+        "nascimento": "2004-03-26",
+        "idade": 21,
+        "carteirinha": "0X2GT000594032",
+        "contatos": {
+          "telefones": ["11 944410245", "11 971121705"],
+          "email": "paloma.eduardda@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Jamir Piquini"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Incerta"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-04-24",
+            "ig": "6s 1d"
+          },
+          "recente": "19/11 36 sem 3191 p88 ila nl dp nl"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-17"
+        },
+        "ig": {
+          "ideal": "37s-38s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Desejo materno",
+        "maternos": "Hipertensão gestacional",
+        "fetais": "Ndn",
+        "placentaPrevia": false,
+        "medicacoes": "Metildopa 2,0 gr/d"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Ndn"
+    },
+    {
+      "id": "2582",
+      "timestamp": "2025-11-24T13:17:13",
+      "paciente": {
+        "nome": "Graziela Figueira Pinho",
+        "nascimento": "1988-10-29",
+        "idade": 37,
+        "carteirinha": "1SQH0000001007",
+        "contatos": {
+          "telefones": ["11985656863"],
+          "email": "Grazi.pires.0102@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 5,
+          "cesareas": 0,
+          "partosNormais": 4,
+          "abortos": 1
+        }
+      },
+      "procedimento": "Indução Programada",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Marisa Helena"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-26",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-19",
+            "ig": "8s 2d"
+          },
+          "recente": "18/11 IG 34,3 doppler nl LA nl peso 2342 perc 29 plac lar E II"
+        },
+        "dpp": {
+          "dum": "2025-12-31",
+          "usg": "2025-12-27"
+        },
+        "ig": {
+          "ideal": "37s-38s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Há cro ica mas não controlada. Aumento MTD hoje, DMG não controlado. OE na última gestação.",
+        "maternos": "DMG, HA CRONICA não controlada, PE anterior",
+        "fetais": "Ndn",
+        "placentaPrevia": false,
+        "medicacoes": "MTD 500 6/6 HS. aas, calcio."
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Pe em gestação anterio"
+    },
+    {
+      "id": "2583",
+      "timestamp": "2025-11-24T13:47:37",
+      "paciente": {
+        "nome": "JOYCE CRISTINNE RIBEIRO DA SILVA",
+        "nascimento": "1999-03-10",
+        "idade": 26,
+        "carteirinha": "1SLZD000132004",
+        "contatos": {
+          "telefones": ["11958029423", "11981029317"],
+          "email": "cristinnejoyce03@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 2,
+          "cesareas": 1,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea + Laqueadura",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Cilmário Filho"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-25",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-15",
+            "ig": "7s 1d"
+          },
+          "recente": "19/11/2025 - PELVICO 2464G P 57 MB NL DP NL"
+        },
+        "dpp": {
+          "dum": "2025-12-30",
+          "usg": "2025-12-31"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "FETO PELVICO",
+        "maternos": "HAC / OBESIDADE / HIPOTIREOIDISMO",
+        "fetais": "NDN",
+        "placentaPrevia": false,
+        "medicacoes": "METILDOPA 1G/DIA + LEVOTIROXINA 50 MCG/DIA"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "NDN"
+    },
+    {
+      "id": "2584",
+      "timestamp": "2025-11-24T13:49:23",
+      "paciente": {
+        "nome": "THAIS SANTANA NASCIMENTO DOS SANTOS",
+        "nascimento": "1990-11-02",
+        "idade": 35,
+        "carteirinha": "0XZQ0001485016",
+        "contatos": {
+          "telefones": ["011 9 7973 3302"],
+          "email": "THAISTAMSANTOS08@YAHOO.COM"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Lauro Massayuki Nakano"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-03-14",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-12",
+            "ig": "8s 0d"
+          },
+          "recente": "24/11/25 FUVCEF PLA LADD G 2 LA NL 2579 P20=36S3D"
+        },
+        "dpp": {
+          "dum": "2025-12-19",
+          "usg": "2025-12-22"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "DESEJO MATERNO",
+        "maternos": "HIPO T",
+        "fetais": "NDN",
+        "placentaPrevia": false,
+        "medicacoes": "POLIVITA LEVOID 50"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "HIPO T"
+    },
+    {
+      "id": "2585",
+      "timestamp": "2025-11-24T14:05:16",
+      "paciente": {
+        "nome": "Whitney Estevam Oliveira",
+        "nascimento": "1988-08-16",
+        "idade": 37,
+        "carteirinha": "0Z6MR000001015",
+        "contatos": {
+          "telefones": ["11 965247380"],
+          "email": "whitneyestevam@yahoo.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 4,
+          "cesareas": 1,
+          "partosNormais": 0,
+          "abortos": 2
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Salvalus",
+        "medico": "Sandra Regina Gonçalves"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-04-03",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-26",
+            "ig": "7s 2d"
+          },
+          "recente": "10/11 - 31;2 semanas, pelvico, 2865g, mbv e doppler normais"
+        },
+        "dpp": {
+          "dum": "2026-01-08",
+          "usg": "2026-01-10"
+        },
+        "ig": {
+          "ideal": "38s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Cesarea anterior, hac sem pre-eclampsia, saaf em uso de enoxaparina",
+        "maternos": "Saaf, hac",
+        "fetais": "Nenhum",
+        "placentaPrevia": false,
+        "medicacoes": "Enoxaparina 40mg, metildopa 1,5g"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Ndn"
+    },
+    {
+      "id": "2586",
+      "timestamp": "2025-11-24T14:34:24",
+      "paciente": {
+        "nome": "Luana Pereira dos Santos",
+        "nascimento": "1995-09-16",
+        "idade": 30,
+        "carteirinha": "0MKMY001106007",
+        "contatos": {
+          "telefones": ["11 942346926"],
+          "email": "luana.psantos1816@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 1,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Cruzeiro",
+        "medico": "Sandra Regina Gonçalves"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Incerta"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-04-30",
+            "ig": "6s 1d"
+          },
+          "recente": "31/10 - 32;3 semanas, 2379g, mbv e doppler normais"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-23"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Desejo materno",
+        "maternos": "Tad, fibromialgia",
+        "fetais": "Nenhum",
+        "placentaPrevia": false,
+        "medicacoes": "Fluoxetina 20mg"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Na"
+    },
+    {
+      "id": "2587",
+      "timestamp": "2025-11-24T15:03:06",
+      "paciente": {
+        "nome": "GEANE DIONISIO DOS SANTOS",
+        "nascimento": "1995-08-16",
+        "idade": 30,
+        "carteirinha": "0ZBU1004470001",
+        "contatos": {
+          "telefones": ["011 9 6223 0252"],
+          "email": "GEANEDIONIZIO29@GMAIL.COM"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 3,
+          "cesareas": 0,
+          "partosNormais": 0,
+          "abortos": 2
+        }
+      },
+      "procedimento": "Cerclagem",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Lauro Massayuki Nakano"
+      },
+      "clinico": {
+        "dum": {
+          "data": "2025-08-25",
+          "confiavel": "Sim - Confiavel"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-11-10",
+            "ig": "6s 1d"
+          },
+          "recente": "19/11 TN 11 ON+ DV NL.. 12S2D"
+        },
+        "dpp": {
+          "dum": "2026-06-01",
+          "usg": "2026-06-05"
+        },
+        "ig": {
+          "ideal": "13s-14s",
+          "naData": null,
+          "atual": null,
+          "metodo": "DUM"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "IIC",
+        "maternos": "NDN",
+        "fetais": "NDN",
+        "placentaPrevia": false,
+        "medicacoes": "POLIVITA"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "IIC"
+    },
+    {
+      "id": "2588",
+      "timestamp": "2025-11-24T15:21:32",
+      "paciente": {
+        "nome": "Idineide Rodrigues de Souza",
+        "nascimento": "1983-09-09",
+        "idade": 42,
+        "carteirinha": "1T68Q000103020",
+        "contatos": {
+          "telefones": ["11 974362117"],
+          "email": "edineiderodriguesdesouza@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 2,
+          "cesareas": 0,
+          "partosNormais": 1,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea + Laqueadura",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Cruzeiro",
+        "medico": "Sandra Regina Gonçalves"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Incerta"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-05-09",
+            "ig": "8s 1d"
+          },
+          "recente": "13/11 - 35 semanas, 2500g, mbv e doppler normais"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-18"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "Apresentação pélvica",
+        "maternos": "Hac sem pe",
+        "fetais": "Nenhum",
+        "placentaPrevia": false,
+        "medicacoes": "Metildopa 1,5g"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "Ndn"
+    },
+    {
+      "id": "2589",
+      "timestamp": "2025-11-24T17:19:40",
+      "paciente": {
+        "nome": "KATHERINE MARGARITA CUPARE GONZALEZ",
+        "nascimento": "1989-12-17",
+        "idade": 35,
+        "carteirinha": "1QBMX001131001",
+        "contatos": {
+          "telefones": ["11963456238", "11949274782"],
+          "email": "katherinecupare74@gmail.com"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 2,
+          "cesareas": 1,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea",
+      "agendamento": {
+        "data": null,
+        "maternidade": "Cruzeiro",
+        "medico": "Cilmário Filho"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Não sabe"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-07-03",
+            "ig": "13s 0d"
+          },
+          "recente": "USG 12/11 CEF 2251G P 97 ILA NL DP NL"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2026-01-08"
+        },
+        "ig": {
+          "ideal": "39s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "DESEJO MATERNO",
+        "maternos": "HAC / HIPOTIREOIDISMO",
+        "fetais": "FETO GIG",
+        "placentaPrevia": false,
+        "medicacoes": "METILDOPA 750 MG/DIA + AAS+ CACO3"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "NDN"
+    },
+    {
+      "id": "2590",
+      "timestamp": "2025-11-24T17:18:26",
+      "paciente": {
+        "nome": "PAOLA RODRIGUES DA SILVA",
+        "nascimento": "1990-04-08",
+        "idade": 35,
+        "carteirinha": "0YZ8D000036005",
+        "contatos": {
+          "telefones": ["013 9 8848 8198", "011 9 6753 5890"],
+          "email": "PAOLARODRIGUES3625@GMAIL.COM"
+        },
+        "historicoObstetrico": {
+          "gestacoes": 5,
+          "cesareas": 4,
+          "partosNormais": 0,
+          "abortos": 0
+        }
+      },
+      "procedimento": "Cesárea + Laqueadura",
+      "agendamento": {
+        "data": null,
+        "maternidade": "NotreCare",
+        "medico": "Lauro Massayuki Nakano"
+      },
+      "clinico": {
+        "dum": {
+          "data": null,
+          "confiavel": "Incerta"
+        },
+        "usg": {
+          "primeiro": {
+            "data": "2025-06-03",
+            "ig": "10s 5d"
+          },
+          "recente": "23/11 FUVC PL POST G 3 LA NL. P 98 % = 3425 G = DOPLER NORMAL 35S3D (BIOM 38S1D)"
+        },
+        "dpp": {
+          "dum": null,
+          "usg": "2025-12-25"
+        },
+        "ig": {
+          "ideal": "38s",
+          "naData": null,
+          "atual": null,
+          "metodo": "USG"
+        }
+      },
+      "diagnosticos": {
+        "indicacao": "CESAREA ITERATIVA + TVP ANTERIOR",
+        "maternos": "TVP GESTAÇÃO ANTERIOR",
+        "fetais": "MACROSSOMIA",
+        "placentaPrevia": false,
+        "medicacoes": "CLEXANE 60 AAS CACO. DAMATER"
+      },
+      "necessidades": {
+        "utiMaterna": false,
+        "reservaSangue": false
+      },
+      "status": "Pendente",
+      "observacoes": "NDN"
+    }
+  ]
+}

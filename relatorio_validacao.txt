@@ -1,0 +1,401 @@
+RELATÓRIO DE VALIDAÇÃO - GESTAFORMS HUB
+================================================================================
+
+Total: 117 | Válidas: 113 | Erros: 4 | Avisos: 98
+
+ERROS CRÍTICOS:
+
+ID 2482 - Ingredy Sena Santos
+  • IG fora da faixa válida: 45 semanas
+
+ID 2489 - KAMILLY
+  • IG fora da faixa válida: 52 semanas
+
+ID 2494 - CAMILA
+  • IG fora da faixa válida: 52 semanas
+
+ID 2534 - FABIANA
+  • IG fora da faixa válida: 47 semanas
+
+
+AVISOS:
+
+ID 2550 - Dalila Pedro da Silva
+  • IG atual registrada (38s 3d) difere da calculada (36s 4d)
+
+ID 2505 - Adriana Pinto Pereira Galdino
+  • IG atual registrada (31s 0d) difere da calculada (33s 2d)
+  • IG pretendida (36s) fora do protocolo Baixo Risco (39-40s)
+
+ID 2516 - GIOVANNA VILAS BOAS BORELLI
+  • IG atual registrada (32s 0d) difere da calculada (34s 3d)
+
+ID 2528 - Helen Cristina dos Santos Calixto
+  • IG atual registrada (34s 3d) difere da calculada (36s 6d)
+  • IG na data agendada (40s) difere da pretendida (38s)
+
+ID 2532 - Rhaissa Soares Lopes
+  • IG atual registrada (34s 2d) difere da calculada (36s 5d)
+  • IG pretendida (39s) fora do protocolo DM com Insulina (38-38s)
+
+ID 2554 - MILLENE SILVA SANTOS
+  • IG atual registrada (34s 3d) difere da calculada (36s 2d)
+
+ID 2558 - Claudia de Araujo Silva
+  • IG atual registrada (34s 0d) difere da calculada (36s 3d)
+
+ID 2560 - Claudia de Araújo Silva
+  • IG atual registrada (34s 0d) difere da calculada (36s 3d)
+  • IG pretendida (39s) fora do protocolo DM com Insulina (38-38s)
+  • IG na data agendada (37s) difere da pretendida (39s)
+
+ID 2567 - Tatiane de Souza Rocha
+  • IG atual registrada (34s 2d) difere da calculada (36s 2d)
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+
+ID 2568 - Léa dos Santis Silva
+  • IG atual registrada (33s 1d) difere da calculada (34s 6d)
+  • IG na data agendada (36s) difere da pretendida (38s)
+
+ID 2570 - Driely Júlia Silva Gusmão
+  • IG atual registrada (37s 1d) difere da calculada (38s 2d)
+
+ID 2573 - Adriana Aparecida dos Reis
+  • IG atual registrada (35s 0d) difere da calculada (37s 3d)
+
+ID 2574 - Tamires Teodoro
+  • IG atual registrada (32s 4d) difere da calculada (34s 3d)
+  • IG pretendida (39s) fora do protocolo Gemelaridade (36-37s)
+
+ID 2575 - Sandra da Silva Martins
+  • IG atual registrada (32s 6d) difere da calculada (34s 6d)
+
+ID 2577 - INGRID GONCALVES CAMPOS LIMA
+  • IG atual registrada (35s 4d) difere da calculada (36s 1d)
+
+ID 2578 - GILMARA SAMPAIO FABELICIO
+  • IG pretendida (39s) fora do protocolo Pré-eclâmpsia (37-37s)
+
+ID 2580 - Ana Carolina dos Santos Silva Dias Acad
+  • IG atual registrada (35s 0d) difere da calculada (34s 3d)
+
+ID 2581 - Paloma Eduarda Batista Braga
+  • IG atual registrada (37s 2d) difere da calculada (36s 6d)
+
+ID 2582 - Graziela Figueira Pinho
+  • IG atual registrada (34s 5d) difere da calculada (35s 3d)
+
+ID 2583 - JOYCE CRISTINNE RIBEIRO DA SILVA
+  • IG atual registrada (35s 1d) difere da calculada (34s 6d)
+
+ID 2584 - THAIS SANTANA NASCIMENTO DOS SANTOS
+  • IG atual registrada (35s 6d) difere da calculada (36s 1d)
+
+ID 2585 - Whitney Estevam Oliveira
+  • IG atual registrada (31s 4d) difere da calculada (33s 3d)
+
+ID 2586 - Luana Pereira dos Santos
+  • IG atual registrada (33s 4d) difere da calculada (36s 0d)
+
+ID 2587 - GEANE DIONISIO DOS SANTOS
+  • IG atual registrada (13s 1d) difere da calculada (12s 4d)
+  • IG na data agendada (13s) difere da pretendida (39s)
+
+ID 2588 - Idineide Rodrigues de Souza
+  • IG atual registrada (36s 0d) difere da calculada (36s 5d)
+
+ID 2590 - PAOLA RODRIGUES DA SILVA
+  • IG pretendida (38s) fora do protocolo Baixo Risco (39-40s)
+
+ID 2445 - LAUDICEIA DE OLIVEIRA ABREU
+  • IG atual registrada (39s 0d) difere da calculada (17s 6d)
+  • Data agendada no passado: 12/2/2025
+  • IG na data agendada (-23s) difere da pretendida (39s)
+
+ID 2448 - Ruana Caroline dos Santos Vieira
+  • Data agendada no passado: 12/9/2025
+  • IG na data agendada (27s) difere da pretendida (39s)
+
+ID 2453 - Emilly Mayara Alexandre Vilaca
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2454 - KARINA DE OLIVEIRA SANTOS
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2458 - Joyce Moreira Rocha
+  • IG pretendida (40s) fora do protocolo Diabetes Gestacional (38-39s)
+  • Data agendada no passado: 11/19/2025
+
+ID 2456 - ACSA CRISTINA SILVA DE AMORIM CASTRO
+  • Data agendada no passado: 12/6/2025
+  • IG na data agendada (14s) difere da pretendida (39s)
+
+ID 2469 - Camila Soares de a Oliveira
+  • IG atual registrada (38s 3d) difere da calculada (37s 5d)
+  • Data agendada no passado: 12/6/2025
+  • IG na data agendada (14s) difere da pretendida (39s)
+
+ID 2511 - Jessica Lunguinho Batista
+  • IG atual registrada (36s 4d) difere da calculada (36s 1d)
+  • IG pretendida (39s) fora do protocolo DM com Insulina (38-38s)
+
+ID 2466 - KAROLINE MARA FERRI
+  • IG pretendida (39s) fora do protocolo DM com Insulina (38-38s)
+  • Data agendada no passado: 12/5/2025
+  • IG na data agendada (10s) difere da pretendida (39s)
+
+ID 2468 - Jennifer Baptista Pio
+  • IG na data agendada (40s) difere da pretendida (38s)
+
+ID 2470 - GIOVANNA GOMES MUNHOZ
+  • IG atual registrada (36s 6d) difere da calculada (15s 5d)
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+  • IG na data agendada (18s) difere da pretendida (37s)
+
+ID 2484 - THAYNA ALMEIDA NOVAIS
+  • IG atual registrada (36s 3d) difere da calculada (15s 3d)
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+  • IG na data agendada (19s) difere da pretendida (37s)
+
+ID 2459 - Bruna alves de souza
+  • IG atual registrada (37s 6d) difere da calculada (25s 1d)
+  • IG pretendida (39s) fora do protocolo Pré-eclâmpsia (37-37s)
+  • Data agendada no passado: 12/10/2025
+  • IG na data agendada (18s) difere da pretendida (39s)
+
+ID 2482 - Ingredy Sena Santos
+  • IG atual registrada (37s 2d) difere da calculada (45s 5d)
+  • IG na data agendada (48s) difere da pretendida (39s)
+
+ID 2490 - Laysa Fortunato da Silva
+  • IG pretendida (37s) fora do protocolo Hipertensão Crônica (38-39s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2471 - TAMIRES ROBERTA DA SILVA SANTOS
+  • IG pretendida (39s) fora do protocolo DM com Insulina (38-38s)
+
+ID 2476 - Tais Ferreira da silva
+  • IG pretendida (37s) fora do protocolo Macrossomia Fetal (38-39s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2474 - Nayara dos Santos Silva
+  • IG atual registrada (39s 1d) difere da calculada (9s 5d)
+  • Data agendada no passado: 12/1/2025
+  • IG na data agendada (-36s) difere da pretendida (39s)
+
+ID 2461 - Amanda couto melo
+  • IG atual registrada (36s 3d) difere da calculada (36s 5d)
+
+ID 2493 - Luana Eloisa Santos Moura da Silva
+  • IG atual registrada (31s 0d) difere da calculada (31s 3d)
+  • IG pretendida (32s) fora do protocolo Gemelaridade (36-37s)
+  • IG na data agendada (40s) difere da pretendida (32s)
+
+ID 2488 - Leidiana Lira da Silva
+  • IG atual registrada (35s 3d) difere da calculada (36s 1d)
+  • IG pretendida (37s) fora do protocolo Diabetes Gestacional (38-39s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2480 - Bianca pereira lins ribeiro
+  • IG pretendida (40s) fora do protocolo Diabetes Gestacional (38-39s)
+  • Data agendada no passado: 12/1/2025
+  • IG na data agendada (-7s) difere da pretendida (40s)
+
+ID 2464 - Carina Viana Gomes
+  • IG atual registrada (35s 0d) difere da calculada (35s 3d)
+  • IG pretendida (37s) fora do protocolo Baixo Risco (39-40s)
+  • IG na data agendada (40s) difere da pretendida (37s)
+
+ID 2473 - BEATRIZ
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2475 - INGRID
+  • Data agendada no passado: 20/11/2025
+
+ID 2477 - MARIA CAROLINA
+  • Data agendada no passado: 21/11/2025
+
+ID 2478 - DEBORA
+  • IG atual registrada (35s 3d) difere da calculada (18s 3d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (23s) difere da pretendida (40s)
+
+ID 2479 - APARECIDA
+  • IG atual registrada (40s 3d) difere da calculada (10s 6d)
+  • Data agendada no passado: 15/11/2025
+  • IG na data agendada (9s) difere da pretendida (39s)
+
+ID 2481 - Samantha
+  • IG atual registrada (34s 6d) difere da calculada (17s 6d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (23s) difere da pretendida (40s)
+
+ID 2483 - MAIRA
+  • IG atual registrada (36s 4d) difere da calculada (23s 6d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (27s) difere da pretendida (40s)
+
+ID 2485 - JOYCE
+  • IG atual registrada (36s 2d) difere da calculada (32s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (35s) difere da pretendida (40s)
+
+ID 2486 - MARIA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2489 - KAMILLY
+  • IG atual registrada (35s 4d) difere da calculada (52s 1d)
+  • IG na data agendada (55s) difere da pretendida (39s)
+
+ID 2491 - PRISCILA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2492 - ALINE
+  • Data agendada no passado: 13/11/2025
+
+ID 2494 - CAMILA
+  • IG atual registrada (35s 3d) difere da calculada (52s 0d)
+  • IG na data agendada (55s) difere da pretendida (39s)
+
+ID 2496 - PATRICIA
+  • IG atual registrada (39s 4d) difere da calculada (27s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (27s) difere da pretendida (40s)
+
+ID 2497 - FERNANDA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2498 - LUANA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2499 - ADRIELLE
+  • IG atual registrada (36s 3d) difere da calculada (32s 1d)
+  • IG na data agendada (34s) difere da pretendida (39s)
+
+ID 2500 - PAMELLA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2501 - FLAVIA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2502 - LUANA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2503 - GISLENE
+  • IG atual registrada (39s 0d) difere da calculada (9s 3d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (10s) difere da pretendida (40s)
+
+ID 2504 - RAFAELA
+  • IG atual registrada (35s 3d) difere da calculada (18s 3d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (23s) difere da pretendida (40s)
+
+ID 2507 - ELAINE
+  • IG atual registrada (36s 3d) difere da calculada (23s 5d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2510 - CAMILA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2512 - NATALIA
+  • IG atual registrada (37s 5d) difere da calculada (29s 2d)
+  • IG na data agendada (30s) difere da pretendida (39s)
+
+ID 2513 - BIANCA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2515 - ANDREIA
+  • IG atual registrada (37s 0d) difere da calculada (24s 2d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2516 - NAYARA
+  • IG atual registrada (37s 5d) difere da calculada (29s 2d)
+  • IG na data agendada (30s) difere da pretendida (39s)
+
+ID 2517 - GRAZIELA
+  • IG atual registrada (36s 2d) difere da calculada (32s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (35s) difere da pretendida (40s)
+
+ID 2518 - MARIANA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2519 - THAINA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2523 - ADRIELE
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2526 - JULIANA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2527 - MARIA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2529 - ALESSANDRA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2530 - MARIA
+  • IG atual registrada (38s 6d) difere da calculada (9s 2d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (10s) difere da pretendida (40s)
+
+ID 2531 - CAMILLA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2532 - JESSICA
+  • IG atual registrada (39s 4d) difere da calculada (27s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (27s) difere da pretendida (40s)
+
+ID 2533 - SIMONE
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2534 - FABIANA
+  • IG atual registrada (39s 4d) difere da calculada (47s 5d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (48s) difere da pretendida (40s)
+
+ID 2535 - CINTIA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2536 - SAMANTA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2537 - MARCELA
+  • IG atual registrada (39s 4d) difere da calculada (27s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (27s) difere da pretendida (40s)
+
+ID 2538 - GIOVANA
+  • IG atual registrada (36s 2d) difere da calculada (32s 0d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (35s) difere da pretendida (40s)
+
+ID 2539 - ROBERTA
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2540 - TATIANE
+  • IG atual registrada (36s 2d) difere da calculada (27s 6d)
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+  • IG na data agendada (31s) difere da pretendida (40s)
+
+ID 2542 - ALINE
+  • IG pretendida (40s) fora do protocolo Cesárea Iterativa (39-39s)
+
+ID 2543 - LARISSA
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
+
+ID 2544 - JAQUELINE
+  • IG atual registrada (37s 5d) difere da calculada (25s 0d)
+  • IG na data agendada (26s) difere da pretendida (39s)
