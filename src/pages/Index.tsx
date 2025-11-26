@@ -3,7 +3,7 @@ import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle, FileText } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -1469,6 +1469,10 @@ const Index = () => {
                   {(isAdmin() || isAdminMed()) && <DropdownMenuItem onClick={() => navigate("/agendamentos-rejeitados")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                       <XCircle className="h-4 w-4 mr-2 text-destructive" />
                       <span>Agendamentos Rejeitados</span>
+                    </DropdownMenuItem>}
+                  {(isAdmin() || isAdminMed()) && <DropdownMenuItem onClick={() => navigate("/importar-agendamentos-html")} className="cursor-pointer hover:bg-accent focus:bg-accent">
+                      <FileText className="h-4 w-4 mr-2 text-primary" />
+                      <span>Importar HTML</span>
                     </DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem onClick={() => navigate("/guia-sistema")} className="cursor-pointer hover:bg-accent focus:bg-accent">
