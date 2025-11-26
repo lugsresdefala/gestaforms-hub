@@ -180,7 +180,7 @@ const ExportarPacientesPorMaternidade = ({
       setOpen(false);
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-      toast.error('Erro ao exportar: ' + errorMessage);
+      toast.error(`Erro ao exportar: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -465,7 +465,7 @@ const ExportarPacientesPorMaternidade = ({
           <div className="rounded-lg bg-muted p-4 text-sm">
             <p className="font-medium mb-2">O relatório irá conter:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Uma aba &quot;Resumo Geral&quot; com totais por maternidade</li>
+              <li>Uma aba "Resumo Geral" com totais por maternidade</li>
               <li>Uma aba separada para cada maternidade</li>
               <li>Dados organizados por data de agendamento</li>
               <li>Formatação profissional com cores corporativas</li>

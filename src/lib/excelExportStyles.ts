@@ -3,6 +3,8 @@
  * Used by ExportarPacientesPorMaternidade component
  */
 
+import { format, parseISO, isValid } from 'date-fns';
+
 // Corporate color scheme (Hapvida NotreDame)
 export const EXCEL_COLORS = {
   headerBg: '003366',      // Dark Blue
@@ -227,54 +229,40 @@ export const SUMMARY_COLUMNS = [
 ];
 
 /**
- * Format a date string to DD/MM/YYYY format
+ * Format a date string to DD/MM/YYYY format using date-fns
  */
 export function formatDateBR(dateString: string | null | undefined): string {
   if (!dateString) return '';
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+    const date = parseISO(dateString);
+    if (!isValid(date)) return '';
+    return format(date, 'dd/MM/yyyy');
   } catch {
     return '';
   }
 }
 
 /**
- * Format datetime to DD/MM/YYYY HH:mm format
+ * Format datetime to DD/MM/YYYY HH:mm format using date-fns
  */
 export function formatDateTimeBR(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
+  return format(date, 'dd/MM/yyyy HH:mm');
 }
 
 /**
- * Generate filename with timestamp
+ * Generate filename with timestamp using date-fns
  */
 export function generateFilename(): string {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  return `Relatorio_Pacientes_${year}-${month}-${day}_${hours}${minutes}${seconds}.xlsx`;
+  return `Relatorio_Pacientes_${format(now, 'yyyy-MM-dd')}_${format(now, 'HHmmss')}.xlsx`;
 }
 
 /**
  * Sanitize sheet name for Excel (max 31 chars, no special chars)
  */
 export function sanitizeSheetName(name: string): string {
-  // Remove invalid characters for Excel sheet names
-  let sanitized = name.replace(/[\\/:*?[\]]/g, '');
+  // Remove invalid characters for Excel sheet names: \ / : * ? [ ]
+  let sanitized = name.replace(/[\\/:\*\?\[\]]/g, '');
   // Limit to 31 characters (Excel limit)
   if (sanitized.length > 31) {
     sanitized = sanitized.substring(0, 31);
