@@ -2,7 +2,14 @@
 
 import streamlit as st
 from typing import Optional
-from utils.auth import hash_password, verify_password
+
+try:
+    from utils.auth import hash_password, verify_password
+    AUTH_UTILS_AVAILABLE = True
+except ImportError:
+    AUTH_UTILS_AVAILABLE = False
+    hash_password = None
+    verify_password = None
 
 try:
     from database import SessionLocal
@@ -13,18 +20,35 @@ except ImportError:
     User = None
 
 
+def _validate_password(password: str) -> bool:
+    """Validate password meets minimum requirements.
+    
+    Args:
+        password: Password to validate
+        
+    Returns:
+        True if password meets requirements, False otherwise
+    """
+    if not password or len(password) < 8:
+        return False
+    return True
+
+
 def register_user(email: str, password: str, plan: str = "free") -> Optional[object]:
     """Register a new user with email and password.
     
     Args:
         email: User's email address
-        password: User's password (will be hashed)
+        password: User's password (will be hashed, must be at least 8 characters)
         plan: Subscription plan (default: "free")
         
     Returns:
         User object if successful, None otherwise
     """
-    if not DATABASE_AVAILABLE:
+    if not DATABASE_AVAILABLE or not AUTH_UTILS_AVAILABLE:
+        return None
+    
+    if not _validate_password(password):
         return None
         
     db = SessionLocal()
@@ -55,7 +79,7 @@ def login_user(email: str, password: str) -> Optional[object]:
     Returns:
         User object if authentication successful, None otherwise
     """
-    if not DATABASE_AVAILABLE:
+    if not DATABASE_AVAILABLE or not AUTH_UTILS_AVAILABLE:
         return None
         
     db = SessionLocal()
