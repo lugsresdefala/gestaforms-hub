@@ -40,6 +40,7 @@ interface PacienteComparacao {
   status_html: string;
   status_banco: string;
   identico: boolean;
+  diferencas: string[]; // Lista de campos diferentes
 }
 
 export default function ImportarAgendamentosHTML() {
