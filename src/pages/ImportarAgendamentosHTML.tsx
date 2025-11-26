@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { FileText, Database, RefreshCw, Upload } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +29,19 @@ interface HTMLRecord {
   status: string;
 }
 
+interface PacienteComparacao {
+  carteirinha: string;
+  nome_html: string;
+  nome_banco: string;
+  maternidade_html: string;
+  maternidade_banco: string;
+  data_html: string;
+  data_banco: string;
+  status_html: string;
+  status_banco: string;
+  identico: boolean;
+}
+
 export default function ImportarAgendamentosHTML() {
   const [processando, setProcessando] = useState(false);
   const [dadosHTML, setDadosHTML] = useState<HTMLRecord[]>([]);
@@ -37,6 +51,7 @@ export default function ImportarAgendamentosHTML() {
     atualizados: number;
   } | null>(null);
   const [progresso, setProgresso] = useState(0);
+  const [detalhesExistentes, setDetalhesExistentes] = useState<PacienteComparacao[]>([]);
 
   const extrairDadosHTML = async () => {
     setProcessando(true);
@@ -122,28 +137,58 @@ export default function ImportarAgendamentosHTML() {
       // Buscar todos os registros do banco
       const { data: registrosBanco, error } = await supabase
         .from('agendamentos_obst')
-        .select('carteirinha, nome_completo');
+        .select('carteirinha, nome_completo, maternidade, data_agendamento_calculada, status');
 
       if (error) throw error;
 
-      const carteirinhasBanco = new Set(
-        (registrosBanco || []).map(r => r.carteirinha.toLowerCase().trim())
+      const carteirinhasBanco = new Map(
+        (registrosBanco || []).map(r => [r.carteirinha.toLowerCase().trim(), r])
       );
 
       let novos = 0;
       let existentes = 0;
+      const detalhes: PacienteComparacao[] = [];
 
       dadosHTML.forEach(registro => {
         const carteirinhaNorm = registro.carteirinha.toLowerCase().trim();
-        if (carteirinhasBanco.has(carteirinhaNorm)) {
+        const registroBanco = carteirinhasBanco.get(carteirinhaNorm);
+        
+        if (registroBanco) {
           existentes++;
+          
+          // Comparar dados
+          const nomeIgual = registroBanco.nome_completo.toLowerCase().trim() === 
+                           registro.nome_completo.toLowerCase().trim();
+          const maternidadeIgual = registroBanco.maternidade === registro.maternidade;
+          const dataHTML = parseDataBR(registro.data_agendada);
+          const dataIgual = registroBanco.data_agendamento_calculada === dataHTML;
+          const statusHTML = registro.status === 'realizado' ? 'realizado' : 'aprovado';
+          const statusIgual = registroBanco.status === statusHTML;
+          
+          detalhes.push({
+            carteirinha: registro.carteirinha,
+            nome_html: registro.nome_completo,
+            nome_banco: registroBanco.nome_completo,
+            maternidade_html: registro.maternidade,
+            maternidade_banco: registroBanco.maternidade,
+            data_html: registro.data_agendada,
+            data_banco: registroBanco.data_agendamento_calculada || 'N/A',
+            status_html: statusHTML,
+            status_banco: registroBanco.status,
+            identico: nomeIgual && maternidadeIgual && dataIgual && statusIgual
+          });
         } else {
           novos++;
         }
       });
 
       setComparacao({ novos, existentes, atualizados: 0 });
-      toast.success('Comparação concluída');
+      setDetalhesExistentes(detalhes);
+      
+      const identicos = detalhes.filter(d => d.identico).length;
+      const diferentes = detalhes.filter(d => !d.identico).length;
+      
+      toast.success(`Comparação concluída: ${identicos} idênticos, ${diferentes} diferentes`);
     } catch (error) {
       console.error('Erro ao comparar:', error);
       toast.error('Erro ao comparar com banco de dados');
@@ -202,6 +247,14 @@ export default function ImportarAgendamentosHTML() {
         // Extrair procedimentos como array
         const procedimentos = [registro.procedimentos];
 
+        // Mapear status corretamente - apenas "pendente", "aprovado", "realizado", "rejeitado"
+        let statusMapeado = 'aprovado'; // padrão
+        if (registro.status === 'realizado') {
+          statusMapeado = 'realizado';
+        } else if (registro.status === 'agendado') {
+          statusMapeado = 'aprovado'; // agendado = aprovado
+        }
+
         try {
           const { error } = await supabase
             .from('agendamentos_obst')
@@ -214,9 +267,9 @@ export default function ImportarAgendamentosHTML() {
               numero_partos_cesareas: paridade.cesareas,
               numero_partos_normais: paridade.normais,
               numero_abortos: paridade.abortos,
-              dum_status: 'Sim - Confiavel',
+              dum_status: dataDum ? 'Sim - Confiavel' : 'Não sabe',
               data_dum: dataDum,
-              data_primeiro_usg: dataDum, // Usar DUM como primeira USG
+              data_primeiro_usg: dataDum || '2025-01-01', // Fallback se DUM for null
               semanas_usg: 0,
               dias_usg: 0,
               usg_recente: 'Sim',
@@ -236,7 +289,7 @@ export default function ImportarAgendamentosHTML() {
               centro_clinico: 'Importado',
               email_paciente: 'nao-informado@example.com',
               data_agendamento_calculada: dataAgendada,
-              status: registro.status === 'realizado' ? 'realizado' : 'agendado'
+              status: statusMapeado
             });
 
           if (error) {
@@ -360,6 +413,100 @@ export default function ImportarAgendamentosHTML() {
                 </div>
               </AlertDescription>
             </Alert>
+          )}
+
+          {detalhesExistentes.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Detalhes dos Registros Existentes</CardTitle>
+                <CardDescription>
+                  Comparação entre dados do HTML e banco de dados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border rounded-lg overflow-auto max-h-[600px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">Carteirinha</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Maternidade</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-center">Idêntico?</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {detalhesExistentes.map((detalhe, index) => (
+                        <TableRow key={index} className={detalhe.identico ? 'bg-green-50' : 'bg-amber-50'}>
+                          <TableCell className="font-mono text-xs">
+                            {detalhe.carteirinha}
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className={detalhe.nome_html === detalhe.nome_banco ? 'text-sm' : 'text-sm text-amber-700'}>
+                                HTML: {detalhe.nome_html}
+                              </div>
+                              {detalhe.nome_html !== detalhe.nome_banco && (
+                                <div className="text-sm text-muted-foreground">
+                                  Banco: {detalhe.nome_banco}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className={detalhe.maternidade_html === detalhe.maternidade_banco ? 'text-sm' : 'text-sm text-amber-700'}>
+                                {detalhe.maternidade_html}
+                              </div>
+                              {detalhe.maternidade_html !== detalhe.maternidade_banco && (
+                                <div className="text-xs text-muted-foreground">
+                                  Banco: {detalhe.maternidade_banco}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="text-sm">{detalhe.data_html}</div>
+                              {detalhe.data_html !== detalhe.data_banco && (
+                                <div className="text-xs text-muted-foreground">
+                                  Banco: {detalhe.data_banco}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <Badge variant={detalhe.status_html === 'realizado' ? 'default' : 'outline'}>
+                                {detalhe.status_html}
+                              </Badge>
+                              {detalhe.status_html !== detalhe.status_banco && (
+                                <div className="text-xs text-muted-foreground">
+                                  Banco: {detalhe.status_banco}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {detalhe.identico ? (
+                              <Badge variant="default" className="bg-green-600">✓ Sim</Badge>
+                            ) : (
+                              <Badge variant="destructive">✗ Não</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Total: {detalhesExistentes.length} registros existentes • 
+                  {' '}{detalhesExistentes.filter(d => d.identico).length} idênticos • 
+                  {' '}{detalhesExistentes.filter(d => !d.identico).length} diferentes
+                </div>
+              </CardContent>
+            </Card>
           )}
         </CardContent>
       </Card>
