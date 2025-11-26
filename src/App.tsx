@@ -433,7 +433,7 @@ const App = () => (
             <Route 
               path="/importar-agendamentos-html" 
               element={
-                <ProtectedRoute requireAdmin>
+                <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <ImportarAgendamentosHTML />
                   </AppLayout>
