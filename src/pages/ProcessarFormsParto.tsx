@@ -310,6 +310,11 @@ export default function ProcessarFormsParto() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Processar Forms de Parto</CardTitle>
+          <CardDescription>Importe e processe arquivos CSV de agendamentos</CardDescription>
+        </CardHeader>
         <CardContent className="space-y-6">
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -373,17 +378,7 @@ export default function ProcessarFormsParto() {
                 </Button>
               )}
             </div>
-          </div>Description>
-          </Alert>
-
-          <Button
-            onClick={processarRegistros}
-            disabled={processing}
-            className="w-full"
-            size="lg"
-          >
-            {processing ? "Processando..." : "Processar Arquivo"}
-          </Button>
+          </div>
 
           {processing && (
             <div className="space-y-2">
