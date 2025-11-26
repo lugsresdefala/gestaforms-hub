@@ -3,7 +3,7 @@ import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle, FileText } from "lucide-react";
+import { Loader2, Plus, Calendar, Building2, Activity, Stethoscope, Baby, Filter, CheckCircle, Clock, XCircle, AlertCircle, ArrowUpRight, Menu, Info, LogOut, Download, HelpCircle, FileText, FileSpreadsheet } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import TutorialInterativo from "@/components/TutorialInterativo";
 import ExportarRelatorios from "@/components/ExportarRelatorios";
+import ExportarPacientesPorMaternidade from "@/components/ExportarPacientesPorMaternidade";
 
 // ==========================================
 // TYPE DEFINITIONS
@@ -1465,6 +1466,10 @@ const Index = () => {
                   {(isAdmin() || isAdminMed()) && <ExportarRelatorios trigger={<div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
                           <Download className="h-4 w-4 mr-2 text-primary" />
                           <span>Exportar Relatórios</span>
+                        </div>} />}
+                  {(isAdmin() || isAdminMed()) && <ExportarPacientesPorMaternidade trigger={<div className="relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent">
+                          <FileSpreadsheet className="h-4 w-4 mr-2 text-primary" />
+                          <span>Exportar por Maternidade</span>
                         </div>} />}
                   {(isAdmin() || isAdminMed()) && <DropdownMenuItem onClick={() => navigate("/agendamentos-rejeitados")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                       <XCircle className="h-4 w-4 mr-2 text-destructive" />
