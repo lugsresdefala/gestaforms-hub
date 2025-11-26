@@ -47,6 +47,7 @@ import ImportarPacientesPendentes from "./pages/ImportarPacientesPendentes";
 import Protocolos from "./pages/Protocolos";
 import Contato from "./pages/Contato";
 import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
+import ImportarAgendamentosHTML from "./pages/ImportarAgendamentosHTML";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -425,6 +426,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Contato />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-agendamentos-html" 
+              element={
+                <ProtectedRoute requireAdmin>
+                  <AppLayout>
+                    <ImportarAgendamentosHTML />
                   </AppLayout>
                 </ProtectedRoute>
               } 
