@@ -100,6 +100,11 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     icon: Shield,
     show: isAdmin
   }, {
+    title: "Auditoria Importações",
+    url: "/auditoria-importacoes",
+    icon: FileCheck,
+    show: isAdmin || isAdminMed
+  }, {
     title: "Comparar Pacientes",
     url: "/comparar-pacientes",
     icon: FileCheck,
