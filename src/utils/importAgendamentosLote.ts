@@ -273,8 +273,12 @@ export async function importarAgendamentosLote(
         numero_partos_cesareas: parseInt(numeroCesareas) || 0,
         numero_abortos: parseInt(numeroAbortos) || 0,
         procedimentos: dadosCalculo.procedimentos,
-        diagnosticos_maternos: diagnosticosMaternos || 'Não informado',
-        diagnosticos_fetais: diagnosticosFetais || undefined,
+        diagnosticos_maternos: diagnosticosMaternos 
+          ? diagnosticosMaternos.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+          : [],
+        diagnosticos_fetais: diagnosticosFetais 
+          ? diagnosticosFetais.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+          : [],
         diagnostico_livre: diagnosticoLivre || undefined,
         placenta_previa: dadosCalculo.placentaPrevia,
         indicacao_procedimento: indicacaoProcedimento,

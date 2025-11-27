@@ -163,9 +163,13 @@ const NovoAgendamento = () => {
         ig_pretendida: `${igNoAgendamentoTexto} (${values.igPretendida})`,
         indicacao_procedimento: values.indicacaoProcedimento,
         medicacao: values.medicacao || null,
-        diagnosticos_maternos: JSON.stringify(values.diagnosticosMaternos) || null,
+        diagnosticos_maternos: values.diagnosticosMaternos.length > 0 
+          ? values.diagnosticosMaternos 
+          : [],
         placenta_previa: values.placentaPrevia || null,
-        diagnosticos_fetais: JSON.stringify(values.diagnosticosFetais) || null,
+        diagnosticos_fetais: values.diagnosticosFetais.length > 0 
+          ? values.diagnosticosFetais 
+          : [],
         diagnosticos_fetais_outros: values.diagnosticosFetaisOutros || null,
         historia_obstetrica: values.historiaObstetrica || null,
         necessidade_uti_materna: values.necessidadeUtiMaterna,
