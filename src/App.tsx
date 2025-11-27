@@ -49,6 +49,7 @@ import Contato from "./pages/Contato";
 import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
 import ImportarAgendamentosHTML from "./pages/ImportarAgendamentosHTML";
 import ImportarPacientes from "./pages/ImportarPacientes";
+import AuditoriaImportacoes from "./pages/AuditoriaImportacoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -407,6 +408,16 @@ const App = () => (
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <LogsAuditoria />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/auditoria-importacoes" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <AuditoriaImportacoes />
                   </AppLayout>
                 </ProtectedRoute>
               } 
