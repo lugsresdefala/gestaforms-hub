@@ -106,8 +106,7 @@ const formRecordSchema = z.object({
   email_paciente: z.string()
     .trim()
     .max(255, "Email muito longo")
-    .optional()
-    .or(z.literal('')),
+    .optional(),
   data_agendada: z.string().trim()
 });
 

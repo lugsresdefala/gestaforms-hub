@@ -269,9 +269,20 @@ export default function ImportarAgendamentosHTML() {
     return { gestacoes: 1, cesareas: 0, normais: 0, abortos: 0 };
   };
 
+  // Constante para idade padrão quando não disponível
+  const DEFAULT_AGE = 25;
+  const MIN_AGE = 12;
+  const MAX_AGE = 65;
+
   // Calcular data de nascimento aproximada a partir da idade
   const calcularDataNascimento = (idade: string): string => {
-    const idadeNum = parseInt(idade) || 25;
+    let idadeNum = parseInt(idade);
+    
+    // Validar idade dentro de faixa razoável (12-65 anos)
+    if (isNaN(idadeNum) || idadeNum < MIN_AGE || idadeNum > MAX_AGE) {
+      idadeNum = DEFAULT_AGE;
+    }
+    
     const anoNascimento = new Date().getFullYear() - idadeNum;
     return `${anoNascimento}-01-01`;
   };
