@@ -305,7 +305,6 @@ export const processSalvalusRow = async (row: SalvalusRow) => {
     necessidade_reserva_sangue: 'Não',
     medico_responsavel: 'Importado - Salvalus 2025',
     centro_clinico: 'Salvalus',
-    email_paciente: 'nao-informado@example.com',
     status: 'aprovado',
     created_by: '00000000-0000-0000-0000-000000000000'
   };

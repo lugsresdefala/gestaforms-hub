@@ -288,7 +288,6 @@ export default function ImportarSQL() {
             necessidade_reserva_sangue: 'Não',
             medico_responsavel: 'Importado do SQL',
             centro_clinico: 'Importado',
-            email_paciente: 'nao-informado@example.com',
             status: 'aprovado',
             created_by: user.id
           };

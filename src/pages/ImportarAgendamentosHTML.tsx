@@ -73,7 +73,9 @@ export default function ImportarAgendamentosHTML() {
       console.log('Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        toast.error('❌ Arquivo HTML não encontrado! Verifique se está em /public/agendamentos_final_pro.html');
+        console.error('❌ Arquivo HTML não encontrado. Status:', response.status);
+        return;
       }
       
       const html = await response.text();
@@ -267,6 +269,13 @@ export default function ImportarAgendamentosHTML() {
     return { gestacoes: 1, cesareas: 0, normais: 0, abortos: 0 };
   };
 
+  // Calcular data de nascimento aproximada a partir da idade
+  const calcularDataNascimento = (idade: string): string => {
+    const idadeNum = parseInt(idade) || 25;
+    const anoNascimento = new Date().getFullYear() - idadeNum;
+    return `${anoNascimento}-01-01`;
+  };
+
   const corrigirDatasExistentes = async () => {
     if (!confirm('Deseja corrigir todas as datas no formato DD/MM/YYYY para o formato ISO (YYYY-MM-DD)?')) {
       return;
@@ -346,12 +355,37 @@ export default function ImportarAgendamentosHTML() {
       let importados = 0;
       let atualizados = 0;
       let erros = 0;
+      let pulados = 0;
+      const errosDetalhados: Array<{ paciente: string; carteirinha: string; erro: string; code?: string }> = [];
 
       for (let i = 0; i < dadosHTML.length; i++) {
         const registro = dadosHTML[i];
         const paridade = parseParidade(registro.paridade);
         const dataDum = parseDataBR(registro.data_dum);
         const dataAgendada = parseDataBR(registro.data_agendada);
+
+        // Validar dados críticos antes de inserir
+        if (!dataAgendada) {
+          console.error(`⚠️ Data inválida para ${registro.nome_completo}: ${registro.data_agendada}`);
+          errosDetalhados.push({
+            paciente: registro.nome_completo,
+            carteirinha: registro.carteirinha,
+            erro: `Data inválida: ${registro.data_agendada}`
+          });
+          pulados++;
+          continue;
+        }
+
+        if (!registro.carteirinha || registro.carteirinha === 'SEM-CARTEIRINHA') {
+          console.error(`⚠️ Carteirinha inválida para ${registro.nome_completo}`);
+          errosDetalhados.push({
+            paciente: registro.nome_completo,
+            carteirinha: registro.carteirinha,
+            erro: 'Carteirinha inválida ou ausente'
+          });
+          pulados++;
+          continue;
+        }
 
         // Log detalhado para debug
         console.log(`Processando [${i + 1}/${dadosHTML.length}]: ${registro.nome_completo}, Carteirinha: ${registro.carteirinha}, Data: ${registro.data_agendada} -> ${dataAgendada}`);
@@ -369,7 +403,7 @@ export default function ImportarAgendamentosHTML() {
           carteirinha: registro.carteirinha,
           nome_completo: registro.nome_completo,
           telefones: registro.telefones,
-          data_nascimento: '2000-01-01',
+          data_nascimento: calcularDataNascimento(registro.idade),
           numero_gestacoes: paridade.gestacoes,
           numero_partos_cesareas: paridade.cesareas,
           numero_partos_normais: paridade.normais,
@@ -394,7 +428,6 @@ export default function ImportarAgendamentosHTML() {
           maternidade: registro.maternidade,
           medico_responsavel: 'Importado do HTML',
           centro_clinico: 'Importado',
-          email_paciente: 'nao-informado@example.com',
           data_agendamento_calculada: dataAgendada,
           status: statusMapeado,
           created_by: user.id
@@ -402,46 +435,94 @@ export default function ImportarAgendamentosHTML() {
 
         try {
           // Verificar se existe
-          const { data: existente } = await supabase
+          const { data: existente, error: selectError } = await supabase
             .from('agendamentos_obst')
             .select('id')
             .eq('carteirinha', registro.carteirinha)
             .maybeSingle();
 
+          if (selectError) {
+            console.error('❌ ERRO AO BUSCAR:', {
+              paciente: registro.nome_completo,
+              carteirinha: registro.carteirinha,
+              erro: selectError.message,
+              code: selectError.code,
+              details: selectError.details
+            });
+            errosDetalhados.push({
+              paciente: registro.nome_completo,
+              carteirinha: registro.carteirinha,
+              erro: selectError.message,
+              code: selectError.code
+            });
+            erros++;
+            continue;
+          }
+
           if (existente) {
             // Atualizar registro existente (não atualiza created_by)
             const { created_by: _, ...dadosAtualizacao } = dadosAgendamento;
-            const { error } = await supabase
+            const { error, data } = await supabase
               .from('agendamentos_obst')
               .update(dadosAtualizacao)
-              .eq('id', existente.id);
+              .eq('id', existente.id)
+              .select('id');
 
             if (error) {
-              console.error('❌ ERRO AO ATUALIZAR:', registro.nome_completo, error);
-              console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+              console.error('❌ ERRO DETALHADO:', {
+                paciente: registro.nome_completo,
+                carteirinha: registro.carteirinha,
+                erro: error.message,
+                code: error.code,
+                details: error.details
+              });
+              errosDetalhados.push({
+                paciente: registro.nome_completo,
+                carteirinha: registro.carteirinha,
+                erro: error.message,
+                code: error.code
+              });
               erros++;
             } else {
-              console.log(`✅ Atualizado: ${registro.nome_completo}`);
+              console.log(`✅ Atualizado: ${registro.nome_completo} (ID: ${data?.[0]?.id || existente.id})`);
               atualizados++;
             }
           } else {
             // Inserir novo registro
-            const { error } = await supabase
+            const { error, data } = await supabase
               .from('agendamentos_obst')
-              .insert(dadosAgendamento);
+              .insert(dadosAgendamento)
+              .select('id');
 
             if (error) {
-              console.error('❌ ERRO AO INSERIR:', registro.nome_completo, error);
-              console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+              console.error('❌ ERRO DETALHADO:', {
+                paciente: registro.nome_completo,
+                carteirinha: registro.carteirinha,
+                erro: error.message,
+                code: error.code,
+                details: error.details,
+                hint: error.hint
+              });
               console.error('Dados do agendamento:', JSON.stringify(dadosAgendamento, null, 2));
+              errosDetalhados.push({
+                paciente: registro.nome_completo,
+                carteirinha: registro.carteirinha,
+                erro: error.message,
+                code: error.code
+              });
               erros++;
             } else {
-              console.log(`✅ Inserido: ${registro.nome_completo}`);
+              console.log(`✅ Inserido: ${registro.nome_completo} (ID: ${data?.[0]?.id || 'N/A'})`);
               importados++;
             }
           }
         } catch (err) {
-          console.error('Erro ao processar:', registro.nome_completo, err);
+          console.error('Erro inesperado ao processar:', registro.nome_completo, err);
+          errosDetalhados.push({
+            paciente: registro.nome_completo,
+            carteirinha: registro.carteirinha,
+            erro: String(err)
+          });
           erros++;
         }
 
@@ -453,12 +534,30 @@ export default function ImportarAgendamentosHTML() {
       console.log('📊 RESUMO DA IMPORTAÇÃO:');
       console.log(`✅ Inseridos no banco: ${importados}`);
       console.log(`🔄 Atualizados no banco: ${atualizados}`);
+      console.log(`⏭️ Pulados (dados inválidos): ${pulados}`);
       console.log(`❌ Erros (não salvos): ${erros}`);
       console.log(`📈 Total processado: ${dadosHTML.length}`);
       console.log('='.repeat(60));
 
+      // Log de erros detalhados
+      if (errosDetalhados.length > 0) {
+        console.log('❌ ERROS DETALHADOS:');
+        console.table(errosDetalhados);
+      }
+
       // Verificar IMEDIATAMENTE se os dados foram realmente salvos
       console.log('🔍 Verificando dados no banco...');
+      const { data: verificacao, error: verificacaoError } = await supabase
+        .from('agendamentos_obst')
+        .select('id, carteirinha')
+        .in('carteirinha', dadosHTML.map(r => r.carteirinha));
+
+      if (verificacaoError) {
+        console.error('❌ Erro ao verificar registros:', verificacaoError);
+      } else {
+        console.log(`✅ Verificação: ${verificacao?.length || 0} registros encontrados no banco`);
+      }
+
       const { count: countTotal, error: countError } = await supabase
         .from('agendamentos_obst')
         .select('*', { count: 'exact', head: true });
@@ -469,38 +568,33 @@ export default function ImportarAgendamentosHTML() {
         console.log(`📊 TOTAL DE REGISTROS NO BANCO: ${countTotal}`);
       }
 
-      toast.success(`${importados} novos, ${atualizados} atualizados, ${erros} erros`);
+      // Mostrar toast baseado em resultados reais
+      if (importados === 0 && atualizados === 0) {
+        toast.error(`❌ Importação falhou! ${erros} erros, ${pulados} pulados. Verifique o console (F12).`);
+      } else if (erros > 0 || pulados > 0) {
+        toast.warning(`⚠️ Importação parcial: ${importados} novos, ${atualizados} atualizados, ${erros} erros, ${pulados} pulados`);
+      } else {
+        toast.success(`✅ Sucesso! ${importados} novos, ${atualizados} atualizados`);
+      }
+
       setComparacao(prev => prev ? { ...prev, atualizados: importados + atualizados } : null);
 
-      // Atualizar dashboard MÚLTIPLAS VEZES para garantir sincronização
+      // Atualizar dashboard
       console.log('🔄 Iniciando atualização do dashboard...');
       try {
-        // Primeira atualização imediata
         await refreshAgendamentos();
-        console.log('✅ Primeira atualização concluída');
+        console.log('✅ Dashboard atualizado');
         
-        // Segunda atualização após 500ms
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await refreshAgendamentos();
-        console.log('✅ Segunda atualização concluída');
-        
-        // Terceira atualização após 1s
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await refreshAgendamentos();
-        console.log('✅ Terceira atualização concluída');
-        
-        toast.info('✅ Dashboard atualizado - recarregue para ver os dados');
+        if (importados > 0 || atualizados > 0) {
+          toast.info('✅ Dashboard atualizado - recarregue para ver os dados');
+        }
       } catch (refreshError) {
         console.error('❌ Erro ao atualizar dashboard:', refreshError);
         toast.warning('⚠️ Recarregue a página para ver os dados atualizados');
       }
-
-      if (erros > 0) {
-        toast.warning(`⚠️ ${erros} registros com erro - verifique o console`);
-      }
     } catch (error) {
       console.error('Erro geral:', error);
-      toast.error('Erro durante importação');
+      toast.error(`Erro durante importação: ${error}`);
     } finally {
       setProcessando(false);
       setProgresso(0);

@@ -65,7 +65,6 @@ export default function ImportarPacientesPendentes() {
     { nome: 'nome_completo', descricao: 'Nome completo da paciente', exemplo: 'MARIA DA SILVA', obrigatorio: true },
     { nome: 'data_nascimento', descricao: 'Data de nascimento (DD/MM/YYYY)', exemplo: '15/03/1990', obrigatorio: true },
     { nome: 'telefones', descricao: 'Telefones de contato (separados por espaço)', exemplo: '11 98888-7777 11 97777-6666', obrigatorio: true },
-    { nome: 'email_paciente', descricao: 'E-mail da paciente', exemplo: 'paciente@email.com', obrigatorio: true },
     { nome: 'numero_gestacoes', descricao: 'Número total de gestações', exemplo: '3', obrigatorio: true },
     { nome: 'numero_partos_normais', descricao: 'Número de partos normais', exemplo: '1', obrigatorio: true },
     { nome: 'numero_partos_cesareas', descricao: 'Número de cesáreas', exemplo: '1', obrigatorio: true },

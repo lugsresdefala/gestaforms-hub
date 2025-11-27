@@ -105,8 +105,9 @@ const formRecordSchema = z.object({
     .max(200, "Nome do médico muito longo"),
   email_paciente: z.string()
     .trim()
-    .email("Email inválido")
-    .max(255, "Email muito longo"),
+    .max(255, "Email muito longo")
+    .optional()
+    .or(z.literal('')),
   data_agendada: z.string().trim()
 });
 
@@ -369,7 +370,6 @@ export default function ProcessarFormsParto() {
               necessidade_reserva_sangue: normalizeSimNao(record.reserva_sangue),
               maternidade: record.maternidade,
               medico_responsavel: record.medico_responsavel,
-              email_paciente: record.email_paciente,
               data_agendamento_calculada: formatDateISO(dataAgendamento),
               idade_gestacional_calculada: resultado.igFinal.displayText,
               observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}`,

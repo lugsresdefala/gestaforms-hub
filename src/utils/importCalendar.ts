@@ -170,7 +170,6 @@ export const importCalendarToAgendamentos = async (csvContent: string, createdBy
         necessidade_reserva_sangue: 'Não',
         medico_responsavel: 'Importado do calendário',
         centro_clinico: 'Importado',
-        email_paciente: 'nao-informado@example.com',
         status: 'pendente',
         created_by: createdBy
       };

@@ -284,7 +284,6 @@ export const processGuarulhosRow = async (row: GuarulhosRow) => {
     necessidade_reserva_sangue: 'Não',
     medico_responsavel: 'Importado - Guarulhos 2025',
     centro_clinico: 'Guarulhos',
-    email_paciente: 'nao-informado@example.com',
     status: 'aprovado',
     created_by: '00000000-0000-0000-0000-000000000000'
   };

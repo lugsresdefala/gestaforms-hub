@@ -256,7 +256,6 @@ export async function importarAgendamentosLote(
         carteirinha: carteirinha,
         data_nascimento: dataNascParsed.toISOString().split('T')[0],
         telefones: telefones || 'Não informado',
-        email_paciente: emailPaciente || 'nao.informado@email.com',
         maternidade: maternidade,
         centro_clinico: 'Importado em Lote',
         medico_responsavel: medicoResponsavel || 'Médico Importado',

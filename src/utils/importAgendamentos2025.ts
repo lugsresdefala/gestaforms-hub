@@ -286,7 +286,6 @@ export async function importAgendamentosCSV(
         carteirinha: row.carteirinha,
         data_nascimento: dataNascimento.toISOString().split('T')[0],
         telefones: row.telefone || 'Não informado',
-        email_paciente: 'nao.informado@email.com',
         maternidade,
         centro_clinico: 'Importado de CSV',
         medico_responsavel: 'Médico Importado',
