@@ -105,8 +105,8 @@ describe('dateParser module', () => {
       expect(date?.getDate()).toBe(15);
     });
 
-    it('should return null for invalid dates', () => {
-      expect(createValidDate(2024, 1, 30)).toBeNull(); // February 30
+    it('should return null for invalid dates (e.g., Feb 30)', () => {
+      expect(createValidDate(2024, 1, 30)).toBeNull(); // Feb 30 is invalid even in leap year
     });
   });
 

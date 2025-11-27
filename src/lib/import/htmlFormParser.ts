@@ -117,8 +117,7 @@ export function parseHTMLForm(htmlContent: string): HTMLFormData | null {
   // TODO: Implement specific HTML parsing for Forms Parto structure
   // The actual implementation will depend on the HTML structure received
   // from the medical forms system
-  
-  console.warn('parseHTMLForm: Implementação inicial - parsing HTML específico pendente');
+  // For now, return null to indicate parsing is not yet implemented
   return null;
 }
 
@@ -171,7 +170,7 @@ export function processHTMLFormData(formData: HTMLFormData): HTMLFormProcessingR
  * Process multiple HTML forms in batch.
  * 
  * @param htmlContents - Array of HTML form contents
- * @param userId - User ID for audit trail
+ * @param _userId - User ID for audit trail (reserved for future use)
  * @returns Batch processing result
  * 
  * @example
@@ -180,7 +179,7 @@ export function processHTMLFormData(formData: HTMLFormData): HTMLFormProcessingR
  */
 export async function processHTMLFormsBatch(
   htmlContents: string[],
-  userId: string
+  _userId: string
 ): Promise<HTMLFormBatchResult> {
   const results: HTMLFormProcessingResult[] = [];
   let success = 0;

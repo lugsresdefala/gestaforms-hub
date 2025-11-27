@@ -168,12 +168,15 @@ export function sanitizeDateToISO(raw: string | null | undefined): string | null
  * Creates a valid date from year, month (0-indexed), and day.
  * Returns null if the resulting date is invalid.
  * 
- * @param year - Full year (e.g., 2024)
+ * @param year - Full year (e.g., 2024) - must be >= MIN_VALID_YEAR
  * @param month - Month (0-indexed, 0 = January)
  * @param day - Day of month
  * @returns Valid Date or null
  */
 export function createValidDate(year: number, month: number, day: number): Date | null {
+  // Validate year against minimum threshold
+  if (year < MIN_VALID_YEAR) return null;
+  
   const date = new Date(year, month, day);
   
   // Validate if the date is valid
