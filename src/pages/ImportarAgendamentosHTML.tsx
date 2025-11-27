@@ -462,8 +462,13 @@ export default function ImportarAgendamentosHTML() {
 
       // Atualizar dashboard com os novos registros
       console.log('Atualizando dashboard...');
-      await refreshAgendamentos();
-      toast.info('✅ Dashboard atualizado com os novos registros');
+      try {
+        await refreshAgendamentos();
+        toast.info('✅ Dashboard atualizado com os novos registros');
+      } catch (refreshError) {
+        console.error('Erro ao atualizar dashboard:', refreshError);
+        toast.warning('⚠️ Dashboard não atualizado automaticamente - atualize a página manualmente');
+      }
 
       if (erros > 0) {
         toast.warning(`⚠️ ${erros} registros com erro - verifique o console`);
