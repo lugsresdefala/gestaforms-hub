@@ -56,6 +56,11 @@ export default function ImportarAgendamentosHTML() {
   const [detalhesExistentes, setDetalhesExistentes] = useState<PacienteComparacao[]>([]);
   const [datasCorrigidas, setDatasCorrigidas] = useState<number | null>(null);
 
+  // Função auxiliar para obter valor de coluna com fallback
+  const getColumnValue = (colunas: NodeListOf<Element>, index: number, defaultValue: string = ''): string => {
+    return colunas[index]?.textContent?.trim() || defaultValue;
+  };
+
   const extrairDadosHTML = async () => {
     setProcessando(true);
     try {
@@ -81,56 +86,62 @@ export default function ImportarAgendamentosHTML() {
       console.log('Linhas encontradas:', linhas.length);
       
       const registros: HTMLRecord[] = [];
-      const linhasIgnoradas: { index: number; colunas: number; motivo: string }[] = [];
+      const linhasComColunasIncompletas: { index: number; colunas: number }[] = [];
       
       linhas.forEach((linha, index) => {
         const colunas = linha.querySelectorAll('td');
-        if (colunas.length >= 16) {
-          const carteirinhaAttr = colunas[0].getAttribute('data-carteirinha') || '';
-          const carteirinha = carteirinhaAttr.replace('Carteirinha:', '').replace('Carteirinha: ', '').trim();
+        
+        // Aceitar linhas com pelo menos 1 coluna (nome/carteirinha)
+        if (colunas.length >= 1) {
+          const carteirinhaAttr = colunas[0]?.getAttribute('data-carteirinha') || '';
+          const carteirinha = carteirinhaAttr.replace('Carteirinha:', '').replace('Carteirinha: ', '').trim() || 'SEM-CARTEIRINHA';
           const status = linha.getAttribute('data-status') || 'agendado';
+          
+          // Se tem menos de 16 colunas, registrar para log
+          if (colunas.length < 16) {
+            linhasComColunasIncompletas.push({ index: index + 1, colunas: colunas.length });
+            console.log(`ℹ️ Linha ${index + 1} com ${colunas.length} colunas - usando valores padrão para campos faltantes`);
+          }
           
           registros.push({
             carteirinha,
-            nome_completo: colunas[0].textContent?.trim() || '',
-            telefones: colunas[1].textContent?.trim() || '',
-            idade: colunas[2].textContent?.trim() || '',
-            paridade: colunas[3].textContent?.trim() || '',
-            data_dum: colunas[4].textContent?.trim() || '',
-            usg_primeiro: colunas[5].textContent?.trim() || '',
-            ig_atual: colunas[6].textContent?.trim() || '',
-            diagnosticos_maternos: colunas[7].textContent?.trim() || '',
-            diagnosticos_fetais: colunas[8].textContent?.trim() || '',
-            usg_ultimo: colunas[9].textContent?.trim() || '',
-            procedimentos: colunas[10].textContent?.trim() || '',
-            maternidade: colunas[11].textContent?.trim() || '',
-            ig_ideal: colunas[12].textContent?.trim() || '',
-            data_agendada: colunas[13].textContent?.trim() || '',
-            ig_na_data: colunas[14].textContent?.trim() || '',
+            nome_completo: getColumnValue(colunas, 0, 'Nome não informado'),
+            telefones: getColumnValue(colunas, 1, 'Não informado'),
+            idade: getColumnValue(colunas, 2, '0'),
+            paridade: getColumnValue(colunas, 3, 'G1C0N0A0'),
+            data_dum: getColumnValue(colunas, 4, ''),
+            usg_primeiro: getColumnValue(colunas, 5, ''),
+            ig_atual: getColumnValue(colunas, 6, '0 semanas'),
+            diagnosticos_maternos: getColumnValue(colunas, 7, 'Não especificado'),
+            diagnosticos_fetais: getColumnValue(colunas, 8, 'Não especificado'),
+            usg_ultimo: getColumnValue(colunas, 9, 'Não informado'),
+            procedimentos: getColumnValue(colunas, 10, 'Não especificado'),
+            maternidade: getColumnValue(colunas, 11, 'Não definida'),
+            ig_ideal: getColumnValue(colunas, 12, '37-40 semanas'),
+            data_agendada: getColumnValue(colunas, 13, ''),
+            ig_na_data: getColumnValue(colunas, 14, '0 semanas'),
             status: status
           });
         } else {
-          const motivo = `Linha ${index + 1} tem apenas ${colunas.length} colunas (mínimo: 16)`;
-          console.warn(motivo);
-          linhasIgnoradas.push({ index: index + 1, colunas: colunas.length, motivo });
+          console.warn(`⚠️ Linha ${index + 1} completamente vazia - ignorada`);
         }
       });
       
       console.log('Registros extraídos:', registros.length);
-      console.log('Linhas ignoradas:', linhasIgnoradas.length);
+      console.log('Linhas com colunas incompletas:', linhasComColunasIncompletas.length);
       
-      if (linhasIgnoradas.length > 0) {
-        console.table(linhasIgnoradas);
-        toast.warning(`⚠️ ${linhasIgnoradas.length} linhas ignoradas por formato inválido`, {
-          description: `Apenas ${registros.length} de ${linhas.length} linhas foram extraídas. Verifique o console para detalhes.`,
-          duration: 8000
+      if (linhasComColunasIncompletas.length > 0) {
+        console.table(linhasComColunasIncompletas);
+        toast.info(`ℹ️ ${linhasComColunasIncompletas.length} registros com campos faltantes`, {
+          description: `Campos ausentes foram preenchidos com valores padrão. Total: ${registros.length} registros extraídos.`,
+          duration: 6000
         });
       }
       
       setDadosHTML(registros);
       
       if (registros.length > 0) {
-        toast.success(`✅ ${registros.length} registros extraídos (Total HTML: ${linhas.length})`);
+        toast.success(`✅ ${registros.length} registros extraídos de ${linhas.length} linhas HTML`);
       } else {
         toast.error('Nenhum registro encontrado no HTML');
       }
