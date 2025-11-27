@@ -418,12 +418,8 @@ export default function ImportarAgendamentosHTML() {
           ig_pretendida: registro.ig_ideal || '37-40 semanas',
           procedimentos,
           indicacao_procedimento: registro.diagnosticos_maternos,
-          diagnosticos_maternos: registro.diagnosticos_maternos 
-            ? registro.diagnosticos_maternos.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-            : [],
-          diagnosticos_fetais: registro.diagnosticos_fetais 
-            ? registro.diagnosticos_fetais.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-            : [],
+          diagnosticos_maternos: registro.diagnosticos_maternos || '',
+          diagnosticos_fetais: registro.diagnosticos_fetais || '',
           medicacao: 'Não informado',
           placenta_previa: 'Não',
           necessidade_uti_materna: 'Não',

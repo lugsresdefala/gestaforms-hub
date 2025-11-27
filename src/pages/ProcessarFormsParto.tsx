@@ -343,7 +343,7 @@ export default function ProcessarFormsParto() {
           // Inserir agendamento
           const { error: insertError } = await supabase
             .from('agendamentos_obst')
-            .insert({
+            .insert([{
               carteirinha: record.carteirinha,
               nome_completo: record.nome_completo,
               data_nascimento: formatDateISO(dataNascimento),
@@ -374,8 +374,9 @@ export default function ProcessarFormsParto() {
               idade_gestacional_calculada: resultado.igFinal.displayText,
               observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}`,
               status: 'pendente',
-              centro_clinico: 'HAPVIDA'
-            });
+              centro_clinico: 'HAPVIDA',
+              email_paciente: 'importado-forms@sistema.local'
+            }]);
 
           if (insertError) {
             errors.push(`${record.nome_completo} - ${insertError.message}`);

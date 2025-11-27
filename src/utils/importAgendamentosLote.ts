@@ -273,12 +273,8 @@ export async function importarAgendamentosLote(
         numero_partos_cesareas: parseInt(numeroCesareas) || 0,
         numero_abortos: parseInt(numeroAbortos) || 0,
         procedimentos: dadosCalculo.procedimentos,
-        diagnosticos_maternos: diagnosticosMaternos 
-          ? diagnosticosMaternos.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-          : [],
-        diagnosticos_fetais: diagnosticosFetais 
-          ? diagnosticosFetais.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
-          : [],
+        diagnosticos_maternos: diagnosticosMaternos || '',
+        diagnosticos_fetais: diagnosticosFetais || '',
         diagnostico_livre: diagnosticoLivre || undefined,
         placenta_previa: dadosCalculo.placentaPrevia,
         indicacao_procedimento: indicacaoProcedimento,
@@ -297,12 +293,13 @@ export async function importarAgendamentosLote(
         idade_gestacional_calculada: resultado.igFinal.displayText,
         observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}\n\n[AUDITORIA] Fonte IG: ${sanitizedCalc.source} | ${sanitizedCalc.reason}`,
         created_by: createdBy,
-        status: 'pendente'
+        status: 'pendente',
+        email_paciente: 'importado-lote@sistema.local'
       };
       
       const { error: insertError } = await supabase
         .from('agendamentos_obst')
-        .insert(agendamentoData);
+        .insert([agendamentoData]);
       
       if (insertError) {
         errors.push(`Linha ${i + 1}: ${insertError.message}`);

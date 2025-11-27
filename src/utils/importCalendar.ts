@@ -171,12 +171,13 @@ export const importCalendarToAgendamentos = async (csvContent: string, createdBy
         medico_responsavel: 'Importado do calendário',
         centro_clinico: 'Importado',
         status: 'pendente',
-        created_by: createdBy
+        created_by: createdBy,
+        email_paciente: 'importado-calendario@sistema.local'
       };
       
       const { error } = await supabase
         .from('agendamentos_obst')
-        .insert(agendamento);
+        .insert([agendamento]);
       
       if (error) {
         results.failed++;
