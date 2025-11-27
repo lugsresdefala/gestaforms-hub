@@ -13,8 +13,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { differenceInDays, format, parse, addDays } from 'date-fns';
 import { mapDiagnosisToProtocol, PROTOCOLS } from '@/lib/obstetricProtocols';
+import { parseDateSafe, isPlaceholderDate, chooseAndCompute } from '@/lib/importSanitizer';
 
 // Mapeamento de colunas do Microsoft Forms TSV (0-indexed)
+// IMPORTANTE: Este mapeamento foi corrigido para refletir a ordem real das colunas no TSV do Forms
 const COLUMN_MAP: Record<number, string> = {
   0: 'id_forms',
   1: 'hora_inicio',
@@ -26,26 +28,26 @@ const COLUMN_MAP: Record<number, string> = {
   7: 'numero_partos_normais',
   8: 'numero_abortos',
   9: 'telefones',
-  10: 'procedimentos',
-  11: 'dum_status',
-  12: 'data_dum',
-  13: 'data_primeiro_usg',
-  14: 'semanas_usg',
-  15: 'dias_usg',
-  16: 'usg_recente',
-  17: 'ig_pretendida',
-  18: 'coluna3',
-  19: 'indicacao_procedimento',
-  20: 'medicacao',
-  21: 'diagnosticos_maternos',
-  22: 'placenta_previa',
-  23: 'diagnosticos_fetais',
-  24: 'historia_obstetrica',
-  25: 'necessidade_uti_materna',
-  26: 'necessidade_reserva_sangue',
-  27: 'maternidade',
-  28: 'medico_responsavel',
-  29: 'email_paciente',
+  10: 'dum_status',           // CORRIGIDO: era 'procedimentos'
+  11: 'data_dum',             // CORRIGIDO: era 'dum_status'
+  12: 'data_primeiro_usg',    // CORRIGIDO: era 'data_dum'
+  13: 'semanas_usg',          // CORRIGIDO: era 'data_primeiro_usg'
+  14: 'dias_usg',             // CORRIGIDO: era 'semanas_usg'
+  15: 'usg_recente',
+  16: 'ig_pretendida',
+  17: 'coluna3',
+  18: 'indicacao_procedimento',
+  19: 'medicacao',
+  20: 'diagnosticos_maternos',
+  21: 'placenta_previa',
+  22: 'diagnosticos_fetais',
+  23: 'historia_obstetrica',
+  24: 'necessidade_uti_materna',
+  25: 'necessidade_reserva_sangue',
+  26: 'maternidade',
+  27: 'medico_responsavel',
+  28: 'email_paciente',
+  29: 'procedimentos',        // CORRIGIDO: movido da posição 10
   30: 'dpp_dum',
   31: 'dpp_usg',
   32: 'idade',
@@ -86,46 +88,10 @@ interface PacienteRow {
   error: string | null;
 }
 
-// Helper functions
-function parseDataBR(dateStr: string): Date | null {
-  if (!dateStr || dateStr === '-') return null;
-  
-  // Clean up the string
-  const cleanStr = dateStr.trim();
-  
-  // Try MM/DD/YYYY HH:MM:SS format from Microsoft Forms
-  const matchUS = cleanStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (matchUS) {
-    const [, first, second, year] = matchUS;
-    const firstNum = parseInt(first);
-    const secondNum = parseInt(second);
-    
-    // Microsoft Forms uses MM/DD/YYYY format
-    // If first number <= 12, treat as month; second as day
-    if (firstNum <= 12) {
-      const date = new Date(parseInt(year), firstNum - 1, secondNum);
-      if (!isNaN(date.getTime())) return date;
-    }
-    
-    // Fallback: if first > 12, must be DD/MM/YYYY
-    if (firstNum > 12 && secondNum <= 12) {
-      const date = new Date(parseInt(year), secondNum - 1, firstNum);
-      if (!isNaN(date.getTime())) return date;
-    }
-  }
-  
-  return null;
-}
-
 // Maximum valid gestational age is 42 weeks (294 days).
 // This is a medical constraint: pregnancies beyond 42 weeks are considered post-term
 // and require immediate medical attention. IG values exceeding this indicate data errors.
 const MAX_IG_DIAS = 294;
-
-// Helper to build warning messages consistently
-function buildWarning(type: string, details: string, nomePaciente: string): string {
-  return `⚠️ ${type}: ${details} para ${nomePaciente}`;
-}
 
 // Validation helper for impossible IG values
 function validarIGDias(dias: number, nome: string): { valido: boolean; mensagem?: string } {
@@ -149,80 +115,6 @@ function formatIGCompacto(totalDias: number): string {
   const semanas = Math.floor(totalDias / 7);
   const dias = totalDias % 7;
   return `${semanas}s${dias}d`;
-}
-
-function calcularIGAtualDias(
-  dumStatus: string,
-  dataDum: Date | null,
-  dataPrimeiroUsg: Date | null,
-  semanasUsg: number,
-  diasUsg: number,
-  dataReferencia: Date = new Date(),
-  nomePaciente: string = ''
-): { dias: number; metodo: 'DUM' | 'USG'; aviso?: string; semDados?: boolean } {
-  let igDumDias: number | null = null;
-  let igUsgDias: number | null = null;
-  let aviso: string | undefined = undefined;
-  
-  // Validate USG date is not in the future
-  if (dataPrimeiroUsg && dataPrimeiroUsg > dataReferencia) {
-    aviso = buildWarning('Data USG no futuro', 'verifique a data', nomePaciente);
-  }
-  
-  // Calcular IG por DUM se disponível
-  if (dataDum && dumStatus?.toLowerCase().includes('confiavel')) {
-    igDumDias = differenceInDays(dataReferencia, dataDum);
-    
-    // Validate DUM IG
-    if (igDumDias < 0) {
-      aviso = buildWarning('DUM no futuro', 'verifique a data', nomePaciente);
-      igDumDias = null;
-    } else if (igDumDias > MAX_IG_DIAS) {
-      aviso = buildWarning('IG por DUM impossível', `${Math.floor(igDumDias / 7)}s > 42 semanas`, nomePaciente);
-    }
-  }
-  
-  // Calcular IG por USG
-  if (dataPrimeiroUsg) {
-    const diasDesdeUsg = differenceInDays(dataReferencia, dataPrimeiroUsg);
-    const diasUsgTotal = (semanasUsg * 7) + diasUsg;
-    igUsgDias = diasUsgTotal + diasDesdeUsg;
-    
-    // Validate USG IG
-    if (igUsgDias < 0) {
-      aviso = buildWarning('Cálculo IG negativo', 'verifique os dados', nomePaciente);
-      igUsgDias = null;
-    } else if (igUsgDias > MAX_IG_DIAS) {
-      aviso = buildWarning('IG impossível', `${Math.floor(igUsgDias / 7)}s > 42 semanas. Verificar ano do USG`, nomePaciente);
-    }
-  }
-  
-  // Decidir qual IG usar
-  if (igDumDias !== null && igUsgDias !== null) {
-    const diferenca = Math.abs(igDumDias - igUsgDias);
-    // Se diferença for pequena, usar DUM
-    if (diferenca <= 14) {
-      return { dias: igDumDias, metodo: 'DUM', aviso };
-    }
-    // Se diferença grande, usar USG
-    return { dias: igUsgDias, metodo: 'USG', aviso };
-  }
-  
-  if (igDumDias !== null) {
-    return { dias: igDumDias, metodo: 'DUM', aviso };
-  }
-  
-  if (igUsgDias !== null) {
-    return { dias: igUsgDias, metodo: 'USG', aviso };
-  }
-  
-  // No valid data available - return 0 with flag indicating missing data
-  return { 
-    dias: 0, 
-    metodo: 'USG', 
-    aviso: aviso || buildWarning('Sem dados', 'não foi possível calcular IG', nomePaciente),
-    semDados: true
-  };
 }
 
 function determinarIGIdeal(diagnosticosMaternos: string, diagnosticosFetais: string, procedimentos: string): { dias: number; protocolo: string } {
@@ -305,21 +197,52 @@ export default function ImportarPacientes() {
         });
         
         try {
-          // Calcular IG atual
-          const dataDum = parseDataBR(parsed.data_dum);
-          const dataPrimeiroUsg = parseDataBR(parsed.data_primeiro_usg);
-          const semanasUsg = parseInt(parsed.semanas_usg) || 0;
-          const diasUsg = parseInt(parsed.dias_usg) || 0;
-          
-          const { dias: igAtualDias, metodo, aviso } = calcularIGAtualDias(
-            parsed.dum_status,
-            dataDum,
-            dataPrimeiroUsg,
-            semanasUsg,
-            diasUsg,
-            hoje,
-            parsed.nome_completo || `Linha ${i + 1}`
-          );
+          // Calcular IG atual usando importSanitizer (lógica unificada)
+          const calcResult = chooseAndCompute({
+            dumRaw: parsed.data_dum,
+            dumStatus: parsed.dum_status,
+            usgDateRaw: parsed.data_primeiro_usg,
+            usgWeeks: parsed.semanas_usg,
+            usgDays: parsed.dias_usg,
+            referenceDate: hoje
+          });
+
+          // Validação bloqueante: rejeitar se não foi possível calcular
+          if (calcResult.source === 'INVALID') {
+            resultado.push({
+              original: colunas,
+              parsed,
+              calculated: null,
+              error: calcResult.reason
+            });
+            setProgresso(Math.round(((i + 1) / linhas.length) * 100));
+            continue;
+          }
+
+          const igAtualDias = calcResult.gaDays;
+          const metodo = calcResult.source;
+
+          // Validação adicional: bloquear IGs impossíveis (>42 semanas)
+          const validacao = validarIGDias(igAtualDias, parsed.nome_completo || `Linha ${i + 1}`);
+          if (!validacao.valido) {
+            resultado.push({
+              original: colunas,
+              parsed,
+              calculated: null,
+              error: validacao.mensagem || 'IG inválida'
+            });
+            setProgresso(Math.round(((i + 1) / linhas.length) * 100));
+            continue;
+          }
+
+          // Detectar placeholders
+          let aviso: string | undefined = undefined;
+          if (isPlaceholderDate(parsed.data_dum)) {
+            aviso = `⚠️ DUM parece ser placeholder: ${parsed.data_dum}`;
+          }
+          if (isPlaceholderDate(parsed.data_primeiro_usg)) {
+            aviso = (aviso ? aviso + ' | ' : '') + `⚠️ Data USG parece ser placeholder: ${parsed.data_primeiro_usg}`;
+          }
           
           // Determinar IG ideal baseado nos diagnósticos
           const { dias: igIdealDias, protocolo } = determinarIGIdeal(
@@ -385,6 +308,24 @@ export default function ImportarPacientes() {
       
       const erros = resultado.filter(p => p.error).length;
       const sucesso = resultado.filter(p => p.calculated).length;
+      
+      // Logging de auditoria
+      const placeholdersDum = resultado.filter(p => isPlaceholderDate(p.parsed.data_dum)).length;
+      const placeholdersUsg = resultado.filter(p => isPlaceholderDate(p.parsed.data_primeiro_usg)).length;
+      const igsPorDum = resultado.filter(p => p.calculated && p.calculated.metodo_ig === 'DUM').length;
+      const igsPorUsg = resultado.filter(p => p.calculated && p.calculated.metodo_ig === 'USG').length;
+
+      console.table({
+        'Total Linhas': linhas.length,
+        'Processados': resultado.length,
+        'Válidos': sucesso,
+        'Erros': erros,
+        'Avisos': resultado.filter(p => p.calculated?.aviso).length,
+        'Placeholders DUM': placeholdersDum,
+        'Placeholders USG': placeholdersUsg,
+        'Cálculo por DUM': igsPorDum,
+        'Cálculo por USG': igsPorUsg
+      });
       
       if (sucesso > 0) {
         toast.success(`${sucesso} pacientes processados com sucesso!`);
@@ -474,9 +415,9 @@ export default function ImportarPacientes() {
 
         try {
           // Parsear datas
-          const dataNascimento = parseDataBR(parsed.data_nascimento);
-          const dataDum = parseDataBR(parsed.data_dum);
-          const dataPrimeiroUsg = parseDataBR(parsed.data_primeiro_usg);
+          const dataNascimento = parseDateSafe(parsed.data_nascimento);
+          const dataDum = parseDateSafe(parsed.data_dum);
+          const dataPrimeiroUsg = parseDateSafe(parsed.data_primeiro_usg);
           const dataAgendada = parse(calc.data_agendada, 'dd/MM/yyyy', new Date());
 
           const agendamentoData = {
@@ -808,8 +749,10 @@ export default function ImportarPacientes() {
               <strong>Instruções:</strong>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                 <li>Copie os dados da planilha do Microsoft Forms (separados por TAB)</li>
+                <li><strong>Formato de datas: DD/MM/YYYY (brasileiro)</strong> - ex: 05/12/2024 = 5 de dezembro</li>
                 <li>Cole na área de texto acima</li>
                 <li>Clique em "Processar Dados" para calcular as colunas adicionais</li>
+                <li>Revise os avisos de placeholders e IGs impossíveis</li>
                 <li>Use "Copiar Tabela Completa" para colar em outra planilha com as colunas calculadas</li>
                 <li>Use "Salvar no Banco" para persistir os dados no sistema</li>
               </ul>

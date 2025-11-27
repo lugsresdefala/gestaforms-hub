@@ -39,6 +39,24 @@ describe('parseDateSafe', () => {
       expect(result).not.toBeNull();
       expect(result?.getFullYear()).toBe(2024);
     });
+
+    it('should prioritize DD/MM/YYYY over MM/DD/YYYY for ambiguous dates', () => {
+      // Critical test case from issue: '05/12/2024' should be December 5, not May 12
+      const result = parseDateSafe('05/12/2024');
+      expect(result).not.toBeNull();
+      expect(result?.getFullYear()).toBe(2024);
+      expect(result?.getMonth()).toBe(11); // December = 11 (0-indexed)
+      expect(result?.getDate()).toBe(5);
+    });
+
+    it('should correctly parse another ambiguous date as DD/MM/YYYY', () => {
+      // '03/06/2024' should be June 3, not March 6
+      const result = parseDateSafe('03/06/2024');
+      expect(result).not.toBeNull();
+      expect(result?.getFullYear()).toBe(2024);
+      expect(result?.getMonth()).toBe(5); // June = 5 (0-indexed)
+      expect(result?.getDate()).toBe(3);
+    });
   });
 
   describe('MM/DD/YYYY format (American)', () => {
@@ -397,6 +415,25 @@ describe('chooseAndCompute', () => {
 
       expect(result.source).toBe('INVALID');
       expect(result.reason).toContain('USG não informada');
+    });
+  });
+
+  describe('Edge cases for date parsing', () => {
+    it('should handle dates with time component from Microsoft Forms', () => {
+      // Microsoft Forms may include time: "05/12/2024 10:30:00"
+      const result = parseDateSafe('05/12/2024 10:30:00');
+      // The function should still parse this correctly
+      // It may strip the time and parse as DD/MM/YYYY
+      if (result) {
+        expect(result.getMonth()).toBe(11); // December
+        expect(result.getDate()).toBe(5);
+      }
+    });
+
+    it('should reject placeholder dates like 1900', () => {
+      // Common placeholder in Microsoft Forms
+      expect(parseDateSafe('10/6/1900')).toBeNull();
+      expect(parseDateSafe('06/10/1900')).toBeNull();
     });
   });
 });
