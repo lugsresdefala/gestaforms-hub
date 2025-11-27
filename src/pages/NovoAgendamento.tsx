@@ -164,12 +164,12 @@ const NovoAgendamento = () => {
         indicacao_procedimento: values.indicacaoProcedimento,
         medicacao: values.medicacao || null,
         diagnosticos_maternos: values.diagnosticosMaternos.length > 0 
-          ? values.diagnosticosMaternos 
-          : [],
+          ? values.diagnosticosMaternos.join(', ') 
+          : '',
         placenta_previa: values.placentaPrevia || null,
         diagnosticos_fetais: values.diagnosticosFetais.length > 0 
-          ? values.diagnosticosFetais 
-          : [],
+          ? values.diagnosticosFetais.join(', ') 
+          : '',
         diagnosticos_fetais_outros: values.diagnosticosFetaisOutros || null,
         historia_obstetrica: values.historiaObstetrica || null,
         necessidade_uti_materna: values.necessidadeUtiMaterna,

@@ -289,12 +289,13 @@ export default function ImportarSQL() {
             medico_responsavel: 'Importado do SQL',
             centro_clinico: 'Importado',
             status: 'aprovado',
-            created_by: user.id
+            created_by: user.id,
+            email_paciente: 'importado-sql@sistema.local'
           };
 
           const { error } = await supabase
             .from('agendamentos_obst')
-            .insert(agendamento);
+            .insert([agendamento]);
 
           if (error) {
             importResults.failed++;
