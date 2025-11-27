@@ -81,6 +81,7 @@ export default function ImportarAgendamentosHTML() {
       console.log('Linhas encontradas:', linhas.length);
       
       const registros: HTMLRecord[] = [];
+      const linhasIgnoradas: { index: number; colunas: number; motivo: string }[] = [];
       
       linhas.forEach((linha, index) => {
         const colunas = linha.querySelectorAll('td');
@@ -109,15 +110,27 @@ export default function ImportarAgendamentosHTML() {
             status: status
           });
         } else {
-          console.log(`Linha ${index} tem apenas ${colunas.length} colunas`);
+          const motivo = `Linha ${index + 1} tem apenas ${colunas.length} colunas (mínimo: 16)`;
+          console.warn(motivo);
+          linhasIgnoradas.push({ index: index + 1, colunas: colunas.length, motivo });
         }
       });
       
       console.log('Registros extraídos:', registros.length);
+      console.log('Linhas ignoradas:', linhasIgnoradas.length);
+      
+      if (linhasIgnoradas.length > 0) {
+        console.table(linhasIgnoradas);
+        toast.warning(`⚠️ ${linhasIgnoradas.length} linhas ignoradas por formato inválido`, {
+          description: `Apenas ${registros.length} de ${linhas.length} linhas foram extraídas. Verifique o console para detalhes.`,
+          duration: 8000
+        });
+      }
+      
       setDadosHTML(registros);
       
       if (registros.length > 0) {
-        toast.success(`${registros.length} registros extraídos do HTML`);
+        toast.success(`✅ ${registros.length} registros extraídos (Total HTML: ${linhas.length})`);
       } else {
         toast.error('Nenhum registro encontrado no HTML');
       }
