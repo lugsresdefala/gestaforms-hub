@@ -55,6 +55,11 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     icon: UserPlus,
     show: isAdmin || isAdminMed
   }, {
+    title: "Importar Pacientes TSV",
+    url: "/importar-pacientes",
+    icon: Upload,
+    show: isAdmin || isAdminMed
+  }, {
     title: "Importar Agendamentos 2025",
     url: "/importar-agendamentos-2025",
     icon: Upload,

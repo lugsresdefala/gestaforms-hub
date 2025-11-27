@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -43,6 +44,7 @@ interface PacienteComparacao {
 }
 
 export default function ImportarAgendamentosHTML() {
+  const { user } = useAuth();
   const [processando, setProcessando] = useState(false);
   const [dadosHTML, setDadosHTML] = useState<HTMLRecord[]>([]);
   const [comparacao, setComparacao] = useState<{
@@ -301,6 +303,12 @@ export default function ImportarAgendamentosHTML() {
       return;
     }
 
+    // Verificar autenticação
+    if (!user) {
+      toast.error('Usuário não autenticado. Faça login novamente.');
+      return;
+    }
+
     if (!confirm(`Deseja substituir ${dadosHTML.length} registros no banco de dados pelos dados do HTML?`)) {
       return;
     }
@@ -362,7 +370,8 @@ export default function ImportarAgendamentosHTML() {
           centro_clinico: 'Importado',
           email_paciente: 'nao-informado@example.com',
           data_agendamento_calculada: dataAgendada,
-          status: statusMapeado
+          status: statusMapeado,
+          created_by: user.id
         };
 
         try {
@@ -374,10 +383,11 @@ export default function ImportarAgendamentosHTML() {
             .maybeSingle();
 
           if (existente) {
-            // Atualizar registro existente
+            // Atualizar registro existente (não atualiza created_by)
+            const { created_by: _, ...dadosAtualizacao } = dadosAgendamento;
             const { error } = await supabase
               .from('agendamentos_obst')
-              .update(dadosAgendamento)
+              .update(dadosAtualizacao)
               .eq('id', existente.id);
 
             if (error) {
