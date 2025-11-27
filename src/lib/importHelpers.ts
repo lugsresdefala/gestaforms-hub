@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// Re-export the sanitizer functions for backward compatibility
-export { parseDateSafe, isPlaceholderDate, sanitizeDateToISO } from './importSanitizer';
+// Re-export the sanitizer functions from the new modular imports
+export { parseDateSafe, isPlaceholderDate, sanitizeDateToISO } from './import/dateParser';
 
 /**
  * Parse de data no formato DD/MM/YYYY ou D/M/YYYY
