@@ -457,17 +457,42 @@ export default function ImportarAgendamentosHTML() {
       console.log(`📈 Total processado: ${dadosHTML.length}`);
       console.log('='.repeat(60));
 
+      // Verificar IMEDIATAMENTE se os dados foram realmente salvos
+      console.log('🔍 Verificando dados no banco...');
+      const { count: countTotal, error: countError } = await supabase
+        .from('agendamentos_obst')
+        .select('*', { count: 'exact', head: true });
+
+      if (countError) {
+        console.error('❌ Erro ao contar registros:', countError);
+      } else {
+        console.log(`📊 TOTAL DE REGISTROS NO BANCO: ${countTotal}`);
+      }
+
       toast.success(`${importados} novos, ${atualizados} atualizados, ${erros} erros`);
       setComparacao(prev => prev ? { ...prev, atualizados: importados + atualizados } : null);
 
-      // Atualizar dashboard com os novos registros
-      console.log('Atualizando dashboard...');
+      // Atualizar dashboard MÚLTIPLAS VEZES para garantir sincronização
+      console.log('🔄 Iniciando atualização do dashboard...');
       try {
+        // Primeira atualização imediata
         await refreshAgendamentos();
-        toast.info('✅ Dashboard atualizado com os novos registros');
+        console.log('✅ Primeira atualização concluída');
+        
+        // Segunda atualização após 500ms
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await refreshAgendamentos();
+        console.log('✅ Segunda atualização concluída');
+        
+        // Terceira atualização após 1s
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await refreshAgendamentos();
+        console.log('✅ Terceira atualização concluída');
+        
+        toast.info('✅ Dashboard atualizado - recarregue para ver os dados');
       } catch (refreshError) {
-        console.error('Erro ao atualizar dashboard:', refreshError);
-        toast.warning('⚠️ Dashboard não atualizado automaticamente - atualize a página manualmente');
+        console.error('❌ Erro ao atualizar dashboard:', refreshError);
+        toast.warning('⚠️ Recarregue a página para ver os dados atualizados');
       }
 
       if (erros > 0) {
