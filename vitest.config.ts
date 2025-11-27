@@ -10,7 +10,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      include: ['src/lib/importSanitizer.ts']
+      include: [
+        'src/lib/importSanitizer.ts',
+        'src/lib/import/dateParser.ts',
+        'src/lib/import/gestationalCalculator.ts',
+        'src/lib/import/tsvProcessor.ts',
+        'src/lib/import/htmlFormParser.ts',
+        'src/lib/import/types.ts',
+        'src/lib/import/index.ts'
+      ]
     }
   },
   resolve: {
