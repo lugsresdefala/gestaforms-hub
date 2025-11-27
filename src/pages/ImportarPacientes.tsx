@@ -117,8 +117,15 @@ function parseDataBR(dateStr: string): Date | null {
   return null;
 }
 
-// Maximum valid gestational age (42 weeks = 294 days)
+// Maximum valid gestational age is 42 weeks (294 days).
+// This is a medical constraint: pregnancies beyond 42 weeks are considered post-term
+// and require immediate medical attention. IG values exceeding this indicate data errors.
 const MAX_IG_DIAS = 294;
+
+// Helper to build warning messages consistently
+function buildWarning(type: string, details: string, nomePaciente: string): string {
+  return `⚠️ ${type}: ${details} para ${nomePaciente}`;
+}
 
 // Validation helper for impossible IG values
 function validarIGDias(dias: number, nome: string): { valido: boolean; mensagem?: string } {
@@ -152,14 +159,14 @@ function calcularIGAtualDias(
   diasUsg: number,
   dataReferencia: Date = new Date(),
   nomePaciente: string = ''
-): { dias: number; metodo: 'DUM' | 'USG'; aviso?: string } {
+): { dias: number; metodo: 'DUM' | 'USG'; aviso?: string; semDados?: boolean } {
   let igDumDias: number | null = null;
   let igUsgDias: number | null = null;
   let aviso: string | undefined = undefined;
   
   // Validate USG date is not in the future
   if (dataPrimeiroUsg && dataPrimeiroUsg > dataReferencia) {
-    aviso = `⚠️ Data USG no futuro para ${nomePaciente}`;
+    aviso = buildWarning('Data USG no futuro', 'verifique a data', nomePaciente);
   }
   
   // Calcular IG por DUM se disponível
@@ -168,10 +175,10 @@ function calcularIGAtualDias(
     
     // Validate DUM IG
     if (igDumDias < 0) {
-      aviso = `⚠️ DUM no futuro para ${nomePaciente}`;
+      aviso = buildWarning('DUM no futuro', 'verifique a data', nomePaciente);
       igDumDias = null;
     } else if (igDumDias > MAX_IG_DIAS) {
-      aviso = `⚠️ IG por DUM impossível (${Math.floor(igDumDias / 7)}s) para ${nomePaciente}`;
+      aviso = buildWarning('IG por DUM impossível', `${Math.floor(igDumDias / 7)}s > 42 semanas`, nomePaciente);
     }
   }
   
@@ -183,10 +190,10 @@ function calcularIGAtualDias(
     
     // Validate USG IG
     if (igUsgDias < 0) {
-      aviso = `⚠️ Cálculo IG negativo para ${nomePaciente}`;
+      aviso = buildWarning('Cálculo IG negativo', 'verifique os dados', nomePaciente);
       igUsgDias = null;
     } else if (igUsgDias > MAX_IG_DIAS) {
-      aviso = `⚠️ IG impossível: ${Math.floor(igUsgDias / 7)}s (> 42 semanas) para ${nomePaciente}. Verificar ano do USG.`;
+      aviso = buildWarning('IG impossível', `${Math.floor(igUsgDias / 7)}s > 42 semanas. Verificar ano do USG`, nomePaciente);
     }
   }
   
@@ -209,7 +216,13 @@ function calcularIGAtualDias(
     return { dias: igUsgDias, metodo: 'USG', aviso };
   }
   
-  return { dias: 0, metodo: 'USG', aviso: aviso || `⚠️ Sem dados para calcular IG de ${nomePaciente}` };
+  // No valid data available - return 0 with flag indicating missing data
+  return { 
+    dias: 0, 
+    metodo: 'USG', 
+    aviso: aviso || buildWarning('Sem dados', 'não foi possível calcular IG', nomePaciente),
+    semDados: true
+  };
 }
 
 function determinarIGIdeal(diagnosticosMaternos: string, diagnosticosFetais: string, procedimentos: string): { dias: number; protocolo: string } {
