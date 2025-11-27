@@ -64,18 +64,25 @@ export interface ComputeParams {
  * Parse a date string safely, handling multiple formats and detecting placeholders.
  * 
  * Supported formats:
- * - DD/MM/YYYY (Brazilian format)
- * - MM/DD/YYYY (American format)
+ * - DD/MM/YYYY (Brazilian format) - PREFERRED for ambiguous dates
+ * - MM/DD/YYYY (American format)  
  * - YYYY-MM-DD (ISO format)
  * - D/M/YYYY (short format)
+ * 
+ * DISAMBIGUATION LOGIC:
+ * For ambiguous dates like '05/03/2024' (could be May 3 or March 5):
+ * 1. If first number > 12, it must be DD/MM/YYYY (unambiguous)
+ * 2. If second number > 12, it must be MM/DD/YYYY (unambiguous)
+ * 3. If both are <= 12, DD/MM/YYYY (Brazilian format) is preferred
+ *    since this is a Brazilian healthcare application
  * 
  * @param raw - Raw date string to parse
  * @returns Parsed Date or null if invalid/placeholder
  * 
  * @example
- * parseDateSafe('15/03/2024')  // Date for March 15, 2024
- * parseDateSafe('03/15/2024')  // Date for March 15, 2024 (if American format detected)
- * parseDateSafe('10/6/1900')   // null (placeholder year)
+ * parseDateSafe('15/03/2024')  // March 15, 2024 (DD > 12, so DD/MM/YYYY)
+ * parseDateSafe('05/03/2024')  // March 5, 2024 (ambiguous, prefers DD/MM/YYYY)
+ * parseDateSafe('10/6/1900')   // null (placeholder year < 1920)
  * parseDateSafe('')            // null
  */
 export function parseDateSafe(raw: string | null | undefined): Date | null {
@@ -433,11 +440,13 @@ export function isPlaceholderDate(raw: string | null | undefined): boolean {
     return true;
   }
 
-  // Parse and check year
-  const parsed = parseDateSafe(raw);
-  if (parsed === null && trimmed.length > 0) {
-    // If parsing failed but there was input, it might be a placeholder
-    return true;
+  // Only flag as placeholder if the input looks like a date pattern but failed to parse
+  // (contains date separators and is long enough to be a date)
+  if ((trimmed.includes('/') || trimmed.includes('-')) && trimmed.length >= 6) {
+    const parsed = parseDateSafe(raw);
+    if (parsed === null) {
+      return true;
+    }
   }
 
   return false;
@@ -453,7 +462,7 @@ export function isPlaceholderDate(raw: string | null | undefined): boolean {
  * 
  * @example
  * // Usage from CLI:
- * // node -r ts-node/register scripts/process-tsv.ts path/to/file.tsv
+ * // npx tsx scripts/process-tsv.ts path/to/file.tsv
  * 
  * const content = fs.readFileSync('data.tsv', 'utf-8');
  * const results = processTsvContent(content);

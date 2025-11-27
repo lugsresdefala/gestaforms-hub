@@ -34,9 +34,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Import from relative path since this runs outside the Vite context
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { processTsvContent, parseDateSafe, isPlaceholderDate } = require('../src/lib/importSanitizer');
+// Dynamic import for ES module compatibility when running with tsx/ts-node
+// Note: This file should be executed with: npx tsx scripts/process-tsv.ts <file>
+import { processTsvContent, parseDateSafe, isPlaceholderDate } from '../src/lib/importSanitizer.js';
 
 interface CliOptions {
   filePath: string;
