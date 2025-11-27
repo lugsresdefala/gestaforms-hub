@@ -14,7 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { differenceInDays, format, parse, addDays } from 'date-fns';
 import { mapDiagnosisToProtocol, PROTOCOLS } from '@/lib/obstetricProtocols';
 
-// Mapeamento de colunas do Google Forms TSV (0-indexed)
+// Mapeamento de colunas do Microsoft Forms TSV (0-indexed)
 const COLUMN_MAP: Record<number, string> = {
   0: 'id_forms',
   1: 'hora_inicio',
@@ -81,6 +81,7 @@ interface PacienteRow {
     data_agendada: string;
     ig_na_data_agendada: string;
     intervalo_dias: number;
+    aviso?: string;
   } | null;
   error: string | null;
 }
@@ -89,23 +90,53 @@ interface PacienteRow {
 function parseDataBR(dateStr: string): Date | null {
   if (!dateStr || dateStr === '-') return null;
   
-  // Try MM/DD/YYYY HH:MM:SS format from Google Forms
-  const matchUS = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (matchUS) {
-    const [, month, day, year] = matchUS;
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    if (!isNaN(date.getTime())) return date;
-  }
+  // Clean up the string
+  const cleanStr = dateStr.trim();
   
-  // Try DD/MM/YYYY format
-  const matchBR = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (matchBR) {
-    const [, day, month, year] = matchBR;
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    if (!isNaN(date.getTime())) return date;
+  // Try MM/DD/YYYY HH:MM:SS format from Microsoft Forms
+  const matchUS = cleanStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (matchUS) {
+    const [, first, second, year] = matchUS;
+    const firstNum = parseInt(first);
+    const secondNum = parseInt(second);
+    
+    // Microsoft Forms uses MM/DD/YYYY format
+    // If first number <= 12, treat as month; second as day
+    if (firstNum <= 12) {
+      const date = new Date(parseInt(year), firstNum - 1, secondNum);
+      if (!isNaN(date.getTime())) return date;
+    }
+    
+    // Fallback: if first > 12, must be DD/MM/YYYY
+    if (firstNum > 12 && secondNum <= 12) {
+      const date = new Date(parseInt(year), secondNum - 1, firstNum);
+      if (!isNaN(date.getTime())) return date;
+    }
   }
   
   return null;
+}
+
+// Maximum valid gestational age is 42 weeks (294 days).
+// This is a medical constraint: pregnancies beyond 42 weeks are considered post-term
+// and require immediate medical attention. IG values exceeding this indicate data errors.
+const MAX_IG_DIAS = 294;
+
+// Helper to build warning messages consistently
+function buildWarning(type: string, details: string, nomePaciente: string): string {
+  return `⚠️ ${type}: ${details} para ${nomePaciente}`;
+}
+
+// Validation helper for impossible IG values
+function validarIGDias(dias: number, nome: string): { valido: boolean; mensagem?: string } {
+  if (dias < 0) {
+    return { valido: false, mensagem: `IG negativa (${dias} dias) para ${nome}` };
+  }
+  if (dias > MAX_IG_DIAS) {
+    const semanas = Math.floor(dias / 7);
+    return { valido: false, mensagem: `IG impossível: ${semanas}s (> 42 semanas) para ${nome}` };
+  }
+  return { valido: true };
 }
 
 function formatIGSemanasDias(totalDias: number): string {
@@ -126,14 +157,29 @@ function calcularIGAtualDias(
   dataPrimeiroUsg: Date | null,
   semanasUsg: number,
   diasUsg: number,
-  dataReferencia: Date = new Date()
-): { dias: number; metodo: 'DUM' | 'USG' } {
+  dataReferencia: Date = new Date(),
+  nomePaciente: string = ''
+): { dias: number; metodo: 'DUM' | 'USG'; aviso?: string; semDados?: boolean } {
   let igDumDias: number | null = null;
   let igUsgDias: number | null = null;
+  let aviso: string | undefined = undefined;
+  
+  // Validate USG date is not in the future
+  if (dataPrimeiroUsg && dataPrimeiroUsg > dataReferencia) {
+    aviso = buildWarning('Data USG no futuro', 'verifique a data', nomePaciente);
+  }
   
   // Calcular IG por DUM se disponível
   if (dataDum && dumStatus?.toLowerCase().includes('confiavel')) {
     igDumDias = differenceInDays(dataReferencia, dataDum);
+    
+    // Validate DUM IG
+    if (igDumDias < 0) {
+      aviso = buildWarning('DUM no futuro', 'verifique a data', nomePaciente);
+      igDumDias = null;
+    } else if (igDumDias > MAX_IG_DIAS) {
+      aviso = buildWarning('IG por DUM impossível', `${Math.floor(igDumDias / 7)}s > 42 semanas`, nomePaciente);
+    }
   }
   
   // Calcular IG por USG
@@ -141,6 +187,14 @@ function calcularIGAtualDias(
     const diasDesdeUsg = differenceInDays(dataReferencia, dataPrimeiroUsg);
     const diasUsgTotal = (semanasUsg * 7) + diasUsg;
     igUsgDias = diasUsgTotal + diasDesdeUsg;
+    
+    // Validate USG IG
+    if (igUsgDias < 0) {
+      aviso = buildWarning('Cálculo IG negativo', 'verifique os dados', nomePaciente);
+      igUsgDias = null;
+    } else if (igUsgDias > MAX_IG_DIAS) {
+      aviso = buildWarning('IG impossível', `${Math.floor(igUsgDias / 7)}s > 42 semanas. Verificar ano do USG`, nomePaciente);
+    }
   }
   
   // Decidir qual IG usar
@@ -148,21 +202,27 @@ function calcularIGAtualDias(
     const diferenca = Math.abs(igDumDias - igUsgDias);
     // Se diferença for pequena, usar DUM
     if (diferenca <= 14) {
-      return { dias: igDumDias, metodo: 'DUM' };
+      return { dias: igDumDias, metodo: 'DUM', aviso };
     }
     // Se diferença grande, usar USG
-    return { dias: igUsgDias, metodo: 'USG' };
+    return { dias: igUsgDias, metodo: 'USG', aviso };
   }
   
   if (igDumDias !== null) {
-    return { dias: igDumDias, metodo: 'DUM' };
+    return { dias: igDumDias, metodo: 'DUM', aviso };
   }
   
   if (igUsgDias !== null) {
-    return { dias: igUsgDias, metodo: 'USG' };
+    return { dias: igUsgDias, metodo: 'USG', aviso };
   }
   
-  return { dias: 0, metodo: 'USG' };
+  // No valid data available - return 0 with flag indicating missing data
+  return { 
+    dias: 0, 
+    metodo: 'USG', 
+    aviso: aviso || buildWarning('Sem dados', 'não foi possível calcular IG', nomePaciente),
+    semDados: true
+  };
 }
 
 function determinarIGIdeal(diagnosticosMaternos: string, diagnosticosFetais: string, procedimentos: string): { dias: number; protocolo: string } {
@@ -251,13 +311,14 @@ export default function ImportarPacientes() {
           const semanasUsg = parseInt(parsed.semanas_usg) || 0;
           const diasUsg = parseInt(parsed.dias_usg) || 0;
           
-          const { dias: igAtualDias, metodo } = calcularIGAtualDias(
+          const { dias: igAtualDias, metodo, aviso } = calcularIGAtualDias(
             parsed.dum_status,
             dataDum,
             dataPrimeiroUsg,
             semanasUsg,
             diasUsg,
-            hoje
+            hoje,
+            parsed.nome_completo || `Linha ${i + 1}`
           );
           
           // Determinar IG ideal baseado nos diagnósticos
@@ -304,6 +365,7 @@ export default function ImportarPacientes() {
               data_agendada: format(dataFinal, 'dd/MM/yyyy'),
               ig_na_data_agendada: formatIGCompacto(igNaDataAgendada),
               intervalo_dias: differenceInDays(dataFinal, hoje),
+              aviso,
             },
             error: null,
           });
@@ -506,6 +568,7 @@ export default function ImportarPacientes() {
 
   const pacientesValidos = useMemo(() => pacientes.filter(p => p.calculated), [pacientes]);
   const pacientesErro = useMemo(() => pacientes.filter(p => p.error), [pacientes]);
+  const pacientesComAviso = useMemo(() => pacientes.filter(p => p.calculated?.aviso), [pacientes]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -513,17 +576,17 @@ export default function ImportarPacientes() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
-            Importar Pacientes do Google Forms
+            Importar Pacientes do Microsoft Forms
           </CardTitle>
           <CardDescription>
-            Cole os dados TSV (separados por TAB) do Google Forms para processar e calcular as datas de agendamento
+            Cole os dados TSV (separados por TAB) do Microsoft Forms para processar e calcular as datas de agendamento
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <label className="text-sm font-medium">Dados TSV (cole aqui os dados copiados da planilha)</label>
             <Textarea
-              placeholder="Cole aqui os dados TSV do Google Forms (separados por TAB)..."
+              placeholder="Cole aqui os dados TSV do Microsoft Forms (separados por TAB)..."
               value={dadosTSV}
               onChange={(e) => setDadosTSV(e.target.value)}
               className="min-h-[200px] font-mono text-xs"
@@ -554,11 +617,17 @@ export default function ImportarPacientes() {
 
           {pacientes.length > 0 && (
             <div className="space-y-4">
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-4 items-center flex-wrap">
                 <Badge variant="outline" className="text-green-600 border-green-600">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   {pacientesValidos.length} válidos
                 </Badge>
+                {pacientesComAviso.length > 0 && (
+                  <Badge variant="outline" className="text-amber-600 border-amber-600">
+                    <AlertCircle className="h-3 w-3 mr-1" />
+                    {pacientesComAviso.length} com avisos
+                  </Badge>
+                )}
                 {pacientesErro.length > 0 && (
                   <Badge variant="outline" className="text-red-600 border-red-600">
                     <XCircle className="h-3 w-3 mr-1" />
@@ -588,7 +657,7 @@ export default function ImportarPacientes() {
           )}
 
           {resultadoSalvar && (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[400px] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-green-50 dark:bg-green-950/20 border-green-200">
                   <CardContent className="p-4 flex items-center gap-2">
@@ -613,7 +682,7 @@ export default function ImportarPacientes() {
                 <Alert variant="destructive">
                   <AlertDescription>
                     <div className="font-semibold mb-2">Erros:</div>
-                    <ul className="list-disc list-inside space-y-1 text-sm max-h-40 overflow-y-auto">
+                    <ul className="list-disc list-inside space-y-1 text-sm max-h-[200px] overflow-y-auto">
                       {resultadoSalvar.errors.map((error, idx) => (
                         <li key={idx}>{error}</li>
                       ))}
@@ -650,18 +719,21 @@ export default function ImportarPacientes() {
                       <TableHead className="min-w-[100px]">Data Agendada</TableHead>
                       <TableHead className="min-w-[100px]">IG na Data</TableHead>
                       <TableHead className="min-w-[80px]">Intervalo</TableHead>
+                      <TableHead className="min-w-[150px]">Aviso</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pacientesValidos.map((p, idx) => (
-                      <TableRow key={idx}>
+                      <TableRow key={idx} className={p.calculated!.aviso ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''}>
                         <TableCell className="font-medium sticky left-0 bg-white z-10">
                           {p.parsed.nome_completo}
                         </TableCell>
                         <TableCell className="font-mono text-xs">{p.parsed.carteirinha}</TableCell>
                         <TableCell>{p.parsed.maternidade}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{p.calculated!.ig_atual_formatada}</Badge>
+                          <Badge variant={p.calculated!.ig_atual_dias > MAX_IG_DIAS ? 'destructive' : 'outline'}>
+                            {p.calculated!.ig_atual_formatada}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant={p.calculated!.metodo_ig === 'DUM' ? 'default' : 'secondary'}>
@@ -684,6 +756,9 @@ export default function ImportarPacientes() {
                           <Badge variant={p.calculated!.intervalo_dias < 10 ? 'destructive' : 'outline'}>
                             {p.calculated!.intervalo_dias}d
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-amber-600">
+                          {p.calculated!.aviso || '-'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -723,7 +798,7 @@ export default function ImportarPacientes() {
         <CardHeader>
           <CardTitle className="text-lg">Formato Esperado</CardTitle>
           <CardDescription>
-            O sistema espera dados TSV (separados por TAB) do Google Forms com as seguintes colunas
+            O sistema espera dados TSV (separados por TAB) do Microsoft Forms com as seguintes colunas
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -732,7 +807,7 @@ export default function ImportarPacientes() {
             <AlertDescription>
               <strong>Instruções:</strong>
               <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>Copie os dados da planilha do Google Forms (separados por TAB)</li>
+                <li>Copie os dados da planilha do Microsoft Forms (separados por TAB)</li>
                 <li>Cole na área de texto acima</li>
                 <li>Clique em "Processar Dados" para calcular as colunas adicionais</li>
                 <li>Use "Copiar Tabela Completa" para colar em outra planilha com as colunas calculadas</li>
