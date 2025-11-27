@@ -23,7 +23,7 @@ SET
       )
     ELSE 
       -- Single string value or comma-separated
-      ARRAY(SELECT unnest(string_to_array(diagnosticos_maternos, ',')))
+      string_to_array(diagnosticos_maternos, ',')
   END,
   diagnosticos_fetais_new = CASE 
     WHEN diagnosticos_fetais IS NULL OR diagnosticos_fetais = '' OR diagnosticos_fetais = 'null' THEN 
@@ -34,7 +34,7 @@ SET
         ARRAY[diagnosticos_fetais]
       )
     ELSE 
-      ARRAY(SELECT unnest(string_to_array(diagnosticos_fetais, ',')))
+      string_to_array(diagnosticos_fetais, ',')
   END;
 
 -- PART 3: Drop old columns and rename
