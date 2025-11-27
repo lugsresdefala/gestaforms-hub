@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useData } from '@/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -45,6 +46,7 @@ interface PacienteComparacao {
 
 export default function ImportarAgendamentosHTML() {
   const { user } = useAuth();
+  const { refreshAgendamentos } = useData();
   const [processando, setProcessando] = useState(false);
   const [dadosHTML, setDadosHTML] = useState<HTMLRecord[]>([]);
   const [comparacao, setComparacao] = useState<{
@@ -415,9 +417,11 @@ export default function ImportarAgendamentosHTML() {
               .eq('id', existente.id);
 
             if (error) {
-              console.error('Erro ao atualizar:', registro.nome_completo, error);
+              console.error('❌ ERRO AO ATUALIZAR:', registro.nome_completo, error);
+              console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
               erros++;
             } else {
+              console.log(`✅ Atualizado: ${registro.nome_completo}`);
               atualizados++;
             }
           } else {
@@ -427,9 +431,12 @@ export default function ImportarAgendamentosHTML() {
               .insert(dadosAgendamento);
 
             if (error) {
-              console.error('Erro ao inserir:', registro.nome_completo, error);
+              console.error('❌ ERRO AO INSERIR:', registro.nome_completo, error);
+              console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+              console.error('Dados do agendamento:', JSON.stringify(dadosAgendamento, null, 2));
               erros++;
             } else {
+              console.log(`✅ Inserido: ${registro.nome_completo}`);
               importados++;
             }
           }
@@ -441,8 +448,26 @@ export default function ImportarAgendamentosHTML() {
         setProgresso(Math.round(((i + 1) / dadosHTML.length) * 100));
       }
 
+      // Resumo detalhado da importação
+      console.log('='.repeat(60));
+      console.log('📊 RESUMO DA IMPORTAÇÃO:');
+      console.log(`✅ Inseridos no banco: ${importados}`);
+      console.log(`🔄 Atualizados no banco: ${atualizados}`);
+      console.log(`❌ Erros (não salvos): ${erros}`);
+      console.log(`📈 Total processado: ${dadosHTML.length}`);
+      console.log('='.repeat(60));
+
       toast.success(`${importados} novos, ${atualizados} atualizados, ${erros} erros`);
       setComparacao(prev => prev ? { ...prev, atualizados: importados + atualizados } : null);
+
+      // Atualizar dashboard com os novos registros
+      console.log('Atualizando dashboard...');
+      await refreshAgendamentos();
+      toast.info('✅ Dashboard atualizado com os novos registros');
+
+      if (erros > 0) {
+        toast.warning(`⚠️ ${erros} registros com erro - verifique o console`);
+      }
     } catch (error) {
       console.error('Erro geral:', error);
       toast.error('Erro durante importação');
