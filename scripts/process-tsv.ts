@@ -52,11 +52,11 @@ interface CliOptions {
 function parseArgs(args: string[]): CliOptions | null {
   const options: CliOptions = {
     filePath: '',
-    dumIndex: 10,
-    dumStatusIndex: 9,
-    usgDateIndex: 11,
-    usgWeeksIndex: 12,
-    usgDaysIndex: 13,
+    dumIndex: 11,          // CORRIGIDO: era 10
+    dumStatusIndex: 10,    // CORRIGIDO: era 9
+    usgDateIndex: 12,      // CORRIGIDO: era 11
+    usgWeeksIndex: 13,     // CORRIGIDO: era 12
+    usgDaysIndex: 14,      // CORRIGIDO: era 13
     referenceDateIndex: -1,
     verbose: false
   };
