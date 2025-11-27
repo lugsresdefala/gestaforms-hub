@@ -430,6 +430,7 @@ export default function ImportarAgendamentosHTML() {
           centro_clinico: 'Importado',
           data_agendamento_calculada: dataAgendada,
           status: statusMapeado,
+          email_paciente: 'importado-html@sistema.local',
           created_by: user.id
         };
 
