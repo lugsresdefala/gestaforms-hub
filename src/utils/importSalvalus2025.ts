@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
+import { parseDateSafe } from '@/lib/importSanitizer';
 
 export interface SalvalusRow {
   dia: string;
@@ -14,27 +15,8 @@ export interface SalvalusRow {
 }
 
 export const parseDate = (dateStr: string): Date | null => {
-  if (!dateStr) return null;
-  
-  try {
-    // Format: M/D/YY or MM/DD/YYYY
-    const parts = dateStr.split('/');
-    if (parts.length === 3) {
-      const month = parseInt(parts[0]) - 1;
-      const day = parseInt(parts[1]);
-      let year = parseInt(parts[2]);
-      
-      // Handle 2-digit years
-      if (year < 100) {
-        year += year < 50 ? 2000 : 1900;
-      }
-      
-      return new Date(year, month, day);
-    }
-    return null;
-  } catch {
-    return null;
-  }
+  // Use the robust sanitizer for date parsing
+  return parseDateSafe(dateStr);
 };
 
 export const calculateAppointmentDate = (diaNumero: string, mes: 'Novembro' | 'Dezembro'): Date | null => {

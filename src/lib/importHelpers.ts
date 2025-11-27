@@ -1,7 +1,11 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Re-export the sanitizer functions for backward compatibility
+export { parseDateSafe, isPlaceholderDate, sanitizeDateToISO } from './importSanitizer';
+
 /**
  * Parse de data no formato DD/MM/YYYY ou D/M/YYYY
+ * @deprecated Use parseDateSafe from importSanitizer instead for better placeholder detection
  */
 export function parseDateDMY(dateStr: string): Date | null {
   if (!dateStr || dateStr === '-' || dateStr === '') return null;

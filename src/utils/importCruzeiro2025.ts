@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
 import { addDays } from 'date-fns';
+import { parseDateSafe } from '@/lib/importSanitizer';
 
 export interface CruzeiroRow {
   dia: string;
@@ -19,23 +20,17 @@ function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
   
   try {
+    // For Excel serial date numbers
     if (typeof dateStr === 'number') {
       const date = XLSX.SSF.parse_date_code(dateStr);
-      return new Date(date.y, date.m - 1, date.d);
+      const parsedDate = new Date(date.y, date.m - 1, date.d);
+      // Reject placeholder years
+      if (parsedDate.getFullYear() < 1920) return null;
+      return parsedDate;
     }
     
-    const parts = dateStr.toString().split(/[\/\-]/);
-    if (parts.length === 3) {
-      let day = parseInt(parts[0]);
-      let month = parseInt(parts[1]) - 1;
-      let year = parseInt(parts[2]);
-      
-      if (year < 100) {
-        year = year > 50 ? 1900 + year : 2000 + year;
-      }
-      
-      return new Date(year, month, day);
-    }
+    // Use the robust sanitizer for string dates
+    return parseDateSafe(dateStr.toString());
   } catch (error) {
     console.error('Erro ao fazer parse da data:', dateStr, error);
   }
