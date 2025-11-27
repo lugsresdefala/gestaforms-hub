@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
 import { verificarDisponibilidade } from '@/lib/vagasValidation';
+import { parseDateSafe, chooseAndCompute, sanitizeDateToISO, isPlaceholderDate } from '@/lib/importSanitizer';
 
 interface LoteRow {
   id: string;
@@ -58,20 +59,8 @@ function parseCSVLine(line: string): string[] {
 }
 
 function parseDate(dateStr: string): Date | null {
-  if (!dateStr || dateStr === '-') return null;
-  
-  // Try M/D/YYYY or MM/DD/YYYY (American format used in CSV)
-  const parts = dateStr.split('/');
-  if (parts.length === 3) {
-    const month = parseInt(parts[0]) - 1;
-    const day = parseInt(parts[1]);
-    const year = parseInt(parts[2]);
-    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-      return new Date(year, month, day);
-    }
-  }
-  
-  return null;
+  // Use the robust sanitizer for date parsing
+  return parseDateSafe(dateStr);
 }
 
 function extractProcedimentos(procedimentosStr: string): string[] {
@@ -197,6 +186,11 @@ export async function importarAgendamentosLote(
       const dataDumParsed = parseDate(dataDum);
       const dataPrimeiroUsgParsed = parseDate(dataPrimeiroUsg);
       
+      // Validate placeholder dates using sanitizer
+      if (dataDum && isPlaceholderDate(dataDum)) {
+        warnings.push(`Linha ${i + 1}: DUM parece ser placeholder (${dataDum}), será ignorada`);
+      }
+      
       if (!dataPrimeiroUsgParsed) {
         errors.push(`Linha ${i + 1}: Data do primeiro USG é obrigatória`);
         failed++;
@@ -212,10 +206,25 @@ export async function importarAgendamentosLote(
         continue;
       }
       
+      // Use importSanitizer for deterministic calculation
+      const sanitizedCalc = chooseAndCompute({
+        dumRaw: dataDum,
+        dumStatus: dumStatus,
+        usgDateRaw: dataPrimeiroUsg,
+        usgWeeks: semanasUsgNum,
+        usgDays: diasUsgNum
+      });
+      
+      if (sanitizedCalc.source === 'INVALID') {
+        errors.push(`Linha ${i + 1}: Não foi possível calcular IG - ${sanitizedCalc.reason}`);
+        failed++;
+        continue;
+      }
+      
       // Calcular agendamento usando a função existente
       const dadosCalculo = {
         dumStatus: dumStatus || 'Incerta',
-        dataDum: dataDumParsed?.toISOString().split('T')[0],
+        dataDum: sanitizeDateToISO(dataDum),
         dataPrimeiroUsg: dataPrimeiroUsgParsed.toISOString().split('T')[0],
         semanasUsg: semanasUsgNum.toString(),
         diasUsg: diasUsgNum.toString(),
@@ -233,7 +242,7 @@ export async function importarAgendamentosLote(
       });
       
       // Garantir que a data está em 2025
-      let dataAgendamento = new Date(resultado.dataAgendamento);
+      const dataAgendamento = new Date(resultado.dataAgendamento);
       if (dataAgendamento.getFullYear() < 2025) {
         dataAgendamento.setFullYear(2025);
       }
@@ -282,7 +291,7 @@ export async function importarAgendamentosLote(
         ig_pretendida: resultado.igAgendamento,
         data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
         idade_gestacional_calculada: resultado.igFinal.displayText,
-        observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}`,
+        observacoes_agendamento: `${resultado.observacoes}\nProtocolo: ${resultado.protocoloAplicado || 'Padrão'}\nDisponibilidade: ${disponibilidade.mensagem}\n\n[AUDITORIA] Fonte IG: ${sanitizedCalc.source} | ${sanitizedCalc.reason}`,
         created_by: createdBy,
         status: 'pendente'
       };

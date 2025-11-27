@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
+import { parseDateSafe } from '@/lib/importSanitizer';
 
 interface CSVRow {
   dia: string;
@@ -35,26 +36,8 @@ function parseCSVLine(line: string): CSVRow | null {
 }
 
 function parseDate(dateStr: string): Date | null {
-  if (!dateStr) return null;
-  
-  // Try DD/MM/YYYY
-  const parts = dateStr.split('/');
-  if (parts.length === 3) {
-    const day = parseInt(parts[0]);
-    const month = parseInt(parts[1]) - 1;
-    const year = parseInt(parts[2]);
-    return new Date(year, month, day);
-  }
-  
-  // Try M/D/YYYY
-  if (parts.length === 3) {
-    const month = parseInt(parts[0]) - 1;
-    const day = parseInt(parts[1]);
-    const year = parseInt(parts[2]);
-    return new Date(year, month, day);
-  }
-  
-  return null;
+  // Use the robust sanitizer for date parsing
+  return parseDateSafe(dateStr);
 }
 
 function calculateAppointmentDate(diaNumero: string, mes: 'Novembro' | 'Dezembro'): Date | null {
