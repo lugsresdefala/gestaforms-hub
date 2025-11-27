@@ -243,7 +243,6 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         necessidade_reserva_sangue: 'Não',
         medico_responsavel: 'Importado',
         centro_clinico: 'Importado',
-        email_paciente: 'nao-informado@example.com',
         status: 'aprovado',
         created_by: createdBy
       };

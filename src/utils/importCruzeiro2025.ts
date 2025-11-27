@@ -219,7 +219,6 @@ async function processCruzeiroRow(row: CruzeiroRow) {
     nome_completo: row.nome.trim(),
     data_nascimento: dataNascimento.toISOString().split('T')[0],
     telefones: row.telefone || '',
-    email_paciente: 'nao.informado@maternidade.com',
     centro_clinico: 'Cruzeiro',
     medico_responsavel: 'Importado da agenda',
     maternidade: 'Cruzeiro',

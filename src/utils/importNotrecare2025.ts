@@ -233,7 +233,6 @@ async function processNotrecareRow(row: NotrecareRow) {
     nome_completo: row.nome.trim(),
     data_nascimento: dataNascimento.toISOString().split('T')[0],
     telefones: row.telefone || '',
-    email_paciente: 'nao.informado@maternidade.com',
     centro_clinico: 'Notrecare',
     medico_responsavel: 'Importado da agenda',
     maternidade: 'Notrecare',
