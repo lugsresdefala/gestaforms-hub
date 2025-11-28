@@ -26,3 +26,6 @@ dist-ssr
 
 # Data output directory (generated files)
 data/output/
+
+# Export directory (generated calendar files)
+exports/
