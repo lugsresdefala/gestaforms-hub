@@ -14,6 +14,7 @@ export default defineConfig({
         'src/lib/importSanitizer.ts',
         'src/lib/import/dateParser.ts',
         'src/lib/import/gestationalCalculator.ts',
+        'src/lib/import/gestationalSnapshot.ts',
         'src/lib/import/tsvProcessor.ts',
         'src/lib/import/htmlFormParser.ts',
         'src/lib/import/types.ts',
