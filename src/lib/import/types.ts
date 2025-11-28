@@ -90,3 +90,31 @@ export interface ColumnMapping {
   /** Column index for reference date (-1 means use today) */
   referenceDateIndex?: number;
 }
+
+/**
+ * Extended parameters for chooseAndCompute function with protocol detection
+ */
+export interface ExtendedComputeParams extends ComputeParams {
+  /** Diagnosis text for protocol detection */
+  diagnostico?: string | null;
+  /** Indication text for protocol detection */
+  indicacao?: string | null;
+}
+
+/**
+ * Extended calculation result with protocol-based scheduling
+ */
+export interface ExtendedCalculationResult extends CalculationResult {
+  /** Ideal date for scheduling based on protocol (adjusted for Sunday) */
+  dataIdeal: Date | null;
+  /** Ideal gestational age text (e.g., "39s 0d") based on protocol */
+  igIdealText: string;
+  /** Ideal gestational age in days from protocol */
+  igIdealDays: number;
+  /** Gestational age at the scheduled date (formatted) */
+  igAtDataIdeal: string;
+  /** Days between reference date and ideal date */
+  deltaAteIdeal: number;
+  /** Protocol applied (cerclagem, hipertensao, dmg_insulina, dmg_sem_insulina, eletivas, default) */
+  protocoloAplicado: string;
+}

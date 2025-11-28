@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
+import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
 
 // Tipos
@@ -46,6 +46,10 @@ interface PacienteRow {
   // Campos calculados
   ig_calculada?: string;
   data_ideal?: string;
+  ig_ideal?: string;
+  ig_na_data_agendada?: string;
+  delta_dias?: number;
+  protocolo?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
 }
@@ -296,33 +300,43 @@ export default function ImportarPorTabela() {
   const processarDados = async () => {
     setProcessing(true);
 
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
     const processedRows = rows.map((row) => {
       try {
         if (!row.nome_completo || !row.carteirinha) {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
         if (!result || result.source === "INVALID") {
-          return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
+          return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = igPretendidaSemanas * 7 - result.gaDays;
-        const dataIdeal = new Date();
-        dataIdeal.setDate(dataIdeal.getDate() + diasRestantes);
-
+        // Use protocol-based ideal date (adjusted for Sunday)
+        const dataAgendada = result.dataIdeal;
+        
+        // Only show current IG if scheduled date is in the future
+        const isFutureDate = dataAgendada && dataAgendada > hoje;
+        
         return {
           ...row,
-          ig_calculada: result.gaFormatted,
-          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
+          ig_calculada: isFutureDate ? result.gaFormatted : "-",
+          data_ideal: dataAgendada ? dataAgendada.toLocaleDateString("pt-BR") : "-",
+          ig_ideal: result.igIdealText,
+          ig_na_data_agendada: result.igAtDataIdeal,
+          delta_dias: result.deltaAteIdeal,
+          protocolo: result.protocoloAplicado,
           status: "valido" as const,
           erro: undefined,
         };
@@ -354,6 +368,8 @@ export default function ImportarPorTabela() {
     setSaving(true);
     let salvos = 0;
     let erros = 0;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
     for (const row of validRows) {
       try {
@@ -371,18 +387,22 @@ export default function ImportarPorTabela() {
           continue;
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = result ? igPretendidaSemanas * 7 - result.gaDays : 0;
-        const dataAgendamento = new Date();
-        dataAgendamento.setDate(dataAgendamento.getDate() + diasRestantes);
+        // Use protocol-based ideal date
+        const dataAgendamento = result?.dataIdeal || new Date();
+        
+        // Only persist IG if scheduled date is in future
+        const isFutureDate = dataAgendamento > hoje;
+        const igCalculadaParaSalvar = isFutureDate ? result?.gaFormatted : null;
 
         const dataNascimento = parseDateSafe(row.data_nascimento);
         const dataDum = parseDateSafe(row.data_dum);
@@ -417,7 +437,7 @@ export default function ImportarPorTabela() {
           medico_responsavel: row.medico_responsavel || "Não informado",
           email_paciente: row.email_paciente.toLowerCase().trim() || "nao-informado@sistema.local",
           centro_clinico: row.centro_clinico || "Centro Clínico Hapvida",
-          idade_gestacional_calculada: result?.gaFormatted || null,
+          idade_gestacional_calculada: igCalculadaParaSalvar,
           data_agendamento_calculada: dataAgendamento.toISOString().split("T")[0],
           created_by: user.id,
           status: "pendente",
@@ -534,8 +554,12 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-32">Maternidade</TableHead>
                     <TableHead className="min-w-[150px]">Médico</TableHead>
                     <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[150px]">IG Calculada</TableHead>
-                    <TableHead className="w-32">Data Ideal</TableHead>
+                    <TableHead className="w-24">IG Atual</TableHead>
+                    <TableHead className="w-24">IG Ideal</TableHead>
+                    <TableHead className="w-32">Data Agend.</TableHead>
+                    <TableHead className="w-24">IG Agend.</TableHead>
+                    <TableHead className="w-20">Δ Dias</TableHead>
+                    <TableHead className="w-28">Protocolo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -786,7 +810,11 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm text-muted-foreground">{row.ig_ideal || "-"}</TableCell>
                       <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm text-green-600">{row.ig_na_data_agendada || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm">{row.delta_dias !== undefined ? row.delta_dias : "-"}</TableCell>
+                      <TableCell className="text-xs">{row.protocolo || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

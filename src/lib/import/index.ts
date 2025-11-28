@@ -19,7 +19,9 @@ export type {
   ComputeParams,
   GestationalAgeResult,
   TsvProcessingResult,
-  ColumnMapping
+  ColumnMapping,
+  ExtendedComputeParams,
+  ExtendedCalculationResult
 } from './types';
 
 // Date Parser
@@ -38,7 +40,10 @@ export {
   dppFromDum,
   dppFromGaDays,
   formatGa,
+  formatGaCompact,
   chooseAndCompute,
+  chooseAndComputeExtended,
+  detectProtocol,
   FULL_TERM_DAYS_CONSTANT
 } from './gestationalCalculator';
 

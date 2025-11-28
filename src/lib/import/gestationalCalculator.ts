@@ -15,7 +15,14 @@
 
 import { differenceInDays, addDays } from 'date-fns';
 import { parseDateSafe } from './dateParser';
-import type { CalculationResult, ComputeParams, GestationalAgeResult } from './types';
+import { adjustForSunday } from '../capacityRules';
+import type { 
+  CalculationResult, 
+  ComputeParams, 
+  GestationalAgeResult,
+  ExtendedComputeParams,
+  ExtendedCalculationResult 
+} from './types';
 
 /** Standard pregnancy duration in days (40 weeks) */
 const FULL_TERM_DAYS = 40 * 7; // 280 days
@@ -269,3 +276,268 @@ export function chooseAndCompute(params: ComputeParams): CalculationResult {
 
 /** Exported for validation purposes */
 export const FULL_TERM_DAYS_CONSTANT = FULL_TERM_DAYS;
+
+/**
+ * Protocol ideal gestational ages in days according to PT-AON-097
+ */
+const PROTOCOL_IG_IDEAL = {
+  cerclagem: 105,      // 15 weeks
+  hipertensao: 259,    // 37 weeks
+  dmg_insulina: 266,   // 38 weeks
+  dmg_sem_insulina: 280, // 40 weeks
+  eletivas: 273,       // 39 weeks
+  default: 273         // 39 weeks
+} as const;
+
+/**
+ * Tolerance limits in days based on USG weeks (PR-DIMEP-PGS-01)
+ */
+function getToleranceDays(usgWeeks: number): number {
+  if (usgWeeks >= 8 && usgWeeks <= 9) return 5;
+  if (usgWeeks >= 10 && usgWeeks <= 11) return 7;
+  if (usgWeeks >= 12 && usgWeeks <= 13) return 10;
+  if (usgWeeks >= 14 && usgWeeks <= 15) return 14;
+  if (usgWeeks >= 16 && usgWeeks <= 19) return 21;
+  return 21; // Default for > 19 weeks
+}
+
+/**
+ * Format gestational age as compact string "Xs Yd"
+ * 
+ * @param weeks - Weeks component
+ * @param days - Days component
+ * @returns Formatted string like "39s 0d"
+ */
+export function formatGaCompact(weeks: number, days: number): string {
+  return `${weeks}s ${days}d`;
+}
+
+/**
+ * Detect the applicable protocol based on diagnosis and indication text.
+ * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → eletivas → default
+ * 
+ * @param text - Combined diagnosis and indication text (lowercase)
+ * @returns Protocol key
+ */
+export function detectProtocol(text: string): keyof typeof PROTOCOL_IG_IDEAL {
+  const lowerText = text.toLowerCase();
+  
+  // 1. Cerclagem / IIC (priority)
+  if (/cerclagem|iic|incompet[eê]ncia\s*(istmo|cervical)?|istmo.?cervical/i.test(lowerText)) {
+    return 'cerclagem';
+  }
+  
+  // 2. Hipertensão / Pré-eclâmpsia / DHEG / HAS / HAC
+  // Match various spellings: pré-eclâmpsia, pre-eclampsia, preeclâmpsia, etc.
+  if (/hipertens[ãa]o|pr[eé].?ecl[aâ]mpsia|dheg|\bhas\b|\bhac\b/i.test(lowerText)) {
+    return 'hipertensao';
+  }
+  
+  // 3. DMG + Insulina
+  if (/dm[g]?.*insulin|insulin.*dm[g]?|diabetes\s+gestacional.*insulin|insulin.*diabetes\s+gestacional/i.test(lowerText)) {
+    return 'dmg_insulina';
+  }
+  
+  // 4. DMG sem Insulina (only DMG without insulina keyword)
+  if (/dmg|diabetes\s+gestacional/i.test(lowerText) && !/insulin/i.test(lowerText)) {
+    return 'dmg_sem_insulina';
+  }
+  
+  // 5. Eletivas (desire/elective)
+  if (/eletiv[ao]|desejo\s+materno|a\s+pedido|cesarea\s+eletiva/i.test(lowerText)) {
+    return 'eletivas';
+  }
+  
+  // 6. Default (39 weeks)
+  return 'default';
+}
+
+/**
+ * Calculate gestational age from days
+ */
+function daysToGa(totalDays: number): GestationalAgeResult {
+  const weeks = Math.floor(totalDays / 7);
+  const days = totalDays % 7;
+  return { totalDays, weeks, days };
+}
+
+/**
+ * Extended chooseAndCompute with DUM/USG hierarchy, tolerance checks, and protocol detection.
+ * 
+ * Implements the following hierarchy (2.1.x):
+ * - Case 1: DUM absent/uncertain → use USG
+ * - Case 2: DUM reliable + USG available → compare with tolerance per USG weeks
+ * - Case 3: Only DUM available
+ * - Case 4: Insufficient data → error
+ * 
+ * Also detects protocols (2.2) and calculates ideal date based on protocol IG.
+ * 
+ * @param params - Extended calculation parameters including diagnosis/indication
+ * @returns Extended calculation result with protocol-based scheduling
+ */
+export function chooseAndComputeExtended(params: ExtendedComputeParams): ExtendedCalculationResult {
+  const {
+    dumRaw,
+    dumStatus,
+    usgDateRaw,
+    usgWeeks,
+    usgDays,
+    diagnostico,
+    indicacao,
+    referenceDate = new Date()
+  } = params;
+
+  // Parse dates
+  const dumDate = parseDateSafe(dumRaw);
+  const usgDate = parseDateSafe(usgDateRaw);
+  
+  // Parse USG weeks/days
+  const usgWeeksNum = parseNumeric(usgWeeks);
+  const usgDaysNum = parseNumeric(usgDays);
+
+  // Check DUM validity
+  const dumReliable = isDumReliable(dumStatus);
+  const dumValid = dumDate !== null && dumReliable;
+
+  // Check USG validity (needs date and at least weeks to be meaningful)
+  const usgValid = usgDate !== null && (usgWeeksNum > 0 || usgDaysNum > 0);
+
+  // Combine diagnosis and indication for protocol detection
+  const combinedText = [diagnostico || '', indicacao || ''].join(' ').trim();
+  const protocoloAplicado = detectProtocol(combinedText);
+  const igIdealDays = PROTOCOL_IG_IDEAL[protocoloAplicado];
+  const igIdealGa = daysToGa(igIdealDays);
+  const igIdealText = formatGaCompact(igIdealGa.weeks, igIdealGa.days);
+
+  // Helper to create invalid result
+  const createInvalidResult = (reason: string): ExtendedCalculationResult => ({
+    source: 'INVALID',
+    gaDays: 0,
+    gaWeeks: 0,
+    gaDaysRemainder: 0,
+    dpp: null,
+    reason,
+    gaFormatted: 'Não calculado',
+    dataIdeal: null,
+    igIdealText,
+    igIdealDays,
+    igAtDataIdeal: '-',
+    deltaAteIdeal: 0,
+    protocoloAplicado
+  });
+
+  // Case 4: Insufficient data
+  if (!dumValid && !usgValid) {
+    const reasons: string[] = [];
+    if (!dumRaw) {
+      reasons.push('DUM não informada');
+    } else if (dumDate === null) {
+      reasons.push(`DUM inválida/placeholder (${dumRaw})`);
+    } else if (!dumReliable) {
+      reasons.push(`DUM não confiável (status: ${dumStatus || 'não informado'})`);
+    }
+    if (!usgDateRaw) {
+      reasons.push('USG não informado');
+    } else if (usgDate === null) {
+      reasons.push(`Data USG inválida/placeholder (${usgDateRaw})`);
+    } else if (usgWeeksNum <= 0 && usgDaysNum <= 0) {
+      reasons.push('IG no USG não informada (0 semanas e 0 dias)');
+    }
+    return createInvalidResult('Dados insuficientes: ' + reasons.join('; ') + '.');
+  }
+
+  let finalSource: 'DUM' | 'USG';
+  let gaDays: number;
+  let ga: GestationalAgeResult;
+  let dpp: Date;
+  let reason: string;
+
+  // Case 1: DUM absent/uncertain → use USG
+  if (!dumValid && usgValid && usgDate) {
+    ga = gaFromUsgAt(usgDate, usgWeeksNum, usgDaysNum, referenceDate);
+    dpp = dppFromGaDays(ga.totalDays, referenceDate);
+    finalSource = 'USG';
+    gaDays = ga.totalDays;
+    
+    if (dumDate === null && dumRaw) {
+      reason = `DUM inválida/placeholder (${dumRaw}). Utilizando USG (${usgWeeksNum}s${usgDaysNum}d em ${usgDateRaw}).`;
+    } else if (!dumReliable) {
+      reason = `DUM não confiável (status: ${dumStatus || 'não informado'}). Utilizando USG (${usgWeeksNum}s${usgDaysNum}d em ${usgDateRaw}).`;
+    } else {
+      reason = `DUM não disponível. Utilizando USG (${usgWeeksNum}s${usgDaysNum}d em ${usgDateRaw}).`;
+    }
+  }
+  // Case 2: DUM reliable + USG available → compare with tolerance
+  else if (dumValid && dumDate && usgValid && usgDate) {
+    const gaDum = gaFromDumAt(dumDate, referenceDate);
+    const gaUsg = gaFromUsgAt(usgDate, usgWeeksNum, usgDaysNum, referenceDate);
+    const toleranceDays = getToleranceDays(usgWeeksNum);
+    const diffDays = Math.abs(gaDum.totalDays - gaUsg.totalDays);
+
+    if (diffDays > toleranceDays) {
+      // Difference exceeds tolerance → use USG
+      finalSource = 'USG';
+      ga = gaUsg;
+      dpp = dppFromGaDays(ga.totalDays, referenceDate);
+      gaDays = ga.totalDays;
+      reason = `Diferença DUM/USG de ${diffDays} dias > tolerância de ${toleranceDays} dias (USG ${usgWeeksNum}s). Utilizando USG.`;
+    } else {
+      // Difference within tolerance → use DUM
+      finalSource = 'DUM';
+      ga = gaDum;
+      dpp = dppFromDum(dumDate);
+      gaDays = ga.totalDays;
+      reason = `DUM confiável, diferença de ${diffDays} dias ≤ tolerância de ${toleranceDays} dias. Utilizando DUM.`;
+    }
+  }
+  // Case 3: Only DUM available
+  else if (dumValid && dumDate) {
+    ga = gaFromDumAt(dumDate, referenceDate);
+    dpp = dppFromDum(dumDate);
+    finalSource = 'DUM';
+    gaDays = ga.totalDays;
+    reason = `DUM confiável (${dumRaw}). IG calculada a partir da DUM.`;
+  }
+  // Should not reach here, but fallback
+  else {
+    return createInvalidResult('Erro inesperado no cálculo.');
+  }
+
+  // Calculate ideal date based on protocol IG
+  const daysUntilIdealIg = igIdealDays - gaDays;
+  let dataIdeal: Date;
+  
+  if (daysUntilIdealIg <= 0) {
+    // Already past ideal IG, use today (don't go backwards)
+    dataIdeal = new Date(referenceDate);
+  } else {
+    dataIdeal = addDays(referenceDate, daysUntilIdealIg);
+  }
+  
+  // Adjust for Sunday (move to Monday)
+  dataIdeal = adjustForSunday(dataIdeal);
+  
+  // Calculate delta days until ideal date
+  const deltaAteIdeal = differenceInDays(dataIdeal, referenceDate);
+  
+  // Calculate IG at the ideal date
+  const igAtIdealDays = gaDays + deltaAteIdeal;
+  const igAtIdealGa = daysToGa(igAtIdealDays);
+  const igAtDataIdeal = formatGaCompact(igAtIdealGa.weeks, igAtIdealGa.days);
+
+  return {
+    source: finalSource,
+    gaDays,
+    gaWeeks: ga.weeks,
+    gaDaysRemainder: ga.days,
+    dpp,
+    reason,
+    gaFormatted: formatGa(ga.weeks, ga.days),
+    dataIdeal,
+    igIdealText,
+    igIdealDays,
+    igAtDataIdeal,
+    deltaAteIdeal,
+    protocoloAplicado
+  };
+}
