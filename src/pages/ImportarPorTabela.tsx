@@ -116,7 +116,7 @@ export default function ImportarPorTabela() {
     Array.from({ length: 65 }, () => ({ ...EMPTY_ROW, id: crypto.randomUUID() })),
   );
   const [processing, setProcessing] = useState(false);
-  the[(saving, setSaving)] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
 
   const addRow = () => {
