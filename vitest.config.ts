@@ -18,7 +18,8 @@ export default defineConfig({
         'src/lib/import/tsvProcessor.ts',
         'src/lib/import/htmlFormParser.ts',
         'src/lib/import/types.ts',
-        'src/lib/import/index.ts'
+        'src/lib/import/index.ts',
+        'src/lib/capacityRules.ts'
       ]
     }
   },

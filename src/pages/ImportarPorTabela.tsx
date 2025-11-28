@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter, Download } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
+import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
 import { getGestationalSnapshot, formatInterval, getIntervalColorClass, type GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
 
@@ -49,6 +49,10 @@ interface PacienteRow {
   // Campos calculados
   ig_calculada?: string;
   data_ideal?: string;
+  ig_ideal?: string;
+  ig_na_data_agendada?: string;
+  delta_dias?: number;
+  protocolo?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
   // Campos de snapshot gestacional
@@ -57,9 +61,6 @@ interface PacienteRow {
 
 type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
 type SortDirection = 'asc' | 'desc';
-
-/** Milliseconds per day for date difference calculations */
-const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
@@ -368,28 +369,47 @@ export default function ImportarPorTabela() {
   const processarDados = async () => {
     setProcessing(true);
 
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
     const processedRows = rows.map((row) => {
       try {
         if (!row.nome_completo || !row.carteirinha) {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
         if (!result || result.source === "INVALID") {
-          return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
+          return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = igPretendidaSemanas * 7 - result.gaDays;
-        const dataIdeal = new Date();
-        dataIdeal.setDate(dataIdeal.getDate() + diasRestantes);
+        // Data agendada baseada no protocolo (dataIdeal) e ajuste posterior feito internamente conforme regras
+        const dataAgendada = result.dataIdeal;
+        const isFutureDate = !!(dataAgendada && dataAgendada > hoje);
+
+        // Compute gestational snapshot for enhanced display
+        const snapshot = getGestationalSnapshot({
+          dumRaw: row.data_dum,
+          dumStatus: row.dum_status,
+          usgDateRaw: row.data_primeiro_usg,
+          usgWeeks: normalizarSemanasUsg(row.semanas_usg),
+          usgDays: normalizarDiasUsg(row.dias_usg),
+          igPretendida: row.ig_pretendida,
+          diagnosticosMaternos: row.diagnosticos_maternos,
+          diagnosticosFetais: row.diagnosticos_fetais,
+          indicacaoProcedimento: row.indicacao_procedimento,
+          dataAgendamentoCalculada: dataAgendada ? dataAgendada.toISOString().split('T')[0] : null,
+          dataAgendamentoManual: null,
+        });
 
         // Compute gestational snapshot for enhanced display
         const snapshot = getGestationalSnapshot({
@@ -408,8 +428,12 @@ export default function ImportarPorTabela() {
 
         return {
           ...row,
-          ig_calculada: result.gaFormatted,
-          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
+          ig_calculada: isFutureDate ? result.gaFormatted : "-",
+          data_ideal: dataAgendada ? dataAgendada.toLocaleDateString("pt-BR") : "-",
+          ig_ideal: result.igIdealText,
+          ig_na_data_agendada: result.igAtDataIdeal,
+          delta_dias: result.deltaAteIdeal,
+          protocolo: result.protocoloAplicado,
           status: "valido" as const,
           erro: undefined,
           snapshot,
@@ -442,6 +466,8 @@ export default function ImportarPorTabela() {
     setSaving(true);
     let salvos = 0;
     let erros = 0;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
     for (const row of validRows) {
       try {
@@ -475,18 +501,22 @@ export default function ImportarPorTabela() {
           continue;
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = result ? igPretendidaSemanas * 7 - result.gaDays : 0;
-        const dataAgendamento = new Date();
-        dataAgendamento.setDate(dataAgendamento.getDate() + diasRestantes);
+        // Use protocol-based ideal date
+        const dataAgendamento = result?.dataIdeal || new Date();
+        
+        // Only persist IG if scheduled date is in future
+        const isFutureDate = dataAgendamento > hoje;
+        const igCalculadaParaSalvar = isFutureDate ? result?.gaFormatted : null;
 
         const dataNascimento = parseDateSafe(row.data_nascimento);
         const dataDum = parseDateSafe(row.data_dum);
@@ -521,7 +551,7 @@ export default function ImportarPorTabela() {
           medico_responsavel: row.medico_responsavel || "Não informado",
           email_paciente: row.email_paciente.toLowerCase().trim() || "nao-informado@sistema.local",
           centro_clinico: row.centro_clinico || "Centro Clínico Hapvida",
-          idade_gestacional_calculada: result?.gaFormatted || null,
+          idade_gestacional_calculada: igCalculadaParaSalvar,
           data_agendamento_calculada: dataAgendamento.toISOString().split("T")[0],
           created_by: user.id,
           status: "pendente",
@@ -683,14 +713,9 @@ export default function ImportarPorTabela() {
               {processing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Calculator className="w-4 h-4 mr-1" />}
               Processar Dados
             </Button>
-            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}>
+            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}> 
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
-            </Button>
-            <Button onClick={exportarResultados} variant="outline" size="sm" 
-              disabled={rows.filter(r => r.status === 'valido' || r.status === 'salvo').length === 0}>
-              <Download className="w-4 h-4 mr-1" />
-              Exportar Resultados ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
             </Button>
             <div className="flex items-center gap-2 ml-4 border-l pl-4">
               <Filter className="w-4 h-4 text-muted-foreground" />
@@ -1021,8 +1046,9 @@ export default function ImportarPorTabela() {
                           onFocus={() => handleCellFocus(idx, "email_paciente")}
                         />
                       </TableCell>
+                      {/* IG Calculada atual (apenas se data agendada for futura) */}
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
-                      {/* IG Ideal with tooltip */}
+                      {/* IG Ideal com tooltip */}
                       <TableCell className="font-mono text-sm">
                         {row.snapshot ? (
                           <Tooltip>
@@ -1045,7 +1071,7 @@ export default function ImportarPorTabela() {
                           </Tooltip>
                         ) : "-"}
                       </TableCell>
-                      {/* Data Agendada with source badge */}
+                      {/* Data Agendada com badge da fonte */}
                       <TableCell className="font-mono text-sm">
                         {row.snapshot?.dataAgendada ? (
                           <div className="flex flex-col gap-1">
@@ -1063,11 +1089,11 @@ export default function ImportarPorTabela() {
                       <TableCell className="font-mono text-sm">
                         {row.snapshot?.igNaDataAgendada || "-"}
                       </TableCell>
-                      {/* Intervalo with color and tooltip */}
+                      {/* Intervalo com cor e tooltip */}
                       <TableCell className="font-mono text-sm">
                         {row.snapshot ? (() => {
                           const colorClass = getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias);
-                          const colorStyles = {
+                          const colorStyles: Record<string,string> = {
                             green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
                             yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
                             red: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
@@ -1115,9 +1141,9 @@ export default function ImportarPorTabela() {
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ''}</span>
             <span>
-              Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
-              {rows.filter((r) => r.status === "erro").length} | Salvos:{" "}
-              {rows.filter((r) => r.status === "salvo").length}
+              Válidos: {rows.filter((r) => r.status === "valido").length} | Erros: {
+              rows.filter((r) => r.status === "erro").length} | Salvos: {
+              rows.filter((r) => r.status === "salvo").length}
             </span>
           </div>
         </CardContent>
