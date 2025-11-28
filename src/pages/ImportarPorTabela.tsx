@@ -5,12 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
+import { addDays, differenceInDays } from "date-fns";
+import { PROTOCOLS } from "@/lib/obstetricProtocols";
+import {
+  encontrarDataAgendada,
+  formatIGCurta,
+  calcularIGNaData,
+  getIntervaloColor,
+  type StatusAgendamento,
+  LEAD_TIME_MINIMO,
+} from "@/lib/scheduling";
 
 // Tipos
 interface PacienteRow {
@@ -48,6 +59,18 @@ interface PacienteRow {
   data_ideal?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
+  // Novos campos de agendamento
+  ig_ideal?: string;
+  ig_ideal_semanas?: number;
+  ig_ideal_dias?: number;
+  data_agendada?: string;
+  status_agendamento?: StatusAgendamento;
+  ig_na_data_agendada?: string;
+  intervalo_dias?: number;
+  lead_time_dias?: number;
+  margem_protocolo?: number;
+  protocolo_aplicado?: string;
+  motivo_calculo?: string;
 }
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
@@ -314,17 +337,63 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
         }
 
+        // Determinar protocolo com base na IG pretendida ou diagnósticos
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = igPretendidaSemanas * 7 - result.gaDays;
-        const dataIdeal = new Date();
-        dataIdeal.setDate(dataIdeal.getDate() + diasRestantes);
+        const igIdealSemanas = igPretendidaSemanas;
+        const igIdealDias = 0;
+        
+        // Usar protocolo padrão desejo_materno ou buscar por diagnóstico
+        let protocolo = PROTOCOLS['desejo_materno'];
+        let protocoloNome = 'desejo_materno';
+        
+        // Tentar encontrar protocolo baseado em diagnósticos
+        const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
+        for (const [key, proto] of Object.entries(PROTOCOLS)) {
+          if (diagnosticos.includes(key.replace(/_/g, ' '))) {
+            protocolo = proto;
+            protocoloNome = key;
+            break;
+          }
+        }
+        
+        const margemDias = protocolo?.margemDias || 7;
+
+        // Calcular data ideal baseada na IG pretendida
+        const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
+        const dataIdeal = addDays(new Date(), diasRestantes);
+        
+        // Usar a função de agendamento para encontrar data válida
+        const scheduleResult = encontrarDataAgendada({
+          dataIdeal,
+          maternidade: row.maternidade || 'Salvalus',
+          dataReferencia: new Date(),
+          margemDias,
+        });
+
+        // Calcular IG na data agendada
+        let igNaDataAgendada = "";
+        if (scheduleResult.dataAgendada) {
+          const igNaData = calcularIGNaData(result.gaDays, new Date(), scheduleResult.dataAgendada);
+          igNaDataAgendada = formatIGCurta(igNaData.semanas, igNaData.dias);
+        }
 
         return {
           ...row,
           ig_calculada: result.gaFormatted,
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
-          status: "valido" as const,
-          erro: undefined,
+          ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
+          ig_ideal_semanas: igIdealSemanas,
+          ig_ideal_dias: igIdealDias,
+          data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
+          status_agendamento: scheduleResult.status,
+          ig_na_data_agendada: igNaDataAgendada || "-",
+          intervalo_dias: scheduleResult.intervaloDias,
+          lead_time_dias: scheduleResult.leadTimeDias,
+          margem_protocolo: margemDias,
+          protocolo_aplicado: protocoloNome,
+          motivo_calculo: scheduleResult.motivo,
+          status: scheduleResult.status === 'needs_review' ? "erro" as const : "valido" as const,
+          erro: scheduleResult.status === 'needs_review' ? 'Revisão necessária: ' + scheduleResult.motivo : undefined,
         };
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
@@ -336,7 +405,8 @@ export default function ImportarPorTabela() {
 
     const validos = processedRows.filter((r) => r.status === "valido").length;
     const erros = processedRows.filter((r) => r.status === "erro").length;
-    toast.info(`Processados: ${validos} válidos, ${erros} com erros`);
+    const needsReview = processedRows.filter((r) => r.status_agendamento === "needs_review").length;
+    toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}`);
   };
 
   const salvarNoBanco = async () => {
@@ -500,7 +570,7 @@ export default function ImportarPorTabela() {
 
           {/* Rolagem vertical + rolagem lateral */}
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
-            <div className="min-w-[2500px]">
+            <div className="min-w-[3200px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -534,8 +604,14 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-32">Maternidade</TableHead>
                     <TableHead className="min-w-[150px]">Médico</TableHead>
                     <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[150px]">IG Calculada</TableHead>
+                    <TableHead className="min-w-[100px]">IG Calculada</TableHead>
+                    <TableHead className="w-28">IG Ideal</TableHead>
                     <TableHead className="w-32">Data Ideal</TableHead>
+                    <TableHead className="w-40">Data Agendada</TableHead>
+                    <TableHead className="w-28">IG na Data</TableHead>
+                    <TableHead className="w-24">Intervalo</TableHead>
+                    <TableHead className="w-24">Lead Time</TableHead>
+                    <TableHead className="w-16">Info</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -786,7 +862,75 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
                       <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                      <TableCell>
+                        {row.data_agendada && row.data_agendada !== "-" ? (
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-sm">{row.data_agendada}</span>
+                            <Badge variant={row.status_agendamento === 'calculado' ? 'outline' : 'destructive'} className="text-xs">
+                              {row.status_agendamento === 'calculado' ? 'Calc' : row.status_agendamento === 'needs_review' ? 'Rev' : 'Man'}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{row.ig_na_data_agendada || "-"}</TableCell>
+                      <TableCell>
+                        {row.intervalo_dias !== undefined && row.margem_protocolo !== undefined ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'green' 
+                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
+                                : getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'yellow'
+                                ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30'
+                                : 'bg-red-500/10 text-red-600 border-red-500/30'
+                            }
+                          >
+                            {row.intervalo_dias > 0 ? '+' : ''}{row.intervalo_dias}d
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.lead_time_dias !== undefined ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              row.lead_time_dias >= LEAD_TIME_MINIMO 
+                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
+                                : 'bg-red-500/10 text-red-600 border-red-500/30'
+                            }
+                          >
+                            {row.lead_time_dias}d
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.motivo_calculo && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-1 text-sm">
+                                  <p><strong>Protocolo:</strong> {row.protocolo_aplicado || 'N/A'}</p>
+                                  <p><strong>Margem:</strong> {row.margem_protocolo} dias</p>
+                                  <p><strong>Cálculo:</strong> {row.motivo_calculo}</p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -800,7 +944,8 @@ export default function ImportarPorTabela() {
             <span>Total: {rows.length} linhas</span>
             <span>
               Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
-              {rows.filter((r) => r.status === "erro").length} | Salvos:{" "}
+              {rows.filter((r) => r.status === "erro").length} | Revisão:{" "}
+              {rows.filter((r) => r.status_agendamento === "needs_review").length} | Salvos:{" "}
               {rows.filter((r) => r.status === "salvo").length}
             </span>
           </div>
