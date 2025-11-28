@@ -58,6 +58,9 @@ interface PacienteRow {
 type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
 type SortDirection = 'asc' | 'desc';
 
+/** Milliseconds per day for date difference calculations */
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
   data_nascimento: "",
@@ -449,9 +452,17 @@ export default function ImportarPorTabela() {
           .maybeSingle();
 
         if (existente) {
-          const dataAgendadaFormatada = existente.data_agendamento_calculada 
-            ? new Date(existente.data_agendamento_calculada).toLocaleDateString('pt-BR')
-            : 'não informada';
+          let dataAgendadaFormatada = 'não informada';
+          try {
+            if (existente.data_agendamento_calculada) {
+              const parsedDate = new Date(existente.data_agendamento_calculada);
+              if (!isNaN(parsedDate.getTime())) {
+                dataAgendadaFormatada = parsedDate.toLocaleDateString('pt-BR');
+              }
+            }
+          } catch {
+            // Keep default 'não informada' if parsing fails
+          }
           
           setRows((prev) =>
             prev.map((r) => (r.id === row.id ? { 
@@ -568,7 +579,7 @@ export default function ImportarPorTabela() {
       if (row.snapshot?.dataAgendada) {
         const dataAgendada = new Date(row.snapshot.dataAgendada);
         dataAgendada.setHours(0, 0, 0, 0);
-        const diffDias = Math.round((dataAgendada.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+        const diffDias = Math.round((dataAgendada.getTime() - hoje.getTime()) / MS_PER_DAY);
         intervalo = diffDias >= 0 ? `+${diffDias}` : `${diffDias}`;
       }
 
