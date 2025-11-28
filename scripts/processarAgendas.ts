@@ -177,7 +177,6 @@ const ENCODING_FIXES: [string, string][] = [
   ['Ã§', 'ç'],
   ['Ã±', 'ñ'],
   // Common name patterns with encoding issues
-  ['LaÃ\u00ads', 'Laís'],
   ['JosÃ©', 'José'],
 ];
 
@@ -518,8 +517,23 @@ export function parseDate(dateStr: string): Date | null {
   // Brazilian format: DD/MM/YYYY
   const brMatch = cleanDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (brMatch) {
-    const [, day, month, year] = brMatch;
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12);
+    const [, dayStr, monthStr, yearStr] = brMatch;
+    const day = parseInt(dayStr, 10);
+    const month = parseInt(monthStr, 10);
+    const year = parseInt(yearStr, 10);
+    
+    // Validate ranges
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return null;
+    }
+    
+    const date = new Date(year, month - 1, day, 12);
+    
+    // Verify the date wasn't auto-adjusted (e.g., Feb 30 -> Mar 2)
+    if (date.getDate() !== day || date.getMonth() !== month - 1 || date.getFullYear() !== year) {
+      return null;
+    }
+    
     return isNaN(date.getTime()) ? null : date;
   }
   
@@ -936,7 +950,7 @@ function findOverbooking(registros: RegistroAgendamento[]): Array<{
   
   for (const reg of registros) {
     if (reg.status === 'needs_review') continue;
-    const key = `${reg.maternidade}-${reg.data_final}`;
+    const key = `${reg.maternidade}|${reg.data_final}`;
     ocupacao.set(key, (ocupacao.get(key) || 0) + 1);
   }
   
@@ -949,7 +963,7 @@ function findOverbooking(registros: RegistroAgendamento[]): Array<{
   }> = [];
   
   for (const [key, total] of ocupacao) {
-    const [maternidade, dateStr] = key.split('-', 2);
+    const [maternidade, dateStr] = key.split('|');
     const date = parseDate(dateStr);
     if (!date) continue;
     

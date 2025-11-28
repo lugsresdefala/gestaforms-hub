@@ -418,6 +418,13 @@ describe('parseDate', () => {
     expect(parseDate('')).toBeNull();
     expect(parseDate('invalid')).toBeNull();
   });
+
+  it('should return null for dates with invalid day/month', () => {
+    expect(parseDate('30/02/2025')).toBeNull(); // Feb 30 doesn't exist
+    expect(parseDate('31/04/2025')).toBeNull(); // April has only 30 days
+    expect(parseDate('00/11/2025')).toBeNull(); // Day 0 invalid
+    expect(parseDate('15/13/2025')).toBeNull(); // Month 13 invalid
+  });
 });
 
 describe('CSV generation', () => {

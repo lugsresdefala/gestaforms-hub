@@ -245,7 +245,7 @@ export default function AuditoriaAgendamentos() {
             </Label>
             <Textarea
               id="banco"
-              placeholder="Maria Silva&#9;12345&#9;Guarulhos&#9;2025-11-03&#10;João Santos&#9;67890&#9;NotreCare&#9;2025-11-04"
+              placeholder={`Maria Silva\t12345\tGuarulhos\t2025-11-03\nJoão Santos\t67890\tNotreCare\t2025-11-04`}
               value={textoBanco}
               onChange={(e) => setTextoBanco(e.target.value)}
               className="min-h-[150px] font-mono text-sm"
@@ -260,7 +260,7 @@ export default function AuditoriaAgendamentos() {
               <Label htmlFor="guarulhos-nov">Calendário Guarulhos - Novembro 2025</Label>
               <Textarea
                 id="guarulhos-nov"
-                placeholder="1&#10;Maria Silva&#10;João Santos&#10;2&#10;Ana Paula"
+                placeholder={`1\nMaria Silva\nJoão Santos\n2\nAna Paula`}
                 value={textoGuarulhosNov}
                 onChange={(e) => setTextoGuarulhosNov(e.target.value)}
                 className="min-h-[100px] font-mono text-sm"
@@ -270,7 +270,7 @@ export default function AuditoriaAgendamentos() {
               <Label htmlFor="guarulhos-dez">Calendário Guarulhos - Dezembro 2025</Label>
               <Textarea
                 id="guarulhos-dez"
-                placeholder="1&#10;Maria Silva&#10;2&#10;Ana Paula"
+                placeholder={`1\nMaria Silva\n2\nAna Paula`}
                 value={textoGuarulhosDez}
                 onChange={(e) => setTextoGuarulhosDez(e.target.value)}
                 className="min-h-[100px] font-mono text-sm"
@@ -280,7 +280,7 @@ export default function AuditoriaAgendamentos() {
               <Label htmlFor="cruzeiro-nov">Calendário Cruzeiro - Novembro 2025</Label>
               <Textarea
                 id="cruzeiro-nov"
-                placeholder="1&#10;Pedro Costa&#10;2&#10;Laura Lima"
+                placeholder={`1\nPedro Costa\n2\nLaura Lima`}
                 value={textoCruzeiroNov}
                 onChange={(e) => setTextoCruzeiroNov(e.target.value)}
                 className="min-h-[100px] font-mono text-sm"
@@ -290,7 +290,7 @@ export default function AuditoriaAgendamentos() {
               <Label htmlFor="cruzeiro-dez">Calendário Cruzeiro - Dezembro 2025</Label>
               <Textarea
                 id="cruzeiro-dez"
-                placeholder="1&#10;Pedro Costa&#10;2&#10;Laura Lima"
+                placeholder={`1\nPedro Costa\n2\nLaura Lima`}
                 value={textoCruzeiroDez}
                 onChange={(e) => setTextoCruzeiroDez(e.target.value)}
                 className="min-h-[100px] font-mono text-sm"
