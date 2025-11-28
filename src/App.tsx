@@ -49,6 +49,7 @@ import Contato from "./pages/Contato";
 import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
 import ImportarAgendamentosHTML from "./pages/ImportarAgendamentosHTML";
 import ImportarPacientes from "./pages/ImportarPacientes";
+import ImportarPorTabela from "./pages/ImportarPorTabela";
 import AuditoriaImportacoes from "./pages/AuditoriaImportacoes";
 import NotFound from "./pages/NotFound";
 
@@ -458,6 +459,16 @@ const App = () => (
                 <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <ImportarPacientes />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/importar-tabela" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <ImportarPorTabela />
                   </AppLayout>
                 </ProtectedRoute>
               } 
