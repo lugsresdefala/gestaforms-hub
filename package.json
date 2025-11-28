@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "export:calendario": "node scripts/export-calendarios-mensais.js"
+    "export:calendario": "node scripts/export-calendarios-mensais.js",
+    "gerar:calendarios": "node scripts/gerar-calendarios.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
