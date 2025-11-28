@@ -125,9 +125,9 @@ const normalizarNumero = (valor: string): number => {
 
 export default function ImportarPorTabela() {
   const { user } = useAuth();
-  const [rows, setRows] = useState<PacienteRow[]>([
-    { ...EMPTY_ROW, id: crypto.randomUUID() }
-  ]);
+  const [rows, setRows] = useState<PacienteRow[]>(
+    Array.from({ length: 65 }, () => ({ ...EMPTY_ROW, id: crypto.randomUUID() }))
+  );
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
 
