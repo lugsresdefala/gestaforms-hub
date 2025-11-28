@@ -323,13 +323,13 @@ export function detectProtocol(text: string): keyof typeof PROTOCOL_IG_IDEAL {
   const lowerText = text.toLowerCase();
   
   // 1. Cerclagem / IIC (priority)
-  if (/cerclagem|iic|incompet[eê]ncia\s*(istmo|cervical)?|istmo.?cervical/i.test(lowerText)) {
+  if (/cerclagem|iic|incompet[eê]ncia\s*(istmo|cervical)?|istmo[-\s]?cervical/i.test(lowerText)) {
     return 'cerclagem';
   }
   
   // 2. Hipertensão / Pré-eclâmpsia / DHEG / HAS / HAC
   // Match various spellings: pré-eclâmpsia, pre-eclampsia, preeclâmpsia, etc.
-  if (/hipertens[ãa]o|pr[eé].?ecl[aâ]mpsia|dheg|\bhas\b|\bhac\b/i.test(lowerText)) {
+  if (/hipertens[ãa]o|pr[eé][-\s]?ecl[aâ]mpsia|dheg|\bhas\b|\bhac\b/i.test(lowerText)) {
     return 'hipertensao';
   }
   
