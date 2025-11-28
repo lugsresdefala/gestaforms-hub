@@ -4,6 +4,32 @@ Scripts Node.js para importar agendamentos obstétricos para o Supabase.
 
 ## Scripts Disponíveis
 
+### export-agendamentos-mensais.js
+Exporta agendamentos aprovados para planilhas XLSX, organizados por maternidade e mês.
+
+**Uso:**
+```bash
+# Buscar dados do Supabase
+npm run export:agendamentos-mensais
+node scripts/export-agendamentos-mensais.js
+
+# Usando um arquivo CSV como fonte de dados
+node scripts/export-agendamentos-mensais.js --csv caminho/para/arquivo.csv
+```
+
+**Saída:** 
+- Planilhas XLSX na pasta `exports/`
+- Formato: `agendamentos_[Maternidade]_[Mês]_[Ano].xlsx`
+- Maternidades: Guarulhos, NotreCare, Salvalus, Cruzeiro
+- Período: Novembro/2025 a Janeiro/2026
+
+**Características:**
+- Formatação Excel com cabeçalhos estilizados
+- Datas no formato DD/MM/YYYY
+- Arrays JSON convertidos para texto legível
+- Ordenação por data e nome
+- Estatísticas de exportação no console
+
 ### importar_cruzeiro_dez_2025.js
 Importa agenda Maternidade Cruzeiro - Dezembro/2025
 
@@ -34,7 +60,7 @@ node scripts/importar_forms_pacientes.js
 ## Requisitos
 
 ```bash
-npm install @supabase/supabase-js
+npm install @supabase/supabase-js xlsx
 ```
 
 ## Resultados

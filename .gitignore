@@ -26,3 +26,6 @@ dist-ssr
 
 # Data output directory (generated files)
 data/output/
+
+# Generated export files
+exports/

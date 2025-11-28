@@ -31,6 +31,43 @@ Sistema integrado para gestão de agendamentos e procedimentos obstétricos do P
 - Importação de dados e calendários (admin)
 - Logs de auditoria (admin)
 
+### Scripts de Exportação
+
+#### Exportar Agendamentos Mensais
+
+Script para gerar planilhas XLSX com agendamentos aprovados, organizados por maternidade e mês.
+
+```bash
+# Usando npm (busca dados do Supabase)
+npm run export:agendamentos-mensais
+
+# Ou diretamente
+node scripts/export-agendamentos-mensais.js
+
+# Usando um arquivo CSV como fonte de dados
+node scripts/export-agendamentos-mensais.js --csv caminho/para/arquivo.csv
+```
+
+**Características:**
+- Exporta agendamentos com status "aprovado"
+- Agrupa por maternidade (Guarulhos, NotreCare, Salvalus, Cruzeiro)
+- Período: Novembro/2025 a Janeiro/2026
+- Formatação Excel com cabeçalhos estilizados
+- Datas no formato DD/MM/YYYY
+- Arrays JSON convertidos para texto legível
+- Ordenação por data e nome da paciente
+
+**Arquivos gerados:**
+- `exports/agendamentos_[Maternidade]_[Mês]_[Ano].xlsx`
+
+**Colunas exportadas:**
+- Dados da paciente (carteirinha, nome, nascimento, contatos)
+- Dados obstétricos (gestações, partos, DUM, USG, IG)
+- Procedimento (tipo, indicação, data agendada, maternidade)
+- Diagnósticos (maternos, fetais, medicação)
+- UTI e reservas de sangue
+- Observações e metadados
+
 ### Controle de Acesso e Permissões
 
 O sistema utiliza um modelo de controle de acesso baseado em roles (funções):
