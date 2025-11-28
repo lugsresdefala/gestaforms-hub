@@ -1,131 +1,91 @@
-# Data Dictionary - GestaForms Hub
+# Dicionário de Dados - GestaForms Hub
 
-Este documento define os campos e termos utilizados no sistema GestaForms Hub, com foco especial nos cálculos gestacionais e protocolos obstétricos.
+Este documento descreve os campos utilizados no sistema GestaForms Hub para gerenciamento de agendamentos obstétricos.
 
-## Campos de Cálculo Gestacional
+## Campos de Agendamento
 
-### IG (Idade Gestacional)
+### Campos Básicos
 
-Representa a idade gestacional da paciente, calculada a partir da DUM (Data da Última Menstruação) ou do USG (Ultrassonografia).
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | UUID | Identificador único do agendamento |
+| `nome_completo` | String | Nome completo da paciente |
+| `carteirinha` | String | Número da carteirinha do convênio |
+| `data_nascimento` | Date | Data de nascimento da paciente |
+| `maternidade` | String | Nome da maternidade (Guarulhos, NotreCare, Salvalus, Cruzeiro) |
+| `status` | Enum | Status do agendamento (pendente, aprovado, rejeitado) |
 
-**Formato de exibição:**
-- Longo: "39 semanas e 2 dias"
-- Compacto: "39s2d"
+### Campos de Idade Gestacional
 
-### IG Calculada (`ig_calculada`)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `data_dum` | Date | Data da Última Menstruação |
+| `dum_status` | String | Status da DUM (Sim - Confiavel, Incerta, Não sabe) |
+| `data_primeiro_usg` | Date | Data do primeiro ultrassom |
+| `semanas_usg` | Number | Semanas de gestação no momento do USG |
+| `dias_usg` | Number | Dias adicionais (0-6) no momento do USG |
+| `idade_gestacional_calculada` | String | IG calculada em formato "X semanas e Y dias" |
 
-Idade gestacional atual da paciente na data de referência (geralmente hoje).
+### Campos de Agendamento Calculado
 
-- **Origem**: Calculado via `chooseAndCompute()` no módulo `gestationalCalculator.ts`
-- **Fonte**: DUM confiável ou USG (fallback)
-- **Formato**: "XX semanas e Y dias"
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `igIdeal` | String | Idade gestacional ideal para o parto conforme protocolo, formato "39s2d" |
+| `igNaDataAgendada` | String | IG projetada na data do agendamento, formato "39s2d" |
+| `data_agendamento_calculada` | Date | Data calculada para o agendamento |
+| `intervaloDias` | Number | Diferença em dias entre data agendada e data ideal (positivo = após ideal) |
+| `leadTimeDias` | Number | Dias entre a data de referência (hoje) e a data agendada |
+| `statusAgendamento` | Enum | Status do cálculo: `calculado`, `needs_review`, `manual` |
 
-### IG Ideal (`igIdeal`)
+## Status de Agendamento
 
-Idade gestacional ideal para resolução da gestação segundo o protocolo obstétrico aplicável.
+### `calculado`
+A data foi calculada automaticamente pelo sistema respeitando todas as regras:
+- Não é domingo
+- Respeita capacidade da maternidade
+- Lead time mínimo de 10 dias
+- Dentro da janela IG permitida pelo protocolo
 
-- **Origem**: Definido no protocolo em `obstetricProtocols.ts`
-- **Fonte**: Baseado em diagnósticos maternos, fetais ou indicação do procedimento
-- **Formato compacto**: "39s0d" (39 semanas e 0 dias)
-- **Exemplo por protocolo**:
-  - Desejo Materno: 39s0d
-  - Diabetes Gestacional sem insulina: 40s0d
-  - Diabetes Gestacional com insulina: 38s0d
-  - Pré-eclâmpsia grave: 34s0d
+### `needs_review`
+O sistema não conseguiu encontrar uma data válida automaticamente. Requer análise manual. Possíveis causas:
+- Todas as datas na janela estão sem vagas
+- Lead time não pode ser satisfeito dentro da margem do protocolo
+- Data ideal cai em período com restrições
 
-### IG na Data Agendada (`igNaDataAgendada`)
+### `manual`
+A data foi definida manualmente por um usuário, não calculada automaticamente.
 
-Idade gestacional projetada para a data do agendamento.
+## Capacidade por Maternidade
 
-- **Cálculo**: IG atual + dias até a data agendada
-- **Formato compacto**: "39s5d"
-- **Uso**: Verificar se a paciente estará na IG apropriada no dia do procedimento
+| Maternidade | Segunda-Sexta | Sábado | Domingo |
+|-------------|---------------|--------|---------|
+| Guarulhos | 2 | 1 | 0 |
+| NotreCare | 6 | 2 | 0 |
+| Salvalus | 9 | 7 | 0 |
+| Cruzeiro | 3 | 1 | 0 |
 
-### Data Ideal (`dataIdeal`)
+## Regras de Cálculo
 
-Data ideal para resolução da gestação baseada na IG Ideal do protocolo.
+### Intervalo (intervaloDias)
+- **Verde** (|dif| ≤ margem): Dentro da tolerância do protocolo
+- **Amarelo** (|dif| ≤ margem × 2): Fora da tolerância, mas aceitável
+- **Vermelho** (|dif| > margem × 2): Significativamente fora da tolerância
 
-- **Cálculo**: DPP - (40 - IG_Ideal) semanas
-- **Formato**: DD/MM/YYYY
+### Lead Time (leadTimeDias)
+- **Verde** (≥ 10 dias): Antecedência adequada
+- **Vermelho** (< 10 dias): Antecedência insuficiente, requer atenção
 
-### Data Agendada (`dataAgendada`)
+## Protocolos
 
-Data efetivamente agendada para o procedimento.
+Os protocolos obstétricos definem a IG ideal e margem de tolerância para cada condição clínica. Consulte `obstetricProtocols.ts` para a lista completa de protocolos disponíveis.
 
-- **Fonte**: Pode ser calculada automaticamente ou definida manualmente
-- **Formato**: DD/MM/YYYY
-
-### Fonte do Agendamento (`fonteAgendamento`)
-
-Indica como a data de agendamento foi determinada.
-
-- **Valores possíveis**:
-  - `calculada`: Data calculada automaticamente pelo sistema
-  - `manual`: Data definida manualmente pelo usuário
-
-### Intervalo (`intervaloDias`)
-
-Diferença em dias entre a data agendada e a data ideal.
-
-- **Cálculo**: Data Agendada - Data Ideal
-- **Formato de exibição**: "+2d", "-3d", "0d"
-- **Interpretação**:
-  - Positivo (+): Agendamento após a data ideal
-  - Negativo (-): Agendamento antes da data ideal
-  - Zero (0): Agendamento na data ideal
-
-### Margem de Tolerância (`margemDias`)
-
-Número de dias de tolerância definido pelo protocolo obstétrico.
-
-- **Origem**: Campo `margemDias` no objeto de protocolo
-- **Padrão**: 7 dias para a maioria dos protocolos
-- **Uso**: Determinar se o intervalo está dentro dos limites aceitáveis
-
-## Indicadores de Status
-
-### Dentro da Margem (`dentroMargem`)
-
-Indica se o intervalo está dentro da margem tolerada pelo protocolo.
-
-- **Cálculo**: |intervaloDias| <= margemDias
-- **Exibição**: 
-  - 🟢 Verde: Dentro da margem
-  - 🟡 Amarelo: Dentro da margem estendida (2x margem)
-  - 🔴 Vermelho: Fora de todas as margens
-
-## Protocolos Obstétricos
-
-Os protocolos são definidos em `src/lib/obstetricProtocols.ts` e incluem:
-
-### Estrutura do Protocolo
-
+### Exemplo de Protocolo
 ```typescript
-interface ProtocolConfig {
-  igIdeal: string;        // IG ideal para resolução (semanas)
-  margemDias: number;     // Tolerância em dias
-  prioridade: number;     // 1 = crítico, 2 = alto, 3 = normal
-  viaPreferencial: string; // "Cesárea", "Via obstétrica"
-  observacoes: string;    // Notas clínicas
+{
+  igIdeal: "39",      // 39 semanas
+  margemDias: 7,      // +/- 7 dias de tolerância
+  prioridade: 3,      // 1 = crítica, 2 = alta, 3 = normal
+  viaPreferencial: "Cesárea",
+  observacoes: "39 semanas (PT-AON-097)"
 }
 ```
-
-### Protocolos Disponíveis
-
-| Protocolo | IG Ideal | Margem | Prioridade |
-|-----------|----------|--------|------------|
-| desejo_materno | 39 | ±7d | 3 |
-| dmg_sem_insulina | 40 | ±7d | 3 |
-| dmg_insulina | 38 | ±7d | 2 |
-| pre_eclampsia_grave | 34 | ±7d | 1 |
-| gemelar_monocorionico | 34 | ±7d | 2 |
-| placenta_previa_total | 36 | ±7d | 1 |
-| ... | ... | ... | ... |
-
-Para a lista completa, consulte `src/lib/obstetricProtocols.ts`.
-
-## Referências
-
-- **PT-AON-097**: Protocolo de Assistência Obstétrica - Hapvida NotreDame
-- **PR-DIMEP-PGS-01**: Procedimento de Assistência Pré-Natal
-- **PR-GNDI-PPS-27**: Protocolo de Gestação de Alto Risco

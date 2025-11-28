@@ -5,15 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
-import { getGestationalSnapshot, formatInterval, getIntervalColorClass, type GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
+import { addDays, differenceInDays } from "date-fns";
+import { PROTOCOLS } from "@/lib/obstetricProtocols";
+import {
+  encontrarDataAgendada,
+  formatIGCurta,
+  calcularIGNaData,
+  getIntervaloColor,
+  type StatusAgendamento,
+  LEAD_TIME_MINIMO,
+} from "@/lib/scheduling";
 
 // Tipos
 interface PacienteRow {
@@ -55,8 +63,18 @@ interface PacienteRow {
   protocolo?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
-  // Campos de snapshot gestacional
-  snapshot?: GestationalSnapshotResult;
+  // Novos campos de agendamento
+  ig_ideal?: string;
+  ig_ideal_semanas?: number;
+  ig_ideal_dias?: number;
+  data_agendada?: string;
+  status_agendamento?: StatusAgendamento;
+  ig_na_data_agendada?: string;
+  intervalo_dias?: number;
+  lead_time_dias?: number;
+  margem_protocolo?: number;
+  protocolo_aplicado?: string;
+  motivo_calculo?: string;
 }
 
 type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
@@ -121,6 +139,9 @@ const normalizarNumero = (valor: string): number => {
   const num = parseInt(valor);
   return isNaN(num) ? 0 : Math.max(0, num);
 };
+
+// Table minimum width to accommodate all columns
+const TABLE_MIN_WIDTH = "3200px";
 
 export default function ImportarPorTabela() {
   const { user } = useAuth();
@@ -392,51 +413,70 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        // Data agendada baseada no protocolo (dataIdeal) e ajuste posterior feito internamente conforme regras
-        const dataAgendada = result.dataIdeal;
-        const isFutureDate = !!(dataAgendada && dataAgendada > hoje);
+        // Determinar protocolo com base na IG pretendida ou diagnósticos
+        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
+        const igIdealSemanas = igPretendidaSemanas;
+        const igIdealDias = 0;
+        
+        // Usar protocolo padrão desejo_materno ou buscar por diagnóstico
+        let protocolo = PROTOCOLS['desejo_materno'];
+        let protocoloNome = 'desejo_materno';
+        
+        // Tentar encontrar protocolo baseado em diagnósticos (usando match exato de palavras)
+        const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
+        if (diagnosticos.trim()) {
+          // Sort protocol keys by length (longest first) to match more specific protocols first
+          const sortedProtocolKeys = Object.keys(PROTOCOLS).sort((a, b) => b.length - a.length);
+          for (const key of sortedProtocolKeys) {
+            const keyPattern = key.replace(/_/g, ' ');
+            // Use word boundary matching to avoid partial matches
+            const regex = new RegExp(`\\b${keyPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+            if (regex.test(diagnosticos)) {
+              protocolo = PROTOCOLS[key];
+              protocoloNome = key;
+              break;
+            }
+          }
+        }
+        
+        const margemDias = protocolo?.margemDias || 7;
 
-        // Compute gestational snapshot for enhanced display
-        const snapshot = getGestationalSnapshot({
-          dumRaw: row.data_dum,
-          dumStatus: row.dum_status,
-          usgDateRaw: row.data_primeiro_usg,
-          usgWeeks: normalizarSemanasUsg(row.semanas_usg),
-          usgDays: normalizarDiasUsg(row.dias_usg),
-          igPretendida: row.ig_pretendida,
-          diagnosticosMaternos: row.diagnosticos_maternos,
-          diagnosticosFetais: row.diagnosticos_fetais,
-          indicacaoProcedimento: row.indicacao_procedimento,
-          dataAgendamentoCalculada: dataAgendada ? dataAgendada.toISOString().split('T')[0] : null,
-          dataAgendamentoManual: null,
+        // Calcular data ideal baseada na IG pretendida
+        const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
+        const dataIdeal = addDays(new Date(), diasRestantes);
+        
+        // Usar a função de agendamento para encontrar data válida
+        const scheduleResult = encontrarDataAgendada({
+          dataIdeal,
+          maternidade: row.maternidade || 'Salvalus',
+          dataReferencia: new Date(),
+          margemDias,
         });
 
-        // Compute gestational snapshot for enhanced display
-        const snapshot = getGestationalSnapshot({
-          dumRaw: row.data_dum,
-          dumStatus: row.dum_status,
-          usgDateRaw: row.data_primeiro_usg,
-          usgWeeks: normalizarSemanasUsg(row.semanas_usg),
-          usgDays: normalizarDiasUsg(row.dias_usg),
-          igPretendida: row.ig_pretendida,
-          diagnosticosMaternos: row.diagnosticos_maternos,
-          diagnosticosFetais: row.diagnosticos_fetais,
-          indicacaoProcedimento: row.indicacao_procedimento,
-          dataAgendamentoCalculada: dataIdeal.toISOString().split('T')[0],
-          dataAgendamentoManual: null,
-        });
+        // Calcular IG na data agendada
+        let igNaDataAgendada = "";
+        if (scheduleResult.dataAgendada) {
+          const igNaData = calcularIGNaData(result.gaDays, new Date(), scheduleResult.dataAgendada);
+          igNaDataAgendada = formatIGCurta(igNaData.semanas, igNaData.dias);
+        }
 
         return {
           ...row,
-          ig_calculada: isFutureDate ? result.gaFormatted : "-",
-          data_ideal: dataAgendada ? dataAgendada.toLocaleDateString("pt-BR") : "-",
-          ig_ideal: result.igIdealText,
-          ig_na_data_agendada: result.igAtDataIdeal,
-          delta_dias: result.deltaAteIdeal,
-          protocolo: result.protocoloAplicado,
-          status: "valido" as const,
-          erro: undefined,
-          snapshot,
+          ig_calculada: result.gaFormatted,
+          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
+          ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
+          ig_ideal_semanas: igIdealSemanas,
+          ig_ideal_dias: igIdealDias,
+          data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
+          status_agendamento: scheduleResult.status,
+          ig_na_data_agendada: igNaDataAgendada || "-",
+          intervalo_dias: scheduleResult.intervaloDias,
+          lead_time_dias: scheduleResult.leadTimeDias,
+          margem_protocolo: margemDias,
+          protocolo_aplicado: protocoloNome,
+          motivo_calculo: scheduleResult.motivo,
+          status: scheduleResult.status === 'needs_review' ? "erro" as const : "valido" as const,
+          erro: scheduleResult.status === 'needs_review' ? 'Revisão necessária: ' + scheduleResult.motivo : undefined,
         };
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
@@ -448,7 +488,8 @@ export default function ImportarPorTabela() {
 
     const validos = processedRows.filter((r) => r.status === "valido").length;
     const erros = processedRows.filter((r) => r.status === "erro").length;
-    toast.info(`Processados: ${validos} válidos, ${erros} com erros`);
+    const needsReview = processedRows.filter((r) => r.status_agendamento === "needs_review").length;
+    toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}`);
   };
 
   const salvarNoBanco = async () => {
@@ -734,7 +775,7 @@ export default function ImportarPorTabela() {
           {/* Table min-width accommodates ~35 columns with varying widths */}
           <TooltipProvider>
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
-            <div className="min-w-[3000px]">
+            <div style={{ minWidth: TABLE_MIN_WIDTH }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -768,35 +809,14 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-32">Maternidade</TableHead>
                     <TableHead className="min-w-[150px]">Médico</TableHead>
                     <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[150px]">IG Calculada</TableHead>
-                    <TableHead 
-                      className="w-24 cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('ig_ideal')}
-                    >
-                      <div className="flex items-center gap-1">
-                        IG Ideal
-                        <ArrowUpDown className="w-3 h-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead 
-                      className="w-32 cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('data_agendada')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Data Agendada
-                        <ArrowUpDown className="w-3 h-3" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="w-24">IG na Data</TableHead>
-                    <TableHead 
-                      className="w-24 cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleSort('intervalo')}
-                    >
-                      <div className="flex items-center gap-1">
-                        Intervalo
-                        <ArrowUpDown className="w-3 h-3" />
-                      </div>
-                    </TableHead>
+                    <TableHead className="min-w-[100px]">IG Calculada</TableHead>
+                    <TableHead className="w-28">IG Ideal</TableHead>
+                    <TableHead className="w-32">Data Ideal</TableHead>
+                    <TableHead className="w-40">Data Agendada</TableHead>
+                    <TableHead className="w-28">IG na Data</TableHead>
+                    <TableHead className="w-24">Intervalo</TableHead>
+                    <TableHead className="w-24">Lead Time</TableHead>
+                    <TableHead className="w-16">Info</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1048,85 +1068,74 @@ export default function ImportarPorTabela() {
                       </TableCell>
                       {/* IG Calculada atual (apenas se data agendada for futura) */}
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
-                      {/* IG Ideal com tooltip */}
-                      <TableCell className="font-mono text-sm">
-                        {row.snapshot ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="cursor-help underline decoration-dotted">
-                                {row.snapshot.igIdeal}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p className="font-semibold">{row.snapshot.protocoloNome}</p>
-                              <p className="text-xs text-muted-foreground">
-                                IG ideal: {row.snapshot.igIdeal} ± {row.snapshot.margemDias}d
-                              </p>
-                              {row.snapshot.dataIdeal && (
-                                <p className="text-xs">
-                                  Data ideal: {row.snapshot.dataIdeal.toLocaleDateString('pt-BR')}
-                                </p>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : "-"}
-                      </TableCell>
-                      {/* Data Agendada com badge da fonte */}
-                      <TableCell className="font-mono text-sm">
-                        {row.snapshot?.dataAgendada ? (
-                          <div className="flex flex-col gap-1">
-                            <span>{row.snapshot.dataAgendada.toLocaleDateString('pt-BR')}</span>
-                            <Badge 
-                              variant={row.snapshot.fonteAgendamento === 'manual' ? 'default' : 'secondary'}
-                              className="text-xs w-fit"
-                            >
-                              {row.snapshot.fonteAgendamento === 'manual' ? 'Manual' : 'Calculada'}
+                      <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                      <TableCell>
+                        {row.data_agendada && row.data_agendada !== "-" ? (
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-sm">{row.data_agendada}</span>
+                            <Badge variant={row.status_agendamento === 'calculado' ? 'outline' : 'destructive'} className="text-xs">
+                              {row.status_agendamento === 'calculado' ? 'Calc' : row.status_agendamento === 'needs_review' ? 'Rev' : 'Man'}
                             </Badge>
                           </div>
-                        ) : row.data_ideal || "-"}
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
-                      {/* IG na Data Agendada */}
-                      <TableCell className="font-mono text-sm">
-                        {row.snapshot?.igNaDataAgendada || "-"}
+                      <TableCell className="font-mono text-sm">{row.ig_na_data_agendada || "-"}</TableCell>
+                      <TableCell>
+                        {row.intervalo_dias !== undefined && row.margem_protocolo !== undefined ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'green' 
+                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
+                                : getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'yellow'
+                                ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30'
+                                : 'bg-red-500/10 text-red-600 border-red-500/30'
+                            }
+                          >
+                            {row.intervalo_dias > 0 ? '+' : ''}{row.intervalo_dias}d
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </TableCell>
-                      {/* Intervalo com cor e tooltip */}
-                      <TableCell className="font-mono text-sm">
-                        {row.snapshot ? (() => {
-                          const colorClass = getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias);
-                          const colorStyles: Record<string,string> = {
-                            green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-                            yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-                            red: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          };
-                          return (
+                      <TableCell>
+                        {row.lead_time_dias !== undefined ? (
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              row.lead_time_dias >= LEAD_TIME_MINIMO 
+                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
+                                : 'bg-red-500/10 text-red-600 border-red-500/30'
+                            }
+                          >
+                            {row.lead_time_dias}d
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {row.motivo_calculo && (
+                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span 
-                                  className={`cursor-help px-2 py-1 rounded font-semibold ${colorStyles[colorClass]}`}
-                                >
-                                  {formatInterval(row.snapshot.intervaloDias)}
-                                </span>
+                                <Button variant="ghost" size="icon" className="h-6 w-6">
+                                  <Info className="h-4 w-4" />
+                                </Button>
                               </TooltipTrigger>
-                              <TooltipContent className="max-w-xs">
-                                <p className="font-semibold">Diferença: {formatInterval(row.snapshot.intervaloDias)}</p>
-                                <p className="text-xs">
-                                  Data agendada: {row.snapshot.dataAgendada?.toLocaleDateString('pt-BR') || '-'}
-                                </p>
-                                <p className="text-xs">
-                                  IG ideal ({row.snapshot.igIdeal}): {row.snapshot.dataIdeal?.toLocaleDateString('pt-BR') || '-'}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Margem tolerada: ±{row.snapshot.margemDias} dias
-                                </p>
-                                {!row.snapshot.dentroMargem && (
-                                  <p className="text-xs text-destructive font-semibold mt-1">
-                                    ⚠️ Fora da margem permitida
-                                  </p>
-                                )}
+                              <TooltipContent className="max-w-sm">
+                                <div className="space-y-1 text-sm">
+                                  <p><strong>Protocolo:</strong> {row.protocolo_aplicado || 'N/A'}</p>
+                                  <p><strong>Margem:</strong> {row.margem_protocolo} dias</p>
+                                  <p><strong>Cálculo:</strong> {row.motivo_calculo}</p>
+                                </div>
                               </TooltipContent>
                             </Tooltip>
-                          );
-                        })() : "-"}
+                          </TooltipProvider>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1141,9 +1150,10 @@ export default function ImportarPorTabela() {
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ''}</span>
             <span>
-              Válidos: {rows.filter((r) => r.status === "valido").length} | Erros: {
-              rows.filter((r) => r.status === "erro").length} | Salvos: {
-              rows.filter((r) => r.status === "salvo").length}
+              Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
+              {rows.filter((r) => r.status === "erro").length} | Revisão:{" "}
+              {rows.filter((r) => r.status_agendamento === "needs_review").length} | Salvos:{" "}
+              {rows.filter((r) => r.status === "salvo").length}
             </span>
           </div>
         </CardContent>
