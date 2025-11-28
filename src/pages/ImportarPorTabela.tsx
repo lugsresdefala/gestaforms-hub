@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
@@ -57,6 +57,9 @@ interface PacienteRow {
 
 type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
 type SortDirection = 'asc' | 'desc';
+
+/** Milliseconds per day for date difference calculations */
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
@@ -444,13 +447,29 @@ export default function ImportarPorTabela() {
       try {
         const { data: existente } = await supabase
           .from("agendamentos_obst")
-          .select("id")
+          .select("id, data_agendamento_calculada")
           .eq("carteirinha", row.carteirinha.trim())
           .maybeSingle();
 
         if (existente) {
+          let dataAgendadaFormatada = 'não informada';
+          try {
+            if (existente.data_agendamento_calculada) {
+              const parsedDate = new Date(existente.data_agendamento_calculada);
+              if (!isNaN(parsedDate.getTime())) {
+                dataAgendadaFormatada = parsedDate.toLocaleDateString('pt-BR');
+              }
+            }
+          } catch {
+            // Keep default 'não informada' if parsing fails
+          }
+          
           setRows((prev) =>
-            prev.map((r) => (r.id === row.id ? { ...r, status: "erro" as const, erro: "Carteirinha já existe" } : r)),
+            prev.map((r) => (r.id === row.id ? { 
+              ...r, 
+              status: "erro" as const, 
+              erro: `Carteirinha já existe - Agendamento em: ${dataAgendadaFormatada}` 
+            } : r)),
           );
           erros++;
           continue;
@@ -528,6 +547,93 @@ export default function ImportarPorTabela() {
     toast.success(`Salvos: ${salvos}, Erros: ${erros}`);
   };
 
+  const exportarResultados = () => {
+    const linhasParaExportar = rows.filter(r => r.status === 'valido' || r.status === 'salvo');
+    
+    if (linhasParaExportar.length === 0) {
+      toast.error('Nenhum resultado válido para exportar');
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // CSV headers
+    const headers = [
+      'Nome Completo', 'Data Nascimento', 'Carteirinha', 
+      'Gestações', 'Partos Cesárea', 'Partos Normal', 'Abortos',
+      'Telefones', 'Procedimentos', 'Status DUM', 'Data DUM',
+      'Data 1º USG', 'Semanas USG', 'Dias USG', 'USG Recente',
+      'IG Pretendida', 'Indicação', 'Medicação', 'Diag Maternos',
+      'Placenta Prévia', 'Diag Fetais', 'História Obstétrica',
+      'Necessidade UTI', 'Necessidade Sangue', 'Maternidade',
+      'Médico Responsável', 'Email Paciente', 'Centro Clínico',
+      // Calculated columns
+      'IG Calculada', 'IG Ideal', 'Protocolo', 'Data Agendada',
+      'IG na Data Agendada', 'Intervalo (dias)', 'Status', 'Erro'
+    ];
+
+    const linhas = linhasParaExportar.map(row => {
+      // Calculate interval in days between today and scheduled date
+      let intervalo = '';
+      if (row.snapshot?.dataAgendada) {
+        const dataAgendada = new Date(row.snapshot.dataAgendada);
+        dataAgendada.setHours(0, 0, 0, 0);
+        const diffDias = Math.round((dataAgendada.getTime() - hoje.getTime()) / MS_PER_DAY);
+        intervalo = diffDias >= 0 ? `+${diffDias}` : `${diffDias}`;
+      }
+
+      return [
+        row.nome_completo, row.data_nascimento, row.carteirinha,
+        row.numero_gestacoes, row.numero_partos_cesareas, 
+        row.numero_partos_normais, row.numero_abortos,
+        row.telefones, row.procedimentos, row.dum_status, row.data_dum,
+        row.data_primeiro_usg, row.semanas_usg, row.dias_usg, row.usg_recente,
+        row.ig_pretendida, row.indicacao_procedimento, row.medicacao,
+        row.diagnosticos_maternos, row.placenta_previa, row.diagnosticos_fetais,
+        row.historia_obstetrica, row.necessidade_uti_materna,
+        row.necessidade_reserva_sangue, row.maternidade,
+        row.medico_responsavel, row.email_paciente, row.centro_clinico,
+        // Calculated columns
+        row.ig_calculada || '', 
+        row.snapshot?.igIdeal || '',
+        row.snapshot?.protocoloNome || '',
+        row.snapshot?.dataAgendada?.toLocaleDateString('pt-BR') || row.data_ideal || '',
+        row.snapshot?.igNaDataAgendada || '',
+        intervalo,
+        row.status || '',
+        row.erro || ''
+      ];
+    });
+
+    // Generate CSV content with proper escaping
+    const csvContent = [
+      headers.join(','),
+      ...linhas.map(linha => linha.map(campo => {
+        const str = String(campo ?? '');
+        // Escape commas, quotes and newlines
+        return str.includes(',') || str.includes('"') || str.includes('\n')
+          ? `"${str.replace(/"/g, '""')}"`
+          : str;
+      }).join(','))
+    ].join('\n');
+
+    // Create download with BOM for UTF-8 Excel compatibility
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `agendamentos-processados-${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`${linhasParaExportar.length} registros exportados!`);
+  };
+
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case "valido":
@@ -580,6 +686,11 @@ export default function ImportarPorTabela() {
             <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}>
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
+            </Button>
+            <Button onClick={exportarResultados} variant="outline" size="sm" 
+              disabled={rows.filter(r => r.status === 'valido' || r.status === 'salvo').length === 0}>
+              <Download className="w-4 h-4 mr-1" />
+              Exportar Resultados ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
             </Button>
             <div className="flex items-center gap-2 ml-4 border-l pl-4">
               <Filter className="w-4 h-4 text-muted-foreground" />

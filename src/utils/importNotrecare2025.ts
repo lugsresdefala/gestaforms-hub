@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { parseDateSafe, isPlaceholderDate } from '@/lib/importSanitizer';
+import { verificarDisponibilidade } from '@/lib/vagasValidation';
 
 export interface NotrecareRow {
   dia: string;
@@ -14,6 +15,36 @@ export interface NotrecareRow {
   viaParto: string;
   telefone: string;
   mes: 'Novembro' | 'Dezembro';
+}
+
+interface ProcessedAgendamento {
+  carteirinha: string;
+  nome_completo: string;
+  data_nascimento: string;
+  telefones: string;
+  centro_clinico: string;
+  medico_responsavel: string;
+  maternidade: string;
+  indicacao_procedimento: string;
+  ig_pretendida: string;
+  usg_recente: string;
+  dum_status: string;
+  procedimentos: string[];
+  numero_gestacoes: number;
+  numero_partos_normais: number;
+  numero_partos_cesareas: number;
+  numero_abortos: number;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  data_dum: string | null;
+  data_agendamento_calculada: string;
+  idade_gestacional_calculada: string;
+  diagnosticos_maternos: string | null;
+  diagnosticos_fetais: string | null;
+  status: string;
+  created_by: string;
+  observacoes_agendamento?: string;
 }
 
 function parseDate(dateStr: string): Date | null {
@@ -197,7 +228,7 @@ function extractDiagnosticos(diagnostico: string): {
   return { maternos, fetais };
 }
 
-async function processNotrecareRow(row: NotrecareRow) {
+async function processNotrecareRow(row: NotrecareRow): Promise<ProcessedAgendamento | null> {
   if (!row.carteirinha || !row.nome) return null;
 
   const dataNascimento = parseDate(row.dataNascimento);
@@ -259,12 +290,34 @@ export async function importNotrecare2025(rows: NotrecareRow[]): Promise<{
   errors: string[];
 }> {
   const results = { success: 0, failed: 0, errors: [] as string[] };
-  const processedRows = [];
+  const processedRows: ProcessedAgendamento[] = [];
 
   for (const row of rows) {
     try {
-      const processed = processNotrecareRow(row);
+      const processed = await processNotrecareRow(row);
       if (processed) {
+        // Validar capacidade da maternidade antes de inserir
+        const dataAgendamentoDate = new Date(processed.data_agendamento_calculada);
+        const disponibilidade = await verificarDisponibilidade(
+          processed.maternidade,
+          dataAgendamentoDate,
+          false
+        );
+        
+        if (!disponibilidade.disponivel) {
+          if (disponibilidade.dataAlternativa) {
+            // Usar data alternativa
+            processed.data_agendamento_calculada = format(disponibilidade.dataAlternativa, 'yyyy-MM-dd');
+            const obsAnterior = processed.observacoes_agendamento || '';
+            processed.observacoes_agendamento = `${obsAnterior}\n⚠️ [IMPORTAÇÃO] ${disponibilidade.mensagem}`.trim();
+          } else {
+            // Marcar para revisão manual
+            processed.status = 'pendente';
+            const obsAnterior = processed.observacoes_agendamento || '';
+            processed.observacoes_agendamento = `${obsAnterior}\n⚠️ SEM VAGAS DISPONÍVEIS: ${disponibilidade.mensagem}`.trim();
+          }
+        }
+        
         processedRows.push(processed);
       }
     } catch (error) {
