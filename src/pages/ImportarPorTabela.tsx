@@ -1,16 +1,19 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, ArrowUpDown, Filter } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
+import { getGestationalSnapshot, formatInterval, getIntervalColorClass, type GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
 
 // Tipos
 interface PacienteRow {
@@ -48,7 +51,12 @@ interface PacienteRow {
   data_ideal?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
+  // Campos de snapshot gestacional
+  snapshot?: GestationalSnapshotResult;
 }
+
+type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
+type SortDirection = 'asc' | 'desc';
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
@@ -118,6 +126,67 @@ export default function ImportarPorTabela() {
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [filterForaMargem, setFilterForaMargem] = useState(false);
+
+  // Computed/sorted/filtered rows
+  const displayRows = useMemo(() => {
+    let result = [...rows];
+    
+    // Filter: somente fora da margem
+    if (filterForaMargem) {
+      result = result.filter(row => row.snapshot && !row.snapshot.dentroMargem);
+    }
+    
+    // Sort
+    if (sortField) {
+      result.sort((a, b) => {
+        let aVal: number | Date | null = null;
+        let bVal: number | Date | null = null;
+        
+        switch (sortField) {
+          case 'data_agendada':
+            aVal = a.snapshot?.dataAgendada || null;
+            bVal = b.snapshot?.dataAgendada || null;
+            break;
+          case 'ig_ideal':
+            aVal = a.snapshot?.igIdealDias || 0;
+            bVal = b.snapshot?.igIdealDias || 0;
+            break;
+          case 'intervalo':
+            aVal = a.snapshot?.intervaloDias || 0;
+            bVal = b.snapshot?.intervaloDias || 0;
+            break;
+        }
+        
+        if (aVal === null && bVal === null) return 0;
+        if (aVal === null) return sortDirection === 'asc' ? 1 : -1;
+        if (bVal === null) return sortDirection === 'asc' ? -1 : 1;
+        
+        if (aVal instanceof Date && bVal instanceof Date) {
+          return sortDirection === 'asc' 
+            ? aVal.getTime() - bVal.getTime() 
+            : bVal.getTime() - aVal.getTime();
+        }
+        
+        const numA = typeof aVal === 'number' ? aVal : 0;
+        const numB = typeof bVal === 'number' ? bVal : 0;
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      });
+    }
+    
+    return result;
+  }, [rows, sortField, sortDirection, filterForaMargem]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const addRow = () => {
     setRows([...rows, { ...EMPTY_ROW, id: crypto.randomUUID() }]);
@@ -319,12 +388,28 @@ export default function ImportarPorTabela() {
         const dataIdeal = new Date();
         dataIdeal.setDate(dataIdeal.getDate() + diasRestantes);
 
+        // Compute gestational snapshot for enhanced display
+        const snapshot = getGestationalSnapshot({
+          dumRaw: row.data_dum,
+          dumStatus: row.dum_status,
+          usgDateRaw: row.data_primeiro_usg,
+          usgWeeks: normalizarSemanasUsg(row.semanas_usg),
+          usgDays: normalizarDiasUsg(row.dias_usg),
+          igPretendida: row.ig_pretendida,
+          diagnosticosMaternos: row.diagnosticos_maternos,
+          diagnosticosFetais: row.diagnosticos_fetais,
+          indicacaoProcedimento: row.indicacao_procedimento,
+          dataAgendamentoCalculada: dataIdeal.toISOString().split('T')[0],
+          dataAgendamentoManual: null,
+        });
+
         return {
           ...row,
           ig_calculada: result.gaFormatted,
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
           status: "valido" as const,
           erro: undefined,
+          snapshot,
         };
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
@@ -484,7 +569,7 @@ export default function ImportarPorTabela() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button onClick={addRow} variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-1" /> Adicionar Linha
             </Button>
@@ -496,11 +581,23 @@ export default function ImportarPorTabela() {
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
             </Button>
+            <div className="flex items-center gap-2 ml-4 border-l pl-4">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Checkbox 
+                id="filter-fora-margem" 
+                checked={filterForaMargem}
+                onCheckedChange={(checked) => setFilterForaMargem(checked === true)}
+              />
+              <label htmlFor="filter-fora-margem" className="text-sm text-muted-foreground cursor-pointer">
+                Somente fora da margem
+              </label>
+            </div>
           </div>
 
           {/* Rolagem vertical + rolagem lateral */}
+          <TooltipProvider>
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
-            <div className="min-w-[2500px]">
+            <div className="min-w-[3000px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -535,11 +632,38 @@ export default function ImportarPorTabela() {
                     <TableHead className="min-w-[150px]">Médico</TableHead>
                     <TableHead className="min-w-[200px]">Email</TableHead>
                     <TableHead className="min-w-[150px]">IG Calculada</TableHead>
-                    <TableHead className="w-32">Data Ideal</TableHead>
+                    <TableHead 
+                      className="w-24 cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort('ig_ideal')}
+                    >
+                      <div className="flex items-center gap-1">
+                        IG Ideal
+                        <ArrowUpDown className="w-3 h-3" />
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="w-32 cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort('data_agendada')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Data Agendada
+                        <ArrowUpDown className="w-3 h-3" />
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-24">IG na Data</TableHead>
+                    <TableHead 
+                      className="w-24 cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleSort('intervalo')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Intervalo
+                        <ArrowUpDown className="w-3 h-3" />
+                      </div>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row, idx) => (
+                  {displayRows.map((row, idx) => (
                     <TableRow
                       key={row.id}
                       className={
@@ -786,7 +910,84 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
-                      <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                      {/* IG Ideal with tooltip */}
+                      <TableCell className="font-mono text-sm">
+                        {row.snapshot ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="cursor-help underline decoration-dotted">
+                                {row.snapshot.igIdeal}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="font-semibold">{row.snapshot.protocoloNome}</p>
+                              <p className="text-xs text-muted-foreground">
+                                IG ideal: {row.snapshot.igIdeal} ± {row.snapshot.margemDias}d
+                              </p>
+                              {row.snapshot.dataIdeal && (
+                                <p className="text-xs">
+                                  Data ideal: {row.snapshot.dataIdeal.toLocaleDateString('pt-BR')}
+                                </p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : "-"}
+                      </TableCell>
+                      {/* Data Agendada with source badge */}
+                      <TableCell className="font-mono text-sm">
+                        {row.snapshot?.dataAgendada ? (
+                          <div className="flex flex-col gap-1">
+                            <span>{row.snapshot.dataAgendada.toLocaleDateString('pt-BR')}</span>
+                            <Badge 
+                              variant={row.snapshot.fonteAgendamento === 'manual' ? 'default' : 'secondary'}
+                              className="text-xs w-fit"
+                            >
+                              {row.snapshot.fonteAgendamento === 'manual' ? 'Manual' : 'Calculada'}
+                            </Badge>
+                          </div>
+                        ) : row.data_ideal || "-"}
+                      </TableCell>
+                      {/* IG na Data Agendada */}
+                      <TableCell className="font-mono text-sm">
+                        {row.snapshot?.igNaDataAgendada || "-"}
+                      </TableCell>
+                      {/* Intervalo with color and tooltip */}
+                      <TableCell className="font-mono text-sm">
+                        {row.snapshot ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span 
+                                className={`cursor-help px-2 py-1 rounded font-semibold ${
+                                  getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias) === 'green'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    : getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias) === 'yellow'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                }`}
+                              >
+                                {formatInterval(row.snapshot.intervaloDias)}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="font-semibold">Diferença: {formatInterval(row.snapshot.intervaloDias)}</p>
+                              <p className="text-xs">
+                                Data agendada: {row.snapshot.dataAgendada?.toLocaleDateString('pt-BR') || '-'}
+                              </p>
+                              <p className="text-xs">
+                                IG ideal ({row.snapshot.igIdeal}): {row.snapshot.dataIdeal?.toLocaleDateString('pt-BR') || '-'}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Margem tolerada: ±{row.snapshot.margemDias} dias
+                              </p>
+                              {!row.snapshot.dentroMargem && (
+                                <p className="text-xs text-destructive font-semibold mt-1">
+                                  ⚠️ Fora da margem permitida
+                                </p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : "-"}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -795,9 +996,10 @@ export default function ImportarPorTabela() {
             <ScrollBar orientation="vertical" />
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
+          </TooltipProvider>
 
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Total: {rows.length} linhas</span>
+            <span>Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ''}</span>
             <span>
               Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
               {rows.filter((r) => r.status === "erro").length} | Salvos:{" "}
