@@ -28,17 +28,13 @@ const MESES_ALVO = [
 const MATERNIDADES_VALIDAS = ['Cruzeiro', 'Salvalus', 'NotreCare', 'Guarulhos'];
 
 // Cores para escala de densidade de agendamentos (ARGB format)
-const CORES_DENSIDADE = {
-  0: 'FFFFFFFF',   // Branco
-  1: 'FFE8F5E9',   // Verde claro (1-2)
-  2: 'FFE8F5E9',   // Verde claro (1-2)
-  3: 'FFFFF9C4',   // Amarelo claro (3-4)
-  4: 'FFFFF9C4',   // Amarelo claro (3-4)
-  5: 'FFFFE0B2',   // Laranja claro (5-7)
-  6: 'FFFFE0B2',   // Laranja claro (5-7)
-  7: 'FFFFE0B2',   // Laranja claro (5-7)
-  8: 'FFFFCDD2'    // Vermelho claro (8+)
-};
+function getColorByCount(count) {
+  if (count === 0) return 'FFFFFFFF';   // Branco
+  if (count <= 2) return 'FFE8F5E9';    // Verde claro (1-2)
+  if (count <= 4) return 'FFFFF9C4';    // Amarelo claro (3-4)
+  if (count <= 7) return 'FFFFE0B2';    // Laranja claro (5-7)
+  return 'FFFFCDD2';                     // Vermelho claro (8+)
+}
 
 // Cores do cabeçalho
 const CORES = {
@@ -53,17 +49,6 @@ const CORES = {
 const DIAS_SEMANA = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 
 // ==================== FUNÇÕES AUXILIARES ====================
-
-/**
- * Retorna a cor baseada na quantidade de agendamentos
- */
-function getColorByCount(count) {
-  if (count === 0) return CORES_DENSIDADE[0];
-  if (count <= 2) return CORES_DENSIDADE[1];
-  if (count <= 4) return CORES_DENSIDADE[3];
-  if (count <= 7) return CORES_DENSIDADE[5];
-  return CORES_DENSIDADE[8];
-}
 
 /**
  * Normaliza o nome da maternidade
@@ -183,8 +168,8 @@ function carregarAgendamentos() {
       const dataAgendadaAlt = record['DATA AGENDADA'];
       // Extrair data de strings como "26/11/2025" ou "agendada 02/12 ..."
       if (dataAgendadaAlt) {
-        // Se começa com data no formato DD/MM/YYYY
-        const matchData = dataAgendadaAlt.match(/^(\d{2}\/\d{2}\/\d{4})/);
+        // Match date formats: DD/MM/YYYY, D/M/YYYY, DD/M/YYYY, D/MM/YYYY
+        const matchData = dataAgendadaAlt.match(/^(\d{1,2}\/\d{1,2}\/\d{4})/);
         if (matchData) {
           dataAgendada = parseData(matchData[1]);
         }
@@ -561,6 +546,47 @@ async function gerarAbaDetalhes(workbook, grupo) {
 }
 
 /**
+ * Adiciona hiperlinks bidirecionais entre as abas CALENDÁRIO e DETALHES
+ */
+function adicionarHiperlinks(workbook, posicoesCalendario, posicoesDetalhes) {
+  const wsCalendario = workbook.getWorksheet('CALENDÁRIO');
+  const wsDetalhes = workbook.getWorksheet('DETALHES DOS AGENDAMENTOS');
+  
+  if (!wsCalendario || !wsDetalhes) return;
+  
+  // Para cada dia que tem agendamentos, adicionar hiperlink do calendário para detalhes
+  for (const [dia, pos] of Object.entries(posicoesCalendario)) {
+    const detalheRow = posicoesDetalhes[dia];
+    if (detalheRow) {
+      const cell = wsCalendario.getCell(pos.row, pos.col);
+      // Adicionar texto de link
+      const currentValue = cell.value || '';
+      const newValue = `${currentValue}\n\nVer detalhes →`;
+      cell.value = {
+        text: newValue,
+        hyperlink: `'DETALHES DOS AGENDAMENTOS'!A${detalheRow}`
+      };
+      cell.font = { name: 'Arial', size: 14, bold: true };
+    }
+  }
+  
+  // Para cada linha de detalhe, adicionar hiperlink de volta ao calendário
+  for (const [dia, detalheRow] of Object.entries(posicoesDetalhes)) {
+    const calPos = posicoesCalendario[dia];
+    if (calPos) {
+      // Adicionar coluna de link ao calendário (última coluna)
+      const cell = wsDetalhes.getCell(detalheRow, 12);
+      cell.value = {
+        text: '← Ver calendário',
+        hyperlink: `'CALENDÁRIO'!${String.fromCharCode(64 + calPos.col)}${calPos.row}`
+      };
+      cell.font = { name: 'Arial', size: 9, color: { argb: 'FF0066CC' }, underline: true };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+  }
+}
+
+/**
  * Gera o arquivo Excel para um grupo (maternidade + mês)
  */
 async function gerarArquivo(grupo) {
@@ -568,9 +594,12 @@ async function gerarArquivo(grupo) {
   workbook.creator = 'GestaForms Hub';
   workbook.created = new Date();
   
-  // Gerar abas
-  await gerarAbaCalendario(workbook, grupo);
-  await gerarAbaDetalhes(workbook, grupo);
+  // Gerar abas e obter posições dos dias
+  const posicoesCalendario = await gerarAbaCalendario(workbook, grupo);
+  const posicoesDetalhes = await gerarAbaDetalhes(workbook, grupo);
+  
+  // Adicionar hiperlinks bidirecionais
+  adicionarHiperlinks(workbook, posicoesCalendario, posicoesDetalhes);
   
   // Nome do arquivo
   const nomeArquivo = `calendario_${grupo.maternidade}_${grupo.nomeMes}_${grupo.ano}.xlsx`;
