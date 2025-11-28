@@ -36,8 +36,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const { toast } = useToast();
 
-  const fetchUserRoles = async (userId: string) => {
-    setRolesLoaded(false);
+  const fetchUserRoles = async (userId: string, isInitialLoad: boolean = false) => {
+    // Only set rolesLoaded to false on initial load to prevent page flicker
+    if (isInitialLoad) {
+      setRolesLoaded(false);
+    }
     const { data, error } = await supabase
       .from('user_roles')
       .select('role, maternidade')
@@ -68,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (session?.user) {
           setTimeout(() => {
-            fetchUserRoles(session.user.id);
+            fetchUserRoles(session.user.id, false); // Not initial load, don't reset loading
           }, 0);
         } else {
           setUserRoles([]);
@@ -85,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        await fetchUserRoles(session.user.id);
+        await fetchUserRoles(session.user.id, true); // Initial load
       } else {
         setRolesLoaded(true);
       }
