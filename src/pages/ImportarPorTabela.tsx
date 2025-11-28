@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -83,18 +82,6 @@ const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   status: "pendente",
 };
 
-const MATERNIDADES = ["Salvalus", "NotreCare", "Cruzeiro", "Guarulhos"];
-const DUM_STATUS_OPTIONS = ["Sim - Confiavel", "Incerta", "Não sabe"];
-const SIM_NAO = ["Sim", "Não"];
-const PROCEDIMENTOS = [
-  "Cesárea",
-  "Cesárea + Laqueadura",
-  "Indução Programada",
-  "Indução Programada;Laqueadura Pós-parto Normal",
-  "Cerclagem",
-  "Cesárea;DIU de Cobre Pós-parto",
-];
-
 // Funções de normalização
 const normalizarDumStatus = (valor: string): string => {
   const v = (valor || "").toLowerCase().trim();
@@ -129,7 +116,7 @@ export default function ImportarPorTabela() {
     Array.from({ length: 65 }, () => ({ ...EMPTY_ROW, id: crypto.randomUUID() })),
   );
   const [processing, setProcessing] = useState(false);
-  const [saving, setSaving] = useState(false);
+  the[(saving, setSaving)] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
 
   const addRow = () => {
@@ -161,35 +148,41 @@ export default function ImportarPorTabela() {
         .filter((l) => l.trim());
       if (lines.length === 0) return;
 
-      // Se não tem tabs, é uma coluna única - preencher na coluna focada
       const isSingleColumn = !text.includes("\t");
 
-      // NOVO: multi-coluna com célula focada → preencher em grade a partir da célula focada
-      if (!isSingleColumn && focusedCell) {
-        const pasteFieldOrder: (keyof PacienteRow)[] = [
-          "nome_completo",
-          "data_nascimento",
-          "carteirinha",
-          "numero_gestacoes",
-          "numero_partos_cesareas",
-          "numero_partos_normais",
-          "numero_abortos",
-          "telefones",
-          "data_dum",
-          "data_primeiro_usg",
-          "semanas_usg",
-          "dias_usg",
-          "usg_recente",
-          "ig_pretendida",
-          "indicacao_procedimento",
-          "medicacao",
-          "diagnosticos_maternos",
-          "diagnosticos_fetais",
-          "historia_obstetrica",
-          "medico_responsavel",
-          "email_paciente",
-        ];
+      // ORDEM COMPLETA DAS COLUNAS EDITÁVEIS (seguindo a tabela)
+      const pasteFieldOrder: (keyof PacienteRow)[] = [
+        "nome_completo",
+        "data_nascimento",
+        "carteirinha",
+        "numero_gestacoes",
+        "numero_partos_cesareas",
+        "numero_partos_normais",
+        "numero_abortos",
+        "telefones",
+        "procedimentos",
+        "dum_status",
+        "data_dum",
+        "data_primeiro_usg",
+        "semanas_usg",
+        "dias_usg",
+        "usg_recente",
+        "ig_pretendida",
+        "indicacao_procedimento",
+        "medicacao",
+        "diagnosticos_maternos",
+        "placenta_previa",
+        "diagnosticos_fetais",
+        "historia_obstetrica",
+        "necessidade_uti_materna",
+        "necessidade_reserva_sangue",
+        "maternidade",
+        "medico_responsavel",
+        "email_paciente",
+      ];
 
+      // Multi-coluna a partir da célula focada
+      if (!isSingleColumn && focusedCell) {
         const { rowIndex, field } = focusedCell;
         const startFieldIndex = pasteFieldOrder.indexOf(field);
 
@@ -225,6 +218,7 @@ export default function ImportarPorTabela() {
         }
       }
 
+      // Coluna única: preenche para baixo na coluna focada
       if (isSingleColumn && focusedCell) {
         e.preventDefault();
         const { rowIndex, field } = focusedCell;
@@ -248,12 +242,11 @@ export default function ImportarPorTabela() {
         return;
       }
 
-      // Se tem tabs, é multi-coluna - comportamento original
+      // Fallback: colagem multi-coluna criando novas linhas (com mapeamento padrão)
       if (!text.includes("\t")) return;
 
       e.preventDefault();
 
-      // Detectar se primeira linha é cabeçalho
       const firstLine = lines[0].toLowerCase();
       const hasHeader = firstLine.includes("nome") || firstLine.includes("carteirinha");
       const dataLines = hasHeader ? lines.slice(1) : lines;
@@ -281,11 +274,11 @@ export default function ImportarPorTabela() {
           indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
           medicacao: cols[20]?.trim() || "",
           diagnosticos_maternos: cols[21]?.trim() || "",
-          placenta_previa: normalizarSimNao(cols[22]?.trim() || "Não"),
+          placenta_previa: cols[22]?.trim() || "Não",
           diagnosticos_fetais: cols[23]?.trim() || "",
           historia_obstetrica: cols[24]?.trim() || "",
-          necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || "Não"),
-          necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || "Não"),
+          necessidade_uti_materna: cols[25]?.trim() || "Não",
+          necessidade_reserva_sangue: cols[26]?.trim() || "Não",
           maternidade: cols[27]?.trim() || "Salvalus",
           medico_responsavel: cols[28]?.trim() || "",
           email_paciente: (cols[29]?.trim() || "").toLowerCase(),
@@ -305,12 +298,10 @@ export default function ImportarPorTabela() {
 
     const processedRows = rows.map((row) => {
       try {
-        // Validar campos obrigatórios
         if (!row.nome_completo || !row.carteirinha) {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
-        // Calcular IG
         const result = chooseAndCompute({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -323,7 +314,6 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
         }
 
-        // Calcular data ideal (IG pretendida)
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
         const diasRestantes = igPretendidaSemanas * 7 - result.gaDays;
         const dataIdeal = new Date();
@@ -336,7 +326,7 @@ export default function ImportarPorTabela() {
           status: "valido" as const,
           erro: undefined,
         };
-      } catch (error) {
+      } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
       }
     });
@@ -367,7 +357,6 @@ export default function ImportarPorTabela() {
 
     for (const row of validRows) {
       try {
-        // Verificar duplicata
         const { data: existente } = await supabase
           .from("agendamentos_obst")
           .select("id")
@@ -382,7 +371,6 @@ export default function ImportarPorTabela() {
           continue;
         }
 
-        // Calcular IG para inserção
         const result = chooseAndCompute({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -396,7 +384,6 @@ export default function ImportarPorTabela() {
         const dataAgendamento = new Date();
         dataAgendamento.setDate(dataAgendamento.getDate() + diasRestantes);
 
-        // Parse datas
         const dataNascimento = parseDateSafe(row.data_nascimento);
         const dataDum = parseDateSafe(row.data_dum);
         const dataPrimeiroUsg = parseDateSafe(row.data_primeiro_usg);
@@ -447,6 +434,7 @@ export default function ImportarPorTabela() {
           salvos++;
         }
       } catch (error) {
+        console.error(error);
         erros++;
       }
     }
@@ -510,348 +498,303 @@ export default function ImportarPorTabela() {
             </Button>
           </div>
 
-          {/* AQUI: adicionei overflow-x-auto para rolagem lateral */}
-          <ScrollArea className="h-[600px] border rounded-lg overflow-x-auto" onPaste={handlePaste}>
-            <div className="min-w-[2500px]">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="w-10">#</TableHead>
-                    <TableHead className="w-12">Ações</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                    <TableHead className="min-w-[200px]">Nome Completo*</TableHead>
-                    <TableHead className="w-32">Nascimento</TableHead>
-                    <TableHead className="min-w-[150px]">Carteirinha*</TableHead>
-                    <TableHead className="w-16">G</TableHead>
-                    <TableHead className="w-16">PC</TableHead>
-                    <TableHead className="w-16">PN</TableHead>
-                    <TableHead className="w-16">A</TableHead>
-                    <TableHead className="min-w-[150px]">Telefones</TableHead>
-                    <TableHead className="min-w-[180px]">Procedimentos</TableHead>
-                    <TableHead className="w-40">Status DUM</TableHead>
-                    <TableHead className="w-32">Data DUM</TableHead>
-                    <TableHead className="w-32">Data 1º USG</TableHead>
-                    <TableHead className="w-20">Sem</TableHead>
-                    <TableHead className="w-20">Dias</TableHead>
-                    <TableHead className="min-w-[200px]">USG Recente</TableHead>
-                    <TableHead className="w-24">IG Pret.</TableHead>
-                    <TableHead className="min-w-[150px]">Indicação</TableHead>
-                    <TableHead className="min-w-[150px]">Medicação</TableHead>
-                    <TableHead className="min-w-[200px]">Diag. Maternos</TableHead>
-                    <TableHead className="w-32">Placenta</TableHead>
-                    <TableHead className="min-w-[200px]">Diag. Fetais</TableHead>
-                    <TableHead className="min-w-[200px]">Hist. Obstétrica</TableHead>
-                    <TableHead className="w-24">UTI</TableHead>
-                    <TableHead className="w-24">Sangue</TableHead>
-                    <TableHead className="w-32">Maternidade</TableHead>
-                    <TableHead className="min-w-[150px]">Médico</TableHead>
-                    <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[150px]">IG Calculada</TableHead>
-                    <TableHead className="w-32">Data Ideal</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rows.map((row, idx) => (
-                    <TableRow
-                      key={row.id}
-                      className={
-                        row.status === "erro" ? "bg-destructive/5" : row.status === "salvo" ? "bg-green-500/5" : ""
-                      }
-                    >
-                      <TableCell className="font-mono text-xs">{idx + 1}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeRow(row.id)}
-                          disabled={rows.length <= 1}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {getStatusBadge(row.status)}
-                          {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.nome_completo}
-                          onChange={(e) => updateRow(row.id, "nome_completo", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "nome_completo")}
-                          className="min-w-[180px]"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_nascimento}
-                          onChange={(e) => updateRow(row.id, "data_nascimento", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_nascimento")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.carteirinha}
-                          onChange={(e) => updateRow(row.id, "carteirinha", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "carteirinha")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_gestacoes}
-                          onChange={(e) => updateRow(row.id, "numero_gestacoes", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_gestacoes")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_partos_cesareas}
-                          onChange={(e) => updateRow(row.id, "numero_partos_cesareas", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_partos_cesareas")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_partos_normais}
-                          onChange={(e) => updateRow(row.id, "numero_partos_normais", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_partos_normais")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_abortos}
-                          onChange={(e) => updateRow(row.id, "numero_abortos", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_abortos")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.telefones}
-                          onChange={(e) => updateRow(row.id, "telefones", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "telefones")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select value={row.procedimentos} onValueChange={(v) => updateRow(row.id, "procedimentos", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PROCEDIMENTOS.map((p) => (
-                              <SelectItem key={p} value={p}>
-                                {p}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={row.dum_status} onValueChange={(v) => updateRow(row.id, "dum_status", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DUM_STATUS_OPTIONS.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_dum}
-                          onChange={(e) => updateRow(row.id, "data_dum", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_dum")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_primeiro_usg}
-                          onChange={(e) => updateRow(row.id, "data_primeiro_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_primeiro_usg")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="42"
-                          value={row.semanas_usg}
-                          onChange={(e) => updateRow(row.id, "semanas_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "semanas_usg")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="6"
-                          value={row.dias_usg}
-                          onChange={(e) => updateRow(row.id, "dias_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "dias_usg")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.usg_recente}
-                          onChange={(e) => updateRow(row.id, "usg_recente", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "usg_recente")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.ig_pretendida}
-                          onChange={(e) => updateRow(row.id, "ig_pretendida", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "ig_pretendida")}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.indicacao_procedimento}
-                          onChange={(e) => updateRow(row.id, "indicacao_procedimento", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "indicacao_procedimento")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.medicacao}
-                          onChange={(e) => updateRow(row.id, "medicacao", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "medicacao")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.diagnosticos_maternos}
-                          onChange={(e) => updateRow(row.id, "diagnosticos_maternos", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "diagnosticos_maternos")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.placenta_previa}
-                          onValueChange={(v) => updateRow(row.id, "placenta_previa", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.diagnosticos_fetais}
-                          onChange={(e) => updateRow(row.id, "diagnosticos_fetais", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "diagnosticos_fetais")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.historia_obstetrica}
-                          onChange={(e) => updateRow(row.id, "historia_obstetrica", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "historia_obstetrica")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.necessidade_uti_materna}
-                          onValueChange={(v) => updateRow(row.id, "necessidade_uti_materna", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={row.necessidade_reserva_sangue}
-                          onValueChange={(v) => updateRow(row.id, "necessidade_reserva_sangue", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Select value={row.maternidade} onValueChange={(v) => updateRow(row.id, "maternidade", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MATERNIDADES.map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.medico_responsavel}
-                          onChange={(e) => updateRow(row.id, "medico_responsavel", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "medico_responsavel")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="email"
-                          value={row.email_paciente}
-                          onChange={(e) => updateRow(row.id, "email_paciente", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "email_paciente")}
-                        />
-                      </TableCell>
-                      <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
-                      <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+          {/* Rolagem vertical + rolagem lateral */}
+          <div className="h-[600px] border rounded-lg overflow-x-auto" onPaste={handlePaste}>
+            <ScrollArea className="h-[600px]">
+              <div className="min-w-[2500px]">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead className="w-10">#</TableHead>
+                      <TableHead className="w-12">Ações</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="min-w-[200px]">Nome Completo*</TableHead>
+                      <TableHead className="w-32">Nascimento</TableHead>
+                      <TableHead className="min-w-[150px]">Carteirinha*</TableHead>
+                      <TableHead className="w-16">G</TableHead>
+                      <TableHead className="w-16">PC</TableHead>
+                      <TableHead className="w-16">PN</TableHead>
+                      <TableHead className="w-16">A</TableHead>
+                      <TableHead className="min-w-[150px]">Telefones</TableHead>
+                      <TableHead className="min-w-[180px]">Procedimentos</TableHead>
+                      <TableHead className="w-40">Status DUM</TableHead>
+                      <TableHead className="w-32">Data DUM</TableHead>
+                      <TableHead className="w-32">Data 1º USG</TableHead>
+                      <TableHead className="w-20">Sem</TableHead>
+                      <TableHead className="w-20">Dias</TableHead>
+                      <TableHead className="min-w-[200px]">USG Recente</TableHead>
+                      <TableHead className="w-24">IG Pret.</TableHead>
+                      <TableHead className="min-w-[150px]">Indicação</TableHead>
+                      <TableHead className="min-w-[150px]">Medicação</TableHead>
+                      <TableHead className="min-w-[200px]">Diag. Maternos</TableHead>
+                      <TableHead className="w-32">Placenta</TableHead>
+                      <TableHead className="min-w-[200px]">Diag. Fetais</TableHead>
+                      <TableHead className="min-w-[200px]">Hist. Obstétrica</TableHead>
+                      <TableHead className="w-24">UTI</TableHead>
+                      <TableHead className="w-24">Sangue</TableHead>
+                      <TableHead className="w-32">Maternidade</TableHead>
+                      <TableHead className="min-w-[150px]">Médico</TableHead>
+                      <TableHead className="min-w-[200px]">Email</TableHead>
+                      <TableHead className="min-w-[150px]">IG Calculada</TableHead>
+                      <TableHead className="w-32">Data Ideal</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((row, idx) => (
+                      <TableRow
+                        key={row.id}
+                        className={
+                          row.status === "erro" ? "bg-destructive/5" : row.status === "salvo" ? "bg-green-500/5" : ""
+                        }
+                      >
+                        <TableCell className="font-mono text-xs">{idx + 1}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeRow(row.id)}
+                            disabled={rows.length <= 1}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {getStatusBadge(row.status)}
+                            {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.nome_completo}
+                            onChange={(e) => updateRow(row.id, "nome_completo", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "nome_completo")}
+                            className="min-w-[180px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_nascimento}
+                            onChange={(e) => updateRow(row.id, "data_nascimento", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_nascimento")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.carteirinha}
+                            onChange={(e) => updateRow(row.id, "carteirinha", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "carteirinha")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_gestacoes}
+                            onChange={(e) => updateRow(row.id, "numero_gestacoes", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_gestacoes")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_partos_cesareas}
+                            onChange={(e) => updateRow(row.id, "numero_partos_cesareas", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_partos_cesareas")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_partos_normais}
+                            onChange={(e) => updateRow(row.id, "numero_partos_normais", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_partos_normais")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_abortos}
+                            onChange={(e) => updateRow(row.id, "numero_abortos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_abortos")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.telefones}
+                            onChange={(e) => updateRow(row.id, "telefones", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "telefones")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.procedimentos}
+                            onChange={(e) => updateRow(row.id, "procedimentos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "procedimentos")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.dum_status}
+                            onChange={(e) => updateRow(row.id, "dum_status", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "dum_status")}
+                            placeholder="Sim - Confiavel / Incerta / Não sabe"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_dum}
+                            onChange={(e) => updateRow(row.id, "data_dum", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_dum")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_primeiro_usg}
+                            onChange={(e) => updateRow(row.id, "data_primeiro_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_primeiro_usg")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="42"
+                            value={row.semanas_usg}
+                            onChange={(e) => updateRow(row.id, "semanas_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "semanas_usg")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={row.dias_usg}
+                            onChange={(e) => updateRow(row.id, "dias_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "dias_usg")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.usg_recente}
+                            onChange={(e) => updateRow(row.id, "usg_recente", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "usg_recente")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.ig_pretendida}
+                            onChange={(e) => updateRow(row.id, "ig_pretendida", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "ig_pretendida")}
+                            className="w-24"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.indicacao_procedimento}
+                            onChange={(e) => updateRow(row.id, "indicacao_procedimento", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "indicacao_procedimento")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.medicacao}
+                            onChange={(e) => updateRow(row.id, "medicacao", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "medicacao")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.diagnosticos_maternos}
+                            onChange={(e) => updateRow(row.id, "diagnosticos_maternos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "diagnosticos_maternos")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.placenta_previa}
+                            onChange={(e) => updateRow(row.id, "placenta_previa", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "placenta_previa")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.diagnosticos_fetais}
+                            onChange={(e) => updateRow(row.id, "diagnosticos_fetais", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "diagnosticos_fetais")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.historia_obstetrica}
+                            onChange={(e) => updateRow(row.id, "historia_obstetrica", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "historia_obstetrica")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.necessidade_uti_materna}
+                            onChange={(e) => updateRow(row.id, "necessidade_uti_materna", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "necessidade_uti_materna")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.necessidade_reserva_sangue}
+                            onChange={(e) => updateRow(row.id, "necessidade_reserva_sangue", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "necessidade_reserva_sangue")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.maternidade}
+                            onChange={(e) => updateRow(row.id, "maternidade", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "maternidade")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.medico_responsavel}
+                            onChange={(e) => updateRow(row.id, "medico_responsavel", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "medico_responsavel")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="email"
+                            value={row.email_paciente}
+                            onChange={(e) => updateRow(row.id, "email_paciente", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "email_paciente")}
+                          />
+                        </TableCell>
+                        <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
+                        <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
+          </div>
 
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Total: {rows.length} linhas</span>
