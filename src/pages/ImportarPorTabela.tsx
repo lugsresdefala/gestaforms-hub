@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
+import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
 import { addDays, differenceInDays } from "date-fns";
 import { PROTOCOLS } from "@/lib/obstetricProtocols";
@@ -57,6 +57,10 @@ interface PacienteRow {
   // Campos calculados
   ig_calculada?: string;
   data_ideal?: string;
+  ig_ideal?: string;
+  ig_na_data_agendada?: string;
+  delta_dias?: number;
+  protocolo?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
   // Novos campos de agendamento
@@ -72,6 +76,9 @@ interface PacienteRow {
   protocolo_aplicado?: string;
   motivo_calculo?: string;
 }
+
+type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
+type SortDirection = 'asc' | 'desc';
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
@@ -144,6 +151,67 @@ export default function ImportarPorTabela() {
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
+  const [sortField, setSortField] = useState<SortField>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [filterForaMargem, setFilterForaMargem] = useState(false);
+
+  // Computed/sorted/filtered rows
+  const displayRows = useMemo(() => {
+    let result = [...rows];
+    
+    // Filter: somente fora da margem
+    if (filterForaMargem) {
+      result = result.filter(row => row.snapshot && !row.snapshot.dentroMargem);
+    }
+    
+    // Sort
+    if (sortField) {
+      result.sort((a, b) => {
+        let aVal: number | Date | null = null;
+        let bVal: number | Date | null = null;
+        
+        switch (sortField) {
+          case 'data_agendada':
+            aVal = a.snapshot?.dataAgendada || null;
+            bVal = b.snapshot?.dataAgendada || null;
+            break;
+          case 'ig_ideal':
+            aVal = a.snapshot?.igIdealDias || 0;
+            bVal = b.snapshot?.igIdealDias || 0;
+            break;
+          case 'intervalo':
+            aVal = a.snapshot?.intervaloDias || 0;
+            bVal = b.snapshot?.intervaloDias || 0;
+            break;
+        }
+        
+        if (aVal === null && bVal === null) return 0;
+        if (aVal === null) return sortDirection === 'asc' ? 1 : -1;
+        if (bVal === null) return sortDirection === 'asc' ? -1 : 1;
+        
+        if (aVal instanceof Date && bVal instanceof Date) {
+          return sortDirection === 'asc' 
+            ? aVal.getTime() - bVal.getTime() 
+            : bVal.getTime() - aVal.getTime();
+        }
+        
+        const numA = typeof aVal === 'number' ? aVal : 0;
+        const numB = typeof bVal === 'number' ? bVal : 0;
+        return sortDirection === 'asc' ? numA - numB : numB - numA;
+      });
+    }
+    
+    return result;
+  }, [rows, sortField, sortDirection, filterForaMargem]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
   const addRow = () => {
     setRows([...rows, { ...EMPTY_ROW, id: crypto.randomUUID() }]);
@@ -322,22 +390,27 @@ export default function ImportarPorTabela() {
   const processarDados = async () => {
     setProcessing(true);
 
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
     const processedRows = rows.map((row) => {
       try {
         if (!row.nome_completo || !row.carteirinha) {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
         if (!result || result.source === "INVALID") {
-          return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
+          return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
         // Determinar protocolo com base na IG pretendida ou diagnósticos
@@ -434,35 +507,57 @@ export default function ImportarPorTabela() {
     setSaving(true);
     let salvos = 0;
     let erros = 0;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
 
     for (const row of validRows) {
       try {
         const { data: existente } = await supabase
           .from("agendamentos_obst")
-          .select("id")
+          .select("id, data_agendamento_calculada")
           .eq("carteirinha", row.carteirinha.trim())
           .maybeSingle();
 
         if (existente) {
+          let dataAgendadaFormatada = 'não informada';
+          try {
+            if (existente.data_agendamento_calculada) {
+              const parsedDate = new Date(existente.data_agendamento_calculada);
+              if (!isNaN(parsedDate.getTime())) {
+                dataAgendadaFormatada = parsedDate.toLocaleDateString('pt-BR');
+              }
+            }
+          } catch {
+            // Keep default 'não informada' if parsing fails
+          }
+          
           setRows((prev) =>
-            prev.map((r) => (r.id === row.id ? { ...r, status: "erro" as const, erro: "Carteirinha já existe" } : r)),
+            prev.map((r) => (r.id === row.id ? { 
+              ...r, 
+              status: "erro" as const, 
+              erro: `Carteirinha já existe - Agendamento em: ${dataAgendadaFormatada}` 
+            } : r)),
           );
           erros++;
           continue;
         }
 
-        const result = chooseAndCompute({
+        const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
           usgDays: normalizarDiasUsg(row.dias_usg),
+          diagnostico: row.diagnosticos_maternos,
+          indicacao: row.indicacao_procedimento,
         });
 
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = result ? igPretendidaSemanas * 7 - result.gaDays : 0;
-        const dataAgendamento = new Date();
-        dataAgendamento.setDate(dataAgendamento.getDate() + diasRestantes);
+        // Use protocol-based ideal date
+        const dataAgendamento = result?.dataIdeal || new Date();
+        
+        // Only persist IG if scheduled date is in future
+        const isFutureDate = dataAgendamento > hoje;
+        const igCalculadaParaSalvar = isFutureDate ? result?.gaFormatted : null;
 
         const dataNascimento = parseDateSafe(row.data_nascimento);
         const dataDum = parseDateSafe(row.data_dum);
@@ -497,7 +592,7 @@ export default function ImportarPorTabela() {
           medico_responsavel: row.medico_responsavel || "Não informado",
           email_paciente: row.email_paciente.toLowerCase().trim() || "nao-informado@sistema.local",
           centro_clinico: row.centro_clinico || "Centro Clínico Hapvida",
-          idade_gestacional_calculada: result?.gaFormatted || null,
+          idade_gestacional_calculada: igCalculadaParaSalvar,
           data_agendamento_calculada: dataAgendamento.toISOString().split("T")[0],
           created_by: user.id,
           status: "pendente",
@@ -521,6 +616,93 @@ export default function ImportarPorTabela() {
 
     setSaving(false);
     toast.success(`Salvos: ${salvos}, Erros: ${erros}`);
+  };
+
+  const exportarResultados = () => {
+    const linhasParaExportar = rows.filter(r => r.status === 'valido' || r.status === 'salvo');
+    
+    if (linhasParaExportar.length === 0) {
+      toast.error('Nenhum resultado válido para exportar');
+      return;
+    }
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // CSV headers
+    const headers = [
+      'Nome Completo', 'Data Nascimento', 'Carteirinha', 
+      'Gestações', 'Partos Cesárea', 'Partos Normal', 'Abortos',
+      'Telefones', 'Procedimentos', 'Status DUM', 'Data DUM',
+      'Data 1º USG', 'Semanas USG', 'Dias USG', 'USG Recente',
+      'IG Pretendida', 'Indicação', 'Medicação', 'Diag Maternos',
+      'Placenta Prévia', 'Diag Fetais', 'História Obstétrica',
+      'Necessidade UTI', 'Necessidade Sangue', 'Maternidade',
+      'Médico Responsável', 'Email Paciente', 'Centro Clínico',
+      // Calculated columns
+      'IG Calculada', 'IG Ideal', 'Protocolo', 'Data Agendada',
+      'IG na Data Agendada', 'Intervalo (dias)', 'Status', 'Erro'
+    ];
+
+    const linhas = linhasParaExportar.map(row => {
+      // Calculate interval in days between today and scheduled date
+      let intervalo = '';
+      if (row.snapshot?.dataAgendada) {
+        const dataAgendada = new Date(row.snapshot.dataAgendada);
+        dataAgendada.setHours(0, 0, 0, 0);
+        const diffDias = Math.round((dataAgendada.getTime() - hoje.getTime()) / MS_PER_DAY);
+        intervalo = diffDias >= 0 ? `+${diffDias}` : `${diffDias}`;
+      }
+
+      return [
+        row.nome_completo, row.data_nascimento, row.carteirinha,
+        row.numero_gestacoes, row.numero_partos_cesareas, 
+        row.numero_partos_normais, row.numero_abortos,
+        row.telefones, row.procedimentos, row.dum_status, row.data_dum,
+        row.data_primeiro_usg, row.semanas_usg, row.dias_usg, row.usg_recente,
+        row.ig_pretendida, row.indicacao_procedimento, row.medicacao,
+        row.diagnosticos_maternos, row.placenta_previa, row.diagnosticos_fetais,
+        row.historia_obstetrica, row.necessidade_uti_materna,
+        row.necessidade_reserva_sangue, row.maternidade,
+        row.medico_responsavel, row.email_paciente, row.centro_clinico,
+        // Calculated columns
+        row.ig_calculada || '', 
+        row.snapshot?.igIdeal || '',
+        row.snapshot?.protocoloNome || '',
+        row.snapshot?.dataAgendada?.toLocaleDateString('pt-BR') || row.data_ideal || '',
+        row.snapshot?.igNaDataAgendada || '',
+        intervalo,
+        row.status || '',
+        row.erro || ''
+      ];
+    });
+
+    // Generate CSV content with proper escaping
+    const csvContent = [
+      headers.join(','),
+      ...linhas.map(linha => linha.map(campo => {
+        const str = String(campo ?? '');
+        // Escape commas, quotes and newlines
+        return str.includes(',') || str.includes('"') || str.includes('\n')
+          ? `"${str.replace(/"/g, '""')}"`
+          : str;
+      }).join(','))
+    ].join('\n');
+
+    // Create download with BOM for UTF-8 Excel compatibility
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const timestamp = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `agendamentos-processados-${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success(`${linhasParaExportar.length} registros exportados!`);
   };
 
   const getStatusBadge = (status?: string) => {
@@ -564,7 +746,7 @@ export default function ImportarPorTabela() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
             <Button onClick={addRow} variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-1" /> Adicionar Linha
             </Button>
@@ -572,13 +754,26 @@ export default function ImportarPorTabela() {
               {processing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Calculator className="w-4 h-4 mr-1" />}
               Processar Dados
             </Button>
-            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}>
+            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}> 
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
             </Button>
+            <div className="flex items-center gap-2 ml-4 border-l pl-4">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <Checkbox 
+                id="filter-fora-margem" 
+                checked={filterForaMargem}
+                onCheckedChange={(checked) => setFilterForaMargem(checked === true)}
+              />
+              <label htmlFor="filter-fora-margem" className="text-sm text-muted-foreground cursor-pointer">
+                Somente fora da margem
+              </label>
+            </div>
           </div>
 
           {/* Rolagem vertical + rolagem lateral */}
+          {/* Table min-width accommodates ~35 columns with varying widths */}
+          <TooltipProvider>
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
             <div style={{ minWidth: TABLE_MIN_WIDTH }}>
               <Table>
@@ -625,7 +820,7 @@ export default function ImportarPorTabela() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((row, idx) => (
+                  {displayRows.map((row, idx) => (
                     <TableRow
                       key={row.id}
                       className={
@@ -871,6 +1066,7 @@ export default function ImportarPorTabela() {
                           onFocus={() => handleCellFocus(idx, "email_paciente")}
                         />
                       </TableCell>
+                      {/* IG Calculada atual (apenas se data agendada for futura) */}
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
                       <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
@@ -949,9 +1145,10 @@ export default function ImportarPorTabela() {
             <ScrollBar orientation="vertical" />
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
+          </TooltipProvider>
 
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Total: {rows.length} linhas</span>
+            <span>Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ''}</span>
             <span>
               Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
               {rows.filter((r) => r.status === "erro").length} | Revisão:{" "}

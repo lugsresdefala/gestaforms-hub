@@ -1,0 +1,5 @@
+nome,carteirinha,maternidade,data_banco,data_calendario,status
+"Maria José da Silva","12345","Guarulhos","2025-11-03","2025-11-03","ambos"
+"João Santos","67890","NotreCare","2025-11-02","","somente_banco"
+"Ana Paula Costa","11111","Salvalus","2025-11-05","2025-11-05","ambos"
+"Pedro Lima","22222","Cruzeiro","2025-11-03","2025-11-04","divergente"

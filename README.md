@@ -31,6 +31,60 @@ Sistema integrado para gestão de agendamentos e procedimentos obstétricos do P
 - Importação de dados e calendários (admin)
 - Logs de auditoria (admin)
 
+### Exportação de Calendários de Agendamentos
+
+O sistema inclui um script para gerar calendários visuais de agendamentos em formato Excel (.xlsx), organizados por maternidade e mês.
+
+#### Como usar
+
+```bash
+# Executar a exportação de calendários
+npm run export:calendario
+```
+
+#### O que é gerado
+
+O script gera arquivos Excel (.xlsx) na pasta `exports/` com:
+
+1. **Aba CALENDÁRIO**: Visualização mensal estilo calendário
+   - Grid de 7 colunas (Domingo a Sábado)
+   - Células coloridas por quantidade de agendamentos:
+     - Branco: 0 agendamentos
+     - Verde claro: 1-2 agendamentos
+     - Amarelo claro: 3-4 agendamentos
+     - Laranja claro: 5-7 agendamentos
+     - Vermelho claro: 8+ agendamentos
+   - Comentários com lista de pacientes em cada dia
+   - Estatísticas no rodapé
+
+2. **Aba DETALHES DOS AGENDAMENTOS**: Lista completa com todos os dados
+   - Data, carteirinha, nome, telefones
+   - IG calculada, procedimentos, indicação
+   - Diagnósticos maternos e fetais
+   - Filtros automáticos habilitados
+
+#### Arquivos gerados
+
+```
+exports/
+├── calendario_Guarulhos_Novembro_2025.xlsx
+├── calendario_Guarulhos_Dezembro_2025.xlsx
+├── calendario_Guarulhos_Janeiro_2026.xlsx
+├── calendario_NotreCare_Novembro_2025.xlsx
+├── calendario_NotreCare_Dezembro_2025.xlsx
+├── calendario_NotreCare_Janeiro_2026.xlsx
+├── calendario_Salvalus_Novembro_2025.xlsx
+├── calendario_Salvalus_Dezembro_2025.xlsx
+├── calendario_Salvalus_Janeiro_2026.xlsx
+├── calendario_Cruzeiro_Novembro_2025.xlsx
+├── calendario_Cruzeiro_Dezembro_2025.xlsx
+└── calendario_Cruzeiro_Janeiro_2026.xlsx
+```
+
+#### Requisitos
+
+O script utiliza dados do arquivo CSV em `public/csv-temp/fluxo_novo_2025_CONSOLIDADO.csv`.
+
 ### Controle de Acesso e Permissões
 
 O sistema utiliza um modelo de controle de acesso baseado em roles (funções):
