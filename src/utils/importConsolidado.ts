@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
 import { parseDateSafe } from '@/lib/importSanitizer';
+import { verificarDisponibilidade } from '@/lib/vagasValidation';
+import { format } from 'date-fns';
 
 interface CSVRow {
   maternidade: string;
@@ -230,6 +232,26 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         status: 'aprovado',
         created_by: createdBy
       };
+      
+      // Validar capacidade da maternidade antes de inserir
+      const dataAgendamentoDate = new Date(agendamento.data_agendamento_calculada);
+      const disponibilidade = await verificarDisponibilidade(
+        agendamento.maternidade,
+        dataAgendamentoDate,
+        false
+      );
+      
+      if (!disponibilidade.disponivel) {
+        if (disponibilidade.dataAlternativa) {
+          // Usar data alternativa
+          agendamento.data_agendamento_calculada = format(disponibilidade.dataAlternativa, 'yyyy-MM-dd');
+          agendamento.observacoes_agendamento = `${agendamento.observacoes_agendamento || ''}\n⚠️ [IMPORTAÇÃO] ${disponibilidade.mensagem}`.trim();
+        } else {
+          // Marcar para revisão manual
+          agendamento.status = 'pendente';
+          agendamento.observacoes_agendamento = `${agendamento.observacoes_agendamento || ''}\n⚠️ SEM VAGAS DISPONÍVEIS: ${disponibilidade.mensagem}`.trim();
+        }
+      }
       
       agendamentosToInsert.push(agendamento);
     } catch (error) {

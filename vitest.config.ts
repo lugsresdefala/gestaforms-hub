@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'scripts/__tests__/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -14,6 +14,7 @@ export default defineConfig({
         'src/lib/importSanitizer.ts',
         'src/lib/import/dateParser.ts',
         'src/lib/import/gestationalCalculator.ts',
+        'src/lib/import/gestationalSnapshot.ts',
         'src/lib/import/tsvProcessor.ts',
         'src/lib/import/htmlFormParser.ts',
         'src/lib/import/types.ts',

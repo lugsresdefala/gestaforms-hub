@@ -63,3 +63,16 @@ export {
   processHTMLFormsBatch,
   validateHTMLFormData
 } from './htmlFormParser';
+
+// Gestational Snapshot
+export type {
+  GestationalSnapshotResult,
+  SnapshotParams
+} from './gestationalSnapshot';
+
+export {
+  getGestationalSnapshot,
+  formatGaCompact,
+  formatInterval,
+  getIntervalColorClass
+} from './gestationalSnapshot';

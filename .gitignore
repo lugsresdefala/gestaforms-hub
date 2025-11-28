@@ -23,3 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Data output directory (generated files)
+data/output/
+
+# Export directory (generated calendar files)
+exports/
+
+# Overbooking correction reports (generated files)
+relatorios_overbooking/

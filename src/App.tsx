@@ -51,6 +51,7 @@ import ImportarAgendamentosHTML from "./pages/ImportarAgendamentosHTML";
 import ImportarPacientes from "./pages/ImportarPacientes";
 import ImportarPorTabela from "./pages/ImportarPorTabela";
 import AuditoriaImportacoes from "./pages/AuditoriaImportacoes";
+import AuditoriaAgendamentos from "./pages/admin/AuditoriaAgendamentos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -419,6 +420,16 @@ const App = () => (
                 <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <AuditoriaImportacoes />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/auditoria-agendamentos" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <AuditoriaAgendamentos />
                   </AppLayout>
                 </ProtectedRoute>
               } 
