@@ -1,0 +1,6 @@
+id_interno,carteirinha,nome_original,nome_normalizado,maternidade,data_original,data_final,motivo_alteracao,status
+1,"12345","Maria José da Silva","MARIA JOSE DA SILVA","Guarulhos","2025-11-03","2025-11-03","nenhum","mantido"
+2,"67890","João Santos","JOAO SANTOS","NotreCare","2025-11-02","2025-11-03","domingo_remapeado","ajustado"
+3,"11111","Ana Paula Costa","ANA PAULA COSTA","Salvalus","2025-11-05","2025-11-05","nenhum","mantido"
+4,"22222","Pedro Lima","PEDRO LIMA","Cruzeiro","2025-11-03","2025-11-04","duplicado_redistribuido","ajustado"
+5,"33333","Laura Oliveira","LAURA OLIVEIRA","Guarulhos","2025-11-10","2025-11-10","nenhum","mantido"
