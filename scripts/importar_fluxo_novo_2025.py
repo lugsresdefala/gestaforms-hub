@@ -7,7 +7,7 @@ Processa 55 pacientes com IDs 2550-2604 + 1 registro incompleto
 import os
 import sys
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client, Client
 
 # Configuração Supabase
@@ -18,6 +18,101 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Caminho do arquivo CSV (consolidado no workspace)
 CSV_PATH = "/workspaces/gestaforms-hub/public/csv-temp/fluxo_novo_2025_CONSOLIDADO.csv"
+
+# Cache de capacidades
+_capacidades_cache = None
+
+def get_capacidades():
+    """Busca capacidades de maternidades do banco de dados"""
+    global _capacidades_cache
+    if _capacidades_cache is None:
+        result = supabase.table('capacidade_maternidades').select('maternidade, vagas_dia_util, vagas_sabado, vagas_domingo').execute()
+        _capacidades_cache = {cap['maternidade'].lower().strip(): cap for cap in (result.data or [])}
+    return _capacidades_cache
+
+def parse_iso_date_safe(date_str):
+    """Converte string ISO para date, retornando None em caso de erro"""
+    if not date_str or not isinstance(date_str, str):
+        return None
+    try:
+        return datetime.fromisoformat(date_str).date()
+    except (ValueError, TypeError):
+        return None
+
+def get_capacidade_dia(cap, data):
+    """Retorna capacidade do dia baseado no dia da semana"""
+    if isinstance(data, str):
+        parsed = parse_iso_date_safe(data)
+        if not parsed:
+            return cap.get('vagas_dia_util', 3)  # Default to weekday capacity
+        data = parsed
+    dow = data.weekday()  # 0 = Segunda, 6 = Domingo
+    if dow == 6:  # Domingo
+        return cap.get('vagas_domingo', 0)
+    if dow == 5:  # Sábado
+        return cap.get('vagas_sabado', 1)
+    return cap.get('vagas_dia_util', 3)
+
+def verificar_disponibilidade(maternidade, data_agendamento):
+    """Verifica disponibilidade e busca data alternativa se necessário"""
+    if not maternidade or not data_agendamento:
+        return {'disponivel': True, 'data_alternativa': None, 'mensagem': 'Dados incompletos'}
+    
+    capacidades = get_capacidades()
+    cap = capacidades.get(maternidade.lower().strip())
+    
+    if not cap:
+        return {'disponivel': True, 'data_alternativa': None, 'mensagem': 'Capacidade não configurada'}
+    
+    if isinstance(data_agendamento, str):
+        data = parse_iso_date_safe(data_agendamento)
+        if not data:
+            return {'disponivel': True, 'data_alternativa': None, 'mensagem': 'Data inválida'}
+    else:
+        data = data_agendamento
+    
+    capacidade_dia = get_capacidade_dia(cap, data)
+    data_str = data.isoformat()
+    
+    # Contar agendamentos existentes
+    result = supabase.table('agendamentos_obst') \
+        .select('id') \
+        .ilike('maternidade', maternidade) \
+        .eq('data_agendamento_calculada', data_str) \
+        .neq('status', 'rejeitado') \
+        .execute()
+    
+    vagas_usadas = len(result.data or [])
+    
+    if vagas_usadas < capacidade_dia:
+        return {'disponivel': True, 'data_alternativa': None, 'mensagem': f'{capacidade_dia - vagas_usadas} vagas disponíveis'}
+    
+    # Buscar data alternativa (+1 a +7 dias)
+    for i in range(1, 8):
+        candidata = data + timedelta(days=i)
+        if candidata.weekday() == 6:  # Pular domingos
+            continue
+        
+        cap_dia = get_capacidade_dia(cap, candidata)
+        data_alt_str = candidata.isoformat()
+        
+        result_alt = supabase.table('agendamentos_obst') \
+            .select('id') \
+            .ilike('maternidade', maternidade) \
+            .eq('data_agendamento_calculada', data_alt_str) \
+            .neq('status', 'rejeitado') \
+            .execute()
+        
+        vagas_alt = len(result_alt.data or [])
+        
+        if vagas_alt < cap_dia:
+            return {
+                'disponivel': True, 
+                'data_alternativa': candidata, 
+                'mensagem': f'Data ajustada de {data_str} para {data_alt_str} (+{i} dias)'
+            }
+    
+    return {'disponivel': False, 'data_alternativa': None, 'mensagem': 'Sem vagas na data ideal nem nos próximos 7 dias'}
 
 def parse_date(date_str):
     """Converte string de data em formato ISO"""
@@ -179,6 +274,25 @@ def processar_csv():
                     'observacoes_agendamento': observacoes,
                     'created_at': datetime.now().isoformat()
                 }
+                
+                # Validar capacidade da maternidade antes de inserir
+                data_ag = registro.get('data_agendamento_calculada')
+                if data_ag and maternidade:
+                    disponibilidade = verificar_disponibilidade(maternidade, data_ag)
+                    
+                    if not disponibilidade['disponivel']:
+                        if disponibilidade['data_alternativa']:
+                            # Usar data alternativa
+                            registro['data_agendamento_calculada'] = disponibilidade['data_alternativa'].isoformat()
+                            obs_anterior = registro.get('observacoes_agendamento') or ''
+                            registro['observacoes_agendamento'] = f"{obs_anterior}\n⚠️ [IMPORTAÇÃO] {disponibilidade['mensagem']}".strip()
+                            print(f"   ⚠️ Data ajustada: {disponibilidade['mensagem']}")
+                        else:
+                            # Marcar para revisão manual
+                            registro['status'] = 'pendente'
+                            obs_anterior = registro.get('observacoes_agendamento') or ''
+                            registro['observacoes_agendamento'] = f"{obs_anterior}\n⚠️ SEM VAGAS DISPONÍVEIS: {disponibilidade['mensagem']}".strip()
+                            print(f"   ❌ Sem vagas: {disponibilidade['mensagem']}")
                 
                 # Insere no Supabase
                 result = supabase.table('agendamentos_obst').insert(registro).execute()
