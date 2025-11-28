@@ -15,6 +15,7 @@ export {
   LEAD_TIME_MINIMO,
   MAX_OFFSET_DIAS,
   MARGEM_PADRAO_DIAS,
+  DEFAULT_CAPACITY,
   type StatusAgendamento,
   type EncontrarDataAgendadaParams,
   type EncontrarDataAgendadaResult,

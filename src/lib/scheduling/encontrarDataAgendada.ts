@@ -77,6 +77,9 @@ export function isSabado(data: Date): boolean {
   return getDay(data) === 6;
 }
 
+/** Default capacity when maternity is not configured */
+export const DEFAULT_CAPACITY = 5;
+
 /**
  * Get capacity for a specific date and maternity
  */
@@ -84,7 +87,7 @@ export function getCapacidadeDia(maternidade: string, data: Date): number {
   const capacidades = CAPACIDADE_MATERNIDADES[maternidade];
   if (!capacidades) {
     // Default capacity if maternity not configured
-    return 5;
+    return DEFAULT_CAPACITY;
   }
   
   const diaSemana = getDay(data);
@@ -258,7 +261,7 @@ export function encontrarDataAgendada(
     status: 'needs_review',
     intervaloDias: 0,
     leadTimeDias: leadTimeIdeal,
-    motivo: 'Não foi possível encontrar data válida dentro da janela IG (+7 dias) considerando capacidade, lead time e restrição de domingo.',
+    motivo: `Não foi possível encontrar data válida dentro da janela IG (+${MAX_OFFSET_DIAS} dias) considerando capacidade, lead time e restrição de domingo.`,
     ajustadoPorCapacidade: true,
     ajustadoPorDomingo: isDomingo(idealDate),
     ajustadoPorLeadTime: leadTimeIdeal < LEAD_TIME_MINIMO,

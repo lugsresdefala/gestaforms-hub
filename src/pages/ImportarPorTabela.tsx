@@ -133,6 +133,9 @@ const normalizarNumero = (valor: string): number => {
   return isNaN(num) ? 0 : Math.max(0, num);
 };
 
+// Table minimum width to accommodate all columns
+const TABLE_MIN_WIDTH = "3200px";
+
 export default function ImportarPorTabela() {
   const { user } = useAuth();
   const [rows, setRows] = useState<PacienteRow[]>(
@@ -346,13 +349,20 @@ export default function ImportarPorTabela() {
         let protocolo = PROTOCOLS['desejo_materno'];
         let protocoloNome = 'desejo_materno';
         
-        // Tentar encontrar protocolo baseado em diagnósticos
+        // Tentar encontrar protocolo baseado em diagnósticos (usando match exato de palavras)
         const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
-        for (const [key, proto] of Object.entries(PROTOCOLS)) {
-          if (diagnosticos.includes(key.replace(/_/g, ' '))) {
-            protocolo = proto;
-            protocoloNome = key;
-            break;
+        if (diagnosticos.trim()) {
+          // Sort protocol keys by length (longest first) to match more specific protocols first
+          const sortedProtocolKeys = Object.keys(PROTOCOLS).sort((a, b) => b.length - a.length);
+          for (const key of sortedProtocolKeys) {
+            const keyPattern = key.replace(/_/g, ' ');
+            // Use word boundary matching to avoid partial matches
+            const regex = new RegExp(`\\b${keyPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+            if (regex.test(diagnosticos)) {
+              protocolo = PROTOCOLS[key];
+              protocoloNome = key;
+              break;
+            }
           }
         }
         
@@ -570,7 +580,7 @@ export default function ImportarPorTabela() {
 
           {/* Rolagem vertical + rolagem lateral */}
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
-            <div className="min-w-[3200px]">
+            <div style={{ minWidth: TABLE_MIN_WIDTH }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
