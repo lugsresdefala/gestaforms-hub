@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { calcularAgendamentoCompleto } from '@/lib/gestationalCalculations';
-import { addDays } from 'date-fns';
+import { addDays, format } from 'date-fns';
 import { parseDateSafe, isPlaceholderDate } from '@/lib/importSanitizer';
+import { verificarDisponibilidade } from '@/lib/vagasValidation';
 
 export interface NotrecareRow {
   dia: string;
@@ -259,12 +260,34 @@ export async function importNotrecare2025(rows: NotrecareRow[]): Promise<{
   errors: string[];
 }> {
   const results = { success: 0, failed: 0, errors: [] as string[] };
-  const processedRows = [];
+  const processedRows: ReturnType<typeof processNotrecareRow> extends Promise<infer T> ? NonNullable<T>[] : never = [];
 
   for (const row of rows) {
     try {
-      const processed = processNotrecareRow(row);
+      const processed = await processNotrecareRow(row);
       if (processed) {
+        // Validar capacidade da maternidade antes de inserir
+        const dataAgendamentoDate = new Date(processed.data_agendamento_calculada);
+        const disponibilidade = await verificarDisponibilidade(
+          processed.maternidade,
+          dataAgendamentoDate,
+          false
+        );
+        
+        if (!disponibilidade.disponivel) {
+          if (disponibilidade.dataAlternativa) {
+            // Usar data alternativa
+            processed.data_agendamento_calculada = format(disponibilidade.dataAlternativa, 'yyyy-MM-dd');
+            const obsAnterior = processed.observacoes_agendamento || '';
+            processed.observacoes_agendamento = `${obsAnterior}\n⚠️ [IMPORTAÇÃO] ${disponibilidade.mensagem}`.trim();
+          } else {
+            // Marcar para revisão manual
+            processed.status = 'pendente';
+            const obsAnterior = processed.observacoes_agendamento || '';
+            processed.observacoes_agendamento = `${obsAnterior}\n⚠️ SEM VAGAS DISPONÍVEIS: ${disponibilidade.mensagem}`.trim();
+          }
+        }
+        
         processedRows.push(processed);
       }
     } catch (error) {
