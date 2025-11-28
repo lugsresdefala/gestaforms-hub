@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
@@ -83,17 +82,7 @@ const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   status: "pendente",
 };
 
-const MATERNIDADES = ["Salvalus", "NotreCare", "Cruzeiro", "Guarulhos"];
-const DUM_STATUS_OPTIONS = ["Sim - Confiavel", "Incerta", "Não sabe"];
-const SIM_NAO = ["Sim", "Não"];
-const PROCEDIMENTOS = [
-  "Cesárea",
-  "Cesárea + Laqueadura",
-  "Indução Programada",
-  "Indução Programada;Laqueadura Pós-parto Normal",
-  "Cerclagem",
-  "Cesárea;DIU de Cobre Pós-parto",
-];
+const PROCEDIMENTOS_DEFAULT = "Cesárea";
 
 // Ordem lógica dos campos editáveis na tabela (para colagem em grade)
 const FIELD_ORDER: (keyof PacienteRow)[] = [
@@ -237,7 +226,7 @@ export default function ImportarPorTabela() {
         return;
       }
 
-      // 2) Colagem em coluna única na coluna focada (comportamento já existente)
+      // 2) Colagem em coluna única na coluna focada
       if (!hasTabs && focusedCell) {
         e.preventDefault();
         const { rowIndex, field } = focusedCell;
@@ -257,11 +246,11 @@ export default function ImportarPorTabela() {
           return updated;
         });
 
-        toast.success(`${lines.length} valores colados na coluna!`);
+        toast.success(`${lines.length} valores colados na coluna.`);
         return;
       }
 
-      // 3) Sem célula focada + múltiplas colunas: import em massa (comportamento original)
+      // 3) Sem célula focada + múltiplas colunas: import em massa (TSV → novas linhas)
       if (!hasTabs) return;
 
       e.preventDefault();
@@ -282,8 +271,8 @@ export default function ImportarPorTabela() {
           numero_partos_normais: cols[7]?.trim() || "0",
           numero_abortos: cols[8]?.trim() || "0",
           telefones: cols[9]?.trim() || "",
-          procedimentos: cols[10]?.trim() || "Cesárea",
-          dum_status: normalizarDumStatus(cols[11]?.trim() || ""),
+          procedimentos: cols[10]?.trim() || PROCEDIMENTOS_DEFAULT,
+          dum_status: cols[11]?.trim() || "",
           data_dum: cols[12]?.trim() || "",
           data_primeiro_usg: cols[13]?.trim() || "",
           semanas_usg: cols[14]?.trim() || "",
@@ -293,11 +282,11 @@ export default function ImportarPorTabela() {
           indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
           medicacao: cols[20]?.trim() || "",
           diagnosticos_maternos: cols[21]?.trim() || "",
-          placenta_previa: normalizarSimNao(cols[22]?.trim() || "Não"),
+          placenta_previa: cols[22]?.trim() || "Não",
           diagnosticos_fetais: cols[23]?.trim() || "",
           historia_obstetrica: cols[24]?.trim() || "",
-          necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || "Não"),
-          necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || "Não"),
+          necessidade_uti_materna: cols[25]?.trim() || "Não",
+          necessidade_reserva_sangue: cols[26]?.trim() || "Não",
           maternidade: cols[27]?.trim() || "Salvalus",
           medico_responsavel: cols[28]?.trim() || "",
           email_paciente: (cols[29]?.trim() || "").toLowerCase(),
@@ -307,7 +296,7 @@ export default function ImportarPorTabela() {
       });
 
       setRows((prev) => [...prev.filter((r) => r.nome_completo), ...newRows]);
-      toast.success(`${newRows.length} linhas coladas com sucesso!`);
+      toast.success(`${newRows.length} linhas coladas com sucesso.`);
     },
     [focusedCell],
   );
@@ -322,7 +311,7 @@ export default function ImportarPorTabela() {
         }
 
         const result = chooseAndCompute({
-          dumStatus: row.dum_status,
+          dumStatus: normalizarDumStatus(row.dum_status),
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
@@ -391,7 +380,7 @@ export default function ImportarPorTabela() {
         }
 
         const result = chooseAndCompute({
-          dumStatus: row.dum_status,
+          dumStatus: normalizarDumStatus(row.dum_status),
           dumRaw: row.data_dum,
           usgDateRaw: row.data_primeiro_usg,
           usgWeeks: normalizarSemanasUsg(row.semanas_usg),
@@ -416,7 +405,7 @@ export default function ImportarPorTabela() {
           numero_partos_normais: normalizarNumero(row.numero_partos_normais),
           numero_abortos: normalizarNumero(row.numero_abortos),
           telefones: row.telefones || "Não informado",
-          procedimentos: row.procedimentos ? [row.procedimentos] : ["Cesárea"],
+          procedimentos: row.procedimentos ? [row.procedimentos] : [PROCEDIMENTOS_DEFAULT],
           dum_status: normalizarDumStatus(row.dum_status),
           data_dum: dataDum?.toISOString().split("T")[0] || null,
           data_primeiro_usg: dataPrimeiroUsg?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0],
@@ -516,7 +505,6 @@ export default function ImportarPorTabela() {
             </Button>
           </div>
 
-          {/* Scroll vertical + horizontal */}
           <ScrollArea className="h-[600px] w-full border rounded-lg" onPaste={handlePaste}>
             <div className="min-w-[2500px]">
               <Table>
@@ -653,32 +641,18 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Select value={row.procedimentos} onValueChange={(v) => updateRow(row.id, "procedimentos", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {PROCEDIMENTOS.map((p) => (
-                              <SelectItem key={p} value={p}>
-                                {p}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          value={row.procedimentos}
+                          onChange={(e) => updateRow(row.id, "procedimentos", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "procedimentos")}
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select value={row.dum_status} onValueChange={(v) => updateRow(row.id, "dum_status", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DUM_STATUS_OPTIONS.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          value={row.dum_status}
+                          onChange={(e) => updateRow(row.id, "dum_status", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "dum_status")}
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -757,21 +731,11 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <Input
                           value={row.placenta_previa}
-                          onValueChange={(v) => updateRow(row.id, "placenta_previa", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={(e) => updateRow(row.id, "placenta_previa", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "placenta_previa")}
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -788,52 +752,25 @@ export default function ImportarPorTabela() {
                         />
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <Input
                           value={row.necessidade_uti_materna}
-                          onValueChange={(v) => updateRow(row.id, "necessidade_uti_materna", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={(e) => updateRow(row.id, "necessidade_uti_materna", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "necessidade_uti_materna")}
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select
+                        <Input
                           value={row.necessidade_reserva_sangue}
-                          onValueChange={(v) => updateRow(row.id, "necessidade_reserva_sangue", v)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          onChange={(e) => updateRow(row.id, "necessidade_reserva_sangue", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "necessidade_reserva_sangue")}
+                        />
                       </TableCell>
                       <TableCell>
-                        <Select value={row.maternidade} onValueChange={(v) => updateRow(row.id, "maternidade", v)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MATERNIDADES.map((m) => (
-                              <SelectItem key={m} value={m}>
-                                {m}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Input
+                          value={row.maternidade}
+                          onChange={(e) => updateRow(row.id, "maternidade", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "maternidade")}
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
