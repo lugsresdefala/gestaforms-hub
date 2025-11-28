@@ -33,9 +33,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userRoles, setUserRoles] = useState<UserRoleData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rolesLoaded, setRolesLoaded] = useState(false);
   const { toast } = useToast();
 
   const fetchUserRoles = async (userId: string) => {
+    setRolesLoaded(false);
     const { data, error } = await supabase
       .from('user_roles')
       .select('role, maternidade')
@@ -44,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!error && data) {
       setUserRoles(data as UserRoleData[]);
     }
+    setRolesLoaded(true);
   };
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setUserRoles([]);
+          setRolesLoaded(true);
         }
         
         setLoading(false);
@@ -76,12 +80,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchUserRoles(session.user.id);
+        await fetchUserRoles(session.user.id);
+      } else {
+        setRolesLoaded(true);
       }
       
       setLoading(false);
@@ -242,13 +248,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .filter(r => r.role === 'medico_maternidade' && r.maternidade)
       .map(r => r.maternidade as string);
 
+  // Only stop loading when both auth and roles are loaded
+  const isFullyLoaded = !loading && rolesLoaded;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
         userRoles,
-        loading,
+        loading: !isFullyLoaded,
         signIn,
         signUp,
         signOut,
