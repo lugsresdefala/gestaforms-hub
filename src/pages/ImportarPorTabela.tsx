@@ -130,6 +130,7 @@ export default function ImportarPorTabela() {
   );
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
 
   const addRow = () => {
     setRows([...rows, { ...EMPTY_ROW, id: crypto.randomUUID() }]);
@@ -147,14 +148,47 @@ export default function ImportarPorTabela() {
     ));
   };
 
+  const handleCellFocus = (rowIndex: number, field: keyof PacienteRow) => {
+    setFocusedCell({ rowIndex, field });
+  };
+
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text');
-    if (!text.includes('\t') && !text.includes('\n')) return;
-    
-    e.preventDefault();
+    if (!text.trim()) return;
     
     const lines = text.trim().split('\n').filter(l => l.trim());
     if (lines.length === 0) return;
+    
+    // Se não tem tabs, é uma coluna única - preencher na coluna focada
+    const isSingleColumn = !text.includes('\t');
+    
+    if (isSingleColumn && focusedCell) {
+      e.preventDefault();
+      const { rowIndex, field } = focusedCell;
+      
+      setRows(prev => {
+        const updated = [...prev];
+        lines.forEach((line, idx) => {
+          const targetIdx = rowIndex + idx;
+          if (targetIdx < updated.length) {
+            updated[targetIdx] = { 
+              ...updated[targetIdx], 
+              [field]: line.trim(),
+              status: 'pendente' 
+            };
+          }
+        });
+        return updated;
+      });
+      
+      toast.success(`${lines.length} valores colados na coluna!`);
+      return;
+    }
+    
+    // Se tem tabs, é multi-coluna - comportamento original
+    if (!text.includes('\t')) return;
+    
+    e.preventDefault();
 
     // Detectar se primeira linha é cabeçalho
     const firstLine = lines[0].toLowerCase();
@@ -199,7 +233,7 @@ export default function ImportarPorTabela() {
 
     setRows(prev => [...prev.filter(r => r.nome_completo), ...newRows]);
     toast.success(`${newRows.length} linhas coladas com sucesso!`);
-  }, []);
+  }, [focusedCell]);
 
   const processarDados = async () => {
     setProcessing(true);
@@ -448,14 +482,14 @@ export default function ImportarPorTabela() {
                           {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
                         </div>
                       </TableCell>
-                      <TableCell><Input value={row.nome_completo} onChange={e => updateRow(row.id, 'nome_completo', e.target.value)} className="min-w-[180px]" /></TableCell>
-                      <TableCell><Input type="text" value={row.data_nascimento} onChange={e => updateRow(row.id, 'data_nascimento', e.target.value)} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input value={row.carteirinha} onChange={e => updateRow(row.id, 'carteirinha', e.target.value)} /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_gestacoes} onChange={e => updateRow(row.id, 'numero_gestacoes', e.target.value)} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_partos_cesareas} onChange={e => updateRow(row.id, 'numero_partos_cesareas', e.target.value)} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_partos_normais} onChange={e => updateRow(row.id, 'numero_partos_normais', e.target.value)} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_abortos} onChange={e => updateRow(row.id, 'numero_abortos', e.target.value)} className="w-16" /></TableCell>
-                      <TableCell><Input value={row.telefones} onChange={e => updateRow(row.id, 'telefones', e.target.value)} /></TableCell>
+                      <TableCell><Input value={row.nome_completo} onChange={e => updateRow(row.id, 'nome_completo', e.target.value)} onFocus={() => handleCellFocus(idx, 'nome_completo')} className="min-w-[180px]" /></TableCell>
+                      <TableCell><Input type="text" value={row.data_nascimento} onChange={e => updateRow(row.id, 'data_nascimento', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_nascimento')} placeholder="DD/MM/YYYY" /></TableCell>
+                      <TableCell><Input value={row.carteirinha} onChange={e => updateRow(row.id, 'carteirinha', e.target.value)} onFocus={() => handleCellFocus(idx, 'carteirinha')} /></TableCell>
+                      <TableCell><Input type="number" min="0" value={row.numero_gestacoes} onChange={e => updateRow(row.id, 'numero_gestacoes', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_gestacoes')} className="w-16" /></TableCell>
+                      <TableCell><Input type="number" min="0" value={row.numero_partos_cesareas} onChange={e => updateRow(row.id, 'numero_partos_cesareas', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_partos_cesareas')} className="w-16" /></TableCell>
+                      <TableCell><Input type="number" min="0" value={row.numero_partos_normais} onChange={e => updateRow(row.id, 'numero_partos_normais', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_partos_normais')} className="w-16" /></TableCell>
+                      <TableCell><Input type="number" min="0" value={row.numero_abortos} onChange={e => updateRow(row.id, 'numero_abortos', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_abortos')} className="w-16" /></TableCell>
+                      <TableCell><Input value={row.telefones} onChange={e => updateRow(row.id, 'telefones', e.target.value)} onFocus={() => handleCellFocus(idx, 'telefones')} /></TableCell>
                       <TableCell>
                         <Select value={row.procedimentos} onValueChange={v => updateRow(row.id, 'procedimentos', v)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -472,15 +506,15 @@ export default function ImportarPorTabela() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input type="text" value={row.data_dum} onChange={e => updateRow(row.id, 'data_dum', e.target.value)} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input type="text" value={row.data_primeiro_usg} onChange={e => updateRow(row.id, 'data_primeiro_usg', e.target.value)} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input type="number" min="0" max="42" value={row.semanas_usg} onChange={e => updateRow(row.id, 'semanas_usg', e.target.value)} className="w-20" /></TableCell>
-                      <TableCell><Input type="number" min="0" max="6" value={row.dias_usg} onChange={e => updateRow(row.id, 'dias_usg', e.target.value)} className="w-20" /></TableCell>
-                      <TableCell><Input value={row.usg_recente} onChange={e => updateRow(row.id, 'usg_recente', e.target.value)} /></TableCell>
-                      <TableCell><Input value={row.ig_pretendida} onChange={e => updateRow(row.id, 'ig_pretendida', e.target.value)} className="w-24" /></TableCell>
-                      <TableCell><Input value={row.indicacao_procedimento} onChange={e => updateRow(row.id, 'indicacao_procedimento', e.target.value)} /></TableCell>
-                      <TableCell><Input value={row.medicacao} onChange={e => updateRow(row.id, 'medicacao', e.target.value)} /></TableCell>
-                      <TableCell><Input value={row.diagnosticos_maternos} onChange={e => updateRow(row.id, 'diagnosticos_maternos', e.target.value)} /></TableCell>
+                      <TableCell><Input type="text" value={row.data_dum} onChange={e => updateRow(row.id, 'data_dum', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_dum')} placeholder="DD/MM/YYYY" /></TableCell>
+                      <TableCell><Input type="text" value={row.data_primeiro_usg} onChange={e => updateRow(row.id, 'data_primeiro_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_primeiro_usg')} placeholder="DD/MM/YYYY" /></TableCell>
+                      <TableCell><Input type="number" min="0" max="42" value={row.semanas_usg} onChange={e => updateRow(row.id, 'semanas_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'semanas_usg')} className="w-20" /></TableCell>
+                      <TableCell><Input type="number" min="0" max="6" value={row.dias_usg} onChange={e => updateRow(row.id, 'dias_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'dias_usg')} className="w-20" /></TableCell>
+                      <TableCell><Input value={row.usg_recente} onChange={e => updateRow(row.id, 'usg_recente', e.target.value)} onFocus={() => handleCellFocus(idx, 'usg_recente')} /></TableCell>
+                      <TableCell><Input value={row.ig_pretendida} onChange={e => updateRow(row.id, 'ig_pretendida', e.target.value)} onFocus={() => handleCellFocus(idx, 'ig_pretendida')} className="w-24" /></TableCell>
+                      <TableCell><Input value={row.indicacao_procedimento} onChange={e => updateRow(row.id, 'indicacao_procedimento', e.target.value)} onFocus={() => handleCellFocus(idx, 'indicacao_procedimento')} /></TableCell>
+                      <TableCell><Input value={row.medicacao} onChange={e => updateRow(row.id, 'medicacao', e.target.value)} onFocus={() => handleCellFocus(idx, 'medicacao')} /></TableCell>
+                      <TableCell><Input value={row.diagnosticos_maternos} onChange={e => updateRow(row.id, 'diagnosticos_maternos', e.target.value)} onFocus={() => handleCellFocus(idx, 'diagnosticos_maternos')} /></TableCell>
                       <TableCell>
                         <Select value={row.placenta_previa} onValueChange={v => updateRow(row.id, 'placenta_previa', v)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -489,8 +523,8 @@ export default function ImportarPorTabela() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input value={row.diagnosticos_fetais} onChange={e => updateRow(row.id, 'diagnosticos_fetais', e.target.value)} /></TableCell>
-                      <TableCell><Input value={row.historia_obstetrica} onChange={e => updateRow(row.id, 'historia_obstetrica', e.target.value)} /></TableCell>
+                      <TableCell><Input value={row.diagnosticos_fetais} onChange={e => updateRow(row.id, 'diagnosticos_fetais', e.target.value)} onFocus={() => handleCellFocus(idx, 'diagnosticos_fetais')} /></TableCell>
+                      <TableCell><Input value={row.historia_obstetrica} onChange={e => updateRow(row.id, 'historia_obstetrica', e.target.value)} onFocus={() => handleCellFocus(idx, 'historia_obstetrica')} /></TableCell>
                       <TableCell>
                         <Select value={row.necessidade_uti_materna} onValueChange={v => updateRow(row.id, 'necessidade_uti_materna', v)}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -515,8 +549,8 @@ export default function ImportarPorTabela() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input value={row.medico_responsavel} onChange={e => updateRow(row.id, 'medico_responsavel', e.target.value)} /></TableCell>
-                      <TableCell><Input type="email" value={row.email_paciente} onChange={e => updateRow(row.id, 'email_paciente', e.target.value)} /></TableCell>
+                      <TableCell><Input value={row.medico_responsavel} onChange={e => updateRow(row.id, 'medico_responsavel', e.target.value)} onFocus={() => handleCellFocus(idx, 'medico_responsavel')} /></TableCell>
+                      <TableCell><Input type="email" value={row.email_paciente} onChange={e => updateRow(row.id, 'email_paciente', e.target.value)} onFocus={() => handleCellFocus(idx, 'email_paciente')} /></TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || '-'}</TableCell>
                       <TableCell className="font-mono text-sm">{row.data_ideal || '-'}</TableCell>
                     </TableRow>
