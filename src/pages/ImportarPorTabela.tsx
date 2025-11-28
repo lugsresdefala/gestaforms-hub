@@ -595,6 +595,7 @@ export default function ImportarPorTabela() {
           </div>
 
           {/* Rolagem vertical + rolagem lateral */}
+          {/* Table min-width accommodates ~35 columns with varying widths */}
           <TooltipProvider>
           <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
             <div className="min-w-[3000px]">
@@ -953,40 +954,42 @@ export default function ImportarPorTabela() {
                       </TableCell>
                       {/* Intervalo with color and tooltip */}
                       <TableCell className="font-mono text-sm">
-                        {row.snapshot ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span 
-                                className={`cursor-help px-2 py-1 rounded font-semibold ${
-                                  getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias) === 'green'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                    : getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias) === 'yellow'
-                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                }`}
-                              >
-                                {formatInterval(row.snapshot.intervaloDias)}
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p className="font-semibold">Diferença: {formatInterval(row.snapshot.intervaloDias)}</p>
-                              <p className="text-xs">
-                                Data agendada: {row.snapshot.dataAgendada?.toLocaleDateString('pt-BR') || '-'}
-                              </p>
-                              <p className="text-xs">
-                                IG ideal ({row.snapshot.igIdeal}): {row.snapshot.dataIdeal?.toLocaleDateString('pt-BR') || '-'}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Margem tolerada: ±{row.snapshot.margemDias} dias
-                              </p>
-                              {!row.snapshot.dentroMargem && (
-                                <p className="text-xs text-destructive font-semibold mt-1">
-                                  ⚠️ Fora da margem permitida
+                        {row.snapshot ? (() => {
+                          const colorClass = getIntervalColorClass(row.snapshot.intervaloDias, row.snapshot.margemDias);
+                          const colorStyles = {
+                            green: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                            yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                            red: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          };
+                          return (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span 
+                                  className={`cursor-help px-2 py-1 rounded font-semibold ${colorStyles[colorClass]}`}
+                                >
+                                  {formatInterval(row.snapshot.intervaloDias)}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs">
+                                <p className="font-semibold">Diferença: {formatInterval(row.snapshot.intervaloDias)}</p>
+                                <p className="text-xs">
+                                  Data agendada: {row.snapshot.dataAgendada?.toLocaleDateString('pt-BR') || '-'}
                                 </p>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : "-"}
+                                <p className="text-xs">
+                                  IG ideal ({row.snapshot.igIdeal}): {row.snapshot.dataIdeal?.toLocaleDateString('pt-BR') || '-'}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Margem tolerada: ±{row.snapshot.margemDias} dias
+                                </p>
+                                {!row.snapshot.dentroMargem && (
+                                  <p className="text-xs text-destructive font-semibold mt-1">
+                                    ⚠️ Fora da margem permitida
+                                  </p>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })() : "-"}
                       </TableCell>
                     </TableRow>
                   ))}

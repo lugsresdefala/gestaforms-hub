@@ -14,6 +14,15 @@ import { chooseAndCompute } from './gestationalCalculator';
 import { PROTOCOLS, mapDiagnosisToProtocol } from '../obstetricProtocols';
 import type { ComputeParams } from './types';
 
+/** Default gestational age in weeks for low-risk pregnancies */
+const DEFAULT_GESTATIONAL_WEEKS = 39;
+
+/** Minimum valid gestational weeks for scheduling */
+const MIN_GESTATIONAL_WEEKS = 1;
+
+/** Maximum valid gestational weeks for scheduling */
+const MAX_GESTATIONAL_WEEKS = 42;
+
 /**
  * Result from getGestationalSnapshot function
  */
@@ -90,7 +99,7 @@ function parseProtocolIgIdeal(igIdeal: string): { weeks: number; days: number } 
     return { weeks: 0, days: 0 };
   }
   
-  const weeks = parseInt(igIdeal, 10) || 39;
+  const weeks = parseInt(igIdeal, 10) || DEFAULT_GESTATIONAL_WEEKS;
   return { weeks, days: 0 };
 }
 
@@ -246,14 +255,14 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     protocoloNome = protocolResult.config.observacoes.split(' - ')[0] || protocolo.replace(/_/g, ' ');
     margemDias = protocolResult.config.margemDias;
   } else {
-    // Fallback to igPretendida or default 39 weeks
-    igIdealWeeks = parseInt(igPretendida || '39', 10) || 39;
+    // Fallback to igPretendida or default weeks for low-risk pregnancies
+    igIdealWeeks = parseInt(igPretendida || String(DEFAULT_GESTATIONAL_WEEKS), 10) || DEFAULT_GESTATIONAL_WEEKS;
   }
   
-  // Override with igPretendida if explicitly set and different
+  // Override with igPretendida if explicitly set and within valid range
   if (igPretendida) {
     const pretendidaWeeks = parseInt(igPretendida, 10);
-    if (!isNaN(pretendidaWeeks) && pretendidaWeeks > 0 && pretendidaWeeks <= 42) {
+    if (!isNaN(pretendidaWeeks) && pretendidaWeeks >= MIN_GESTATIONAL_WEEKS && pretendidaWeeks <= MAX_GESTATIONAL_WEEKS) {
       igIdealWeeks = pretendidaWeeks;
     }
   }
