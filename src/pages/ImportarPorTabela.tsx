@@ -1,17 +1,17 @@
-import { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { chooseAndCompute } from '@/lib/import/gestationalCalculator';
-import { parseDateSafe } from '@/lib/import/dateParser';
+import { useState, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { chooseAndCompute } from "@/lib/import/gestationalCalculator";
+import { parseDateSafe } from "@/lib/import/dateParser";
 
 // Tipos
 interface PacienteRow {
@@ -47,60 +47,91 @@ interface PacienteRow {
   // Campos calculados
   ig_calculada?: string;
   data_ideal?: string;
-  status?: 'pendente' | 'valido' | 'erro' | 'salvo';
+  status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
 }
 
-const EMPTY_ROW: Omit<PacienteRow, 'id'> = {
-  nome_completo: '',
-  data_nascimento: '',
-  carteirinha: '',
-  numero_gestacoes: '1',
-  numero_partos_cesareas: '0',
-  numero_partos_normais: '0',
-  numero_abortos: '0',
-  telefones: '',
-  procedimentos: 'Cesárea',
-  dum_status: 'Incerta',
-  data_dum: '',
-  data_primeiro_usg: '',
-  semanas_usg: '',
-  dias_usg: '0',
-  usg_recente: '',
-  ig_pretendida: '39',
-  indicacao_procedimento: 'Desejo materno',
-  medicacao: '',
-  diagnosticos_maternos: '',
-  placenta_previa: 'Não',
-  diagnosticos_fetais: '',
-  historia_obstetrica: '',
-  necessidade_uti_materna: 'Não',
-  necessidade_reserva_sangue: 'Não',
-  maternidade: 'Salvalus',
-  medico_responsavel: '',
-  email_paciente: '',
-  centro_clinico: 'Centro Clínico Hapvida',
-  status: 'pendente',
+// ordem das colunas editáveis na tabela (sem as colunas calculadas)
+const EDITABLE_FIELDS: (keyof PacienteRow)[] = [
+  "nome_completo",
+  "data_nascimento",
+  "carteirinha",
+  "numero_gestacoes",
+  "numero_partos_cesareas",
+  "numero_partos_normais",
+  "numero_abortos",
+  "telefones",
+  "procedimentos",
+  "dum_status",
+  "data_dum",
+  "data_primeiro_usg",
+  "semanas_usg",
+  "dias_usg",
+  "usg_recente",
+  "ig_pretendida",
+  "indicacao_procedimento",
+  "medicacao",
+  "diagnosticos_maternos",
+  "placenta_previa",
+  "diagnosticos_fetais",
+  "historia_obstetrica",
+  "necessidade_uti_materna",
+  "necessidade_reserva_sangue",
+  "maternidade",
+  "medico_responsavel",
+  "email_paciente",
+];
+
+const EMPTY_ROW: Omit<PacienteRow, "id"> = {
+  nome_completo: "",
+  data_nascimento: "",
+  carteirinha: "",
+  numero_gestacoes: "1",
+  numero_partos_cesareas: "0",
+  numero_partos_normais: "0",
+  numero_abortos: "0",
+  telefones: "",
+  procedimentos: "Cesárea",
+  dum_status: "Incerta",
+  data_dum: "",
+  data_primeiro_usg: "",
+  semanas_usg: "",
+  dias_usg: "0",
+  usg_recente: "",
+  ig_pretendida: "39",
+  indicacao_procedimento: "Desejo materno",
+  medicacao: "",
+  diagnosticos_maternos: "",
+  placenta_previa: "Não",
+  diagnosticos_fetais: "",
+  historia_obstetrica: "",
+  necessidade_uti_materna: "Não",
+  necessidade_reserva_sangue: "Não",
+  maternidade: "Salvalus",
+  medico_responsavel: "",
+  email_paciente: "",
+  centro_clinico: "Centro Clínico Hapvida",
+  status: "pendente",
 };
 
-const MATERNIDADES = ['Salvalus', 'NotreCare', 'Cruzeiro', 'Guarulhos'];
-const DUM_STATUS_OPTIONS = ['Sim - Confiavel', 'Incerta', 'Não sabe'];
-const SIM_NAO = ['Sim', 'Não'];
+const MATERNIDADES = ["Salvalus", "NotreCare", "Cruzeiro", "Guarulhos"];
+const DUM_STATUS_OPTIONS = ["Sim - Confiavel", "Incerta", "Não sabe"];
+const SIM_NAO = ["Sim", "Não"];
 const PROCEDIMENTOS = [
-  'Cesárea',
-  'Cesárea + Laqueadura',
-  'Indução Programada',
-  'Indução Programada;Laqueadura Pós-parto Normal',
-  'Cerclagem',
-  'Cesárea;DIU de Cobre Pós-parto',
+  "Cesárea",
+  "Cesárea + Laqueadura",
+  "Indução Programada",
+  "Indução Programada;Laqueadura Pós-parto Normal",
+  "Cerclagem",
+  "Cesárea;DIU de Cobre Pós-parto",
 ];
 
 // Funções de normalização
 const normalizarDumStatus = (valor: string): string => {
-  const v = (valor || '').toLowerCase().trim();
-  if (v.includes('confiavel') || v.includes('confiável') || v === 'sim') return 'Sim - Confiavel';
-  if (v.includes('incerta')) return 'Incerta';
-  return 'Não sabe';
+  const v = (valor || "").toLowerCase().trim();
+  if (v.includes("confiavel") || v.includes("confiável") || v === "sim") return "Sim - Confiavel";
+  if (v.includes("incerta")) return "Incerta";
+  return "Não sabe";
 };
 
 const normalizarDiasUsg = (valor: string): number => {
@@ -114,8 +145,8 @@ const normalizarSemanasUsg = (valor: string): number => {
 };
 
 const normalizarSimNao = (valor: string): string => {
-  const v = (valor || '').toLowerCase().trim();
-  return (v === 'sim' || v === 's' || v === 'yes') ? 'Sim' : 'Não';
+  const v = (valor || "").toLowerCase().trim();
+  return v === "sim" || v === "s" || v === "yes" ? "Sim" : "Não";
 };
 
 const normalizarNumero = (valor: string): number => {
@@ -126,7 +157,7 @@ const normalizarNumero = (valor: string): number => {
 export default function ImportarPorTabela() {
   const { user } = useAuth();
   const [rows, setRows] = useState<PacienteRow[]>(
-    Array.from({ length: 65 }, () => ({ ...EMPTY_ROW, id: crypto.randomUUID() }))
+    Array.from({ length: 65 }, () => ({ ...EMPTY_ROW, id: crypto.randomUUID() })),
   );
   const [processing, setProcessing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -138,114 +169,157 @@ export default function ImportarPorTabela() {
 
   const removeRow = (id: string) => {
     if (rows.length > 1) {
-      setRows(rows.filter(r => r.id !== id));
+      setRows(rows.filter((r) => r.id !== id));
     }
   };
 
   const updateRow = (id: string, field: keyof PacienteRow, value: string) => {
-    setRows(rows.map(r => 
-      r.id === id ? { ...r, [field]: value, status: 'pendente' } : r
-    ));
+    setRows(rows.map((r) => (r.id === id ? { ...r, [field]: value, status: "pendente" } : r)));
   };
 
   const handleCellFocus = (rowIndex: number, field: keyof PacienteRow) => {
     setFocusedCell({ rowIndex, field });
   };
 
-  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData('text');
-    if (!text.trim()) return;
-    
-    const lines = text.trim().split('\n').filter(l => l.trim());
-    if (lines.length === 0) return;
-    
-    // Se não tem tabs, é uma coluna única - preencher na coluna focada
-    const isSingleColumn = !text.includes('\t');
-    
-    if (isSingleColumn && focusedCell) {
-      e.preventDefault();
-      const { rowIndex, field } = focusedCell;
-      
-      setRows(prev => {
-        const updated = [...prev];
-        lines.forEach((line, idx) => {
-          const targetIdx = rowIndex + idx;
-          if (targetIdx < updated.length) {
-            updated[targetIdx] = { 
-              ...updated[targetIdx], 
-              [field]: line.trim(),
-              status: 'pendente' 
-            };
-          }
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent) => {
+      const text = e.clipboardData.getData("text");
+      if (!text.trim()) return;
+
+      const lines = text
+        .trim()
+        .split("\n")
+        .filter((l) => l.trim());
+      if (lines.length === 0) return;
+
+      const hasTabs = text.includes("\t");
+
+      // COLAGEM DE UMA ÚNICA COLUNA (sem tab): preenche uma coluna única a partir da célula focada
+      if (!hasTabs && focusedCell) {
+        e.preventDefault();
+        const { rowIndex, field } = focusedCell;
+
+        setRows((prev) => {
+          const updated = [...prev];
+          lines.forEach((line, idx) => {
+            const targetIdx = rowIndex + idx;
+            if (targetIdx < updated.length) {
+              updated[targetIdx] = {
+                ...updated[targetIdx],
+                [field]: line.trim(),
+                status: "pendente",
+              };
+            }
+          });
+          return updated;
         });
-        return updated;
-      });
-      
-      toast.success(`${lines.length} valores colados na coluna!`);
-      return;
-    }
-    
-    // Se tem tabs, é multi-coluna - comportamento original
-    if (!text.includes('\t')) return;
-    
-    e.preventDefault();
 
-    // Detectar se primeira linha é cabeçalho
-    const firstLine = lines[0].toLowerCase();
-    const hasHeader = firstLine.includes('nome') || firstLine.includes('carteirinha');
-    const dataLines = hasHeader ? lines.slice(1) : lines;
+        toast.success(`${lines.length} valores colados na coluna.`);
+        return;
+      }
 
-    const newRows: PacienteRow[] = dataLines.map(line => {
-      const cols = line.split('\t');
-      return {
-        id: crypto.randomUUID(),
-        nome_completo: cols[2]?.trim() || cols[0]?.trim() || '',
-        data_nascimento: cols[3]?.trim() || cols[1]?.trim() || '',
-        carteirinha: cols[4]?.trim() || cols[2]?.trim() || '',
-        numero_gestacoes: cols[5]?.trim() || '1',
-        numero_partos_cesareas: cols[6]?.trim() || '0',
-        numero_partos_normais: cols[7]?.trim() || '0',
-        numero_abortos: cols[8]?.trim() || '0',
-        telefones: cols[9]?.trim() || '',
-        procedimentos: cols[10]?.trim() || 'Cesárea',
-        dum_status: normalizarDumStatus(cols[11]?.trim() || ''),
-        data_dum: cols[12]?.trim() || '',
-        data_primeiro_usg: cols[13]?.trim() || '',
-        semanas_usg: cols[14]?.trim() || '',
-        dias_usg: cols[15]?.trim() || '0',
-        usg_recente: cols[16]?.trim() || '',
-        ig_pretendida: cols[17]?.trim() || '39',
-        indicacao_procedimento: cols[19]?.trim() || 'Desejo materno',
-        medicacao: cols[20]?.trim() || '',
-        diagnosticos_maternos: cols[21]?.trim() || '',
-        placenta_previa: normalizarSimNao(cols[22]?.trim() || 'Não'),
-        diagnosticos_fetais: cols[23]?.trim() || '',
-        historia_obstetrica: cols[24]?.trim() || '',
-        necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || 'Não'),
-        necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || 'Não'),
-        maternidade: cols[27]?.trim() || 'Salvalus',
-        medico_responsavel: cols[28]?.trim() || '',
-        email_paciente: (cols[29]?.trim() || '').toLowerCase(),
-        centro_clinico: 'Centro Clínico Hapvida',
-        status: 'pendente',
-      };
-    });
+      // COLAGEM MULTICOLUNA (com tab) COM CÉLULA FOCADA:
+      // distribui os valores pelas colunas adjacentes, linha a linha
+      if (hasTabs && focusedCell) {
+        e.preventDefault();
+        const { rowIndex, field } = focusedCell;
+        const startColIndex = EDITABLE_FIELDS.indexOf(field);
 
-    setRows(prev => [...prev.filter(r => r.nome_completo), ...newRows]);
-    toast.success(`${newRows.length} linhas coladas com sucesso!`);
-  }, [focusedCell]);
+        if (startColIndex === -1) {
+          // se por algum motivo o campo não estiver na lista, não faz nada especial
+          return;
+        }
+
+        setRows((prev) => {
+          const updated = [...prev];
+
+          lines.forEach((line, rOffset) => {
+            const targetRowIndex = rowIndex + rOffset;
+            if (targetRowIndex >= updated.length) return;
+
+            const cols = line.split("\t");
+            const currentRow = { ...updated[targetRowIndex] };
+
+            cols.forEach((cellValue, cOffset) => {
+              const fieldIndex = startColIndex + cOffset;
+              if (fieldIndex >= EDITABLE_FIELDS.length) return;
+
+              const targetField = EDITABLE_FIELDS[fieldIndex];
+              currentRow[targetField] = cellValue.trim();
+            });
+
+            currentRow.status = "pendente";
+            updated[targetRowIndex] = currentRow;
+          });
+
+          return updated;
+        });
+
+        toast.success(`Colagem em grade: ${lines.length} linha(s) e múltiplas colunas distribuídas.`);
+        return;
+      }
+
+      // COLAGEM MULTICOLUNA SEM CÉLULA FOCADA:
+      // mantém o comportamento de "importar tabela inteira"
+      if (hasTabs && !focusedCell) {
+        e.preventDefault();
+
+        const firstLine = lines[0].toLowerCase();
+        const hasHeader = firstLine.includes("nome") || firstLine.includes("carteirinha");
+        const dataLines = hasHeader ? lines.slice(1) : lines;
+
+        const newRows: PacienteRow[] = dataLines.map((line) => {
+          const cols = line.split("\t");
+          return {
+            id: crypto.randomUUID(),
+            nome_completo: cols[2]?.trim() || cols[0]?.trim() || "",
+            data_nascimento: cols[3]?.trim() || cols[1]?.trim() || "",
+            carteirinha: cols[4]?.trim() || cols[2]?.trim() || "",
+            numero_gestacoes: cols[5]?.trim() || "1",
+            numero_partos_cesareas: cols[6]?.trim() || "0",
+            numero_partos_normais: cols[7]?.trim() || "0",
+            numero_abortos: cols[8]?.trim() || "0",
+            telefones: cols[9]?.trim() || "",
+            procedimentos: cols[10]?.trim() || "Cesárea",
+            dum_status: normalizarDumStatus(cols[11]?.trim() || ""),
+            data_dum: cols[12]?.trim() || "",
+            data_primeiro_usg: cols[13]?.trim() || "",
+            semanas_usg: cols[14]?.trim() || "",
+            dias_usg: cols[15]?.trim() || "0",
+            usg_recente: cols[16]?.trim() || "",
+            ig_pretendida: cols[17]?.trim() || "39",
+            indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
+            medicacao: cols[20]?.trim() || "",
+            diagnosticos_maternos: cols[21]?.trim() || "",
+            placenta_previa: normalizarSimNao(cols[22]?.trim() || "Não"),
+            diagnosticos_fetais: cols[23]?.trim() || "",
+            historia_obstetrica: cols[24]?.trim() || "",
+            necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || "Não"),
+            necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || "Não"),
+            maternidade: cols[27]?.trim() || "Salvalus",
+            medico_responsavel: cols[28]?.trim() || "",
+            email_paciente: (cols[29]?.trim() || "").toLowerCase(),
+            centro_clinico: "Centro Clínico Hapvida",
+            status: "pendente",
+          };
+        });
+
+        setRows((prev) => [...prev.filter((r) => r.nome_completo), ...newRows]);
+        toast.success(`${newRows.length} linhas coladas com sucesso.`);
+      }
+    },
+    [focusedCell],
+  );
 
   const processarDados = async () => {
     setProcessing(true);
-    
-    const processedRows = rows.map(row => {
+
+    const processedRows = rows.map((row) => {
       try {
-        // Validar campos obrigatórios
         if (!row.nome_completo || !row.carteirinha) {
-          return { ...row, status: 'erro' as const, erro: 'Nome e carteirinha são obrigatórios' };
+          return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
-        // Calcular IG
         const result = chooseAndCompute({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -254,45 +328,44 @@ export default function ImportarPorTabela() {
           usgDays: normalizarDiasUsg(row.dias_usg),
         });
 
-        if (!result || result.source === 'INVALID') {
-          return { ...row, status: 'erro' as const, erro: 'Não foi possível calcular IG' };
+        if (!result || result.source === "INVALID") {
+          return { ...row, status: "erro" as const, erro: "Não foi possível calcular IG" };
         }
 
-        // Calcular data ideal (IG pretendida)
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = (igPretendidaSemanas * 7) - result.gaDays;
+        const diasRestantes = igPretendidaSemanas * 7 - result.gaDays;
         const dataIdeal = new Date();
         dataIdeal.setDate(dataIdeal.getDate() + diasRestantes);
 
         return {
           ...row,
           ig_calculada: result.gaFormatted,
-          data_ideal: dataIdeal.toLocaleDateString('pt-BR'),
-          status: 'valido' as const,
+          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
+          status: "valido" as const,
           erro: undefined,
         };
-      } catch (error) {
-        return { ...row, status: 'erro' as const, erro: 'Erro no processamento' };
+      } catch {
+        return { ...row, status: "erro" as const, erro: "Erro no processamento" };
       }
     });
 
     setRows(processedRows);
     setProcessing(false);
 
-    const validos = processedRows.filter(r => r.status === 'valido').length;
-    const erros = processedRows.filter(r => r.status === 'erro').length;
+    const validos = processedRows.filter((r) => r.status === "valido").length;
+    const erros = processedRows.filter((r) => r.status === "erro").length;
     toast.info(`Processados: ${validos} válidos, ${erros} com erros`);
   };
 
   const salvarNoBanco = async () => {
     if (!user) {
-      toast.error('Usuário não autenticado');
+      toast.error("Usuário não autenticado");
       return;
     }
 
-    const validRows = rows.filter(r => r.status === 'valido');
+    const validRows = rows.filter((r) => r.status === "valido");
     if (validRows.length === 0) {
-      toast.error('Nenhum registro válido para salvar. Processe os dados primeiro.');
+      toast.error("Nenhum registro válido para salvar. Processe os dados primeiro.");
       return;
     }
 
@@ -302,22 +375,20 @@ export default function ImportarPorTabela() {
 
     for (const row of validRows) {
       try {
-        // Verificar duplicata
         const { data: existente } = await supabase
-          .from('agendamentos_obst')
-          .select('id')
-          .eq('carteirinha', row.carteirinha.trim())
+          .from("agendamentos_obst")
+          .select("id")
+          .eq("carteirinha", row.carteirinha.trim())
           .maybeSingle();
 
         if (existente) {
-          setRows(prev => prev.map(r => 
-            r.id === row.id ? { ...r, status: 'erro' as const, erro: 'Carteirinha já existe' } : r
-          ));
+          setRows((prev) =>
+            prev.map((r) => (r.id === row.id ? { ...r, status: "erro" as const, erro: "Carteirinha já existe" } : r)),
+          );
           erros++;
           continue;
         }
 
-        // Calcular IG para inserção
         const result = chooseAndCompute({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -327,33 +398,32 @@ export default function ImportarPorTabela() {
         });
 
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const diasRestantes = result ? (igPretendidaSemanas * 7) - result.gaDays : 0;
+        const diasRestantes = result ? igPretendidaSemanas * 7 - result.gaDays : 0;
         const dataAgendamento = new Date();
         dataAgendamento.setDate(dataAgendamento.getDate() + diasRestantes);
 
-        // Parse datas
         const dataNascimento = parseDateSafe(row.data_nascimento);
         const dataDum = parseDateSafe(row.data_dum);
         const dataPrimeiroUsg = parseDateSafe(row.data_primeiro_usg);
 
-        const { error } = await supabase.from('agendamentos_obst').insert({
+        const { error } = await supabase.from("agendamentos_obst").insert({
           nome_completo: row.nome_completo.trim(),
-          data_nascimento: dataNascimento?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          data_nascimento: dataNascimento?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0],
           carteirinha: row.carteirinha.trim(),
           numero_gestacoes: normalizarNumero(row.numero_gestacoes),
           numero_partos_cesareas: normalizarNumero(row.numero_partos_cesareas),
           numero_partos_normais: normalizarNumero(row.numero_partos_normais),
           numero_abortos: normalizarNumero(row.numero_abortos),
-          telefones: row.telefones || 'Não informado',
-          procedimentos: row.procedimentos ? [row.procedimentos] : ['Cesárea'],
+          telefones: row.telefones || "Não informado",
+          procedimentos: row.procedimentos ? [row.procedimentos] : ["Cesárea"],
           dum_status: normalizarDumStatus(row.dum_status),
-          data_dum: dataDum?.toISOString().split('T')[0] || null,
-          data_primeiro_usg: dataPrimeiroUsg?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+          data_dum: dataDum?.toISOString().split("T")[0] || null,
+          data_primeiro_usg: dataPrimeiroUsg?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0],
           semanas_usg: normalizarSemanasUsg(row.semanas_usg),
           dias_usg: normalizarDiasUsg(row.dias_usg),
-          usg_recente: row.usg_recente || 'Não informado',
-          ig_pretendida: row.ig_pretendida || '39',
-          indicacao_procedimento: row.indicacao_procedimento || 'Desejo materno',
+          usg_recente: row.usg_recente || "Não informado",
+          ig_pretendida: row.ig_pretendida || "39",
+          indicacao_procedimento: row.indicacao_procedimento || "Desejo materno",
           medicacao: row.medicacao || null,
           diagnosticos_maternos: row.diagnosticos_maternos || null,
           placenta_previa: normalizarSimNao(row.placenta_previa),
@@ -361,29 +431,27 @@ export default function ImportarPorTabela() {
           historia_obstetrica: row.historia_obstetrica || null,
           necessidade_uti_materna: normalizarSimNao(row.necessidade_uti_materna),
           necessidade_reserva_sangue: normalizarSimNao(row.necessidade_reserva_sangue),
-          maternidade: row.maternidade || 'Salvalus',
-          medico_responsavel: row.medico_responsavel || 'Não informado',
-          email_paciente: row.email_paciente.toLowerCase().trim() || 'nao-informado@sistema.local',
-          centro_clinico: row.centro_clinico || 'Centro Clínico Hapvida',
+          maternidade: row.maternidade || "Salvalus",
+          medico_responsavel: row.medico_responsavel || "Não informado",
+          email_paciente: row.email_paciente.toLowerCase().trim() || "nao-informado@sistema.local",
+          centro_clinico: row.centro_clinico || "Centro Clínico Hapvida",
           idade_gestacional_calculada: result?.gaFormatted || null,
-          data_agendamento_calculada: dataAgendamento.toISOString().split('T')[0],
+          data_agendamento_calculada: dataAgendamento.toISOString().split("T")[0],
           created_by: user.id,
-          status: 'pendente',
+          status: "pendente",
         });
 
         if (error) {
-          console.error('Erro ao salvar:', error);
-          setRows(prev => prev.map(r => 
-            r.id === row.id ? { ...r, status: 'erro' as const, erro: error.message } : r
-          ));
+          console.error("Erro ao salvar:", error);
+          setRows((prev) =>
+            prev.map((r) => (r.id === row.id ? { ...r, status: "erro" as const, erro: error.message } : r)),
+          );
           erros++;
         } else {
-          setRows(prev => prev.map(r => 
-            r.id === row.id ? { ...r, status: 'salvo' as const } : r
-          ));
+          setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status: "salvo" as const } : r)));
           salvos++;
         }
-      } catch (error) {
+      } catch {
         erros++;
       }
     }
@@ -394,10 +462,29 @@ export default function ImportarPorTabela() {
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
-      case 'valido': return <Badge variant="outline" className="bg-green-500/10 text-green-600"><CheckCircle2 className="w-3 h-3 mr-1" />Válido</Badge>;
-      case 'erro': return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />Erro</Badge>;
-      case 'salvo': return <Badge className="bg-blue-500"><CheckCircle2 className="w-3 h-3 mr-1" />Salvo</Badge>;
-      default: return <Badge variant="secondary">Pendente</Badge>;
+      case "valido":
+        return (
+          <Badge variant="outline" className="bg-green-500/10 text-green-600">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Válido
+          </Badge>
+        );
+      case "erro":
+        return (
+          <Badge variant="destructive">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Erro
+          </Badge>
+        );
+      case "salvo":
+        return (
+          <Badge className="bg-blue-500">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Salvo
+          </Badge>
+        );
+      default:
+        return <Badge variant="secondary">Pendente</Badge>;
     }
   };
 
@@ -422,13 +509,14 @@ export default function ImportarPorTabela() {
               {processing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Calculator className="w-4 h-4 mr-1" />}
               Processar Dados
             </Button>
-            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every(r => r.status !== 'valido')}>
+            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}>
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
-              Salvar no Banco ({rows.filter(r => r.status === 'valido').length})
+              Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
             </Button>
           </div>
 
-          <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
+          {/* Scroll vertical + horizontal */}
+          <ScrollArea className="h-[600px] w-full border rounded-lg" onPaste={handlePaste}>
             <div className="min-w-[2500px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
@@ -469,10 +557,20 @@ export default function ImportarPorTabela() {
                 </TableHeader>
                 <TableBody>
                   {rows.map((row, idx) => (
-                    <TableRow key={row.id} className={row.status === 'erro' ? 'bg-destructive/5' : row.status === 'salvo' ? 'bg-green-500/5' : ''}>
+                    <TableRow
+                      key={row.id}
+                      className={
+                        row.status === "erro" ? "bg-destructive/5" : row.status === "salvo" ? "bg-green-500/5" : ""
+                      }
+                    >
                       <TableCell className="font-mono text-xs">{idx + 1}</TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => removeRow(row.id)} disabled={rows.length <= 1}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeRow(row.id)}
+                          disabled={rows.length <= 1}
+                        >
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                       </TableCell>
@@ -482,90 +580,291 @@ export default function ImportarPorTabela() {
                           {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
                         </div>
                       </TableCell>
-                      <TableCell><Input value={row.nome_completo} onChange={e => updateRow(row.id, 'nome_completo', e.target.value)} onFocus={() => handleCellFocus(idx, 'nome_completo')} className="min-w-[180px]" /></TableCell>
-                      <TableCell><Input type="text" value={row.data_nascimento} onChange={e => updateRow(row.id, 'data_nascimento', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_nascimento')} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input value={row.carteirinha} onChange={e => updateRow(row.id, 'carteirinha', e.target.value)} onFocus={() => handleCellFocus(idx, 'carteirinha')} /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_gestacoes} onChange={e => updateRow(row.id, 'numero_gestacoes', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_gestacoes')} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_partos_cesareas} onChange={e => updateRow(row.id, 'numero_partos_cesareas', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_partos_cesareas')} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_partos_normais} onChange={e => updateRow(row.id, 'numero_partos_normais', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_partos_normais')} className="w-16" /></TableCell>
-                      <TableCell><Input type="number" min="0" value={row.numero_abortos} onChange={e => updateRow(row.id, 'numero_abortos', e.target.value)} onFocus={() => handleCellFocus(idx, 'numero_abortos')} className="w-16" /></TableCell>
-                      <TableCell><Input value={row.telefones} onChange={e => updateRow(row.id, 'telefones', e.target.value)} onFocus={() => handleCellFocus(idx, 'telefones')} /></TableCell>
                       <TableCell>
-                        <Select value={row.procedimentos} onValueChange={v => updateRow(row.id, 'procedimentos', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        <Input
+                          value={row.nome_completo}
+                          onChange={(e) => updateRow(row.id, "nome_completo", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "nome_completo")}
+                          className="min-w-[180px]"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={row.data_nascimento}
+                          onChange={(e) => updateRow(row.id, "data_nascimento", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "data_nascimento")}
+                          placeholder="DD/MM/YYYY"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.carteirinha}
+                          onChange={(e) => updateRow(row.id, "carteirinha", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "carteirinha")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={row.numero_gestacoes}
+                          onChange={(e) => updateRow(row.id, "numero_gestacoes", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "numero_gestacoes")}
+                          className="w-16"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={row.numero_partos_cesareas}
+                          onChange={(e) => updateRow(row.id, "numero_partos_cesareas", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "numero_partos_cesareas")}
+                          className="w-16"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={row.numero_partos_normais}
+                          onChange={(e) => updateRow(row.id, "numero_partos_normais", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "numero_partos_normais")}
+                          className="w-16"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={row.numero_abortos}
+                          onChange={(e) => updateRow(row.id, "numero_abortos", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "numero_abortos")}
+                          className="w-16"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.telefones}
+                          onChange={(e) => updateRow(row.id, "telefones", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "telefones")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select value={row.procedimentos} onValueChange={(v) => updateRow(row.id, "procedimentos", v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
-                            {PROCEDIMENTOS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                            {PROCEDIMENTOS.map((p) => (
+                              <SelectItem key={p} value={p}>
+                                {p}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select value={row.dum_status} onValueChange={v => updateRow(row.id, 'dum_status', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        <Select value={row.dum_status} onValueChange={(v) => updateRow(row.id, "dum_status", v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
-                            {DUM_STATUS_OPTIONS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell><Input type="text" value={row.data_dum} onChange={e => updateRow(row.id, 'data_dum', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_dum')} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input type="text" value={row.data_primeiro_usg} onChange={e => updateRow(row.id, 'data_primeiro_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'data_primeiro_usg')} placeholder="DD/MM/YYYY" /></TableCell>
-                      <TableCell><Input type="number" min="0" max="42" value={row.semanas_usg} onChange={e => updateRow(row.id, 'semanas_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'semanas_usg')} className="w-20" /></TableCell>
-                      <TableCell><Input type="number" min="0" max="6" value={row.dias_usg} onChange={e => updateRow(row.id, 'dias_usg', e.target.value)} onFocus={() => handleCellFocus(idx, 'dias_usg')} className="w-20" /></TableCell>
-                      <TableCell><Input value={row.usg_recente} onChange={e => updateRow(row.id, 'usg_recente', e.target.value)} onFocus={() => handleCellFocus(idx, 'usg_recente')} /></TableCell>
-                      <TableCell><Input value={row.ig_pretendida} onChange={e => updateRow(row.id, 'ig_pretendida', e.target.value)} onFocus={() => handleCellFocus(idx, 'ig_pretendida')} className="w-24" /></TableCell>
-                      <TableCell><Input value={row.indicacao_procedimento} onChange={e => updateRow(row.id, 'indicacao_procedimento', e.target.value)} onFocus={() => handleCellFocus(idx, 'indicacao_procedimento')} /></TableCell>
-                      <TableCell><Input value={row.medicacao} onChange={e => updateRow(row.id, 'medicacao', e.target.value)} onFocus={() => handleCellFocus(idx, 'medicacao')} /></TableCell>
-                      <TableCell><Input value={row.diagnosticos_maternos} onChange={e => updateRow(row.id, 'diagnosticos_maternos', e.target.value)} onFocus={() => handleCellFocus(idx, 'diagnosticos_maternos')} /></TableCell>
-                      <TableCell>
-                        <Select value={row.placenta_previa} onValueChange={v => updateRow(row.id, 'placenta_previa', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell><Input value={row.diagnosticos_fetais} onChange={e => updateRow(row.id, 'diagnosticos_fetais', e.target.value)} onFocus={() => handleCellFocus(idx, 'diagnosticos_fetais')} /></TableCell>
-                      <TableCell><Input value={row.historia_obstetrica} onChange={e => updateRow(row.id, 'historia_obstetrica', e.target.value)} onFocus={() => handleCellFocus(idx, 'historia_obstetrica')} /></TableCell>
-                      <TableCell>
-                        <Select value={row.necessidade_uti_materna} onValueChange={v => updateRow(row.id, 'necessidade_uti_materna', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {SIM_NAO.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            {DUM_STATUS_OPTIONS.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select value={row.necessidade_reserva_sangue} onValueChange={v => updateRow(row.id, 'necessidade_reserva_sangue', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        <Input
+                          type="text"
+                          value={row.data_dum}
+                          onChange={(e) => updateRow(row.id, "data_dum", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "data_dum")}
+                          placeholder="DD/MM/YYYY"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={row.data_primeiro_usg}
+                          onChange={(e) => updateRow(row.id, "data_primeiro_usg", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "data_primeiro_usg")}
+                          placeholder="DD/MM/YYYY"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="42"
+                          value={row.semanas_usg}
+                          onChange={(e) => updateRow(row.id, "semanas_usg", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "semanas_usg")}
+                          className="w-20"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          min="0"
+                          max="6"
+                          value={row.dias_usg}
+                          onChange={(e) => updateRow(row.id, "dias_usg", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "dias_usg")}
+                          className="w-20"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.usg_recente}
+                          onChange={(e) => updateRow(row.id, "usg_recente", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "usg_recente")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.ig_pretendida}
+                          onChange={(e) => updateRow(row.id, "ig_pretendida", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "ig_pretendida")}
+                          className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.indicacao_procedimento}
+                          onChange={(e) => updateRow(row.id, "indicacao_procedimento", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "indicacao_procedimento")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.medicacao}
+                          onChange={(e) => updateRow(row.id, "medicacao", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "medicacao")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.diagnosticos_maternos}
+                          onChange={(e) => updateRow(row.id, "diagnosticos_maternos", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "diagnosticos_maternos")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={row.placenta_previa}
+                          onValueChange={(v) => updateRow(row.id, "placenta_previa", v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
-                            {SIM_NAO.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                            {SIM_NAO.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select value={row.maternidade} onValueChange={v => updateRow(row.id, 'maternidade', v)}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
+                        <Input
+                          value={row.diagnosticos_fetais}
+                          onChange={(e) => updateRow(row.id, "diagnosticos_fetais", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "diagnosticos_fetais")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.historia_obstetrica}
+                          onChange={(e) => updateRow(row.id, "historia_obstetrica", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "historia_obstetrica")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={row.necessidade_uti_materna}
+                          onValueChange={(v) => updateRow(row.id, "necessidade_uti_materna", v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
                           <SelectContent>
-                            {MATERNIDADES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                            {SIM_NAO.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell><Input value={row.medico_responsavel} onChange={e => updateRow(row.id, 'medico_responsavel', e.target.value)} onFocus={() => handleCellFocus(idx, 'medico_responsavel')} /></TableCell>
-                      <TableCell><Input type="email" value={row.email_paciente} onChange={e => updateRow(row.id, 'email_paciente', e.target.value)} onFocus={() => handleCellFocus(idx, 'email_paciente')} /></TableCell>
-                      <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || '-'}</TableCell>
-                      <TableCell className="font-mono text-sm">{row.data_ideal || '-'}</TableCell>
+                      <TableCell>
+                        <Select
+                          value={row.necessidade_reserva_sangue}
+                          onValueChange={(v) => updateRow(row.id, "necessidade_reserva_sangue", v)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SIM_NAO.map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Select value={row.maternidade} onValueChange={(v) => updateRow(row.id, "maternidade", v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MATERNIDADES.map((m) => (
+                              <SelectItem key={m} value={m}>
+                                {m}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={row.medico_responsavel}
+                          onChange={(e) => updateRow(row.id, "medico_responsavel", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "medico_responsavel")}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="email"
+                          value={row.email_paciente}
+                          onChange={(e) => updateRow(row.id, "email_paciente", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "email_paciente")}
+                        />
+                      </TableCell>
+                      <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
+                      <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
+            <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Total: {rows.length} linhas</span>
             <span>
-              Válidos: {rows.filter(r => r.status === 'valido').length} | 
-              Erros: {rows.filter(r => r.status === 'erro').length} | 
-              Salvos: {rows.filter(r => r.status === 'salvo').length}
+              Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
+              {rows.filter((r) => r.status === "erro").length} | Salvos:{" "}
+              {rows.filter((r) => r.status === "salvo").length}
             </span>
           </div>
         </CardContent>
