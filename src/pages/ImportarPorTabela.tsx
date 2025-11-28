@@ -51,37 +51,6 @@ interface PacienteRow {
   erro?: string;
 }
 
-// ordem das colunas editáveis na tabela (sem as colunas calculadas)
-const EDITABLE_FIELDS: (keyof PacienteRow)[] = [
-  "nome_completo",
-  "data_nascimento",
-  "carteirinha",
-  "numero_gestacoes",
-  "numero_partos_cesareas",
-  "numero_partos_normais",
-  "numero_abortos",
-  "telefones",
-  "procedimentos",
-  "dum_status",
-  "data_dum",
-  "data_primeiro_usg",
-  "semanas_usg",
-  "dias_usg",
-  "usg_recente",
-  "ig_pretendida",
-  "indicacao_procedimento",
-  "medicacao",
-  "diagnosticos_maternos",
-  "placenta_previa",
-  "diagnosticos_fetais",
-  "historia_obstetrica",
-  "necessidade_uti_materna",
-  "necessidade_reserva_sangue",
-  "maternidade",
-  "medico_responsavel",
-  "email_paciente",
-];
-
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   nome_completo: "",
   data_nascimento: "",
@@ -124,6 +93,37 @@ const PROCEDIMENTOS = [
   "Indução Programada;Laqueadura Pós-parto Normal",
   "Cerclagem",
   "Cesárea;DIU de Cobre Pós-parto",
+];
+
+// Ordem lógica dos campos editáveis na tabela (para colagem em grade)
+const FIELD_ORDER: (keyof PacienteRow)[] = [
+  "nome_completo",
+  "data_nascimento",
+  "carteirinha",
+  "numero_gestacoes",
+  "numero_partos_cesareas",
+  "numero_partos_normais",
+  "numero_abortos",
+  "telefones",
+  "procedimentos",
+  "dum_status",
+  "data_dum",
+  "data_primeiro_usg",
+  "semanas_usg",
+  "dias_usg",
+  "usg_recente",
+  "ig_pretendida",
+  "indicacao_procedimento",
+  "medicacao",
+  "diagnosticos_maternos",
+  "placenta_previa",
+  "diagnosticos_fetais",
+  "historia_obstetrica",
+  "necessidade_uti_materna",
+  "necessidade_reserva_sangue",
+  "maternidade",
+  "medico_responsavel",
+  "email_paciente",
 ];
 
 // Funções de normalização
@@ -188,13 +188,56 @@ export default function ImportarPorTabela() {
 
       const lines = text
         .trim()
-        .split("\n")
+        .split(/\r?\n/)
         .filter((l) => l.trim());
       if (lines.length === 0) return;
 
       const hasTabs = text.includes("\t");
 
-      // COLAGEM DE UMA ÚNICA COLUNA (sem tab): preenche uma coluna única a partir da célula focada
+      // 1) Colagem em grade (multi-coluna) quando há célula focada
+      if (hasTabs && focusedCell) {
+        e.preventDefault();
+
+        const grid = lines.map((line) => line.split("\t"));
+        const startRow = focusedCell.rowIndex;
+        const startFieldIndex = FIELD_ORDER.indexOf(focusedCell.field);
+
+        if (startFieldIndex === -1) {
+          toast.error("Colagem não suportada nesta coluna.");
+          return;
+        }
+
+        setRows((prev) => {
+          const updated = [...prev];
+
+          grid.forEach((cols, rowOffset) => {
+            const targetRowIndex = startRow + rowOffset;
+            if (targetRowIndex >= updated.length) return;
+
+            const originalRow = updated[targetRowIndex];
+            let newRow: PacienteRow = {
+              ...originalRow,
+              status: "pendente",
+            };
+
+            cols.forEach((value, colOffset) => {
+              const fieldIndex = startFieldIndex + colOffset;
+              const field = FIELD_ORDER[fieldIndex];
+              if (!field) return;
+              (newRow as any)[field] = value.trim();
+            });
+
+            updated[targetRowIndex] = newRow;
+          });
+
+          return updated;
+        });
+
+        toast.success(`Dados colados em ${grid.length} linha(s) e múltiplas colunas.`);
+        return;
+      }
+
+      // 2) Colagem em coluna única na coluna focada (comportamento já existente)
       if (!hasTabs && focusedCell) {
         e.preventDefault();
         const { rowIndex, field } = focusedCell;
@@ -214,99 +257,57 @@ export default function ImportarPorTabela() {
           return updated;
         });
 
-        toast.success(`${lines.length} valores colados na coluna.`);
+        toast.success(`${lines.length} valores colados na coluna!`);
         return;
       }
 
-      // COLAGEM MULTICOLUNA (com tab) COM CÉLULA FOCADA:
-      // distribui os valores pelas colunas adjacentes, linha a linha
-      if (hasTabs && focusedCell) {
-        e.preventDefault();
-        const { rowIndex, field } = focusedCell;
-        const startColIndex = EDITABLE_FIELDS.indexOf(field);
+      // 3) Sem célula focada + múltiplas colunas: import em massa (comportamento original)
+      if (!hasTabs) return;
 
-        if (startColIndex === -1) {
-          // se por algum motivo o campo não estiver na lista, não faz nada especial
-          return;
-        }
+      e.preventDefault();
 
-        setRows((prev) => {
-          const updated = [...prev];
+      const firstLine = lines[0].toLowerCase();
+      const hasHeader = firstLine.includes("nome") || firstLine.includes("carteirinha");
+      const dataLines = hasHeader ? lines.slice(1) : lines;
 
-          lines.forEach((line, rOffset) => {
-            const targetRowIndex = rowIndex + rOffset;
-            if (targetRowIndex >= updated.length) return;
+      const newRows: PacienteRow[] = dataLines.map((line) => {
+        const cols = line.split("\t");
+        return {
+          id: crypto.randomUUID(),
+          nome_completo: cols[2]?.trim() || cols[0]?.trim() || "",
+          data_nascimento: cols[3]?.trim() || cols[1]?.trim() || "",
+          carteirinha: cols[4]?.trim() || cols[2]?.trim() || "",
+          numero_gestacoes: cols[5]?.trim() || "1",
+          numero_partos_cesareas: cols[6]?.trim() || "0",
+          numero_partos_normais: cols[7]?.trim() || "0",
+          numero_abortos: cols[8]?.trim() || "0",
+          telefones: cols[9]?.trim() || "",
+          procedimentos: cols[10]?.trim() || "Cesárea",
+          dum_status: normalizarDumStatus(cols[11]?.trim() || ""),
+          data_dum: cols[12]?.trim() || "",
+          data_primeiro_usg: cols[13]?.trim() || "",
+          semanas_usg: cols[14]?.trim() || "",
+          dias_usg: cols[15]?.trim() || "0",
+          usg_recente: cols[16]?.trim() || "",
+          ig_pretendida: cols[17]?.trim() || "39",
+          indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
+          medicacao: cols[20]?.trim() || "",
+          diagnosticos_maternos: cols[21]?.trim() || "",
+          placenta_previa: normalizarSimNao(cols[22]?.trim() || "Não"),
+          diagnosticos_fetais: cols[23]?.trim() || "",
+          historia_obstetrica: cols[24]?.trim() || "",
+          necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || "Não"),
+          necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || "Não"),
+          maternidade: cols[27]?.trim() || "Salvalus",
+          medico_responsavel: cols[28]?.trim() || "",
+          email_paciente: (cols[29]?.trim() || "").toLowerCase(),
+          centro_clinico: "Centro Clínico Hapvida",
+          status: "pendente",
+        };
+      });
 
-            const cols = line.split("\t");
-            const currentRow = { ...updated[targetRowIndex] };
-
-            cols.forEach((cellValue, cOffset) => {
-              const fieldIndex = startColIndex + cOffset;
-              if (fieldIndex >= EDITABLE_FIELDS.length) return;
-
-              const targetField = EDITABLE_FIELDS[fieldIndex];
-              currentRow[targetField] = cellValue.trim();
-            });
-
-            currentRow.status = "pendente";
-            updated[targetRowIndex] = currentRow;
-          });
-
-          return updated;
-        });
-
-        toast.success(`Colagem em grade: ${lines.length} linha(s) e múltiplas colunas distribuídas.`);
-        return;
-      }
-
-      // COLAGEM MULTICOLUNA SEM CÉLULA FOCADA:
-      // mantém o comportamento de "importar tabela inteira"
-      if (hasTabs && !focusedCell) {
-        e.preventDefault();
-
-        const firstLine = lines[0].toLowerCase();
-        const hasHeader = firstLine.includes("nome") || firstLine.includes("carteirinha");
-        const dataLines = hasHeader ? lines.slice(1) : lines;
-
-        const newRows: PacienteRow[] = dataLines.map((line) => {
-          const cols = line.split("\t");
-          return {
-            id: crypto.randomUUID(),
-            nome_completo: cols[2]?.trim() || cols[0]?.trim() || "",
-            data_nascimento: cols[3]?.trim() || cols[1]?.trim() || "",
-            carteirinha: cols[4]?.trim() || cols[2]?.trim() || "",
-            numero_gestacoes: cols[5]?.trim() || "1",
-            numero_partos_cesareas: cols[6]?.trim() || "0",
-            numero_partos_normais: cols[7]?.trim() || "0",
-            numero_abortos: cols[8]?.trim() || "0",
-            telefones: cols[9]?.trim() || "",
-            procedimentos: cols[10]?.trim() || "Cesárea",
-            dum_status: normalizarDumStatus(cols[11]?.trim() || ""),
-            data_dum: cols[12]?.trim() || "",
-            data_primeiro_usg: cols[13]?.trim() || "",
-            semanas_usg: cols[14]?.trim() || "",
-            dias_usg: cols[15]?.trim() || "0",
-            usg_recente: cols[16]?.trim() || "",
-            ig_pretendida: cols[17]?.trim() || "39",
-            indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
-            medicacao: cols[20]?.trim() || "",
-            diagnosticos_maternos: cols[21]?.trim() || "",
-            placenta_previa: normalizarSimNao(cols[22]?.trim() || "Não"),
-            diagnosticos_fetais: cols[23]?.trim() || "",
-            historia_obstetrica: cols[24]?.trim() || "",
-            necessidade_uti_materna: normalizarSimNao(cols[25]?.trim() || "Não"),
-            necessidade_reserva_sangue: normalizarSimNao(cols[26]?.trim() || "Não"),
-            maternidade: cols[27]?.trim() || "Salvalus",
-            medico_responsavel: cols[28]?.trim() || "",
-            email_paciente: (cols[29]?.trim() || "").toLowerCase(),
-            centro_clinico: "Centro Clínico Hapvida",
-            status: "pendente",
-          };
-        });
-
-        setRows((prev) => [...prev.filter((r) => r.nome_completo), ...newRows]);
-        toast.success(`${newRows.length} linhas coladas com sucesso.`);
-      }
+      setRows((prev) => [...prev.filter((r) => r.nome_completo), ...newRows]);
+      toast.success(`${newRows.length} linhas coladas com sucesso!`);
     },
     [focusedCell],
   );
