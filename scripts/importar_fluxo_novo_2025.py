@@ -30,10 +30,22 @@ def get_capacidades():
         _capacidades_cache = {cap['maternidade'].lower().strip(): cap for cap in (result.data or [])}
     return _capacidades_cache
 
+def parse_iso_date_safe(date_str):
+    """Converte string ISO para date, retornando None em caso de erro"""
+    if not date_str or not isinstance(date_str, str):
+        return None
+    try:
+        return datetime.fromisoformat(date_str).date()
+    except (ValueError, TypeError):
+        return None
+
 def get_capacidade_dia(cap, data):
     """Retorna capacidade do dia baseado no dia da semana"""
     if isinstance(data, str):
-        data = datetime.fromisoformat(data).date()
+        parsed = parse_iso_date_safe(data)
+        if not parsed:
+            return cap.get('vagas_dia_util', 3)  # Default to weekday capacity
+        data = parsed
     dow = data.weekday()  # 0 = Segunda, 6 = Domingo
     if dow == 6:  # Domingo
         return cap.get('vagas_domingo', 0)
@@ -53,7 +65,9 @@ def verificar_disponibilidade(maternidade, data_agendamento):
         return {'disponivel': True, 'data_alternativa': None, 'mensagem': 'Capacidade não configurada'}
     
     if isinstance(data_agendamento, str):
-        data = datetime.fromisoformat(data_agendamento).date()
+        data = parse_iso_date_safe(data_agendamento)
+        if not data:
+            return {'disponivel': True, 'data_alternativa': None, 'mensagem': 'Data inválida'}
     else:
         data = data_agendamento
     

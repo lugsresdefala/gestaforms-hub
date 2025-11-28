@@ -74,6 +74,38 @@ interface AjusteRealizado {
   motivo: string;
 }
 
+/**
+ * Helper function to create correction observation messages
+ */
+function criarObservacaoCorrecao(
+  observacaoAnterior: string | null | undefined,
+  dataOriginal: string,
+  novaDataStr: string,
+  diasDiff: number
+): string {
+  const timestamp = new Date().toISOString();
+  const direcao = diasDiff > 0 ? `+${diasDiff}` : diasDiff.toString();
+  const mensagem = `⚠️ [CORREÇÃO AUTOMÁTICA ${timestamp}]: Data ajustada de ${dataOriginal} para ${novaDataStr} (${direcao} dias) devido a excesso de capacidade.`;
+  
+  return observacaoAnterior 
+    ? `${observacaoAnterior}\n\n${mensagem}`.trim()
+    : mensagem;
+}
+
+/**
+ * Helper function to create pending observation messages
+ */
+function criarObservacaoPendente(
+  observacaoAnterior: string | null | undefined,
+  dataOriginal: string
+): string {
+  const mensagem = `⚠️ SEM VAGAS DISPONÍVEIS: Original em ${dataOriginal} excedeu capacidade. Nenhuma vaga encontrada em ±7 dias. REVISAR MANUALMENTE.`;
+  
+  return observacaoAnterior
+    ? `${observacaoAnterior}\n\n${mensagem}`.trim()
+    : mensagem;
+}
+
 interface CasoNaoResolvido {
   id: string;
   nome: string;
@@ -299,8 +331,12 @@ async function corrigirOverbooking(
         const direcao = diasDiff > 0 ? `+${diasDiff}` : diasDiff.toString();
         
         if (!dryRun) {
-          const observacaoAnterior = ag.observacoes_agendamento || '';
-          const novaObservacao = `${observacaoAnterior}\n\n⚠️ [CORREÇÃO AUTOMÁTICA ${new Date().toISOString()}]: Data ajustada de ${prob.data} para ${novaDataStr} (${direcao} dias) devido a excesso de capacidade.`.trim();
+          const novaObservacao = criarObservacaoCorrecao(
+            ag.observacoes_agendamento,
+            prob.data,
+            novaDataStr,
+            diasDiff
+          );
           
           const { error } = await supabase
             .from('agendamentos_obst')
@@ -330,8 +366,10 @@ async function corrigirOverbooking(
       } else {
         // Sem vagas disponíveis - marcar para revisão manual
         if (!dryRun) {
-          const observacaoAnterior = ag.observacoes_aprovacao || '';
-          const novaObservacao = `${observacaoAnterior}\n\n⚠️ SEM VAGAS DISPONÍVEIS: Original em ${prob.data} excedeu capacidade. Nenhuma vaga encontrada em ±7 dias. REVISAR MANUALMENTE.`.trim();
+          const novaObservacao = criarObservacaoPendente(
+            ag.observacoes_aprovacao,
+            prob.data
+          );
           
           const { error } = await supabase
             .from('agendamentos_obst')

@@ -17,6 +17,36 @@ export interface NotrecareRow {
   mes: 'Novembro' | 'Dezembro';
 }
 
+interface ProcessedAgendamento {
+  carteirinha: string;
+  nome_completo: string;
+  data_nascimento: string;
+  telefones: string;
+  centro_clinico: string;
+  medico_responsavel: string;
+  maternidade: string;
+  indicacao_procedimento: string;
+  ig_pretendida: string;
+  usg_recente: string;
+  dum_status: string;
+  procedimentos: string[];
+  numero_gestacoes: number;
+  numero_partos_normais: number;
+  numero_partos_cesareas: number;
+  numero_abortos: number;
+  data_primeiro_usg: string;
+  semanas_usg: number;
+  dias_usg: number;
+  data_dum: string | null;
+  data_agendamento_calculada: string;
+  idade_gestacional_calculada: string;
+  diagnosticos_maternos: string | null;
+  diagnosticos_fetais: string | null;
+  status: string;
+  created_by: string;
+  observacoes_agendamento?: string;
+}
+
 function parseDate(dateStr: string): Date | null {
   if (!dateStr) return null;
   
@@ -198,7 +228,7 @@ function extractDiagnosticos(diagnostico: string): {
   return { maternos, fetais };
 }
 
-async function processNotrecareRow(row: NotrecareRow) {
+async function processNotrecareRow(row: NotrecareRow): Promise<ProcessedAgendamento | null> {
   if (!row.carteirinha || !row.nome) return null;
 
   const dataNascimento = parseDate(row.dataNascimento);
@@ -260,7 +290,7 @@ export async function importNotrecare2025(rows: NotrecareRow[]): Promise<{
   errors: string[];
 }> {
   const results = { success: 0, failed: 0, errors: [] as string[] };
-  const processedRows: ReturnType<typeof processNotrecareRow> extends Promise<infer T> ? NonNullable<T>[] : never = [];
+  const processedRows: ProcessedAgendamento[] = [];
 
   for (const row of rows) {
     try {
