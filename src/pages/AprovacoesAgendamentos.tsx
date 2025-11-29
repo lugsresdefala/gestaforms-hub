@@ -377,7 +377,11 @@ const AprovacoesAgendamentos = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Maternidade</p>
-                    <Badge variant="outline" className="text-base">{agendamento.maternidade}</Badge>
+                    {agendamento.maternidade && agendamento.maternidade.trim() !== '' && agendamento.maternidade.toLowerCase() !== 'não' ? (
+                      <Badge variant="outline" className="text-base">{agendamento.maternidade}</Badge>
+                    ) : (
+                      <p className="text-sm text-destructive">⚠️ Maternidade não informada</p>
+                    )}
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Data Calculada</p>
@@ -403,7 +407,11 @@ const AprovacoesAgendamentos = () => {
                   </div>
                   <div className="p-4 border rounded-lg bg-background">
                     <p className="text-sm font-semibold mb-2">Médico Responsável</p>
-                    <p className="text-sm">{agendamento.medico_responsavel}</p>
+                    {agendamento.medico_responsavel && agendamento.medico_responsavel.trim() !== '' ? (
+                      <p className="text-sm">{agendamento.medico_responsavel}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Não informado</p>
+                    )}
                   </div>
                 </div>
 
