@@ -55,25 +55,10 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     icon: UserPlus,
     show: isAdmin || isAdminMed
   }, {
-    title: "Importar Pacientes TSV",
-    url: "/importar-pacientes",
+    title: "Importar por Tabela",
+    url: "/importar-tabela",
     icon: Upload,
     show: isAdmin || isAdminMed
-  }, {
-    title: "Importar Agendamentos 2025",
-    url: "/importar-agendamentos-2025",
-    icon: Upload,
-    show: isAdmin
-  }, {
-    title: "Importar Lote",
-    url: "/importar-agendamentos-lote",
-    icon: Upload,
-    show: isAdmin
-  }, {
-    title: "Processar CSV",
-    url: "/processar-csv-upload",
-    icon: Upload,
-    show: isAdmin
   }, {
     title: "Pacientes Pendentes",
     url: "/importar-pacientes-pendentes",

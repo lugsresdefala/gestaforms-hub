@@ -6,8 +6,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter } from "lucide-react";
+import type { GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
+
+const MS_PER_DAY = 86400000;
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
@@ -58,15 +62,13 @@ interface PacienteRow {
   ig_calculada?: string;
   data_ideal?: string;
   ig_ideal?: string;
-  ig_na_data_agendada?: string;
   delta_dias?: number;
   protocolo?: string;
   status?: "pendente" | "valido" | "erro" | "salvo";
   erro?: string;
-  // Novos campos de agendamento
-  ig_ideal?: string;
-  ig_ideal_semanas?: number;
-  ig_ideal_dias?: number;
+  // Snapshot de agendamento
+  snapshot?: GestationalSnapshotResult;
+  // Campos de agendamento
   data_agendada?: string;
   status_agendamento?: StatusAgendamento;
   ig_na_data_agendada?: string;
