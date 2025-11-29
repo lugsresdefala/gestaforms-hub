@@ -45,6 +45,7 @@ interface ProcessedAgendamento {
   status: string;
   created_by: string;
   observacoes_agendamento?: string;
+  email_paciente: string;
 }
 
 function parseDate(dateStr: string): Date | null {
@@ -281,6 +282,7 @@ async function processNotrecareRow(row: NotrecareRow): Promise<ProcessedAgendame
     diagnosticos_fetais: fetais.length > 0 ? fetais.join(', ') : null,
     status: 'aprovado',
     created_by: '00000000-0000-0000-0000-000000000000',
+    email_paciente: 'nao.informado@importacao.com',
   };
 }
 

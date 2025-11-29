@@ -196,7 +196,7 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         maternidade: 'Consolidado' // Arquivo consolidado
       });
       
-      const agendamento = {
+      const agendamento: Record<string, any> = {
         carteirinha: row.carteirinha,
         nome_completo: row.nome,
         data_nascimento: dataNascimento.toISOString().split('T')[0],
@@ -230,7 +230,9 @@ export const importConsolidadoCSV = async (csvContent: string, createdBy: string
         medico_responsavel: 'Importado',
         centro_clinico: 'Importado',
         status: 'aprovado',
-        created_by: createdBy
+        created_by: createdBy,
+        observacoes_agendamento: '',
+        email_paciente: 'nao.informado@importacao.com'
       };
       
       // Validar capacidade da maternidade antes de inserir

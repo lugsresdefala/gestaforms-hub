@@ -72,7 +72,6 @@ export type {
 
 export {
   getGestationalSnapshot,
-  formatGaCompact,
   formatInterval,
   getIntervalColorClass
 } from './gestationalSnapshot';
