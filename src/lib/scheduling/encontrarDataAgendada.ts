@@ -61,6 +61,94 @@ export interface EncontrarDataAgendadaResult {
   ajustadoPorDomingo: boolean;
   /** Whether the date was adjusted due to lead time constraint */
   ajustadoPorLeadTime: boolean;
+  /** Alerts that require review */
+  alertas?: string[];
+}
+
+/** Maximum tolerance in days for IG deviation to require review */
+export const TOLERANCIA_IG_DIAS = 7;
+
+export interface ValidacaoIGParams {
+  /** IG ideal in weeks from protocol */
+  igIdealSemanas: number;
+  /** IG ideal days (0-6) */
+  igIdealDias?: number;
+  /** IG pretendida (intended) from user input in weeks */
+  igPretendidaSemanas: number;
+  /** Current IG in total days */
+  igAtualDias: number;
+  /** Reference date for IG */
+  dataReferencia: Date;
+  /** Scheduled date */
+  dataAgendada: Date | null;
+}
+
+export interface ValidacaoIGResult {
+  /** Whether review is required */
+  requerRevisao: boolean;
+  /** List of alerts/reasons for review */
+  alertas: string[];
+  /** IG at scheduled date in total days */
+  igNaDataAgendadaDias?: number;
+  /** Difference between IG at scheduled date and IG ideal */
+  diferencaIGDias?: number;
+}
+
+/**
+ * Validate IG consistency and flag cases requiring review
+ */
+export function validarIG(params: ValidacaoIGParams): ValidacaoIGResult {
+  const {
+    igIdealSemanas,
+    igIdealDias = 0,
+    igPretendidaSemanas,
+    igAtualDias,
+    dataReferencia,
+    dataAgendada,
+  } = params;
+
+  const alertas: string[] = [];
+  let requerRevisao = false;
+  let igNaDataAgendadaDias: number | undefined;
+  let diferencaIGDias: number | undefined;
+
+  // Check 1: IG ideal differs from IG pretendida
+  if (igIdealSemanas !== igPretendidaSemanas) {
+    alertas.push(
+      `IG ideal (${igIdealSemanas}s) difere da IG pretendida (${igPretendidaSemanas}s). ` +
+      `Verifique se o protocolo aplicado está correto.`
+    );
+    requerRevisao = true;
+  }
+
+  // Check 2: IG at scheduled date differs from IG ideal by more than 7 days
+  if (dataAgendada) {
+    const refDate = new Date(dataReferencia);
+    refDate.setHours(0, 0, 0, 0);
+    
+    const diasAteAgendamento = differenceInDays(dataAgendada, refDate);
+    igNaDataAgendadaDias = igAtualDias + diasAteAgendamento;
+    
+    const igIdealTotalDias = igIdealSemanas * 7 + igIdealDias;
+    diferencaIGDias = igNaDataAgendadaDias - igIdealTotalDias;
+    
+    if (Math.abs(diferencaIGDias) > TOLERANCIA_IG_DIAS) {
+      const semanasNaData = Math.floor(igNaDataAgendadaDias / 7);
+      const diasNaData = igNaDataAgendadaDias % 7;
+      alertas.push(
+        `IG na data agendada (${semanasNaData}s${diasNaData}d) difere mais de ${TOLERANCIA_IG_DIAS} dias ` +
+        `do IG ideal (${igIdealSemanas}s${igIdealDias}d). Diferença: ${diferencaIGDias > 0 ? '+' : ''}${diferencaIGDias} dias.`
+      );
+      requerRevisao = true;
+    }
+  }
+
+  return {
+    requerRevisao,
+    alertas,
+    igNaDataAgendadaDias,
+    diferencaIGDias,
+  };
 }
 
 /**

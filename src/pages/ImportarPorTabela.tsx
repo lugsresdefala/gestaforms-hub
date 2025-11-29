@@ -23,6 +23,7 @@ import {
   formatIGCurta,
   calcularIGNaData,
   getIntervaloColor,
+  validarIG,
   type StatusAgendamento,
   LEAD_TIME_MINIMO,
 } from "@/lib/scheduling";
@@ -462,23 +463,41 @@ export default function ImportarPorTabela() {
           igNaDataAgendada = formatIGCurta(igNaData.semanas, igNaData.dias);
         }
 
+        // Validar IG: verificar se IG ideal difere de IG pretendida ou se IG na data agendada difere muito
+        const validacao = validarIG({
+          igIdealSemanas,
+          igIdealDias,
+          igPretendidaSemanas,
+          igAtualDias: result.gaDays,
+          dataReferencia: new Date(),
+          dataAgendada: scheduleResult.dataAgendada,
+        });
+
+        // Determinar status final
+        const requerRevisao = scheduleResult.status === 'needs_review' || validacao.requerRevisao;
+        const motivos: string[] = [];
+        if (scheduleResult.status === 'needs_review') {
+          motivos.push(scheduleResult.motivo);
+        }
+        if (validacao.alertas.length > 0) {
+          motivos.push(...validacao.alertas);
+        }
+
         return {
           ...row,
           ig_calculada: result.gaFormatted,
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
           ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
-          ig_ideal_semanas: igIdealSemanas,
-          ig_ideal_dias: igIdealDias,
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
-          status_agendamento: scheduleResult.status,
+          status_agendamento: requerRevisao ? 'needs_review' : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
           intervalo_dias: scheduleResult.intervaloDias,
           lead_time_dias: scheduleResult.leadTimeDias,
           margem_protocolo: margemDias,
           protocolo_aplicado: protocoloNome,
-          motivo_calculo: scheduleResult.motivo,
-          status: scheduleResult.status === 'needs_review' ? "erro" as const : "valido" as const,
-          erro: scheduleResult.status === 'needs_review' ? 'Revisão necessária: ' + scheduleResult.motivo : undefined,
+          motivo_calculo: motivos.join(' | ') || scheduleResult.motivo,
+          status: requerRevisao ? "erro" as const : "valido" as const,
+          erro: requerRevisao ? 'Revisão necessária: ' + motivos.join(' | ') : undefined,
         };
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
