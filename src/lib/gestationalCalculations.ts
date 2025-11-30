@@ -1,5 +1,5 @@
 import { differenceInDays, addDays, addWeeks, getDay } from "date-fns";
-import { PROTOCOLS, type ProtocolConfig } from "./obstetricProtocols";
+import { PROTOCOLS, type ProtocolConfig, mapDiagnosisToProtocol } from "./obstetricProtocols";
 
 export interface GestationalAge {
   weeks: number;
@@ -192,12 +192,26 @@ export const encontrarProximaDataDisponivel = (dataIdeal: Date): Date => {
 };
 
 /**
+ * Normaliza diagnósticos para um array de strings
+ * Aceita tanto arrays de IDs estruturados quanto strings de texto livre
+ */
+export const normalizarDiagnosticos = (valor: string | string[] | undefined): string[] => {
+  if (!valor) return [];
+  if (Array.isArray(valor)) return valor;
+  
+  // Split por vírgula, ponto-e-vírgula ou quebra de linha
+  return valor.split(/[,;\n]/).map(d => d.trim()).filter(Boolean);
+};
+
+/**
  * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
+ * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
  */
 export const identificarPatologias = (dados: {
   procedimentos: string[];
-  diagnosticosMaternos?: string[];
-  diagnosticosFetais?: string[];
+  diagnosticosMaternos?: string | string[];
+  diagnosticosFetais?: string | string[];
+  indicacaoProcedimento?: string;
   placentaPrevia?: string;
 }): string[] => {
   const patologias: string[] = [];
@@ -208,35 +222,41 @@ export const identificarPatologias = (dados: {
     patologias.push('laqueadura');
   }
   
-  if (dados.procedimentos.includes('Cesárea Eletiva') && 
-      !dados.diagnosticosMaternos?.length && 
-      !dados.diagnosticosFetais?.length) {
+  // Coletar todos os diagnósticos em texto livre
+  const todosDiagnosticos: string[] = [];
+  
+  // Adicionar indicação de procedimento
+  if (dados.indicacaoProcedimento) {
+    todosDiagnosticos.push(dados.indicacaoProcedimento);
+  }
+  
+  // Adicionar diagnósticos maternos (normalizar para array)
+  todosDiagnosticos.push(...normalizarDiagnosticos(dados.diagnosticosMaternos));
+  
+  // Adicionar diagnósticos fetais (normalizar para array)
+  todosDiagnosticos.push(...normalizarDiagnosticos(dados.diagnosticosFetais));
+  
+  // Usar mapDiagnosisToProtocol para busca textual inteligente
+  // Isso processa tanto IDs estruturados quanto texto livre
+  const protocolosMapeados = mapDiagnosisToProtocol(todosDiagnosticos);
+  patologias.push(...protocolosMapeados);
+  
+  // Lógica de placenta prévia (manter)
+  if (dados.placentaPrevia && dados.placentaPrevia !== 'Não') {
+    const temAcretismo = patologias.includes('placenta_acreta') || 
+                         patologias.includes('placenta_percreta');
+    if (!temAcretismo) {
+      patologias.push('placenta_previa_sem_acretismo');
+    }
+  }
+  
+  // Lógica de cesárea eletiva sem diagnósticos
+  if (dados.procedimentos.includes('Cesárea Eletiva') && patologias.length === 0) {
     patologias.push('desejo_materno');
   }
   
-  // Placenta prévia
-  if (dados.placentaPrevia && dados.placentaPrevia !== 'Não') {
-    const temAcretismo = dados.diagnosticosMaternos?.includes('placenta_previa_acretismo');
-    patologias.push(temAcretismo ? 'placenta_previa_acretismo' : 'placenta_previa_sem_acretismo');
-  }
-  
-  // Diagnósticos maternos
-  const diagnosticosMaternos = dados.diagnosticosMaternos || [];
-  diagnosticosMaternos.forEach(diagnostico => {
-    if (diagnostico !== 'nenhum_materno' && PROTOCOLS[diagnostico]) {
-      patologias.push(diagnostico);
-    }
-  });
-  
-  // Diagnósticos fetais
-  const diagnosticosFetais = dados.diagnosticosFetais || [];
-  diagnosticosFetais.forEach(diagnostico => {
-    if (diagnostico !== 'nenhum_fetal' && PROTOCOLS[diagnostico]) {
-      patologias.push(diagnostico);
-    }
-  });
-  
-  return patologias;
+  // Remover duplicatas
+  return [...new Set(patologias)];
 };
 
 /**
@@ -390,8 +410,9 @@ export const calcularAgendamentoCompleto = async (dados: {
   semanasUsg: string;
   diasUsg: string;
   procedimentos: string[];
-  diagnosticosMaternos?: string[];
-  diagnosticosFetais?: string[];
+  diagnosticosMaternos?: string | string[];
+  diagnosticosFetais?: string | string[];
+  indicacaoProcedimento?: string;
   placentaPrevia?: string;
   maternidade: string;
 }): Promise<CalculationResult> => {
@@ -420,8 +441,14 @@ export const calcularAgendamentoCompleto = async (dados: {
     parseInt(dados.semanasUsg) || 0
   );
   
-  // Identificar patologias
-  const patologias = identificarPatologias(dados);
+  // Identificar patologias (agora também processa indicacaoProcedimento)
+  const patologias = identificarPatologias({
+    procedimentos: dados.procedimentos,
+    diagnosticosMaternos: dados.diagnosticosMaternos,
+    diagnosticosFetais: dados.diagnosticosFetais,
+    indicacaoProcedimento: dados.indicacaoProcedimento,
+    placentaPrevia: dados.placentaPrevia,
+  });
   
   // Calcular data de agendamento COM verificação de vagas
   const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp, vagaConfirmada } = 
