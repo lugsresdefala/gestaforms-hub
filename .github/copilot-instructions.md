@@ -174,3 +174,25 @@ const { isAdmin, isMedicoUnidade } = useAuth();
 - **Status workflow is strict** - pendente → aprovado is the only valid approval path
 - **Date calculations consider medical protocols** - not just calendar math
 - **Portuguese language** - All user-facing text in Brazilian Portuguese
+
+## ⚠️ Regras de Protocolo Obstétrico
+
+### O que NÃO usar:
+- ❌ `desejo_materno` - Não é indicação clínica, não define IG
+- ❌ `cesarea_eletiva` - Não é protocolo médico
+- ❌ `laqueadura` - É procedimento adicional, não protocolo
+
+### Regra de ouro:
+- ✅ IG ideal é definida **exclusivamente** por patologias clínicas (tabela PT-AON-097)
+- ✅ Cesárea eletiva sem indicação médica = protocolo de baixo risco (39 semanas)
+- ✅ Se não houver diagnóstico, retornar array vazio ou `null` (não criar protocolo fictício)
+
+### Arquivos de importação ativos:
+- ✅ `src/pages/ImportarPorTabela.tsx` - Interface web principal
+- ✅ `src/lib/importSanitizer.ts` - Validação de dados
+- ✅ `src/lib/import/gestationalSnapshot.ts` - Cálculo de IG
+
+### Arquivos DELETADOS (não recriar):
+- ❌ Todos os `src/utils/import*2025.ts` (obsoletos)
+- ❌ Scripts em `src/scripts/process*.ts` (obsoletos)
+- ❌ Páginas de importação legadas (`ImportarAgendamentos2025.tsx`, `ProcessarAgendas2025.tsx`, etc.)

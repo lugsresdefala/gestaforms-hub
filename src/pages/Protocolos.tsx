@@ -27,10 +27,6 @@ const getProtocolLabel = (key: string): string => {
     // Prioridade Crítica
     'cerclagem': 'Cerclagem / IIC',
     
-    // Cesárea eletiva
-    'desejo_materno': 'Desejo Materno',
-    'laqueadura': 'Laqueadura',
-    
     // Hipertensão
     'hac': 'HAC Compensada',
     'hac_dificil': 'HAC Difícil Controle',
@@ -65,7 +61,6 @@ const getProtocolLabel = (key: string): string => {
 
 const categorias = {
   'Prioridade Crítica': ['cerclagem'],
-  'Cesárea Eletiva': ['desejo_materno', 'laqueadura'],
   'Hipertensão': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_grave'],
   'Diabetes': ['dmg_sem_insulina', 'dmg_sem_insulina_descomp', 'dmg_insulina', 'dmg_insulina_descomp', 'dm_pregestacional', 'dm_pregestacional_descomp'],
   'Gestação Gemelar': ['gestacao_gemelar_dicorionica', 'gestacao_gemelar_monocorionica'],

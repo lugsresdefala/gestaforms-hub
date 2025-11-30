@@ -137,10 +137,12 @@ describe('Extended Gestational Calculator', () => {
       expect(detectProtocol('diabetes gestacional')).toBe('dmg_sem_insulina');
     });
 
-    it('should detect elective procedures', () => {
-      expect(detectProtocol('cesárea eletiva')).toBe('eletivas');
-      expect(detectProtocol('desejo materno')).toBe('eletivas');
-      expect(detectProtocol('a pedido da paciente')).toBe('eletivas');
+    // NOTE: 'eletivas' protocol removed - desejo_materno/cesarea eletiva are not clinical pathologies
+    // These cases now fall through to 'default' (39 weeks low-risk protocol)
+    it('should return default for elective procedures (not clinical pathologies)', () => {
+      expect(detectProtocol('cesárea eletiva')).toBe('default');
+      expect(detectProtocol('desejo materno')).toBe('default');
+      expect(detectProtocol('a pedido da paciente')).toBe('default');
     });
 
     it('should return default for unrecognized conditions', () => {
@@ -224,7 +226,8 @@ describe('Extended Gestational Calculator', () => {
       expect(result.igIdealText).toBe('40s 0d');
     });
 
-    it('should set IG ideal to 39 weeks (273 days) for elective and default', () => {
+    // NOTE: 'eletivas' protocol removed - now falls to 'default' with same 39 weeks IG
+    it('should set IG ideal to 39 weeks (273 days) for low-risk and default', () => {
       const result = chooseAndComputeExtended({
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -236,7 +239,8 @@ describe('Extended Gestational Calculator', () => {
         referenceDate: new Date('2024-04-01')
       });
 
-      expect(result.protocoloAplicado).toBe('eletivas');
+      // desejo materno is no longer a protocol - defaults to low-risk (39 weeks)
+      expect(result.protocoloAplicado).toBe('default');
       expect(result.igIdealDays).toBe(273);
       expect(result.igIdealText).toBe('39s 0d');
     });

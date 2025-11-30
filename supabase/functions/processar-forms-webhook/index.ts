@@ -69,12 +69,13 @@ interface FormsOutput extends FormsInput {
 
 // ============================================================================
 // PROTOCOLS (simplified version for Edge Function)
+// NOTE: desejo_materno and laqueadura removed - not clinical pathologies (PT-AON-097)
 // ============================================================================
 
 const PROTOCOLS: Record<string, ProtocolConfig> = {
   cerclagem: { igIdeal: "15", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "PRIORIDADE CRÍTICA - Cerclagem / IIC" },
-  desejo_materno: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas" },
-  laqueadura: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Cesárea", observacoes: "39 semanas" },
+  // baixo_risco fallback for no diagnoses (39 weeks)
+  baixo_risco: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Gestação de baixo risco" },
   hac: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada" },
   hac_dificil: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "3 drogas - difícil controle" },
   hipertensao_gestacional: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: ">36sem: Doppler+PBF semanal" },
@@ -378,12 +379,8 @@ function mapDiagnosisToProtocol(diagnosticos: string[]): string[] {
       mapped.push('polidramnia');
     }
     
-    // Laqueadura
-    if (diag.includes('laqueadura')) {
-      mapped.push('laqueadura');
-    } else if (diag.includes('desejo materno') || diag.includes('a pedido')) {
-      mapped.push('desejo_materno');
-    }
+    // NOTE: laqueadura and desejo_materno removed - they are not clinical pathologies
+    // and should not influence IG calculation (PT-AON-097)
   }
   
   return [...new Set(mapped)];

@@ -103,9 +103,8 @@ const DIAGNOSIS_KEYWORDS: Record<string, string[]> = {
   'obesidade_morbida': ['obesidade mórbida', 'obesidade morbida', 'imc >40', 'obesidade grau iii'],
   'aloimunizacao_rh': ['aloimunização', 'aloimunizacao', 'incompatibilidade rh', 'isoimunização', 'rh negativo sensibilizada'],
   
-  // Elective
-  'desejo_materno': ['desejo materno', 'a pedido', 'cesárea eletiva', 'cesarea eletiva'],
-  'laqueadura': ['laqueadura', 'ligadura tubária', 'ligadura tubarica', 'esterilização'],
+  // NOTE: desejo_materno and laqueadura removed - they are not clinical pathologies
+  // and should not influence IG calculation (PT-AON-097)
 };
 
 export function classifyFreeDiagnosis(freeText: string): ClassificationResult {

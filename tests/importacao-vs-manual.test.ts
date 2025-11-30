@@ -53,10 +53,10 @@ function calcularAgendamento(dados: {
     return { valido: false, motivo: igResult?.reason || 'IG não calculável' };
   }
 
-  // Map diagnoses to protocols
+  // Map diagnoses to protocols - if no diagnoses, use empty array (baixo_risco applies)
   const allDiagnoses = [...dados.diagnosticos_maternos, ...dados.diagnosticos_fetais];
   const protocolResult = calculateAutomaticIG(
-    allDiagnoses.length > 0 ? mapDiagnosisToProtocol(allDiagnoses) : ['desejo_materno']
+    allDiagnoses.length > 0 ? mapDiagnosisToProtocol(allDiagnoses) : []
   );
 
   const igIdealSemanas = parseInt(protocolResult.igPretendida) || 39;
