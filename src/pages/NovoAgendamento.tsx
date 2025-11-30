@@ -20,6 +20,7 @@ import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { validarProtocolo, ValidacaoProtocolo } from "@/lib/protocoloValidation";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
 import { classifyFreeDiagnosis } from "@/lib/diagnosisClassifier";
+import { validarAgendamento } from "@/lib/validation";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AlertCircle } from "lucide-react";
 import { ProtocolosModal } from "@/components/ProtocolosModal";
@@ -70,6 +71,36 @@ const NovoAgendamento = () => {
     }
   });
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    // First, use unified validation for consistent checks with ImportarPorTabela
+    if (user) {
+      const validacaoUnificada = await validarAgendamento({
+        nome_completo: values.nomeCompleto,
+        carteirinha: values.carteirinha,
+        data_nascimento: values.dataNascimento,
+        maternidade: values.maternidade,
+        dum_status: values.dum,
+        data_dum: values.dataDum,
+        data_primeiro_usg: values.dataPrimeiroUsg,
+        semanas_usg: values.semanasUsg,
+        dias_usg: values.diasUsg,
+        ig_pretendida: values.igPretendida,
+        indicacao_procedimento: values.indicacaoProcedimento,
+        diagnosticos_maternos: values.diagnosticosMaternos,
+        diagnosticos_fetais: values.diagnosticosFetais,
+      }, { supabase, userId: user.id });
+
+      // If unified validation fails, show errors and return
+      if (!validacaoUnificada.valido) {
+        toast.error('Erros de validação: ' + validacaoUnificada.errosCriticos.join(', '));
+        return;
+      }
+
+      // Log unified validation warnings
+      if (validacaoUnificada.avisos.length > 0) {
+        console.log('Avisos de validação unificada:', validacaoUnificada.avisos);
+      }
+    }
+
     // Calcular dados de agendamento COM verificação automática de vagas
     const resultado = await calcularAgendamentoCompleto({
       dumStatus: values.dum,
