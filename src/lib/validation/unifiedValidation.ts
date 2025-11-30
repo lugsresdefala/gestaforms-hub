@@ -14,6 +14,8 @@ import { chooseAndComputeExtended } from '@/lib/import/gestationalCalculator';
 import { PROTOCOLS, mapDiagnosisToProtocol } from '@/lib/obstetricProtocols';
 import { LEAD_TIME_MINIMO } from '@/lib/scheduling';
 
+import { LEAD_TIME_MINIMO } from '@/lib/scheduling';
+
 /**
  * Result from validation function
  */
@@ -90,6 +92,9 @@ export interface ValidationContext {
 
 /** Maximum margin in days from protocol ideal IG */
 const MARGEM_MAXIMA_DIAS = 7;
+
+/** Lead time threshold for urgent cases (encaminhar para PS) */
+const LEAD_TIME_URGENTE = 7;
 
 /**
  * Normalizes a string array or comma-separated string to array
@@ -279,9 +284,9 @@ export async function validarAgendamento(
         detalhes.leadTimeInsuficiente = true;
         if (leadTimeDias < 0) {
           errosCriticos.push(`Data de agendamento está no passado`);
-        } else if (leadTimeDias < 7) {
+        } else if (leadTimeDias < LEAD_TIME_URGENTE) {
           // URGENTE - menos de 7 dias
-          errosCriticos.push(`URGENTE (< 7 dias): Lead time de ${leadTimeDias} dias. Encaminhar para PRONTO-SOCORRO`);
+          errosCriticos.push(`URGENTE (< ${LEAD_TIME_URGENTE} dias): Lead time de ${leadTimeDias} dias. Encaminhar para PRONTO-SOCORRO`);
         } else {
           avisos.push(`Lead time de ${leadTimeDias} dias é inferior ao mínimo de ${LEAD_TIME_MINIMO} dias`);
         }

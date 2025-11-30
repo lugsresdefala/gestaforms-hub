@@ -128,6 +128,8 @@ async function main() {
     console.log('');
 
     // Delete all agendamentos_obst records
+    // Note: Using a UUID that will never exist to match all records via 'neq' operator
+    // This is a workaround since Supabase JS client doesn't have a direct "delete all" method
     const { error: deleteAgendamentosError, count: deletedAgendamentos } = await supabase
       .from('agendamentos_obst')
       .delete()
