@@ -33,6 +33,7 @@ Este documento descreve os campos utilizados no sistema GestaForms Hub para gere
 | `igIdeal` | String | Idade gestacional ideal para o parto conforme protocolo, formato "39s2d" |
 | `igNaDataAgendada` | String | IG projetada na data do agendamento, formato "39s2d" |
 | `data_agendamento_calculada` | Date | Data calculada para o agendamento |
+| `data_agendada_editavel` | Date | Data agendada editável manualmente pelo usuário (sobrescreve o cálculo automático) |
 | `intervaloDias` | Number | Diferença em dias entre data agendada e data ideal (positivo = após ideal) |
 | `leadTimeDias` | Number | Dias entre a data de referência (hoje) e a data agendada |
 | `statusAgendamento` | Enum | Status do cálculo: `calculado`, `needs_review`, `manual` |
@@ -89,3 +90,30 @@ Os protocolos obstétricos definem a IG ideal e margem de tolerância para cada 
   observacoes: "39 semanas (PT-AON-097)"
 }
 ```
+
+## Exportação de Resultados
+
+O sistema permite exportar os dados processados em formato CSV. O arquivo exportado contém:
+
+- Todas as colunas de entrada (dados brutos da paciente)
+- Colunas calculadas (IG, datas sugeridas)
+- Data Agendada Original (do arquivo de entrada)
+- Data Agendada Editada (se modificada manualmente pelo usuário)
+
+### Formato do Nome do Arquivo
+O arquivo é exportado com o seguinte padrão de nomenclatura:
+```
+resultados_YYYY-MM-DD_HHhmm.csv
+```
+Exemplo: `resultados_2025-11-30_15h30.csv`
+
+### Edição Manual de Data Agendada
+
+Na tela de processamento, é possível editar manualmente a data agendada de cada paciente:
+
+1. Carregue o arquivo CSV para processamento
+2. Na tabela de preview, utilize o campo de data na coluna "Data Agendada" para editar a data
+3. A data editada será incluída na exportação na coluna "Data Agendada (Editada)"
+4. A data original permanece preservada na coluna "Data Agendada Original"
+
+**Validação:** A data informada deve estar em formato válido (DD/MM/YYYY ou selecionada via calendário).

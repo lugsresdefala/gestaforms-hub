@@ -216,11 +216,11 @@ export function ModalCorrecaoDatas({
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
-        className="max-w-2xl max-h-[90vh] flex flex-col"
+        className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-amber-600">
             <AlertTriangle className="h-6 w-6" />
             Incoerências Detectadas
@@ -242,7 +242,7 @@ export function ModalCorrecaoDatas({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4">
           <div className="space-y-4 py-2">
             {incoerencias.map((inco, index) => (
               <div
@@ -352,7 +352,7 @@ export function ModalCorrecaoDatas({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 pt-4 border-t">
+        <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 sm:gap-0 pt-4 border-t mt-4">
           <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
