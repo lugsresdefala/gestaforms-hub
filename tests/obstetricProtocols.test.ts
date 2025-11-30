@@ -619,6 +619,17 @@ describe('obstetricProtocols module', () => {
           expect(patologias).not.toContain('desejo_materno');
         });
         
+        it('should filter out desejo_materno when passed directly along with real pathologies', () => {
+          // Edge case: when desejo_materno is passed as protocol ID directly together with real pathologies
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: ['desejo_materno', 'HAC'],
+          });
+          
+          expect(patologias).toContain('hac');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
         it('should only return desejo_materno when no pathologies are identified', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],

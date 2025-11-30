@@ -135,7 +135,7 @@ export const ProtocolosModal = ({
             Protocolos Obstétricos
           </Button>}
       </DialogTrigger>
-      <DialogContent className="max-w-5xl max-h-[90vh]">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
