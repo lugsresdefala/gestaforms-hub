@@ -166,7 +166,7 @@ const MenuContent = ({
   return <>
       <div className="p-4 sm:p-6 border-b border-sky-400/20 bg-gradient-to-br from-white/5 to-sky-400/10 backdrop-blur-xl">
         <div className="flex flex-col items-center gap-3">
-          <div className="p-3 bg-blue-50 border border-sky-300/80 shadow-inner px-[8px] py-[8px] rounded-none opacity-100">
+          <div className="p-3 shadow-inner px-[8px] py-[8px] rounded-none opacity-100 bg-destructive-foreground border-2 border-popover-foreground">
             <img src="/hapvida-logo.png" alt="Logo" className="h-16 object-cover shadow-inner opacity-95" />
           </div>
           {!collapsed && <span className="text-xs uppercase text-sky-100 bg-sky-500/20 px-3 py-1 border border-sky-400/10 font-extralight text-center">
