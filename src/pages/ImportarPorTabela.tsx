@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
 import { addDays, differenceInDays } from "date-fns";
-import { PROTOCOLS } from "@/lib/obstetricProtocols";
+import { PROTOCOLS, mapDiagnosisToProtocol, calculateAutomaticIG } from "@/lib/obstetricProtocols";
 import {
   encontrarDataAgendada,
   formatIGCurta,
@@ -562,30 +562,49 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        // Determinar protocolo com base na IG pretendida ou diagnósticos
-        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const igIdealSemanas = igPretendidaSemanas;
-        const igIdealDias = 0;
+        // Determinar protocolo com base nos diagnósticos
+        // Coletar todos os diagnósticos de múltiplas fontes
+        const todosDiagnosticos: string[] = [];
         
-        // Default baixo_risco protocol config (39 weeks, 7 days margin)
-        const DEFAULT_PROTOCOL = { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Via obstétrica', observacoes: 'Gestação de baixo risco' };
-        let protocolo: typeof DEFAULT_PROTOCOL | undefined = DEFAULT_PROTOCOL;
-        let protocoloNome = 'baixo_risco';
+        // Adicionar diagnósticos maternos
+        if (row.diagnosticos_maternos) {
+          todosDiagnosticos.push(...row.diagnosticos_maternos.split(/[,;]/).map(d => d.trim()).filter(Boolean));
+        }
         
-        // Tentar encontrar protocolo baseado em diagnósticos
-        const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
-        if (diagnosticos.trim()) {
-          const sortedProtocolKeys = Object.keys(PROTOCOLS).sort((a, b) => b.length - a.length);
-          for (const key of sortedProtocolKeys) {
-            const keyPattern = key.replace(/_/g, ' ');
-            const regex = new RegExp(`\\b${keyPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            if (regex.test(diagnosticos)) {
-              protocolo = PROTOCOLS[key];
-              protocoloNome = key;
-              break;
-            }
+        // Adicionar diagnósticos fetais
+        if (row.diagnosticos_fetais) {
+          todosDiagnosticos.push(...row.diagnosticos_fetais.split(/[,;]/).map(d => d.trim()).filter(Boolean));
+        }
+        
+        // Adicionar indicação de procedimento
+        if (row.indicacao_procedimento) {
+          todosDiagnosticos.push(row.indicacao_procedimento);
+        }
+        
+        // Adicionar história obstétrica (pode conter informações relevantes)
+        if (row.historia_obstetrica) {
+          todosDiagnosticos.push(...row.historia_obstetrica.split(/[,;]/).map(d => d.trim()).filter(Boolean));
+        }
+        
+        // Usar mapDiagnosisToProtocol para detectar protocolos baseados em texto livre
+        const protocolosMapeados = mapDiagnosisToProtocol(todosDiagnosticos);
+        
+        // Adicionar placenta prévia se indicado
+        if (row.placenta_previa && row.placenta_previa.toLowerCase() !== 'não' && row.placenta_previa.toLowerCase() !== 'nao') {
+          // Verificar se já não tem acretismo
+          if (!protocolosMapeados.includes('placenta_acreta') && !protocolosMapeados.includes('placenta_percreta')) {
+            protocolosMapeados.push('placenta_baixa');
           }
         }
+        
+        // Usar calculateAutomaticIG para determinar o protocolo mais restritivo
+        const resultadoIG = calculateAutomaticIG(protocolosMapeados);
+        
+        const igIdealSemanas = parseInt(resultadoIG.igPretendida) || 39;
+        const igIdealDias = 0;
+        const igPretendidaSemanas = parseInt(row.ig_pretendida) || igIdealSemanas; // Fallback to protocol ideal if not specified
+        const protocoloNome = resultadoIG.protocoloAplicado;
+        const protocolo = PROTOCOLS[protocoloNome] || { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Via obstétrica', observacoes: 'Gestação de baixo risco' };
         
         const margemDias = protocolo?.margemDias || 7;
 
