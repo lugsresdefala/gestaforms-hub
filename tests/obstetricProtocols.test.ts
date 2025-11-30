@@ -8,6 +8,8 @@
  * - mapDiagnosisToProtocol function
  * - getAllCategories function
  * - getDiagnosticsByCategory function
+ * - identificarPatologias function (with text parsing)
+ * - normalizarDiagnosticos helper function
  */
 
 import { describe, it, expect } from 'vitest';
@@ -21,6 +23,11 @@ import {
   getDiagnosticsByCategory,
   type DiagnosticCategory
 } from '../src/lib/obstetricProtocols';
+
+import {
+  identificarPatologias,
+  normalizarDiagnosticos
+} from '../src/lib/gestationalCalculations';
 
 describe('obstetricProtocols module', () => {
   describe('PROTOCOLS object', () => {
@@ -305,6 +312,185 @@ describe('obstetricProtocols module', () => {
       const protocol = PROTOCOLS.oligoamnio_isolado;
       expect(protocol.igIdeal).toBe('36');
       expect(protocol.igIdealMax).toBe('37');
+    });
+  });
+
+  describe('identificarPatologias with text parsing', () => {
+    describe('normalizarDiagnosticos helper', () => {
+      it('should return empty array for undefined', () => {
+        expect(normalizarDiagnosticos(undefined)).toEqual([]);
+      });
+
+      it('should return empty array for empty string', () => {
+        expect(normalizarDiagnosticos('')).toEqual([]);
+      });
+
+      it('should pass through array as-is', () => {
+        expect(normalizarDiagnosticos(['dmg_sem_insulina', 'hac_compensada']))
+          .toEqual(['dmg_sem_insulina', 'hac_compensada']);
+      });
+
+      it('should split comma-separated string', () => {
+        expect(normalizarDiagnosticos('DMG, HAC, Oligoâmnio'))
+          .toEqual(['DMG', 'HAC', 'Oligoâmnio']);
+      });
+
+      it('should split semicolon-separated string', () => {
+        expect(normalizarDiagnosticos('DMG; HAC; Oligoâmnio'))
+          .toEqual(['DMG', 'HAC', 'Oligoâmnio']);
+      });
+
+      it('should split newline-separated string', () => {
+        expect(normalizarDiagnosticos('DMG\nHAC\nOligoâmnio'))
+          .toEqual(['DMG', 'HAC', 'Oligoâmnio']);
+      });
+
+      it('should trim whitespace from each item', () => {
+        expect(normalizarDiagnosticos('  DMG  ,  HAC  '))
+          .toEqual(['DMG', 'HAC']);
+      });
+
+      it('should filter out empty items', () => {
+        expect(normalizarDiagnosticos('DMG,,HAC'))
+          .toEqual(['DMG', 'HAC']);
+      });
+    });
+
+    describe('identificarPatologias with free text', () => {
+      it('should identify protocol from free text in diagnosticos_maternos', () => {
+        const patologias = identificarPatologias({
+          procedimentos: ['Cesárea Eletiva'],
+          diagnosticosMaternos: 'DMG com insulina descompensada, HAC difícil controle',
+          diagnosticosFetais: undefined,
+        });
+        
+        expect(patologias).toContain('dmg_insulina_descomp');
+        expect(patologias).toContain('hac_dificil');
+      });
+
+      it('should identify protocol from indicacao_procedimento field', () => {
+        const patologias = identificarPatologias({
+          procedimentos: ['Cesárea Eletiva'],
+          indicacaoProcedimento: 'Pré-eclâmpsia grave',
+        });
+        
+        expect(patologias).toContain('pre_eclampsia_grave');
+      });
+
+      it('should handle mix of structured IDs and free text', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: ['dmg_sem_insulina'], // ID estruturado
+          diagnosticosFetais: 'Restrição de crescimento fetal', // Texto livre
+        });
+        
+        expect(patologias).toContain('dmg_sem_insulina');
+        expect(patologias).toContain('rcf');
+      });
+
+      it('should split comma-separated diagnoses', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: 'DMG, HAC, Oligoâmnio',
+        });
+        
+        expect(patologias.length).toBeGreaterThanOrEqual(3);
+        expect(patologias).toContain('dmg_sem_insulina');
+        expect(patologias).toContain('hac');
+        expect(patologias).toContain('oligodramnia');
+      });
+
+      it('should return desejo_materno for cesarea eletiva without diagnoses', () => {
+        const patologias = identificarPatologias({
+          procedimentos: ['Cesárea Eletiva'],
+          diagnosticosMaternos: undefined,
+          diagnosticosFetais: undefined,
+        });
+        
+        expect(patologias).toContain('desejo_materno');
+      });
+
+      it('should not add desejo_materno if diagnoses are found', () => {
+        const patologias = identificarPatologias({
+          procedimentos: ['Cesárea Eletiva'],
+          indicacaoProcedimento: 'DMG com insulina',
+        });
+        
+        expect(patologias).toContain('dmg_insulina');
+        expect(patologias).not.toContain('desejo_materno');
+      });
+
+      it('should identify laqueadura from procedimentos', () => {
+        const patologias = identificarPatologias({
+          procedimentos: ['Cesárea + Laqueadura'],
+          diagnosticosMaternos: undefined,
+        });
+        
+        expect(patologias).toContain('laqueadura');
+      });
+
+      it('should handle placenta prévia with acretismo', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: 'Placenta acreta',
+          placentaPrevia: 'Sim',
+        });
+        
+        expect(patologias).toContain('placenta_acreta');
+        expect(patologias).not.toContain('placenta_previa_sem_acretismo');
+      });
+
+      it('should add placenta_previa_sem_acretismo when no acretismo', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: undefined,
+          placentaPrevia: 'Sim',
+        });
+        
+        expect(patologias).toContain('placenta_previa_sem_acretismo');
+      });
+
+      it('should handle cerclagem text', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          indicacaoProcedimento: 'Paciente com cerclagem prévia',
+        });
+        
+        expect(patologias).toContain('cerclagem');
+      });
+
+      it('should handle hipertensão gestacional text', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: 'Hipertensão gestacional',
+        });
+        
+        expect(patologias).toContain('hipertensao_gestacional');
+      });
+
+      it('should remove duplicates', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: 'DMG, DMG, diabetes gestacional',
+          indicacaoProcedimento: 'DMG',
+        });
+        
+        // Even with multiple mentions, should only appear once
+        const dmgCount = patologias.filter(p => p.includes('dmg')).length;
+        expect(dmgCount).toBe(1);
+      });
+
+      it('should maintain backward compatibility with array of IDs', () => {
+        const patologias = identificarPatologias({
+          procedimentos: [],
+          diagnosticosMaternos: ['hac_compensada', 'dmg_sem_insulina_bom_controle'],
+          diagnosticosFetais: ['rcf_pig_sem_comorbidade'],
+        });
+        
+        expect(patologias).toContain('hac_compensada');
+        expect(patologias).toContain('dmg_sem_insulina_bom_controle');
+        expect(patologias).toContain('rcf_pig_sem_comorbidade');
+      });
     });
   });
 });
