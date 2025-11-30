@@ -262,10 +262,17 @@ export function validarCoerenciaDatas(
         const igDias = result.gaDaysRemainder;
         const igFormatada = `${igSemanas}s${igDias}d`;
 
-        // Adicionar IG calculada a TODAS as incoerências detectadas até agora
-        // para que o usuário possa ver o impacto no modal de correção
+        // Adicionar IG calculada apenas às incoerências relacionadas a DUM/USG
+        // (não adicionar a erros de idade materna - IG é do feto, não da mãe)
+        const tiposComIG: TipoIncoerencia[] = [
+          'ig_impossivel',
+          'usg_muito_antigo',
+          'data_futura'
+        ];
+
         incoerencias.forEach(inco => {
-          if (!inco.detalhes.igCalculada) {
+          // Só adiciona IG se for erro obstétrico (DUM/USG) E o campo não for data_nascimento
+          if (tiposComIG.includes(inco.tipo) && inco.campo !== 'data_nascimento' && !inco.detalhes.igCalculada) {
             inco.detalhes.igCalculada = igFormatada;
           }
         });
