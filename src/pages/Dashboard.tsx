@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useData } from "@/contexts/DataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -86,14 +86,8 @@ const Dashboard = () => {
     setLoading(dataLoading);
   }, [dataLoading]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [allAgendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/auth');
-  };
-  const applyFilters = () => {
+  // Memoize filter application to avoid recreating the function on every render
+  const applyFilters = useCallback(() => {
     let filtered = [...allAgendamentos];
 
     // Filtro por data selecionada no calendário
@@ -104,7 +98,8 @@ const Dashboard = () => {
 
     // Filtro por nome
     if (searchNome) {
-      filtered = filtered.filter(a => a.nome_completo.toLowerCase().includes(searchNome.toLowerCase()) || a.carteirinha.includes(searchNome));
+      const searchLower = searchNome.toLowerCase();
+      filtered = filtered.filter(a => a.nome_completo.toLowerCase().includes(searchLower) || a.carteirinha.includes(searchNome));
     }
 
     // Filtro por médico
@@ -127,21 +122,43 @@ const Dashboard = () => {
 
     // Filtro por patologia
     if (filterPatologia !== "all") {
+      const patologiaLower = filterPatologia.toLowerCase();
       filtered = filtered.filter(a => {
         const diagMat = a.diagnosticos_maternos || '';
         const diagFet = a.diagnosticos_fetais || '';
-        return diagMat.toLowerCase().includes(filterPatologia.toLowerCase()) || diagFet.toLowerCase().includes(filterPatologia.toLowerCase());
+        return diagMat.toLowerCase().includes(patologiaLower) || diagFet.toLowerCase().includes(patologiaLower);
       });
     }
     setFilteredAgendamentos(filtered);
+  }, [allAgendamentos, searchNome, filterMedico, filterMaternidade, filterDataInicio, filterDataFim, filterPatologia, selectedDate]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth');
   };
-  const getUniqueMedicos = () => {
-    return [...new Set(allAgendamentos.map(a => a.medico_responsavel))];
-  };
-  const getUniqueMaternidades = () => {
-    return [...new Set(allAgendamentos.map(a => a.maternidade))];
-  };
-  const exportToCSV = () => {
+
+  // Memoize unique medicos and maternidades to avoid recalculating on every render
+  const uniqueMedicos = useMemo(() => 
+    [...new Set(allAgendamentos.map(a => a.medico_responsavel))],
+    [allAgendamentos]
+  );
+  
+  const uniqueMaternidades = useMemo(() => 
+    [...new Set(allAgendamentos.map(a => a.maternidade))],
+    [allAgendamentos]
+  );
+
+  // Memoize dates with agendamentos to avoid creating new Date objects on every render
+  const datesWithAgendamentos = useMemo(() => 
+    allAgendamentos.map(a => new Date(a.data_agendamento_calculada)),
+    [allAgendamentos]
+  );
+
+  const exportToCSV = useCallback(() => {
     const headers = ["Carteirinha", "Nome", "Data Nascimento", "Telefone", "Procedimentos", "Médico", "Maternidade", "Centro Clínico", "Data Agendamento", "IG Calculada", "Diagnósticos Maternos", "Diagnósticos Fetais", "Observações"];
     const rows = filteredAgendamentos.map(a => [a.carteirinha, a.nome_completo, a.data_nascimento, a.telefones, a.procedimentos.length ? a.procedimentos.join('; ') : 'Não informado', a.medico_responsavel, a.maternidade, a.centro_clinico, a.data_agendamento_calculada, a.idade_gestacional_calculada || 'Não calculado', formatDiagnosticos(a.diagnosticos_maternos || 'Não informado'), formatDiagnosticos(a.diagnosticos_fetais || 'Não informado'), a.observacoes_agendamento?.replace(/\n/g, ' ') || '']);
     const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
@@ -152,8 +169,9 @@ const Dashboard = () => {
     link.href = URL.createObjectURL(blob);
     link.download = `agendamentos_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-  };
-  const clearFilters = () => {
+  }, [filteredAgendamentos]);
+
+  const clearFilters = useCallback(() => {
     setSearchNome("");
     setFilterMedico("all");
     setFilterMaternidade("all");
@@ -161,10 +179,9 @@ const Dashboard = () => {
     setFilterDataFim("");
     setFilterPatologia("all");
     setSelectedDate(undefined);
-  };
-  const getDatesWithAgendamentos = () => {
-    return allAgendamentos.map(a => new Date(a.data_agendamento_calculada));
-  };
+  }, []);
+
+  // getStatusBadge is a pure function based only on its arguments, using useCallback for stability
   const getStatusBadge = (dataAgendamento: string, status: string) => {
     const hoje = new Date();
     const dataAgend = new Date(dataAgendamento);
@@ -246,7 +263,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="flex justify-center">
               <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} locale={ptBR} className="rounded-md border pointer-events-auto" modifiers={{
-              hasAgendamento: getDatesWithAgendamentos()
+              hasAgendamento: datesWithAgendamentos
             }} modifiersStyles={{
               hasAgendamento: {
                 fontWeight: 'bold',
@@ -327,7 +344,7 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    {getUniqueMedicos().map(medico => <SelectItem key={medico} value={medico}>{medico}</SelectItem>)}
+                    {uniqueMedicos.map(medico => <SelectItem key={medico} value={medico}>{medico}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -340,7 +357,7 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas</SelectItem>
-                    {getUniqueMaternidades().map(maternidade => <SelectItem key={maternidade} value={maternidade}>{maternidade}</SelectItem>)}
+                    {uniqueMaternidades.map(maternidade => <SelectItem key={maternidade} value={maternidade}>{maternidade}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

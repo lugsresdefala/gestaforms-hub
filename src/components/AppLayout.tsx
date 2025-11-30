@@ -157,7 +157,15 @@ const MenuContent = ({
     solicitacoesPendentes,
     agendamentosPendentes
   } = useData();
-  const sections = useMemo(() => menuItems(isAdmin(), isAdminMed(), agendamentosPendentes, solicitacoesPendentes), [isAdmin(), isAdminMed(), agendamentosPendentes, solicitacoesPendentes]);
+  
+  // Memoize role checks to avoid calling functions in dependency arrays
+  const userIsAdmin = isAdmin();
+  const userIsAdminMed = isAdminMed();
+  
+  const sections = useMemo(
+    () => menuItems(userIsAdmin, userIsAdminMed, agendamentosPendentes, solicitacoesPendentes),
+    [userIsAdmin, userIsAdminMed, agendamentosPendentes, solicitacoesPendentes]
+  );
   return <>
       <div className="p-4 sm:p-6 border-b border-sky-400/20 bg-gradient-to-br from-white/5 to-sky-400/10 backdrop-blur-xl">
         <div className="flex flex-col items-center gap-3">

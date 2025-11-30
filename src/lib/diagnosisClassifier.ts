@@ -11,8 +11,8 @@ export interface ClassificationResult {
   requiresReview: boolean;
 }
 
-// Keywords mapping for automatic classification
-const DIAGNOSIS_KEYWORDS: Record<string, string[]> = {
+// Keywords mapping for automatic classification (raw strings with proper casing)
+const DIAGNOSIS_KEYWORDS_RAW: Record<string, string[]> = {
   // Hypertension
   'hipertensao_gestacional': ['hipertensão gestacional', 'hipertensao gestacional', 'hg'],
   'hac': ['hipertensão crônica', 'hipertensao cronica', 'hac', 'has', 'hipertensão arterial sistemica'],
@@ -107,6 +107,14 @@ const DIAGNOSIS_KEYWORDS: Record<string, string[]> = {
   // and should not influence IG calculation (PT-AON-097)
 };
 
+// Pre-normalize keywords to lowercase for efficient matching (computed once at module load)
+const DIAGNOSIS_KEYWORDS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(DIAGNOSIS_KEYWORDS_RAW).map(([key, keywords]) => [
+    key,
+    keywords.map(kw => kw.toLowerCase())
+  ])
+);
+
 export function classifyFreeDiagnosis(freeText: string): ClassificationResult {
   if (!freeText || freeText.trim().length === 0) {
     return {
@@ -120,15 +128,15 @@ export function classifyFreeDiagnosis(freeText: string): ClassificationResult {
   const normalizedText = freeText.toLowerCase().trim();
   const matches: { diagnosis: string; score: number }[] = [];
 
-  // Try to match against keywords
+  // Try to match against pre-normalized keywords (no .toLowerCase() needed in loop)
   for (const [diagnosis, keywords] of Object.entries(DIAGNOSIS_KEYWORDS)) {
     let score = 0;
     for (const keyword of keywords) {
-      if (normalizedText.includes(keyword.toLowerCase())) {
+      if (normalizedText.includes(keyword)) {
         // Give higher score for exact matches
-        if (normalizedText === keyword.toLowerCase()) {
+        if (normalizedText === keyword) {
           score += 10;
-        } else if (normalizedText.startsWith(keyword.toLowerCase())) {
+        } else if (normalizedText.startsWith(keyword)) {
           score += 5;
         } else {
           score += 2;
