@@ -20,6 +20,30 @@ import {
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
 
+/**
+ * Escape CSV field - wraps in quotes and escapes internal quotes if needed
+ */
+function escapeCSVField(field: string): string {
+  if (field.includes(',') || field.includes('\n') || field.includes('"')) {
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+}
+
+/**
+ * Convert a date value for the HTML date input
+ * Handles DD/MM/YYYY format from the record and returns YYYY-MM-DD for input
+ */
+function formatDateForInput(dateStr: string): string {
+  if (!dateStr) return '';
+  const parsed = parseDateDMY(dateStr);
+  if (parsed) {
+    return formatDateISO(parsed);
+  }
+  // If already in YYYY-MM-DD format or unrecognized, return as is
+  return dateStr;
+}
+
 // Schema de validação para campos obrigatórios
 const formRecordSchema = z.object({
   carteirinha: z.string()
@@ -232,28 +256,23 @@ export default function ProcessarFormsParto() {
         record.email_paciente || '',
         record.data_agendada || '',
         effectiveDate
-      ].map(field => {
-        // Escape quotes and wrap in quotes if contains comma or newline
-        const strField = String(field);
-        if (strField.includes(',') || strField.includes('\n') || strField.includes('"')) {
-          return `"${strField.replace(/"/g, '""')}"`;
-        }
-        return strField;
-      }).join(',');
+      ].map(field => escapeCSVField(String(field))).join(',');
     });
 
     const csvContent = [headers.join(','), ...rows].join('\n');
+    // BOM (Byte Order Mark) added for Excel UTF-8 compatibility
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+    const filename = `resultados_${formatExportTimestamp()}.csv`;
     a.href = url;
-    a.download = `resultados_${formatExportTimestamp()}.csv`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    toast.success(`Arquivo exportado: resultados_${formatExportTimestamp()}.csv`);
+    toast.success(`Arquivo exportado: ${filename}`);
   };
 
   const parseCSV = (text: string): { records: FormRecord[], errors: ValidationError[] } => {
@@ -704,11 +723,7 @@ export default function ProcessarFormsParto() {
                         <td className="p-2">
                           <Input
                             type="date"
-                            value={getEffectiveDate(record) ? 
-                              (parseDateDMY(getEffectiveDate(record)) ? 
-                                formatDateISO(parseDateDMY(getEffectiveDate(record))) : 
-                                getEffectiveDate(record)) : 
-                              ''}
+                            value={formatDateForInput(getEffectiveDate(record))}
                             onChange={(e) => {
                               const dateValue = e.target.value;
                               if (dateValue) {
