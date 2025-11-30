@@ -194,12 +194,13 @@ export const encontrarProximaDataDisponivel = (dataIdeal: Date): Date => {
 /**
  * Normaliza diagnósticos para um array de strings
  * Aceita tanto arrays de IDs estruturados quanto strings de texto livre
+ * Separa strings por qualquer combinação de: vírgula (,), ponto-e-vírgula (;), ou quebra de linha (\n)
  */
 export const normalizarDiagnosticos = (valor: string | string[] | undefined): string[] => {
   if (!valor) return [];
   if (Array.isArray(valor)) return valor;
   
-  // Split por vírgula, ponto-e-vírgula ou quebra de linha
+  // Split por vírgula, ponto-e-vírgula ou quebra de linha (ou combinação deles)
   return valor.split(/[,;\n]/).map(d => d.trim()).filter(Boolean);
 };
 
@@ -250,7 +251,9 @@ export const identificarPatologias = (dados: {
     }
   }
   
-  // Lógica de cesárea eletiva sem diagnósticos
+  // Lógica de cesárea eletiva sem diagnósticos identificados
+  // Nota: 'laqueadura' é adicionado somente para 'Cesárea + Laqueadura' (procedimento diferente),
+  // então se 'Cesárea Eletiva' for selecionado sem nenhum diagnóstico mapeado, adiciona desejo_materno
   if (dados.procedimentos.includes('Cesárea Eletiva') && patologias.length === 0) {
     patologias.push('desejo_materno');
   }
