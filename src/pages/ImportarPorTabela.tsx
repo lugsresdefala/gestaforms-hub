@@ -28,6 +28,8 @@ import {
   LEAD_TIME_MINIMO,
 } from "@/lib/scheduling";
 import { validarAgendamento } from "@/lib/validation";
+import { ModalCorrecaoDatas } from "@/components/ModalCorrecaoDatas";
+import { validarCoerenciaDatas, type IncoerenciaData } from "@/lib/validation/dateCoherenceValidator";
 
 // Tipos
 interface PacienteRow {
@@ -160,6 +162,22 @@ export default function ImportarPorTabela() {
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterForaMargem, setFilterForaMargem] = useState(false);
+  
+  // State for date correction modal
+  const [modalCorrecao, setModalCorrecao] = useState<{
+    isOpen: boolean;
+    paciente: { nome: string; carteirinha: string; rowId: string };
+    incoerencias: IncoerenciaData[];
+  } | null>(null);
+  
+  // Review queue for rows with incoherencies
+  const [filaRevisao, setFilaRevisao] = useState<Array<{
+    rowId: string;
+    incoerencias: IncoerenciaData[];
+  }>>([]);
+  
+  // Counter for corrected rows
+  const [corrigidos, setCorrigidos] = useState(0);
 
   // Computed/sorted/filtered rows
   const displayRows = useMemo(() => {
@@ -395,9 +413,75 @@ export default function ImportarPorTabela() {
     [focusedCell],
   );
 
-  const processarDados = async () => {
-    setProcessing(true);
+  // Open modal for the first item in the review queue
+  const abrirModalParaPrimeira = (fila: Array<{ rowId: string; incoerencias: IncoerenciaData[] }>) => {
+    if (fila.length === 0) return;
+    
+    const primeiro = fila[0];
+    const row = rows.find(r => r.id === primeiro.rowId);
+    if (!row) return;
+    
+    setModalCorrecao({
+      isOpen: true,
+      paciente: {
+        nome: row.nome_completo,
+        carteirinha: row.carteirinha,
+        rowId: primeiro.rowId,
+      },
+      incoerencias: primeiro.incoerencias,
+    });
+  };
 
+  // Handle corrections from modal
+  const handleCorrigirDatas = (correcoes: Record<string, string>) => {
+    if (!modalCorrecao) return;
+    
+    // Apply corrections to the row
+    if (Object.keys(correcoes).length > 0) {
+      setRows(prev => prev.map(row => {
+        if (row.id === modalCorrecao.paciente.rowId) {
+          return { ...row, ...correcoes, status: 'pendente' as const };
+        }
+        return row;
+      }));
+      setCorrigidos(prev => prev + 1);
+    }
+    
+    processarProximaIncoerencia();
+  };
+
+  // Handle keeping current values
+  const handleManterValores = () => {
+    processarProximaIncoerencia();
+  };
+
+  // Handle skipping a patient
+  const handlePularPaciente = () => {
+    if (!modalCorrecao) return;
+    
+    // Remove row from the list
+    setRows(prev => prev.filter(r => r.id !== modalCorrecao.paciente.rowId));
+    
+    processarProximaIncoerencia();
+  };
+
+  // Process next incoherence in queue
+  const processarProximaIncoerencia = async () => {
+    const novaFila = filaRevisao.slice(1);
+    setFilaRevisao(novaFila);
+    
+    if (novaFila.length > 0) {
+      // Open modal for next row
+      abrirModalParaPrimeira(novaFila);
+    } else {
+      // All resolved, continue processing
+      setModalCorrecao(null);
+      await processarDadosNormalmente();
+    }
+  };
+
+  // Normal processing (after incoherence resolution)
+  const processarDadosNormalmente = async () => {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -425,7 +509,7 @@ export default function ImportarPorTabela() {
           usgDays: normalizarDiasUsg(row.dias_usg),
           diagnostico: row.diagnosticos_maternos,
           indicacao: row.indicacao_procedimento,
-          referenceDate: dataReferencia, // Usar data de registro como referência
+          referenceDate: dataReferencia,
         });
 
         if (!result || result.source === "INVALID") {
@@ -441,14 +525,12 @@ export default function ImportarPorTabela() {
         let protocolo = PROTOCOLS['desejo_materno'];
         let protocoloNome = 'desejo_materno';
         
-        // Tentar encontrar protocolo baseado em diagnósticos (usando match exato de palavras)
+        // Tentar encontrar protocolo baseado em diagnósticos
         const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
         if (diagnosticos.trim()) {
-          // Sort protocol keys by length (longest first) to match more specific protocols first
           const sortedProtocolKeys = Object.keys(PROTOCOLS).sort((a, b) => b.length - a.length);
           for (const key of sortedProtocolKeys) {
             const keyPattern = key.replace(/_/g, ' ');
-            // Use word boundary matching to avoid partial matches
             const regex = new RegExp(`\\b${keyPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
             if (regex.test(diagnosticos)) {
               protocolo = PROTOCOLS[key];
@@ -460,7 +542,7 @@ export default function ImportarPorTabela() {
         
         const margemDias = protocolo?.margemDias || 7;
 
-        // Calcular data ideal baseada na IG pretendida (a partir da data de registro)
+        // Calcular data ideal baseada na IG pretendida
         const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
         const dataIdeal = addDays(dataReferencia, diasRestantes);
         
@@ -468,11 +550,11 @@ export default function ImportarPorTabela() {
         const scheduleResult = encontrarDataAgendada({
           dataIdeal,
           maternidade: row.maternidade || 'Salvalus',
-          dataReferencia, // Usar data de registro como referência
+          dataReferencia,
           margemDias,
         });
 
-        // Calcular IG na data agendada (baseada na data de registro)
+        // Calcular IG na data agendada
         let igNaDataAgendada = "";
         if (scheduleResult.dataAgendada) {
           const igNaData = calcularIGNaData(result.gaDays, dataReferencia, scheduleResult.dataAgendada);
@@ -485,7 +567,7 @@ export default function ImportarPorTabela() {
           intervaloRegistroAgendamento = differenceInDays(scheduleResult.dataAgendada, dataReferencia);
         }
 
-        // Validar IG: verificar se IG ideal difere de IG pretendida ou se IG na data agendada difere muito
+        // Validar IG
         const validacao = validarIG({
           igIdealSemanas,
           igIdealDias,
@@ -507,13 +589,13 @@ export default function ImportarPorTabela() {
 
         return {
           ...row,
-          ig_no_registro: result.gaFormatted, // IG na data do registro
+          ig_no_registro: result.gaFormatted,
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
           ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
           status_agendamento: requerRevisao ? 'needs_review' : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
-          intervalo_dias: intervaloRegistroAgendamento, // Intervalo entre registro e agendamento
+          intervalo_dias: intervaloRegistroAgendamento,
           lead_time_dias: scheduleResult.leadTimeDias,
           margem_protocolo: margemDias,
           protocolo_aplicado: protocoloNome,
@@ -532,7 +614,49 @@ export default function ImportarPorTabela() {
     const validos = processedRows.filter((r) => r.status === "valido").length;
     const erros = processedRows.filter((r) => r.status === "erro").length;
     const needsReview = processedRows.filter((r) => r.status_agendamento === "needs_review").length;
-    toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}`);
+    const msgCorrigidos = corrigidos > 0 ? `, ${corrigidos} corrigidos` : '';
+    toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}${msgCorrigidos}`);
+    setCorrigidos(0); // Reset counter
+  };
+
+  const processarDados = async () => {
+    setProcessing(true);
+    setCorrigidos(0);
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    // First pass: detect incoherencies
+    const rowsComIncoerencias: Array<{ rowId: string; incoerencias: IncoerenciaData[] }> = [];
+
+    for (const row of rows) {
+      if (!row.nome_completo || !row.carteirinha) continue;
+
+      const incoerencias = validarCoerenciaDatas({
+        data_nascimento: row.data_nascimento,
+        data_dum: row.data_dum,
+        dum_status: row.dum_status,
+        data_primeiro_usg: row.data_primeiro_usg,
+        semanas_usg: row.semanas_usg,
+        dias_usg: row.dias_usg,
+      }, hoje);
+
+      if (incoerencias.length > 0) {
+        rowsComIncoerencias.push({ rowId: row.id, incoerencias });
+      }
+    }
+
+    // If there are incoherencies, start review queue
+    if (rowsComIncoerencias.length > 0) {
+      setFilaRevisao(rowsComIncoerencias);
+      abrirModalParaPrimeira(rowsComIncoerencias);
+      toast.warning(`${rowsComIncoerencias.length} registro(s) com datas incoerentes. Revise antes de processar.`);
+      setProcessing(false);
+      return;
+    }
+
+    // No incoherencies, process normally
+    await processarDadosNormalmente();
   };
 
   const salvarNoBanco = async () => {
@@ -1214,6 +1338,22 @@ export default function ImportarPorTabela() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Modal de Correção de Datas */}
+      {modalCorrecao && (
+        <ModalCorrecaoDatas
+          isOpen={modalCorrecao.isOpen}
+          paciente={modalCorrecao.paciente}
+          incoerencias={modalCorrecao.incoerencias}
+          onCorrigir={handleCorrigirDatas}
+          onManter={handleManterValores}
+          onPular={handlePularPaciente}
+          posicaoFila={{
+            atual: filaRevisao.length > 0 ? 1 : 0,
+            total: filaRevisao.length,
+          }}
+        />
+      )}
     </div>
   );
 }
