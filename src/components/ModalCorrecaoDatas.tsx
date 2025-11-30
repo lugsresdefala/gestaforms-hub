@@ -216,7 +216,7 @@ export function ModalCorrecaoDatas({
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent 
-        className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+        className="max-w-2xl max-h-[90vh] min-h-[400px] flex flex-col overflow-hidden"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -242,7 +242,7 @@ export function ModalCorrecaoDatas({
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0 pr-4">
+        <ScrollArea className="flex-1 min-h-0 pr-4 max-h-[calc(90vh-250px)]">
           <div className="space-y-4 py-2">
             {incoerencias.map((inco, index) => (
               <div
@@ -261,7 +261,7 @@ export function ModalCorrecaoDatas({
                 </div>
 
                 {/* Problem description */}
-                <p className="text-sm text-muted-foreground">{inco.problema}</p>
+                <p className="text-sm text-muted-foreground break-words">{inco.problema}</p>
 
                 {/* Details */}
                 {(inco.detalhes.igCalculada || inco.detalhes.idadeCalculada || inco.detalhes.mesesDecorridos) && (

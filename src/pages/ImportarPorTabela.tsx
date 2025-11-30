@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter, Download } from "lucide-react";
 import type { GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
+import * as XLSX from 'xlsx';
 
 const MS_PER_DAY = 86400000;
 import { supabase } from "@/integrations/supabase/client";
@@ -850,78 +851,100 @@ export default function ImportarPorTabela() {
       return;
     }
 
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+    // Criar workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Preparar dados para worksheet
+    const data = linhasParaExportar.map(row => ({
+      'Data Registro': row.data_registro || '',
+      'Nome Completo': row.nome_completo,
+      'Data Nascimento': row.data_nascimento,
+      'Carteirinha': row.carteirinha,
+      'Gestações': row.numero_gestacoes,
+      'Partos Cesárea': row.numero_partos_cesareas,
+      'Partos Normal': row.numero_partos_normais,
+      'Abortos': row.numero_abortos,
+      'Telefones': row.telefones,
+      'Procedimentos': row.procedimentos,
+      'Status DUM': row.dum_status,
+      'Data DUM': row.data_dum,
+      'Data 1º USG': row.data_primeiro_usg,
+      'Semanas USG': row.semanas_usg,
+      'Dias USG': row.dias_usg,
+      'USG Recente': row.usg_recente,
+      'IG Pretendida': row.ig_pretendida,
+      'Indicação': row.indicacao_procedimento,
+      'Medicação': row.medicacao,
+      'Diag Maternos': row.diagnosticos_maternos,
+      'Placenta Prévia': row.placenta_previa,
+      'Diag Fetais': row.diagnosticos_fetais,
+      'História Obstétrica': row.historia_obstetrica,
+      'UTI': row.necessidade_uti_materna,
+      'Sangue': row.necessidade_reserva_sangue,
+      'Maternidade': row.maternidade,
+      'Médico': row.medico_responsavel,
+      'Email': row.email_paciente,
+      'Centro Clínico': row.centro_clinico || '',
+      'IG no Registro': row.ig_no_registro || '',
+      'IG Ideal': row.ig_ideal || '',
+      'Protocolo': row.protocolo_aplicado || '',
+      'Data Agendada': row.data_agendada || '',
+      'IG na Data Agendada': row.ig_na_data_agendada || '',
+      'Intervalo (dias)': row.intervalo_dias !== undefined ? (row.intervalo_dias >= 0 ? `+${row.intervalo_dias}` : `${row.intervalo_dias}`) : '',
+      'Status': row.status || '',
+      'Observações': row.erro || ''
+    }));
 
-    // CSV headers
-    const headers = [
-      'Data Registro', 'Nome Completo', 'Data Nascimento', 'Carteirinha', 
-      'Gestações', 'Partos Cesárea', 'Partos Normal', 'Abortos',
-      'Telefones', 'Procedimentos', 'Status DUM', 'Data DUM',
-      'Data 1º USG', 'Semanas USG', 'Dias USG', 'USG Recente',
-      'IG Pretendida', 'Indicação', 'Medicação', 'Diag Maternos',
-      'Placenta Prévia', 'Diag Fetais', 'História Obstétrica',
-      'Necessidade UTI', 'Necessidade Sangue', 'Maternidade',
-      'Médico Responsável', 'Email Paciente', 'Centro Clínico',
-      // Calculated columns
-      'IG no Registro', 'IG Ideal', 'Protocolo', 'Data Agendada',
-      'IG na Data Agendada', 'Intervalo (dias)', 'Status', 'Erro'
+    // Criar worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    
+    // Ajustar largura das colunas
+    const colWidths = [
+      { wch: 12 }, // Data Registro
+      { wch: 30 }, // Nome
+      { wch: 12 }, // Data Nasc
+      { wch: 15 }, // Carteirinha
+      { wch: 10 }, // Gestações
+      { wch: 12 }, // Cesáreas
+      { wch: 12 }, // Normal
+      { wch: 10 }, // Abortos
+      { wch: 18 }, // Telefones
+      { wch: 20 }, // Procedimentos
+      { wch: 18 }, // Status DUM
+      { wch: 12 }, // Data DUM
+      { wch: 12 }, // Data USG
+      { wch: 10 }, // Semanas
+      { wch: 8 },  // Dias
+      { wch: 25 }, // USG Recente
+      { wch: 12 }, // IG Pret
+      { wch: 25 }, // Indicação
+      { wch: 20 }, // Medicação
+      { wch: 30 }, // Diag Maternos
+      { wch: 15 }, // Placenta
+      { wch: 30 }, // Diag Fetais
+      { wch: 30 }, // Hist Obst
+      { wch: 8 },  // UTI
+      { wch: 10 }, // Sangue
+      { wch: 15 }, // Maternidade
+      { wch: 25 }, // Médico
+      { wch: 30 }, // Email
+      { wch: 25 }, // Centro Clínico
+      { wch: 15 }, // IG Registro
+      { wch: 12 }, // IG Ideal
+      { wch: 18 }, // Protocolo
+      { wch: 14 }, // Data Agendada
+      { wch: 18 }, // IG na Data
+      { wch: 14 }, // Intervalo
+      { wch: 12 }, // Status
+      { wch: 40 }  // Observações
     ];
+    worksheet['!cols'] = colWidths;
 
-    const linhas = linhasParaExportar.map(row => {
-      // Calculate interval in days between registro and scheduled date
-      let intervalo = '';
-      if (row.intervalo_dias !== undefined) {
-        intervalo = row.intervalo_dias >= 0 ? `+${row.intervalo_dias}` : `${row.intervalo_dias}`;
-      }
-
-      return [
-        row.data_registro || '', row.nome_completo, row.data_nascimento, row.carteirinha,
-        row.numero_gestacoes, row.numero_partos_cesareas, 
-        row.numero_partos_normais, row.numero_abortos,
-        row.telefones, row.procedimentos, row.dum_status, row.data_dum,
-        row.data_primeiro_usg, row.semanas_usg, row.dias_usg, row.usg_recente,
-        row.ig_pretendida, row.indicacao_procedimento, row.medicacao,
-        row.diagnosticos_maternos, row.placenta_previa, row.diagnosticos_fetais,
-        row.historia_obstetrica, row.necessidade_uti_materna,
-        row.necessidade_reserva_sangue, row.maternidade,
-        row.medico_responsavel, row.email_paciente, row.centro_clinico,
-        // Calculated columns
-        row.ig_no_registro || '', 
-        row.snapshot?.igIdeal || '',
-        row.snapshot?.protocoloNome || '',
-        row.snapshot?.dataAgendada?.toLocaleDateString('pt-BR') || row.data_ideal || '',
-        row.snapshot?.igNaDataAgendada || '',
-        intervalo,
-        row.status || '',
-        row.erro || ''
-      ];
-    });
-
-    // Generate CSV content with proper escaping
-    const csvContent = [
-      headers.join(','),
-      ...linhas.map(linha => linha.map(campo => {
-        const str = String(campo ?? '');
-        // Escape commas, quotes and newlines
-        return str.includes(',') || str.includes('"') || str.includes('\n')
-          ? `"${str.replace(/"/g, '""')}"`
-          : str;
-      }).join(','))
-    ].join('\n');
-
-    // Create download with BOM for UTF-8 Excel compatibility
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Agendamentos');
+    
+    // Salvar arquivo
     const timestamp = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `agendamentos-processados-${timestamp}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    XLSX.writeFile(workbook, `agendamentos-processados-${timestamp}.xlsx`);
 
     toast.success(`${linhasParaExportar.length} registros exportados!`);
   };
@@ -978,6 +1001,16 @@ export default function ImportarPorTabela() {
             <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}> 
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
+            </Button>
+            <Button 
+              onClick={exportarResultados} 
+              size="sm" 
+              variant="outline"
+              disabled={rows.filter(r => r.status === 'valido' || r.status === 'salvo').length === 0}
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Exportar Resultados ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
             </Button>
             <div className="flex items-center gap-2 ml-4 border-l pl-4">
               <Filter className="w-4 h-4 text-muted-foreground" />
