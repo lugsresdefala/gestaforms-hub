@@ -103,9 +103,8 @@ function mapDiagnosticoTextToIds(textoLivre: string): string[] {
   const texto = textoLivre.toLowerCase();
   const ids: string[] = [];
   
-  // Maternos - Cesárea eletiva
-  if (texto.includes('desejo materno')) ids.push('desejo_materno');
-  if (texto.includes('laqueadura')) ids.push('laqueadura');
+  // NOTE: desejo_materno and laqueadura removed - they are not clinical pathologies
+  // and should not influence IG calculation (PT-AON-097)
   
   // Maternos - Hipertensão
   if (texto.includes('hac') && (texto.includes('difícil') || texto.includes('dificil'))) {

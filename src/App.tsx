@@ -22,7 +22,6 @@ import GerenciarUsuarios from "./pages/GerenciarUsuarios";
 import CriarUsuariosPadrao from "./pages/CriarUsuariosPadrao";
 import OcupacaoMaternidades from "./pages/OcupacaoMaternidades";
 import GuiaSistema from "./pages/GuiaSistema";
-import ImportarCalendario from "./pages/ImportarCalendario";
 import CalendarioOcupacao from "./pages/CalendarioOcupacao";
 import CalendarioCompleto from "./pages/CalendarioCompleto";
 import CompararCSVs from "./pages/CompararCSVs";
@@ -30,12 +29,7 @@ import CompararPacientes from "./pages/CompararPacientes";
 import AnalisarForm1 from "./pages/AnalisarForm1";
 import ListaAgendamentos from "./pages/ListaAgendamentos";
 import Onboarding from "./pages/Onboarding";
-import AtualizarIG from "./pages/AtualizarIG";
 import CorrigirParidade from "./pages/CorrigirParidade";
-import ImportarAgendamentos2025 from "./pages/ImportarAgendamentos2025";
-import ProcessarAgendas2025 from "./pages/ProcessarAgendas2025";
-import ProcessarImportacoes from "./pages/ProcessarImportacoes";
-import ImportarAgendamentosLote from "./pages/ImportarAgendamentosLote";
 import ImportarSQL from "./pages/ImportarSQL";
 import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
 import ProcessarFormsParto from "./pages/ProcessarFormsParto";
@@ -205,16 +199,6 @@ const App = () => (
               } 
             />
             <Route 
-              path="/importar-calendario" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ImportarCalendario />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/calendario-ocupacao" 
               element={
                 <ProtectedRoute>
@@ -275,16 +259,6 @@ const App = () => (
               } 
             />
             <Route 
-              path="/atualizar-ig"
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <AtualizarIG />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/corrigir-paridade" 
               element={
                 <ProtectedRoute requireAdmin>
@@ -295,51 +269,11 @@ const App = () => (
               } 
             />
             <Route 
-              path="/importar-agendamentos-2025" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ImportarAgendamentos2025 />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/processar-agendas-2025" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ProcessarAgendas2025 />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
               path="/importar-sql" 
               element={
                 <ProtectedRoute requireAdmin>
                   <AppLayout>
                     <ImportarSQL />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route
-              path="/processar-importacoes" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ProcessarImportacoes />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/importar-agendamentos-lote" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ImportarAgendamentosLote />
                   </AppLayout>
                 </ProtectedRoute>
               } 

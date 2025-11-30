@@ -34,9 +34,6 @@ const getPrioridadeLabel = (prioridade: number) => {
 };
 const getProtocolLabel = (key: string): string => {
   const labels: Record<string, string> = {
-    // Cesárea eletiva
-    'desejo_materno': 'Desejo Materno',
-    'laqueadura': 'Laqueadura',
     // Hipertensão
     'hac': 'HAC Compensada',
     'hac_dificil': 'HAC Difícil Controle',
@@ -110,7 +107,6 @@ const getProtocolLabel = (key: string): string => {
   return labels[key] || key;
 };
 const categorias = {
-  'Cesárea Eletiva': ['desejo_materno', 'laqueadura'],
   'Distúrbios Hipertensivos': ['hac', 'hac_dificil', 'hipertensao_gestacional', 'pre_eclampsia_sem_deterioracao', 'pre_eclampsia_grave', 'eclampsia', 'sindrome_hellp'],
   'Diabetes Gestacional e Pré-gestacional': ['dmg_sem_insulina', 'dmg_sem_insulina_descomp', 'dmg_insulina', 'dmg_insulina_descomp', 'dm_pregestacional', 'dm_pregestacional_descomp'],
   'Patologias Placentárias': ['placenta_previa_total', 'placenta_previa_parcial', 'placenta_baixa', 'placenta_acreta', 'placenta_percreta', 'dpp'],

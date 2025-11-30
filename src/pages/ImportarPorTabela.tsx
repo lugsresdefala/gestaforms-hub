@@ -567,9 +567,9 @@ export default function ImportarPorTabela() {
         const igIdealSemanas = igPretendidaSemanas;
         const igIdealDias = 0;
         
-        // Usar protocolo padrão desejo_materno ou buscar por diagnóstico
-        let protocolo = PROTOCOLS['desejo_materno'];
-        let protocoloNome = 'desejo_materno';
+        // Usar protocolo baixo_risco como padrão (39 semanas)
+        let protocolo = PROTOCOLS['laqueadura']; // fallback to any 39w protocol config
+        let protocoloNome = 'baixo_risco';
         
         // Tentar encontrar protocolo baseado em diagnósticos
         const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();

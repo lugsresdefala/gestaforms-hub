@@ -305,12 +305,13 @@ export async function validarAgendamento(
     ...normalizeToArray(dados.diagnosticos_fetais),
   ];
   
-  const protocolKeys = mapDiagnosisToProtocol(diagnosticos.length > 0 ? diagnosticos : ['desejo_materno']);
+  // Map diagnoses to protocols, fallback to empty (baixo_risco applies)
+  const protocolKeys = mapDiagnosisToProtocol(diagnosticos);
   
   if (protocolKeys.length > 0) {
     // Find most restrictive protocol
     let mostRestrictiveIg = 39;
-    let mostRestrictiveProtocol = 'desejo_materno';
+    let mostRestrictiveProtocol = 'baixo_risco';
     let margemDias = 7;
     
     for (const key of protocolKeys) {

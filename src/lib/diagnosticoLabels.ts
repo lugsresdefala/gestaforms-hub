@@ -1,9 +1,5 @@
 // Mapeamento de IDs de diagnósticos para labels legíveis
 export const DIAGNOSTICO_LABELS: Record<string, string> = {
-  // Maternos - Cesárea eletiva
-  'desejo_materno': 'Desejo materno (Cesárea eletiva)',
-  'laqueadura': 'Laqueadura',
-  
   // Maternos - Hipertensão
   'hac': 'HAC - Hipertensão Arterial Crônica compensada',
   'hac_dificil': 'HAC de difícil controle (≥3 drogas)',
