@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, CheckCircle2, Upload, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Upload, XCircle, Download, Edit2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import { z } from "zod";
+import { format } from "date-fns";
 import { 
   parseDateDMY, 
   extractProcedimentos, 
@@ -17,6 +19,30 @@ import {
 } from "@/lib/importHelpers";
 import { calcularAgendamentoCompleto } from "@/lib/gestationalCalculations";
 import { verificarDisponibilidade } from "@/lib/vagasValidation";
+
+/**
+ * Escape CSV field - wraps in quotes and escapes internal quotes if needed
+ */
+function escapeCSVField(field: string): string {
+  if (field.includes(',') || field.includes('\n') || field.includes('"')) {
+    return `"${field.replace(/"/g, '""')}"`;
+  }
+  return field;
+}
+
+/**
+ * Convert a date value for the HTML date input
+ * Handles DD/MM/YYYY format from the record and returns YYYY-MM-DD for input
+ */
+function formatDateForInput(dateStr: string): string {
+  if (!dateStr) return '';
+  const parsed = parseDateDMY(dateStr);
+  if (parsed) {
+    return formatDateISO(parsed);
+  }
+  // If already in YYYY-MM-DD format or unrecognized, return as is
+  return dateStr;
+}
 
 // Schema de validação para campos obrigatórios
 const formRecordSchema = z.object({
@@ -127,6 +153,8 @@ export default function ProcessarFormsParto() {
   const [parsedRecords, setParsedRecords] = useState<FormRecord[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  // State for manually edited dates (keyed by carteirinha)
+  const [editedDates, setEditedDates] = useState<Record<string, string>>({});
   const [results, setResults] = useState<{
     success: number;
     errors: string[];
@@ -136,6 +164,117 @@ export default function ProcessarFormsParto() {
     errors: [],
     skipped: []
   });
+
+  // Handle date edit for a specific record
+  const handleDateEdit = (carteirinha: string, newDate: string) => {
+    setEditedDates(prev => ({
+      ...prev,
+      [carteirinha]: newDate
+    }));
+  };
+
+  // Get the effective date for a record (edited or original)
+  const getEffectiveDate = (record: FormRecord): string => {
+    return editedDates[record.carteirinha] || record.data_agendada || '';
+  };
+
+  // Format date for export filename
+  const formatExportTimestamp = (): string => {
+    const now = new Date();
+    return format(now, "yyyy-MM-dd_HH'h'mm");
+  };
+
+  // Export results to CSV
+  const exportarResultados = () => {
+    if (parsedRecords.length === 0) {
+      toast.error('Nenhum registro para exportar');
+      return;
+    }
+
+    // CSV headers - all input columns + edited date
+    const headers = [
+      'Carteirinha',
+      'Nome Completo',
+      'Data Nascimento',
+      'Gestações',
+      'Partos Cesáreas',
+      'Partos Normais',
+      'Abortos',
+      'Telefones',
+      'Procedimentos',
+      'Status DUM',
+      'Data DUM',
+      'Data Primeiro USG',
+      'Semanas USG',
+      'Dias USG',
+      'USG Recente',
+      'IG Pretendida',
+      'Indicação',
+      'Medicação',
+      'Diagnósticos Maternos',
+      'Placenta Prévia',
+      'Diagnósticos Fetais',
+      'História Obstétrica',
+      'Reserva UTI',
+      'Reserva Sangue',
+      'Maternidade',
+      'Médico Responsável',
+      'Email Paciente',
+      'Data Agendada Original',
+      'Data Agendada (Editada)'
+    ];
+
+    const rows = parsedRecords.map(record => {
+      const effectiveDate = getEffectiveDate(record);
+      return [
+        record.carteirinha,
+        record.nome_completo,
+        record.data_nascimento,
+        record.gestacoes.toString(),
+        record.partos_cesareas.toString(),
+        record.partos_normais.toString(),
+        record.abortos.toString(),
+        record.telefones,
+        record.procedimentos.join('; '),
+        record.dum_status,
+        record.data_dum || '',
+        record.data_primeiro_usg,
+        record.semanas_usg.toString(),
+        record.dias_usg.toString(),
+        record.usg_recente,
+        record.ig_pretendida,
+        record.indicacao,
+        record.medicacao,
+        record.diagnosticos_maternos,
+        record.placenta_previa,
+        record.diagnosticos_fetais,
+        record.historia_obstetrica,
+        record.reserva_uti,
+        record.reserva_sangue,
+        record.maternidade,
+        record.medico_responsavel,
+        record.email_paciente || '',
+        record.data_agendada || '',
+        effectiveDate
+      ].map(field => escapeCSVField(String(field))).join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    // BOM (Byte Order Mark) added for Excel UTF-8 compatibility
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const filename = `resultados_${formatExportTimestamp()}.csv`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success(`Arquivo exportado: ${filename}`);
+  };
+
   const parseCSV = (text: string): { records: FormRecord[], errors: ValidationError[] } => {
     const lines = text.split('\n');
     const records: FormRecord[] = [];
@@ -534,10 +673,19 @@ export default function ProcessarFormsParto() {
 
           {showPreview && parsedRecords.length > 0 && (
             <div className="border rounded-lg overflow-hidden">
-              <div className="bg-muted p-3 border-b">
+              <div className="bg-muted p-3 border-b flex items-center justify-between">
                 <h3 className="font-semibold text-sm">
                   Preview dos Registros ({parsedRecords.length} encontrados)
                 </h3>
+                <Button
+                  onClick={exportarResultados}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Exportar Resultados
+                </Button>
               </div>
               <div className="overflow-x-auto max-h-96 overflow-y-auto">
                 <table className="w-full text-sm">
@@ -550,7 +698,13 @@ export default function ProcessarFormsParto() {
                       <th className="p-2 text-left border-r">Procedimentos</th>
                       <th className="p-2 text-left border-r">Maternidade</th>
                       <th className="p-2 text-left border-r">Médico</th>
-                      <th className="p-2 text-left">Indicação</th>
+                      <th className="p-2 text-left border-r">Indicação</th>
+                      <th className="p-2 text-left min-w-[160px]">
+                        <div className="flex items-center gap-1">
+                          <Edit2 className="h-3 w-3" />
+                          Data Agendada
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -565,7 +719,24 @@ export default function ProcessarFormsParto() {
                         </td>
                         <td className="p-2 border-r text-xs">{record.maternidade || 'N/A'}</td>
                         <td className="p-2 border-r text-xs">{record.medico_responsavel || 'N/A'}</td>
-                        <td className="p-2 text-xs">{record.indicacao}</td>
+                        <td className="p-2 border-r text-xs">{record.indicacao}</td>
+                        <td className="p-2">
+                          <Input
+                            type="date"
+                            value={formatDateForInput(getEffectiveDate(record))}
+                            onChange={(e) => {
+                              const dateValue = e.target.value;
+                              if (dateValue) {
+                                // Convert from YYYY-MM-DD to DD/MM/YYYY for storage
+                                const [year, month, day] = dateValue.split('-');
+                                handleDateEdit(record.carteirinha, `${day}/${month}/${year}`);
+                              } else {
+                                handleDateEdit(record.carteirinha, '');
+                              }
+                            }}
+                            className="h-8 text-xs w-[140px]"
+                          />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -590,7 +761,7 @@ export default function ProcessarFormsParto() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>{results.skipped.length}</strong> registros já existem:
-                    <ul className="mt-2 space-y-1 text-sm">
+                    <ul className="mt-2 space-y-1 text-sm max-h-40 overflow-y-auto">
                       {results.skipped.slice(0, 5).map((msg, idx) => (
                         <li key={idx}>• {msg}</li>
                       ))}
@@ -607,7 +778,7 @@ export default function ProcessarFormsParto() {
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     <strong>{results.errors.length}</strong> erros encontrados:
-                    <ul className="mt-2 space-y-1 text-sm">
+                    <ul className="mt-2 space-y-1 text-sm max-h-40 overflow-y-auto">
                       {results.errors.slice(0, 5).map((msg, idx) => (
                         <li key={idx}>• {msg}</li>
                       ))}
@@ -617,6 +788,20 @@ export default function ProcessarFormsParto() {
                     </ul>
                   </AlertDescription>
                 </Alert>
+              )}
+
+              {/* Export button in results section */}
+              {parsedRecords.length > 0 && (
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={exportarResultados}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Exportar Resultados
+                  </Button>
+                </div>
               )}
             </div>
           )}
