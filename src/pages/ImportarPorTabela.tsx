@@ -344,7 +344,11 @@ export default function ImportarPorTabela() {
 
             grid.forEach((cols, rowOffset) => {
               const targetRowIndex = rowIndex + rowOffset;
-              if (targetRowIndex >= updated.length) return;
+              
+              // Auto-create additional rows if needed
+              while (targetRowIndex >= updated.length) {
+                updated.push({ ...EMPTY_ROW, id: crypto.randomUUID() });
+              }
 
               const current = updated[targetRowIndex];
               const newRow: PacienteRow = { ...current, status: "pendente" };
@@ -376,13 +380,17 @@ export default function ImportarPorTabela() {
           const updated = [...prev];
           lines.forEach((line, idx) => {
             const targetIdx = rowIndex + idx;
-            if (targetIdx < updated.length) {
-              updated[targetIdx] = {
-                ...updated[targetIdx],
-                [field]: line.trim(),
-                status: "pendente",
-              };
+            
+            // Auto-create additional rows if needed
+            while (targetIdx >= updated.length) {
+              updated.push({ ...EMPTY_ROW, id: crypto.randomUUID() });
             }
+            
+            updated[targetIdx] = {
+              ...updated[targetIdx],
+              [field]: line.trim(),
+              status: "pendente",
+            };
           });
           return updated;
         });
