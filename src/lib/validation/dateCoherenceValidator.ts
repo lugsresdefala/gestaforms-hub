@@ -262,6 +262,14 @@ export function validarCoerenciaDatas(
         const igDias = result.gaDaysRemainder;
         const igFormatada = `${igSemanas}s${igDias}d`;
 
+        // Adicionar IG calculada a TODAS as incoerências detectadas até agora
+        // para que o usuário possa ver o impacto no modal de correção
+        incoerencias.forEach(inco => {
+          if (!inco.detalhes.igCalculada) {
+            inco.detalhes.igCalculada = igFormatada;
+          }
+        });
+
         if (igSemanas > IG_MAXIMA_SEMANAS) {
           // Determine which field is problematic
           const dumConfiavel = dados.dum_status?.toLowerCase().includes('confiavel') || 

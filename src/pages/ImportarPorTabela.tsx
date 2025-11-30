@@ -186,7 +186,17 @@ export default function ImportarPorTabela() {
   // State for date correction modal
   const [modalCorrecao, setModalCorrecao] = useState<{
     isOpen: boolean;
-    paciente: { nome: string; carteirinha: string; rowId: string };
+    paciente: {
+      nome: string;
+      carteirinha: string;
+      rowId: string;
+      data_registro?: string;
+      dum_status?: string;
+      data_dum?: string;
+      data_primeiro_usg?: string;
+      semanas_usg?: string;
+      dias_usg?: string;
+    };
     incoerencias: IncoerenciaData[];
   } | null>(null);
   
@@ -447,6 +457,13 @@ export default function ImportarPorTabela() {
         nome: row.nome_completo,
         carteirinha: row.carteirinha,
         rowId: primeiro.rowId,
+        // Dados obstétricos para recálculo de IG no modal
+        data_registro: row.data_registro,
+        dum_status: row.dum_status,
+        data_dum: row.data_dum,
+        data_primeiro_usg: row.data_primeiro_usg,
+        semanas_usg: row.semanas_usg,
+        dias_usg: row.dias_usg,
       },
       incoerencias: primeiro.incoerencias,
     });

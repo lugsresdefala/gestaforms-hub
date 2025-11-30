@@ -7,7 +7,9 @@
  * @component ModalCorrecaoDatas
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { parseDateSafe } from '@/lib/import/dateParser';
+import { chooseAndComputeExtended } from '@/lib/import/gestationalCalculator';
 import {
   Dialog,
   DialogContent,
@@ -35,10 +37,22 @@ import {
 export interface ModalCorrecaoDatasProps {
   /** Whether the modal is open */
   isOpen: boolean;
-  /** Patient information */
+  /** Patient information with obstetric data for IG recalculation */
   paciente: {
     nome: string;
     carteirinha: string;
+    /** Data do registro/formulário original (para cálculos históricos) */
+    data_registro?: string;
+    /** Status da DUM (Sim - Confiavel, Incerta, Não sabe) */
+    dum_status?: string;
+    /** Data da última menstruação */
+    data_dum?: string;
+    /** Data do primeiro USG */
+    data_primeiro_usg?: string;
+    /** Semanas de gestação no USG */
+    semanas_usg?: string;
+    /** Dias de gestação no USG (0-6) */
+    dias_usg?: string;
   };
   /** List of incoherencies to display/correct */
   incoerencias: IncoerenciaData[];
@@ -69,6 +83,8 @@ export function ModalCorrecaoDatas({
 }: ModalCorrecaoDatasProps) {
   // State for editable values
   const [correcoes, setCorrecoes] = useState<Record<string, string>>({});
+  // State for recalculated IGs (campo -> IG string)
+  const [igRecalculadas, setIgRecalculadas] = useState<Record<string, string>>({});
   
   // Initialize corrections with suggestions or current values
   useEffect(() => {
@@ -77,7 +93,63 @@ export function ModalCorrecaoDatas({
       inicial[inco.campo] = inco.sugestaoCorrecao || inco.valorAtual;
     });
     setCorrecoes(inicial);
+    setIgRecalculadas({}); // Reset recalculated IGs when incoerencies change
   }, [incoerencias]);
+
+  // Recalculate IG when values are changed
+  const recalcularIG = useCallback((campo: string, valorCorrigido: string) => {
+    try {
+      // Build updated data with the correction applied
+      const dadosAtualizados: Record<string, string | undefined> = {
+        dum_status: paciente.dum_status,
+        data_dum: paciente.data_dum,
+        data_primeiro_usg: paciente.data_primeiro_usg,
+        semanas_usg: paciente.semanas_usg,
+        dias_usg: paciente.dias_usg,
+      };
+      
+      // Apply the specific field correction
+      dadosAtualizados[campo] = valorCorrigido;
+      
+      // Use data_registro as reference for historical data, or today if not available
+      let dataReferencia = new Date();
+      if (paciente.data_registro) {
+        const parsedData = parseDateSafe(paciente.data_registro);
+        if (parsedData) {
+          dataReferencia = parsedData;
+        }
+      }
+      dataReferencia.setHours(0, 0, 0, 0);
+      
+      // Calculate IG with corrected data
+      const result = chooseAndComputeExtended({
+        dumStatus: dadosAtualizados.dum_status || '',
+        dumRaw: dadosAtualizados.data_dum || '',
+        usgDateRaw: dadosAtualizados.data_primeiro_usg || '',
+        usgWeeks: parseInt(dadosAtualizados.semanas_usg || '0') || 0,
+        usgDays: parseInt(dadosAtualizados.dias_usg || '0') || 0,
+        referenceDate: dataReferencia,
+      });
+      
+      if (result && result.source !== 'INVALID') {
+        const igCorrigida = `${result.gaWeeks}s${result.gaDaysRemainder}d`;
+        setIgRecalculadas(prev => ({
+          ...prev,
+          [campo]: igCorrigida,
+        }));
+      } else {
+        setIgRecalculadas(prev => ({
+          ...prev,
+          [campo]: 'Inválido',
+        }));
+      }
+    } catch {
+      setIgRecalculadas(prev => ({
+        ...prev,
+        [campo]: 'Erro',
+      }));
+    }
+  }, [paciente]);
 
   // Apply all suggestions
   const aplicarSugestoes = () => {
@@ -85,6 +157,8 @@ export function ModalCorrecaoDatas({
     incoerencias.forEach((inco) => {
       if (inco.sugestaoCorrecao) {
         novasCorrecoes[inco.campo] = inco.sugestaoCorrecao;
+        // Recalculate IG for each suggestion applied
+        recalcularIG(inco.campo, inco.sugestaoCorrecao);
       }
     });
     setCorrecoes(novasCorrecoes);
@@ -96,6 +170,11 @@ export function ModalCorrecaoDatas({
       ...prev,
       [campo]: valor,
     }));
+    
+    // Recalculate IG with the new value
+    if (valor) {
+      recalcularIG(campo, valor);
+    }
   };
 
   // Confirm corrections
@@ -232,6 +311,37 @@ export function ModalCorrecaoDatas({
                     )}
                   </div>
                 </div>
+
+                {/* Comparação de IG: Antes vs Depois */}
+                {inco.detalhes.igCalculada && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label className="text-xs font-semibold text-blue-900 mb-2 block">
+                      Idade Gestacional Calculada
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-muted-foreground mb-1">Atual</div>
+                        <div className="text-lg font-mono font-semibold text-destructive">
+                          {inco.detalhes.igCalculada}
+                        </div>
+                      </div>
+                      {igRecalculadas[inco.campo] && (
+                        <div>
+                          <div className="text-xs text-muted-foreground mb-1">Com Correção</div>
+                          <div className={`text-lg font-mono font-semibold ${
+                            igRecalculadas[inco.campo].includes('s') && 
+                            !igRecalculadas[inco.campo].includes('Erro') &&
+                            !igRecalculadas[inco.campo].includes('Inválido')
+                              ? 'text-green-600' 
+                              : 'text-amber-600'
+                          }`}>
+                            {igRecalculadas[inco.campo]}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

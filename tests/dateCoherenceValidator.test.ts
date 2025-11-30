@@ -181,6 +181,36 @@ describe('dateCoherenceValidator', () => {
         const tipos = incoerencias.map(i => i.tipo);
         expect(tipos).toContain('idade_implausivel');
       });
+
+      it('should add igCalculada to ALL incoherencies when IG is calculated successfully', () => {
+        /**
+         * Test case: USG from 2024 with 12 weeks results in IG > 42 weeks by Nov 2025
+         * This should trigger both usg_muito_antigo AND ig_impossivel
+         * BOTH should have igCalculada in their details
+         */
+        const incoerencias = validarCoerenciaDatas({
+          data_primeiro_usg: '05/05/2024', // Old USG with year 2024
+          semanas_usg: '12',
+          dias_usg: '0',
+          dum_status: 'Incerta',
+        }, dataReferencia);
+        
+        expect(incoerencias.length).toBeGreaterThan(0);
+        
+        // ALL incoherencies should have igCalculada when IG was calculated
+        const usgAntigoInco = incoerencias.find(i => i.tipo === 'usg_muito_antigo');
+        const igImpossivel = incoerencias.find(i => i.tipo === 'ig_impossivel');
+        
+        // Both should exist
+        expect(usgAntigoInco).toBeDefined();
+        expect(igImpossivel).toBeDefined();
+        
+        // Both should have igCalculada
+        expect(usgAntigoInco?.detalhes.igCalculada).toBeDefined();
+        expect(usgAntigoInco?.detalhes.igCalculada).toMatch(/\d+s\d+d/);
+        expect(igImpossivel?.detalhes.igCalculada).toBeDefined();
+        expect(igImpossivel?.detalhes.igCalculada).toMatch(/\d+s\d+d/);
+      });
     });
 
     describe('empty/null data', () => {
