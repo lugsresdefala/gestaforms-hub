@@ -1475,10 +1475,6 @@ const Index = () => {
                       <XCircle className="h-4 w-4 mr-2 text-destructive" />
                       <span>Agendamentos Rejeitados</span>
                     </DropdownMenuItem>}
-                  {(isAdmin() || isAdminMed()) && <DropdownMenuItem onClick={() => navigate("/importar-agendamentos-html")} className="cursor-pointer hover:bg-accent focus:bg-accent">
-                      <FileText className="h-4 w-4 mr-2 text-primary" />
-                      <span>Importar HTML</span>
-                    </DropdownMenuItem>}
                   <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem onClick={() => navigate("/guia-sistema")} className="cursor-pointer hover:bg-accent focus:bg-accent">
                     <Info className="h-4 w-4 mr-2 text-primary" />

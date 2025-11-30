@@ -60,11 +60,6 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     icon: Upload,
     show: isAdmin || isAdminMed
   }, {
-    title: "Pacientes Pendentes",
-    url: "/importar-pacientes-pendentes",
-    icon: Upload,
-    show: isAdminMed
-  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,
