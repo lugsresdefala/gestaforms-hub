@@ -207,10 +207,6 @@ export const normalizarDiagnosticos = (valor: string | string[] | undefined): st
 /**
  * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
  * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
- */
-/**
- * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
- * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
  * 
  * IMPORTANTE: Real pathologies always take precedence over "desejo_materno"
  * A case is only classified as "desejo_materno" when:
