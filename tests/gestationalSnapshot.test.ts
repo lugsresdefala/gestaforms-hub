@@ -223,5 +223,212 @@ describe('gestationalSnapshot module', () => {
 
       expect(result.igIdealDias).toBe(39 * 7); // 273 days
     });
+
+    it('should use baixo_risco fallback when no diagnoses are provided', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: '39',
+        diagnosticosMaternos: null,
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // With no diagnoses, should use baixo_risco fallback (not desejo_materno)
+      expect(result.protocolo).toBe('baixo_risco');
+      expect(result.protocoloNome).toBe('Baixo Risco');
+      expect(result.igIdeal).toBe('39s0d');
+    });
+
+    it('should use baixo_risco fallback when diagnoses are not recognized', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: '39',
+        diagnosticosMaternos: 'Unknown diagnosis XYZ',
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Unrecognized diagnoses should fallback to baixo_risco (not desejo_materno)
+      expect(result.protocolo).toBe('baixo_risco');
+      expect(result.protocoloNome).toBe('Baixo Risco');
+    });
+
+    it('should correctly identify HAC protocol', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: 'HAC',
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect HAC protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('hac');
+    });
+
+    it('should correctly identify DMG com insulina protocol', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: 'DMG com insulina',
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect DMG insulin protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('dmg_insulina');
+    });
+
+    it('should correctly identify pre-eclampsia protocol', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: 'pré-eclâmpsia',
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect pre-eclampsia protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('pre_eclampsia_sem_deterioracao');
+    });
+
+    it('should correctly identify gemelar Di/Di protocol', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: null,
+        diagnosticosFetais: 'Gemelar Di/Di',
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect gemelar protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('gemelar_bicorionico');
+    });
+
+    it('should correctly identify presentation pelvic protocol', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: null,
+        diagnosticosFetais: 'Apresentação pélvica',
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect pelvic presentation protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('pelvico');
+    });
+
+    it('should choose most restrictive protocol when multiple diagnoses present', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: 'HAC + pré-eclâmpsia',
+        diagnosticosFetais: null,
+        indicacaoProcedimento: null,
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should identify pre-eclampsia (or the most restrictive), not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+    });
+
+    it('should use protocol from indicacaoProcedimento when provided', () => {
+      const params: SnapshotParams = {
+        dumRaw: '01/01/2024',
+        dumStatus: 'Sim - Confiavel',
+        usgDateRaw: null,
+        usgWeeks: null,
+        usgDays: null,
+        igPretendida: null,
+        diagnosticosMaternos: null,
+        diagnosticosFetais: null,
+        indicacaoProcedimento: 'HIPERTENSAO GESTACIONAL',
+        dataAgendamentoCalculada: '2024-09-15',
+        dataAgendamentoManual: null,
+        referenceDate: new Date('2024-04-01')
+      };
+
+      const result = getGestationalSnapshot(params);
+
+      // Should detect gestational hypertension protocol, not desejo_materno
+      expect(result.protocolo).not.toBe('desejo_materno');
+      expect(result.protocolo).toBe('hipertensao_gestacional');
+    });
   });
 });

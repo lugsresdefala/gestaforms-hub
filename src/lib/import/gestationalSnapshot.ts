@@ -125,15 +125,14 @@ function findApplicableProtocol(
   }
   
   if (allDiagnoses.length === 0) {
-    // Default to desejo_materno for low-risk pregnancies
-    return { key: 'desejo_materno', config: PROTOCOLS['desejo_materno'] };
+    return null; // Sem diagnósticos = sem protocolo específico
   }
   
   // Map diagnoses to protocol keys
   const protocolKeys = mapDiagnosisToProtocol(allDiagnoses);
   
   if (protocolKeys.length === 0) {
-    return { key: 'desejo_materno', config: PROTOCOLS['desejo_materno'] };
+    return null; // Diagnósticos não reconhecidos = sem protocolo identificado
   }
   
   // Find the most restrictive protocol (lowest igIdeal or highest priority)
