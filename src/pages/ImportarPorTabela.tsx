@@ -567,8 +567,9 @@ export default function ImportarPorTabela() {
         const igIdealSemanas = igPretendidaSemanas;
         const igIdealDias = 0;
         
-        // Usar protocolo baixo_risco como padrão (39 semanas)
-        let protocolo = PROTOCOLS['laqueadura']; // fallback to any 39w protocol config
+        // Default baixo_risco protocol config (39 weeks, 7 days margin)
+        const DEFAULT_PROTOCOL = { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Via obstétrica', observacoes: 'Gestação de baixo risco' };
+        let protocolo: typeof DEFAULT_PROTOCOL | undefined = DEFAULT_PROTOCOL;
         let protocoloNome = 'baixo_risco';
         
         // Tentar encontrar protocolo baseado em diagnósticos
