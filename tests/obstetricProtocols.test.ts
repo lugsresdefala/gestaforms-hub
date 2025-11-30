@@ -1,0 +1,310 @@
+/**
+ * Unit Tests for Obstetric Protocols Module
+ * 
+ * Tests cover:
+ * - PROTOCOLS object structure
+ * - DIAGNOSTIC_CHECKLIST completeness
+ * - calculateAutomaticIG function
+ * - mapDiagnosisToProtocol function
+ * - getAllCategories function
+ * - getDiagnosticsByCategory function
+ */
+
+import { describe, it, expect } from 'vitest';
+
+import {
+  PROTOCOLS,
+  DIAGNOSTIC_CHECKLIST,
+  calculateAutomaticIG,
+  mapDiagnosisToProtocol,
+  getAllCategories,
+  getDiagnosticsByCategory,
+  type DiagnosticCategory
+} from '../src/lib/obstetricProtocols';
+
+describe('obstetricProtocols module', () => {
+  describe('PROTOCOLS object', () => {
+    it('should have required protocol keys', () => {
+      // Test new standardized IDs
+      expect(PROTOCOLS.hac_compensada).toBeDefined();
+      expect(PROTOCOLS.hac_dificil).toBeDefined();
+      expect(PROTOCOLS.hipertensao_gestacional).toBeDefined();
+      expect(PROTOCOLS.pre_eclampsia_sem_deterioracao).toBeDefined();
+      expect(PROTOCOLS.pre_eclampsia_com_deterioracao).toBeDefined();
+      
+      // Diabetes
+      expect(PROTOCOLS.dmg_sem_insulina_bom_controle).toBeDefined();
+      expect(PROTOCOLS.dmg_insulina_bom_controle).toBeDefined();
+      expect(PROTOCOLS.dm_pregestacional_bom_controle).toBeDefined();
+      
+      // Emergency protocols
+      expect(PROTOCOLS.eclampsia).toBeDefined();
+      expect(PROTOCOLS.sindrome_hellp).toBeDefined();
+      expect(PROTOCOLS.dpp).toBeDefined();
+    });
+    
+    it('should maintain backward compatibility with old protocol IDs', () => {
+      // Test that old IDs still work
+      expect(PROTOCOLS.hac).toBeDefined();
+      expect(PROTOCOLS.dmg_sem_insulina).toBeDefined();
+      expect(PROTOCOLS.dmg_insulina).toBeDefined();
+      expect(PROTOCOLS.dm_pregestacional).toBeDefined();
+      expect(PROTOCOLS.rcf).toBeDefined();
+      expect(PROTOCOLS.rcf_grave).toBeDefined();
+      expect(PROTOCOLS.macrossomia).toBeDefined();
+      expect(PROTOCOLS.oligodramnia).toBeDefined();
+      expect(PROTOCOLS.polidramnia).toBeDefined();
+      expect(PROTOCOLS.gemelar_monocorionico).toBeDefined();
+      expect(PROTOCOLS.lupus).toBeDefined();
+      expect(PROTOCOLS.cerclagem).toBeDefined();
+    });
+    
+    it('should have valid igIdeal values for all protocols', () => {
+      for (const [key, protocol] of Object.entries(PROTOCOLS)) {
+        expect(protocol.igIdeal).toBeDefined();
+        // igIdeal should be a number string or "Imediato"
+        const isValidIg = !isNaN(parseInt(protocol.igIdeal)) || protocol.igIdeal === 'Imediato';
+        expect(isValidIg).toBe(true);
+      }
+    });
+    
+    it('should have prioridade between 1 and 3', () => {
+      for (const [key, protocol] of Object.entries(PROTOCOLS)) {
+        expect(protocol.prioridade).toBeGreaterThanOrEqual(1);
+        expect(protocol.prioridade).toBeLessThanOrEqual(3);
+      }
+    });
+  });
+
+  describe('DIAGNOSTIC_CHECKLIST', () => {
+    it('should have unique IDs', () => {
+      const ids = DIAGNOSTIC_CHECKLIST.map(d => d.id);
+      const uniqueIds = new Set(ids);
+      expect(uniqueIds.size).toBe(ids.length);
+    });
+    
+    it('should cover all major categories', () => {
+      const categories = new Set(DIAGNOSTIC_CHECKLIST.map(d => d.categoria));
+      expect(categories.has('hipertensao')).toBe(true);
+      expect(categories.has('diabetes')).toBe(true);
+      expect(categories.has('outras_maternas')).toBe(true);
+      expect(categories.has('liquido_amniotico')).toBe(true);
+      expect(categories.has('crescimento_fetal')).toBe(true);
+      expect(categories.has('gemelaridade')).toBe(true);
+    });
+    
+    it('should have igIdeal for all diagnostics', () => {
+      for (const diag of DIAGNOSTIC_CHECKLIST) {
+        expect(diag.igIdeal).toBeDefined();
+        expect(parseInt(diag.igIdeal)).toBeGreaterThanOrEqual(28);
+        expect(parseInt(diag.igIdeal)).toBeLessThanOrEqual(41);
+      }
+    });
+    
+    it('should have at least 5 hypertension conditions', () => {
+      const hipertensao = DIAGNOSTIC_CHECKLIST.filter(d => d.categoria === 'hipertensao');
+      expect(hipertensao.length).toBeGreaterThanOrEqual(5);
+    });
+    
+    it('should have at least 6 diabetes conditions', () => {
+      const diabetes = DIAGNOSTIC_CHECKLIST.filter(d => d.categoria === 'diabetes');
+      expect(diabetes.length).toBeGreaterThanOrEqual(6);
+    });
+  });
+
+  describe('calculateAutomaticIG', () => {
+    it('should return 39 weeks for low-risk (empty diagnostics)', () => {
+      const result = calculateAutomaticIG([]);
+      expect(result.igPretendida).toBe('39');
+      expect(result.protocoloAplicado).toBe('baixo_risco');
+      expect(result.prioridade).toBe(3);
+    });
+    
+    it('should return correct IG for single hypertension diagnosis', () => {
+      const result = calculateAutomaticIG(['hac_compensada']);
+      expect(result.igPretendida).toBe('39');
+      expect(result.protocoloAplicado).toBe('hac_compensada');
+    });
+    
+    it('should return correct IG for HAC dificil', () => {
+      const result = calculateAutomaticIG(['hac_dificil']);
+      expect(result.igPretendida).toBe('37');
+      expect(result.protocoloAplicado).toBe('hac_dificil');
+    });
+    
+    it('should return most restrictive IG when multiple diagnoses', () => {
+      // hac_compensada = 39 weeks, dm_pregestacional_descontrole = 36-37 weeks
+      const result = calculateAutomaticIG(['hac_compensada', 'dm_pregestacional_descontrole']);
+      expect(parseInt(result.igPretendida)).toBeLessThanOrEqual(37);
+    });
+    
+    it('should prioritize critical protocols', () => {
+      const result = calculateAutomaticIG(['desejo_materno', 'pre_eclampsia_com_deterioracao']);
+      // pre_eclampsia_com_deterioracao has priority 1
+      expect(result.prioridade).toBe(1);
+    });
+    
+    it('should return Imediato for emergency protocols', () => {
+      const result = calculateAutomaticIG(['eclampsia']);
+      expect(result.igPretendida).toBe('Imediato');
+      expect(result.prioridade).toBe(1);
+    });
+    
+    it('should handle gemelar monoamniotico', () => {
+      const result = calculateAutomaticIG(['gemelar_monocorionico_monoamniotico']);
+      expect(parseInt(result.igPretendida)).toBeLessThanOrEqual(34);
+    });
+    
+    it('should handle old protocol IDs', () => {
+      const result = calculateAutomaticIG(['dmg_sem_insulina']);
+      expect(result.igPretendida).toBeDefined();
+    });
+  });
+
+  describe('mapDiagnosisToProtocol', () => {
+    it('should return empty array for empty input', () => {
+      const result = mapDiagnosisToProtocol([]);
+      expect(result).toEqual([]);
+    });
+    
+    it('should map direct protocol IDs', () => {
+      const result = mapDiagnosisToProtocol(['hac_compensada', 'dmg_sem_insulina_bom_controle']);
+      expect(result).toContain('hac_compensada');
+      expect(result).toContain('dmg_sem_insulina_bom_controle');
+    });
+    
+    it('should map text-based diagnoses', () => {
+      const result = mapDiagnosisToProtocol(['Hipertensão gestacional']);
+      expect(result).toContain('hipertensao_gestacional');
+    });
+    
+    it('should map diabetes text diagnoses', () => {
+      const result = mapDiagnosisToProtocol(['DMG com insulina']);
+      expect(result).toContain('dmg_insulina');
+    });
+    
+    it('should map pre-eclampsia diagnoses', () => {
+      const result = mapDiagnosisToProtocol(['Pré-eclâmpsia']);
+      expect(result).toContain('pre_eclampsia_sem_deterioracao');
+    });
+    
+    it('should remove duplicates', () => {
+      const result = mapDiagnosisToProtocol(['hac_compensada', 'hac_compensada']);
+      expect(result).toHaveLength(1);
+    });
+    
+    it('should handle cerclagem/IIC as critical', () => {
+      const result = mapDiagnosisToProtocol(['Cerclagem']);
+      expect(result).toContain('cerclagem');
+    });
+  });
+
+  describe('getAllCategories', () => {
+    it('should return all 13 categories', () => {
+      const categories = getAllCategories();
+      expect(categories.length).toBe(13);
+    });
+    
+    it('should have id and label for each category', () => {
+      const categories = getAllCategories();
+      for (const cat of categories) {
+        expect(cat.id).toBeDefined();
+        expect(cat.label).toBeDefined();
+        expect(cat.label.length).toBeGreaterThan(0);
+      }
+    });
+    
+    it('should include essential categories', () => {
+      const categories = getAllCategories();
+      const ids = categories.map(c => c.id);
+      expect(ids).toContain('hipertensao');
+      expect(ids).toContain('diabetes');
+      expect(ids).toContain('gemelaridade');
+      expect(ids).toContain('eletivos');
+    });
+  });
+
+  describe('getDiagnosticsByCategory', () => {
+    it('should return diagnostics for hipertensao', () => {
+      const diagnostics = getDiagnosticsByCategory('hipertensao');
+      expect(diagnostics.length).toBeGreaterThan(0);
+      expect(diagnostics.every(d => d.categoria === 'hipertensao')).toBe(true);
+    });
+    
+    it('should return diagnostics for diabetes', () => {
+      const diagnostics = getDiagnosticsByCategory('diabetes');
+      expect(diagnostics.length).toBeGreaterThan(0);
+      expect(diagnostics.every(d => d.categoria === 'diabetes')).toBe(true);
+    });
+    
+    it('should return empty array for non-existent category', () => {
+      const diagnostics = getDiagnosticsByCategory('non_existent' as DiagnosticCategory);
+      expect(diagnostics).toEqual([]);
+    });
+  });
+
+  describe('Protocol IG values match requirements', () => {
+    // Test specific IG requirements from the problem statement
+    
+    it('HAC compensada should be 39-40 weeks', () => {
+      const protocol = PROTOCOLS.hac_compensada;
+      expect(protocol.igIdeal).toBe('39');
+      expect(protocol.igIdealMax).toBe('40');
+    });
+    
+    it('HAC dificil controle should be 37 weeks', () => {
+      const protocol = PROTOCOLS.hac_dificil;
+      expect(protocol.igIdeal).toBe('37');
+    });
+    
+    it('Hipertensao gestacional should be 37 weeks', () => {
+      const protocol = PROTOCOLS.hipertensao_gestacional;
+      expect(protocol.igIdeal).toBe('37');
+    });
+    
+    it('Pre-eclampsia SEM deterioracao should be 37 weeks', () => {
+      const protocol = PROTOCOLS.pre_eclampsia_sem_deterioracao;
+      expect(protocol.igIdeal).toBe('37');
+    });
+    
+    it('DMG sem insulina bom controle should be 39-40 weeks', () => {
+      const protocol = PROTOCOLS.dmg_sem_insulina_bom_controle;
+      expect(protocol.igIdeal).toBe('39');
+      expect(protocol.igIdealMax).toBe('40');
+    });
+    
+    it('DMG com insulina bom controle should be 38 weeks', () => {
+      const protocol = PROTOCOLS.dmg_insulina_bom_controle;
+      expect(protocol.igIdeal).toBe('38');
+    });
+    
+    it('DM pregestacional bom controle should be 38 weeks', () => {
+      const protocol = PROTOCOLS.dm_pregestacional_bom_controle;
+      expect(protocol.igIdeal).toBe('38');
+    });
+    
+    it('DM pregestacional descontrole should be 36-37 weeks', () => {
+      const protocol = PROTOCOLS.dm_pregestacional_descontrole;
+      expect(protocol.igIdeal).toBe('36');
+      expect(protocol.igIdealMax).toBe('37');
+    });
+    
+    it('Polidramnia leve-moderado should be 38-39 weeks', () => {
+      const protocol = PROTOCOLS.polidramnia_leve_moderado;
+      expect(protocol.igIdeal).toBe('38');
+      expect(protocol.igIdealMax).toBe('39');
+    });
+    
+    it('Polidramnia severo should be 35-37 weeks', () => {
+      const protocol = PROTOCOLS.polidramnia_severo;
+      expect(protocol.igIdeal).toBe('35');
+      expect(protocol.igIdealMax).toBe('37');
+    });
+    
+    it('Oligoamnio isolado should be 36-37 weeks', () => {
+      const protocol = PROTOCOLS.oligoamnio_isolado;
+      expect(protocol.igIdeal).toBe('36');
+      expect(protocol.igIdealMax).toBe('37');
+    });
+  });
+});
