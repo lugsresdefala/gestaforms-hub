@@ -14,8 +14,6 @@ import { chooseAndComputeExtended } from '@/lib/import/gestationalCalculator';
 import { PROTOCOLS, mapDiagnosisToProtocol } from '@/lib/obstetricProtocols';
 import { LEAD_TIME_MINIMO } from '@/lib/scheduling';
 
-import { LEAD_TIME_MINIMO } from '@/lib/scheduling';
-
 /**
  * Result from validation function
  */
