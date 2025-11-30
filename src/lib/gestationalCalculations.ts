@@ -262,8 +262,8 @@ export const identificarPatologias = (dados: {
   // Remover duplicatas primeiro para poder analisar patologias reais
   const patologiasUnicas = [...new Set(patologias)];
   
-  // Verificar se há patologias reais (excluindo laqueadura que é procedimento eletivo)
-  const patologiasReais = patologiasUnicas.filter(p => p !== 'laqueadura');
+  // Verificar se há patologias reais (excluindo laqueadura e desejo_materno que são procedimentos eletivos)
+  const patologiasReais = patologiasUnicas.filter(p => p !== 'laqueadura' && p !== 'desejo_materno');
   
   // Lógica de cesárea eletiva sem diagnósticos identificados
   // "desejo_materno" só é adicionado se:
@@ -276,6 +276,12 @@ export const identificarPatologias = (dados: {
   
   if (ehCesareaEletiva && patologiasReais.length === 0) {
     patologiasUnicas.push('desejo_materno');
+  }
+  
+  // Filtro final: remover desejo_materno se houver patologias reais
+  // Isso garante que desejo_materno só apareça quando não há outras patologias
+  if (patologiasReais.length > 0) {
+    return patologiasUnicas.filter(p => p !== 'desejo_materno');
   }
   
   return patologiasUnicas;
