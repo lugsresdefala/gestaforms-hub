@@ -57,8 +57,9 @@ export const DIAGNOSTIC_CHECKLIST: DiagnosticOption[] = [
   { id: "dm_pregestacional_descontrole", label: "DM1/DM2 com descontrole ou complicações", igIdeal: "36", igIdealMax: "37", categoria: "diabetes", observacoes: "DM com vasculopatia, nefropatia ou retinopatia" },
   
   // 1.3. Outras Condições Maternas
-  { id: "desejo_materno", label: "Parto cesárea por desejo materno", igIdeal: "39", categoria: "eletivos", observacoes: "Cesárea eletiva ≥39 semanas" },
-  { id: "laqueadura", label: "Cesárea com laqueadura tubária", igIdeal: "39", categoria: "eletivos", observacoes: "39 semanas - verificar termo de consentimento 60 dias" },
+  // NOTA: desejo_materno foi removido da checklist de protocolos - não deve influenciar cálculo de IG ideal
+  // laqueadura mantido apenas para exibição/relato, mas não deve influenciar IG ideal (categoria eletivos)
+  { id: "laqueadura", label: "Cesárea com laqueadura tubária", igIdeal: "39", categoria: "eletivos", observacoes: "39 semanas - verificar termo de consentimento 60 dias (apenas procedimento, não altera IG)" },
   { id: "rpmo", label: "Rotura prematura de membranas", igIdeal: "34", categoria: "rotura_membranas", observacoes: "RPMO pré-termo - corticoide + antibiótico" },
   { id: "natimorto_anterior", label: "Natimorto em gestação anterior", igIdeal: "38", igIdealMax: "39", categoria: "outras_maternas", observacoes: "História de óbito fetal prévio" },
   { id: "obesidade_imc35", label: "Obesidade (IMC ≥35)", igIdeal: "39", igIdealMax: "40", categoria: "outras_maternas", observacoes: "Obesidade grau II ou superior" },
@@ -196,13 +197,14 @@ function getPriorityForCategory(categoria: DiagnosticCategory, igIdeal: string):
 }
 
 // Função auxiliar para determinar via preferencial
+// NOTA: desejo_materno e laqueadura removidos de cesareanIds pois não devem influenciar
+// via de parto como critério de protocolo obstétrico (apenas procedimentos eletivos)
 function getPreferredRoute(id: string, categoria: DiagnosticCategory): string {
-  // IDs que requerem cesárea
+  // IDs que requerem cesárea (patologias clínicas apenas)
   const cesareanIds = [
     'placenta_previa_total', 'placenta_acreta', 'gemelar_monocorionico_monoamniotico',
     'pelvico', 'transversa', 'cesarea_classica', 'iteratividade_2cesarea',
-    'hiv_cv_detectavel', 'herpes_ativo', 'hidrocefalia', 'macrossomia_4500g',
-    'desejo_materno', 'laqueadura'
+    'hiv_cv_detectavel', 'herpes_ativo', 'hidrocefalia', 'macrossomia_4500g'
   ];
   
   if (cesareanIds.includes(id)) return 'Cesárea';
@@ -602,12 +604,9 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
       mapped.push('aloimunizacao_rh');
     }
     
-    // ELETIVOS - verificar POR ÚLTIMO pois só deve ser aplicado se nenhuma patologia foi encontrada
-    // Isso evita que "desejo materno" sobrescreva patologias reais
-    if (diag.includes('laqueadura') || diag.includes('ligadura tubaria') ||
-        diag.includes('esterilizacao') || diag.includes('ltb')) {
-      mapped.push('laqueadura');
-    }
+    // NOTA: laqueadura e desejo_materno NÃO são mais mapeados aqui
+    // Estes são procedimentos eletivos, não patologias clínicas
+    // Não devem influenciar o cálculo de IG ideal (PT-AON-097)
   });
   
   // Remover duplicatas mantendo ordem
