@@ -1005,9 +1005,9 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-16">A</TableHead>
                     <TableHead className="min-w-[150px]">Telefones</TableHead>
                     <TableHead className="min-w-[180px]">Procedimentos</TableHead>
-                    <TableHead className="w-40">Status DUM</TableHead>
-                    <TableHead className="w-32">Data DUM</TableHead>
-                    <TableHead className="w-32">Data 1º USG</TableHead>
+                    <TableHead className="min-w-[180px]">Status DUM</TableHead>
+                    <TableHead className="min-w-[120px]">Data DUM</TableHead>
+                    <TableHead className="min-w-[120px]">Data 1º USG</TableHead>
                     <TableHead className="w-20">Sem</TableHead>
                     <TableHead className="w-20">Dias</TableHead>
                     <TableHead className="min-w-[200px]">USG Recente</TableHead>
