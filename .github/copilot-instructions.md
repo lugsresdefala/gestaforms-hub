@@ -1,3 +1,38 @@
+## **GestaForms Hub — Copilot Guidance (concise)**
+This file tells AI coding agents how the project is organized, where to make safe changes, and which conventions are authoritative.
+**Big Picture:**
+- **Frontend:** Vite + React + TypeScript. UI components in `src/components/` and multi-step forms in `src/components/form-steps/`.
+- **Business logic:** `src/lib/` (important: `gestationalCalculations.ts`, `obstetricProtocols.ts`, `formSchema.ts`).
+- **Backend / DB:** Supabase (Postgres) with Edge Functions in `supabase/functions/` and migrations in `supabase/migrations/`.
+**Security & Roles (authoritative):**
+- **Primary boundary:** Row-Level Security (RLS) in the DB — do not rely on client checks for security.
+- **Client checks only for UX:** `src/contexts/AuthContext.tsx` and `src/components/ProtectedRoute.tsx` enforce UX-level restrictions.
+- **Role names:** `admin`, `admin_med`, `medico_unidade`, `medico_maternidade`. Use `useAuth()` helpers (e.g., `isAdmin()`) when altering UI or routes.
+**Critical Patterns to Preserve:**
+- Appointment workflow: `medico_unidade` creates (status: `pendente`) → `admin_med` approves (status: `aprovado`, sets final date).
+- Calculation flow: Validate form (`src/lib/formSchema.ts`) → run `gestationalCalculations` → persist with `status='pendente'`.
+- Medical protocols stored in `src/lib/obstetricProtocols.ts` (48 protocols). Edits here must be tested against `gestationalCalculations.ts` and unit tests in `tests/`.
+**Where to change DB or roles safely:**
+- Add migrations to `supabase/migrations/` and update TypeScript interfaces in `src/`.
+- When changing access, update RLS policies in the Supabase dashboard and corresponding Edge Function checks (search `has_role` in `supabase/functions/`).
+**Developer commands (local):**
+- Start dev server: `npm run dev` (Vite; default dev port used historically is 8080).
+- Build: `npm run build` or `npm run build:dev` for development build.
+- Tests: `npm test` (Vitest). Use `npm run test:watch` for TDD.
+- Lint: `npm run lint`.
+- Helpful scripts: `node scripts/export-agendamentos-mensais.js` and other utilities in `scripts/` (CSV import/export).
+**Integration points & examples:**
+- CSV import samples: `public/csv-temp/` and `scripts/` (see `importar_fluxo_novo_2025.py` and JS import utilities).
+- Supabase client setup: `src/integrations/supabase/` — update here if auth/URL keys change.
+- Edge functions and migrations: `supabase/functions/` and `supabase/migrations/`.
+**Testing & verification:**
+- Unit tests live in `tests/` and `scripts/__tests__/`. Run `npm test` after changes to `gestationalCalculations` or protocols.
+- To validate imports, compare generated CSV output against `public/csv-temp/` examples and use `scripts/analyze-csv-schema.js`.
+**Conventions / Style:**
+- All UI text is in Brazilian Portuguese — keep translations consistent.
+- Avoid changing RLS or Edge Function logic without explicit migration and test coverage.
+- Keep medical logic deterministic: prefer pure functions in `src/lib/` and add focused unit tests.
+If anything above is ambiguous or you want more examples (specific functions, tests to run, or a migration template), tell me which section to expand.
 # GestaForms Hub - AI Coding Instructions
 
 ## Project Overview
