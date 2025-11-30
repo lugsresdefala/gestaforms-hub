@@ -32,6 +32,7 @@ import { validarAgendamento } from "@/lib/validation";
 // Tipos
 interface PacienteRow {
   id: string;
+  data_registro: string; // Data original da solicitação de agendamento
   nome_completo: string;
   data_nascimento: string;
   carteirinha: string;
@@ -61,7 +62,7 @@ interface PacienteRow {
   email_paciente: string;
   centro_clinico: string;
   // Campos calculados
-  ig_calculada?: string;
+  ig_no_registro?: string; // IG calculada na data do registro
   data_ideal?: string;
   ig_ideal?: string;
   delta_dias?: number;
@@ -74,7 +75,7 @@ interface PacienteRow {
   data_agendada?: string;
   status_agendamento?: StatusAgendamento;
   ig_na_data_agendada?: string;
-  intervalo_dias?: number;
+  intervalo_dias?: number; // Intervalo entre data registro e data agendada
   lead_time_dias?: number;
   margem_protocolo?: number;
   protocolo_aplicado?: string;
@@ -85,6 +86,7 @@ type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
 type SortDirection = 'asc' | 'desc';
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
+  data_registro: "", // Data original da solicitação
   nome_completo: "",
   data_nascimento: "",
   carteirinha: "",
@@ -250,6 +252,7 @@ export default function ImportarPorTabela() {
 
       // ORDEM COMPLETA DAS COLUNAS EDITÁVEIS (seguindo a tabela)
       const pasteFieldOrder: (keyof PacienteRow)[] = [
+        "data_registro",
         "nome_completo",
         "data_nascimento",
         "carteirinha",
@@ -353,33 +356,34 @@ export default function ImportarPorTabela() {
         const cols = line.split("\t");
         return {
           id: crypto.randomUUID(),
-          nome_completo: cols[2]?.trim() || cols[0]?.trim() || "",
-          data_nascimento: cols[3]?.trim() || cols[1]?.trim() || "",
-          carteirinha: cols[4]?.trim() || cols[2]?.trim() || "",
-          numero_gestacoes: cols[5]?.trim() || "1",
-          numero_partos_cesareas: cols[6]?.trim() || "0",
-          numero_partos_normais: cols[7]?.trim() || "0",
-          numero_abortos: cols[8]?.trim() || "0",
-          telefones: cols[9]?.trim() || "",
-          procedimentos: cols[10]?.trim() || "Cesárea",
-          dum_status: normalizarDumStatus(cols[11]?.trim() || ""),
-          data_dum: cols[12]?.trim() || "",
-          data_primeiro_usg: cols[13]?.trim() || "",
-          semanas_usg: cols[14]?.trim() || "",
-          dias_usg: cols[15]?.trim() || "0",
-          usg_recente: cols[16]?.trim() || "",
-          ig_pretendida: cols[17]?.trim() || "39",
-          indicacao_procedimento: cols[19]?.trim() || "Desejo materno",
-          medicacao: cols[20]?.trim() || "",
-          diagnosticos_maternos: cols[21]?.trim() || "",
-          placenta_previa: cols[22]?.trim() || "Não",
-          diagnosticos_fetais: cols[23]?.trim() || "",
-          historia_obstetrica: cols[24]?.trim() || "",
-          necessidade_uti_materna: cols[25]?.trim() || "Não",
-          necessidade_reserva_sangue: cols[26]?.trim() || "Não",
-          maternidade: cols[27]?.trim() || "Salvalus",
-          medico_responsavel: cols[28]?.trim() || "",
-          email_paciente: (cols[29]?.trim() || "").toLowerCase(),
+          data_registro: cols[0]?.trim() || "", // Data original da solicitação
+          nome_completo: cols[1]?.trim() || cols[0]?.trim() || "",
+          data_nascimento: cols[2]?.trim() || cols[1]?.trim() || "",
+          carteirinha: cols[3]?.trim() || cols[2]?.trim() || "",
+          numero_gestacoes: cols[4]?.trim() || "1",
+          numero_partos_cesareas: cols[5]?.trim() || "0",
+          numero_partos_normais: cols[6]?.trim() || "0",
+          numero_abortos: cols[7]?.trim() || "0",
+          telefones: cols[8]?.trim() || "",
+          procedimentos: cols[9]?.trim() || "Cesárea",
+          dum_status: normalizarDumStatus(cols[10]?.trim() || ""),
+          data_dum: cols[11]?.trim() || "",
+          data_primeiro_usg: cols[12]?.trim() || "",
+          semanas_usg: cols[13]?.trim() || "",
+          dias_usg: cols[14]?.trim() || "0",
+          usg_recente: cols[15]?.trim() || "",
+          ig_pretendida: cols[16]?.trim() || "39",
+          indicacao_procedimento: cols[18]?.trim() || "Desejo materno",
+          medicacao: cols[19]?.trim() || "",
+          diagnosticos_maternos: cols[20]?.trim() || "",
+          placenta_previa: cols[21]?.trim() || "Não",
+          diagnosticos_fetais: cols[22]?.trim() || "",
+          historia_obstetrica: cols[23]?.trim() || "",
+          necessidade_uti_materna: cols[24]?.trim() || "Não",
+          necessidade_reserva_sangue: cols[25]?.trim() || "Não",
+          maternidade: cols[26]?.trim() || "Salvalus",
+          medico_responsavel: cols[27]?.trim() || "",
+          email_paciente: (cols[28]?.trim() || "").toLowerCase(),
           centro_clinico: "Centro Clínico Hapvida",
           status: "pendente",
         };
@@ -403,6 +407,16 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
         }
 
+        // Usar data_registro como referência, ou hoje se não informada
+        let dataReferencia = hoje;
+        if (row.data_registro) {
+          const parsedDataRegistro = parseDateSafe(row.data_registro);
+          if (parsedDataRegistro) {
+            dataReferencia = parsedDataRegistro;
+            dataReferencia.setHours(0, 0, 0, 0);
+          }
+        }
+
         const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -411,6 +425,7 @@ export default function ImportarPorTabela() {
           usgDays: normalizarDiasUsg(row.dias_usg),
           diagnostico: row.diagnosticos_maternos,
           indicacao: row.indicacao_procedimento,
+          referenceDate: dataReferencia, // Usar data de registro como referência
         });
 
         if (!result || result.source === "INVALID") {
@@ -445,23 +460,29 @@ export default function ImportarPorTabela() {
         
         const margemDias = protocolo?.margemDias || 7;
 
-        // Calcular data ideal baseada na IG pretendida
+        // Calcular data ideal baseada na IG pretendida (a partir da data de registro)
         const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
-        const dataIdeal = addDays(new Date(), diasRestantes);
+        const dataIdeal = addDays(dataReferencia, diasRestantes);
         
         // Usar a função de agendamento para encontrar data válida
         const scheduleResult = encontrarDataAgendada({
           dataIdeal,
           maternidade: row.maternidade || 'Salvalus',
-          dataReferencia: new Date(),
+          dataReferencia, // Usar data de registro como referência
           margemDias,
         });
 
-        // Calcular IG na data agendada
+        // Calcular IG na data agendada (baseada na data de registro)
         let igNaDataAgendada = "";
         if (scheduleResult.dataAgendada) {
-          const igNaData = calcularIGNaData(result.gaDays, new Date(), scheduleResult.dataAgendada);
+          const igNaData = calcularIGNaData(result.gaDays, dataReferencia, scheduleResult.dataAgendada);
           igNaDataAgendada = formatIGCurta(igNaData.semanas, igNaData.dias);
+        }
+
+        // Calcular intervalo entre data de registro e data agendada
+        let intervaloRegistroAgendamento: number | undefined;
+        if (scheduleResult.dataAgendada) {
+          intervaloRegistroAgendamento = differenceInDays(scheduleResult.dataAgendada, dataReferencia);
         }
 
         // Validar IG: verificar se IG ideal difere de IG pretendida ou se IG na data agendada difere muito
@@ -470,7 +491,7 @@ export default function ImportarPorTabela() {
           igIdealDias,
           igPretendidaSemanas,
           igAtualDias: result.gaDays,
-          dataReferencia: new Date(),
+          dataReferencia,
           dataAgendada: scheduleResult.dataAgendada,
         });
 
@@ -486,13 +507,13 @@ export default function ImportarPorTabela() {
 
         return {
           ...row,
-          ig_calculada: result.gaFormatted,
+          ig_no_registro: result.gaFormatted, // IG na data do registro
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
           ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
           status_agendamento: requerRevisao ? 'needs_review' : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
-          intervalo_dias: scheduleResult.intervaloDias,
+          intervalo_dias: intervaloRegistroAgendamento, // Intervalo entre registro e agendamento
           lead_time_dias: scheduleResult.leadTimeDias,
           margem_protocolo: margemDias,
           protocolo_aplicado: protocoloNome,
@@ -658,7 +679,7 @@ export default function ImportarPorTabela() {
 
     // CSV headers
     const headers = [
-      'Nome Completo', 'Data Nascimento', 'Carteirinha', 
+      'Data Registro', 'Nome Completo', 'Data Nascimento', 'Carteirinha', 
       'Gestações', 'Partos Cesárea', 'Partos Normal', 'Abortos',
       'Telefones', 'Procedimentos', 'Status DUM', 'Data DUM',
       'Data 1º USG', 'Semanas USG', 'Dias USG', 'USG Recente',
@@ -667,22 +688,19 @@ export default function ImportarPorTabela() {
       'Necessidade UTI', 'Necessidade Sangue', 'Maternidade',
       'Médico Responsável', 'Email Paciente', 'Centro Clínico',
       // Calculated columns
-      'IG Calculada', 'IG Ideal', 'Protocolo', 'Data Agendada',
+      'IG no Registro', 'IG Ideal', 'Protocolo', 'Data Agendada',
       'IG na Data Agendada', 'Intervalo (dias)', 'Status', 'Erro'
     ];
 
     const linhas = linhasParaExportar.map(row => {
-      // Calculate interval in days between today and scheduled date
+      // Calculate interval in days between registro and scheduled date
       let intervalo = '';
-      if (row.snapshot?.dataAgendada) {
-        const dataAgendada = new Date(row.snapshot.dataAgendada);
-        dataAgendada.setHours(0, 0, 0, 0);
-        const diffDias = Math.round((dataAgendada.getTime() - hoje.getTime()) / MS_PER_DAY);
-        intervalo = diffDias >= 0 ? `+${diffDias}` : `${diffDias}`;
+      if (row.intervalo_dias !== undefined) {
+        intervalo = row.intervalo_dias >= 0 ? `+${row.intervalo_dias}` : `${row.intervalo_dias}`;
       }
 
       return [
-        row.nome_completo, row.data_nascimento, row.carteirinha,
+        row.data_registro || '', row.nome_completo, row.data_nascimento, row.carteirinha,
         row.numero_gestacoes, row.numero_partos_cesareas, 
         row.numero_partos_normais, row.numero_abortos,
         row.telefones, row.procedimentos, row.dum_status, row.data_dum,
@@ -693,7 +711,7 @@ export default function ImportarPorTabela() {
         row.necessidade_reserva_sangue, row.maternidade,
         row.medico_responsavel, row.email_paciente, row.centro_clinico,
         // Calculated columns
-        row.ig_calculada || '', 
+        row.ig_no_registro || '', 
         row.snapshot?.igIdeal || '',
         row.snapshot?.protocoloNome || '',
         row.snapshot?.dataAgendada?.toLocaleDateString('pt-BR') || row.data_ideal || '',
@@ -809,6 +827,7 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-10">#</TableHead>
                     <TableHead className="w-12">Ações</TableHead>
                     <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-32">Registro</TableHead>
                     <TableHead className="min-w-[200px]">Nome Completo*</TableHead>
                     <TableHead className="w-32">Nascimento</TableHead>
                     <TableHead className="min-w-[150px]">Carteirinha*</TableHead>
@@ -836,7 +855,7 @@ export default function ImportarPorTabela() {
                     <TableHead className="w-32">Maternidade</TableHead>
                     <TableHead className="min-w-[150px]">Médico</TableHead>
                     <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[100px]">IG Calculada</TableHead>
+                    <TableHead className="min-w-[100px]">IG no Registro</TableHead>
                     <TableHead className="w-28">IG Ideal</TableHead>
                     <TableHead className="w-32">Data Ideal</TableHead>
                     <TableHead className="w-40">Data Agendada</TableHead>
@@ -870,6 +889,16 @@ export default function ImportarPorTabela() {
                           {getStatusBadge(row.status)}
                           {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="text"
+                          value={row.data_registro}
+                          onChange={(e) => updateRow(row.id, "data_registro", e.target.value)}
+                          onFocus={() => handleCellFocus(idx, "data_registro")}
+                          placeholder="DD/MM/YYYY"
+                          className="w-28"
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
@@ -1093,8 +1122,8 @@ export default function ImportarPorTabela() {
                           onFocus={() => handleCellFocus(idx, "email_paciente")}
                         />
                       </TableCell>
-                      {/* IG Calculada atual (apenas se data agendada for futura) */}
-                      <TableCell className="font-mono text-sm text-primary">{row.ig_calculada || "-"}</TableCell>
+                      {/* IG na data do registro */}
+                      <TableCell className="font-mono text-sm text-primary">{row.ig_no_registro || "-"}</TableCell>
                       <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
                       <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
                       <TableCell>
