@@ -27,6 +27,7 @@ import {
   type StatusAgendamento,
   LEAD_TIME_MINIMO,
 } from "@/lib/scheduling";
+import { validarAgendamento } from "@/lib/validation";
 
 // Tipos
 interface PacienteRow {
@@ -533,34 +534,39 @@ export default function ImportarPorTabela() {
 
     for (const row of validRows) {
       try {
-        const { data: existente } = await supabase
-          .from("agendamentos_obst")
-          .select("id, data_agendamento_calculada")
-          .eq("carteirinha", row.carteirinha.trim())
-          .maybeSingle();
+        // Use unified validation for consistent checks
+        const validacao = await validarAgendamento({
+          nome_completo: row.nome_completo,
+          carteirinha: row.carteirinha,
+          data_nascimento: row.data_nascimento,
+          maternidade: row.maternidade || "Salvalus",
+          dum_status: row.dum_status,
+          data_dum: row.data_dum,
+          data_primeiro_usg: row.data_primeiro_usg,
+          semanas_usg: normalizarSemanasUsg(row.semanas_usg),
+          dias_usg: normalizarDiasUsg(row.dias_usg),
+          ig_pretendida: row.ig_pretendida,
+          indicacao_procedimento: row.indicacao_procedimento,
+          diagnosticos_maternos: row.diagnosticos_maternos,
+          diagnosticos_fetais: row.diagnosticos_fetais,
+          data_agendamento_calculada: row.data_agendada,
+        }, { supabase, userId: user.id });
 
-        if (existente) {
-          let dataAgendadaFormatada = 'não informada';
-          try {
-            if (existente.data_agendamento_calculada) {
-              const parsedDate = new Date(existente.data_agendamento_calculada);
-              if (!isNaN(parsedDate.getTime())) {
-                dataAgendadaFormatada = parsedDate.toLocaleDateString('pt-BR');
-              }
-            }
-          } catch {
-            // Keep default 'não informada' if parsing fails
-          }
-          
+        if (!validacao.valido) {
           setRows((prev) =>
             prev.map((r) => (r.id === row.id ? { 
               ...r, 
               status: "erro" as const, 
-              erro: `Carteirinha já existe - Agendamento em: ${dataAgendadaFormatada}` 
+              erro: validacao.errosCriticos.join('; ') 
             } : r)),
           );
           erros++;
           continue;
+        }
+
+        // Log warnings if any
+        if (validacao.avisos.length > 0) {
+          console.log(`Avisos para ${row.nome_completo}:`, validacao.avisos);
         }
 
         const result = chooseAndComputeExtended({
