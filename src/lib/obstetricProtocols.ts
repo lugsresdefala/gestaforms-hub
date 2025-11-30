@@ -168,7 +168,6 @@ PROTOCOLS.cerclagem = PROTOCOLS.iic;
 PROTOCOLS.hiv = PROTOCOLS.hiv_cv_indetectavel;
 PROTOCOLS.cormica = PROTOCOLS.transversa;
 PROTOCOLS.cesarea_corporal = PROTOCOLS.cesarea_classica;
-PROTOCOLS.cardiopatia_fetal = PROTOCOLS.cardiopatia_fetal;
 PROTOCOLS.pre_eclampsia_grave = PROTOCOLS.pre_eclampsia_com_deterioracao;
 PROTOCOLS.rpmo_pretermo = PROTOCOLS.rpmo;
 PROTOCOLS.rpmo_termo = { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "Indução trabalho parto até 24h", categoria: "rotura_membranas" };
