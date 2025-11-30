@@ -96,10 +96,13 @@ const Dashboard = () => {
       filtered = filtered.filter(a => a.data_agendamento_calculada === selectedDateStr);
     }
 
-    // Filtro por nome
+    // Filtro por nome ou carteirinha
     if (searchNome) {
       const searchLower = searchNome.toLowerCase();
-      filtered = filtered.filter(a => a.nome_completo.toLowerCase().includes(searchLower) || a.carteirinha.includes(searchNome));
+      filtered = filtered.filter(a => 
+        a.nome_completo.toLowerCase().includes(searchLower) || 
+        a.carteirinha.toLowerCase().includes(searchLower)
+      );
     }
 
     // Filtro por médico
@@ -181,7 +184,8 @@ const Dashboard = () => {
     setSelectedDate(undefined);
   }, []);
 
-  // getStatusBadge is a pure function based only on its arguments, using useCallback for stability
+  // getStatusBadge is a pure function based only on its arguments - no memoization needed
+  // since it doesn't capture any closure variables that change
   const getStatusBadge = (dataAgendamento: string, status: string) => {
     const hoje = new Date();
     const dataAgend = new Date(dataAgendamento);
