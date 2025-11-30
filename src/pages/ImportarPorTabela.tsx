@@ -148,6 +148,26 @@ const normalizarNumero = (valor: string): number => {
   return isNaN(num) ? 0 : Math.max(0, num);
 };
 
+/**
+ * Obtém a data de referência para cálculos de IG em dados históricos.
+ * Para dados históricos: usa data_registro como referência (quando disponível)
+ * Para importação em tempo real: usa a data atual
+ * 
+ * @param dataRegistro - String da data de registro do formulário
+ * @param fallback - Data de fallback caso data_registro seja inválida/ausente
+ * @returns Data de referência normalizada (00:00:00)
+ */
+const obterDataReferencia = (dataRegistro: string | undefined, fallback: Date): Date => {
+  if (dataRegistro) {
+    const parsedData = parseDateSafe(dataRegistro);
+    if (parsedData) {
+      parsedData.setHours(0, 0, 0, 0);
+      return parsedData;
+    }
+  }
+  return fallback;
+};
+
 // Table minimum width to accommodate all columns
 const TABLE_MIN_WIDTH = "3200px";
 
@@ -632,6 +652,9 @@ export default function ImportarPorTabela() {
     for (const row of rows) {
       if (!row.nome_completo || !row.carteirinha) continue;
 
+      // Para dados históricos: usar data_registro como referência se disponível
+      const dataReferencia = obterDataReferencia(row.data_registro, hoje);
+
       const incoerencias = validarCoerenciaDatas({
         data_nascimento: row.data_nascimento,
         data_dum: row.data_dum,
@@ -639,7 +662,7 @@ export default function ImportarPorTabela() {
         data_primeiro_usg: row.data_primeiro_usg,
         semanas_usg: row.semanas_usg,
         dias_usg: row.dias_usg,
-      }, hoje);
+      }, dataReferencia);
 
       if (incoerencias.length > 0) {
         rowsComIncoerencias.push({ rowId: row.id, incoerencias });
@@ -714,6 +737,9 @@ export default function ImportarPorTabela() {
           console.log(`Avisos para ${row.nome_completo}:`, validacao.avisos);
         }
 
+        // Para dados históricos: usar data_registro como referência se disponível
+        const dataReferencia = obterDataReferencia(row.data_registro, hoje);
+
         const result = chooseAndComputeExtended({
           dumStatus: row.dum_status,
           dumRaw: row.data_dum,
@@ -722,6 +748,7 @@ export default function ImportarPorTabela() {
           usgDays: normalizarDiasUsg(row.dias_usg),
           diagnostico: row.diagnosticos_maternos,
           indicacao: row.indicacao_procedimento,
+          referenceDate: dataReferencia,
         });
 
         // Use protocol-based ideal date
