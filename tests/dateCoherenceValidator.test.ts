@@ -198,6 +198,93 @@ describe('dateCoherenceValidator', () => {
         expect(incoerencias).toHaveLength(0);
       });
     });
+
+    describe('historical data validation with dataReferencia', () => {
+      it('should NOT flag valid historical data when using appropriate dataReferencia (Caso 1)', () => {
+        /**
+         * Caso 1: Dado Histórico Válido (NÃO deve gerar alerta)
+         * data_registro: 15/01/2025
+         * data_primeiro_usg: 10/12/2024
+         * semanas_usg: 12
+         * dias_usg: 3
+         * Resultado esperado: IG ~16 semanas na data do registro (válida, sem modal)
+         */
+        const dataRegistro = new Date(2025, 0, 15); // 15/01/2025
+        
+        const incoerencias = validarCoerenciaDatas({
+          data_primeiro_usg: '10/12/2024',
+          semanas_usg: '12',
+          dias_usg: '3',
+          dum_status: 'Incerta',
+        }, dataRegistro);
+        
+        // Should not have any IG-related incoherencies when validated at correct reference date
+        const igIncoerencias = incoerencias.filter(i => i.tipo === 'ig_impossivel');
+        expect(igIncoerencias).toHaveLength(0);
+      });
+
+      it('should flag historical data with real error when using appropriate dataReferencia (Caso 2)', () => {
+        /**
+         * Caso 2: Dado Histórico com Erro Real (DEVE gerar alerta)
+         * data_registro: 15/01/2025
+         * data_primeiro_usg: 10/10/2024 (much earlier to get impossible IG)
+         * semanas_usg: 35
+         * dias_usg: 0
+         * Resultado: From Oct 10 to Jan 15 = ~97 days = ~14 weeks
+         * IG at Jan 15 = 35 + 14 = 49 weeks (impossible, correct modal shown)
+         */
+        const dataRegistro = new Date(2025, 0, 15); // 15/01/2025
+        
+        const incoerencias = validarCoerenciaDatas({
+          data_primeiro_usg: '10/10/2024', // Earlier to cause IG > 42 weeks
+          semanas_usg: '35',
+          dias_usg: '0',
+          dum_status: 'Incerta',
+        }, dataRegistro);
+        
+        // Should detect impossible IG even with historical reference date
+        const igIncoerencias = incoerencias.filter(i => i.tipo === 'ig_impossivel');
+        expect(igIncoerencias.length).toBeGreaterThan(0);
+      });
+
+      it('should use today as default when no dataReferencia provided (Caso 3)', () => {
+        /**
+         * Caso 3: Importação em Tempo Real (comportamento atual)
+         * data_registro: [vazio]
+         * Resultado esperado: Usa new Date(), comportamento normal mantido
+         */
+        // This test verifies the function works with current date by default
+        const incoerencias = validarCoerenciaDatas({
+          data_primeiro_usg: '28/11/2025',
+          semanas_usg: '12',
+          dias_usg: '0',
+          dum_status: 'Incerta',
+        }); // No second argument - should use new Date()
+        
+        // Recent USG should not be flagged as too old
+        const antigaIncoerencias = incoerencias.filter(i => i.tipo === 'usg_muito_antigo');
+        expect(antigaIncoerencias).toHaveLength(0);
+      });
+
+      it('should NOT flag USG from 2024 as too old when validated at January 2025', () => {
+        /**
+         * USG from December 2024 validated at January 2025 is only 1 month old
+         * Should NOT trigger "USG muito antigo" error
+         */
+        const dataRegistro = new Date(2025, 0, 15); // 15/01/2025
+        
+        const incoerencias = validarCoerenciaDatas({
+          data_primeiro_usg: '10/12/2024', // December 2024
+          semanas_usg: '10',
+          dias_usg: '0',
+          dum_status: 'Incerta',
+        }, dataRegistro);
+        
+        // Should NOT flag as too old (only ~1 month difference)
+        const antigaIncoerencias = incoerencias.filter(i => i.tipo === 'usg_muito_antigo');
+        expect(antigaIncoerencias).toHaveLength(0);
+      });
+    });
   });
 
   describe('temSugestaoDisponivel', () => {
