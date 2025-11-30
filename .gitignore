@@ -32,3 +32,9 @@ exports/
 
 # Overbooking correction reports (generated files)
 relatorios_overbooking/
+
+# Backup directories (cleanup backups)
+.backup-*/
+
+# Temporary CSV files
+public/csv-temp/
