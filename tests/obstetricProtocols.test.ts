@@ -400,14 +400,18 @@ describe('obstetricProtocols module', () => {
         expect(patologias).toContain('oligodramnia');
       });
 
-      it('should return desejo_materno for cesarea eletiva without diagnoses', () => {
+      // NOTE: desejo_materno is no longer added as a fallback - it's not a clinical pathology
+      // When no diagnoses are found, baixo_risco protocol is used (39 weeks)
+      it('should return empty array for cesarea eletiva without diagnoses (no desejo_materno fallback)', () => {
         const patologias = identificarPatologias({
           procedimentos: ['Cesárea Eletiva'],
           diagnosticosMaternos: undefined,
           diagnosticosFetais: undefined,
         });
         
-        expect(patologias).toContain('desejo_materno');
+        // desejo_materno is no longer added as fallback
+        expect(patologias).not.toContain('desejo_materno');
+        expect(patologias).toEqual([]);
       });
 
       it('should not add desejo_materno if diagnoses are found', () => {
@@ -420,13 +424,16 @@ describe('obstetricProtocols module', () => {
         expect(patologias).not.toContain('desejo_materno');
       });
 
-      it('should identify laqueadura from procedimentos', () => {
+      // NOTE: laqueadura is no longer included in patologias - it's just a procedure, not a clinical pathology
+      it('should not include laqueadura from procedimentos (procedure only, not pathology)', () => {
         const patologias = identificarPatologias({
           procedimentos: ['Cesárea + Laqueadura'],
           diagnosticosMaternos: undefined,
         });
         
-        expect(patologias).toContain('laqueadura');
+        // laqueadura should NOT be in patologias as it doesn't affect IG calculation
+        expect(patologias).not.toContain('laqueadura');
+        expect(patologias).toEqual([]);
       });
 
       it('should handle placenta prévia with acretismo', () => {
@@ -630,23 +637,29 @@ describe('obstetricProtocols module', () => {
           expect(patologias).not.toContain('desejo_materno');
         });
         
-        it('should only return desejo_materno when no pathologies are identified', () => {
+        // NOTE: desejo_materno is no longer used as fallback - it's not a clinical pathology
+        // When no diagnoses are found, baixo_risco protocol applies
+        it('should return empty array when no pathologies are identified (no desejo_materno)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             indicacaoProcedimento: 'Cesárea a pedido',
           });
           
-          expect(patologias).toContain('desejo_materno');
+          // desejo_materno is no longer added as fallback
+          expect(patologias).not.toContain('desejo_materno');
+          expect(patologias).toEqual([]);
         });
         
-        it('should only return desejo_materno for empty diagnostics', () => {
+        it('should return empty array for empty diagnostics (no desejo_materno fallback)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             diagnosticosMaternos: '',
             diagnosticosFetais: '',
           });
           
-          expect(patologias).toContain('desejo_materno');
+          // desejo_materno is no longer added as fallback
+          expect(patologias).not.toContain('desejo_materno');
+          expect(patologias).toEqual([]);
         });
       });
       

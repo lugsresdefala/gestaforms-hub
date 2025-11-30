@@ -121,8 +121,9 @@ describe('Importação vs Manual - Consistency Tests', () => {
     it('should calculate IG successfully', () => {
       const result = calcularAgendamento({ ...dadosBase, dataReferencia });
       expect(result.valido).toBe(true);
-      // For low-risk pregnancies with no diagnoses, uses 'desejo_materno' protocol
-      expect(result.protocolo).toBe('desejo_materno');
+      // For low-risk pregnancies with no diagnoses, uses 'baixo_risco' protocol (39 weeks)
+      // NOTE: desejo_materno is no longer used - it's not a clinical pathology
+      expect(result.protocolo).toBe('baixo_risco');
       expect(result.igIdeal).toBe('39 semanas');
     });
   });

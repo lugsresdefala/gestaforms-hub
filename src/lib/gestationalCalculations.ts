@@ -208,10 +208,9 @@ export const normalizarDiagnosticos = (valor: string | string[] | undefined): st
  * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
  * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
  * 
- * IMPORTANTE: Real pathologies always take precedence over "desejo_materno"
- * A case is only classified as "desejo_materno" when:
- * 1. It's a "Cesárea Eletiva" procedure AND
- * 2. No real pathologies were identified from any text field
+ * IMPORTANTE: Apenas patologias clínicas são consideradas para cálculo de IG ideal.
+ * - desejo_materno NÃO é adicionado como fallback (não é patologia clínica)
+ * - laqueadura é filtrada do array final (apenas procedimento, não altera IG)
  */
 export const identificarPatologias = (dados: {
   procedimentos: string[];
@@ -222,17 +221,13 @@ export const identificarPatologias = (dados: {
 }): string[] => {
   const patologias: string[] = [];
   
-  // Verificar procedimentos especiais
-  if (dados.procedimentos.includes('Cesárea + Laqueadura') || 
-      dados.procedimentos.includes('Laqueadura Pós-parto Normal')) {
-    patologias.push('laqueadura');
-  }
+  // Nota: Laqueadura não é mais adicionada aqui pois não deve influenciar IG ideal
+  // Se for necessário para fins de exibição/relato, deve ser tratado separadamente
   
   // Coletar todos os diagnósticos em texto livre
   const todosDiagnosticos: string[] = [];
   
   // Adicionar indicação de procedimento
-  // Sempre adicionar para mapeamento, pois pode conter pathologies misturadas com "desejo materno"
   if (dados.indicacaoProcedimento) {
     todosDiagnosticos.push(dados.indicacaoProcedimento);
   }
@@ -259,32 +254,13 @@ export const identificarPatologias = (dados: {
     }
   }
   
-  // Remover duplicatas primeiro para poder analisar patologias reais
+  // Remover duplicatas
   const patologiasUnicas = [...new Set(patologias)];
   
-  // Verificar se há patologias reais (excluindo laqueadura e desejo_materno que são procedimentos eletivos)
-  const patologiasReais = patologiasUnicas.filter(p => p !== 'laqueadura' && p !== 'desejo_materno');
-  
-  // Lógica de cesárea eletiva sem diagnósticos identificados
-  // "desejo_materno" só é adicionado se:
-  // 1. É um procedimento de cesárea eletiva OU não há procedimentos definidos
-  // 2. Nenhuma patologia real foi identificada
-  const ehCesareaEletiva = dados.procedimentos.includes('Cesárea Eletiva') ||
-                           dados.procedimentos.includes('Cesariana Eletiva') ||
-                           dados.procedimentos.includes('Cesárea') ||
-                           dados.procedimentos.length === 0;
-  
-  if (ehCesareaEletiva && patologiasReais.length === 0) {
-    patologiasUnicas.push('desejo_materno');
-  }
-  
-  // Filtro final: remover desejo_materno se houver patologias reais
-  // Isso garante que desejo_materno só apareça quando não há outras patologias
-  if (patologiasReais.length > 0) {
-    return patologiasUnicas.filter(p => p !== 'desejo_materno');
-  }
-  
-  return patologiasUnicas;
+  // Filtrar laqueadura e desejo_materno do array final
+  // Estes não são patologias clínicas e não devem influenciar IG ideal
+  // A IG ideal deve ser determinada exclusivamente por patologias clínicas (PT-AON-097)
+  return patologiasUnicas.filter(p => p !== 'laqueadura' && p !== 'desejo_materno');
 };
 
 /**
