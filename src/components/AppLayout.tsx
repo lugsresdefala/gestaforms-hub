@@ -161,8 +161,8 @@ const MenuContent = ({
   return <>
       <div className="p-4 sm:p-6 border-b border-sky-400/20 bg-gradient-to-br from-white/5 to-sky-400/10 backdrop-blur-xl">
         <div className="flex flex-col items-center gap-3">
-          <div className="p-10 shadow-inner px-[10px] py-[10px] rounded-none opacity-95 bg-destructive-foreground border-3 border-popover-foreground">
-            <img src="/hapvida-logo.png" alt="Logo" className="h-16 object-cover shadow-inner opacity-95 border-2 border-popover-foreground rounded-none" />
+          <div className="p-10 shadow-inner px-[10px] py-[10px] rounded-none opacity-95 border-3 border-popover-foreground bg-accent-foreground border-2">
+            <img src="/hapvida-logo.png" alt="Logo" className="h-16 object-cover shadow-inner opacity-95 border-2 rounded-none border-primary-foreground" />
           </div>
           {!collapsed && <span className="text-xs uppercase text-sky-100 bg-sky-500/20 px-3 py-1 border border-sky-400/10 font-extralight text-center">
               Gestação Segura
