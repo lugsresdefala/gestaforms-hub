@@ -98,6 +98,11 @@ export function ModalCorrecaoDatas({
 
   // Recalculate IG when values are changed
   const recalcularIG = useCallback((campo: string, valorCorrigido: string) => {
+    // Não recalcular IG para campos que não são obstétricos (data_nascimento é da mãe)
+    if (campo === 'data_nascimento') {
+      return;
+    }
+    
     try {
       // Build updated data with the correction applied
       const dadosAtualizados: Record<string, string | undefined> = {
@@ -312,8 +317,8 @@ export function ModalCorrecaoDatas({
                   </div>
                 </div>
 
-                {/* Comparação de IG: Antes vs Depois */}
-                {inco.detalhes.igCalculada && (
+                {/* Comparação de IG: Antes vs Depois (não exibir para erros de idade materna) */}
+                {inco.detalhes.igCalculada && inco.campo !== 'data_nascimento' && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <Label className="text-xs font-semibold text-blue-900 mb-2 block">
                       Idade Gestacional Calculada

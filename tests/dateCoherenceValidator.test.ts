@@ -182,7 +182,7 @@ describe('dateCoherenceValidator', () => {
         expect(tipos).toContain('idade_implausivel');
       });
 
-      it('should add igCalculada to ALL incoherencies when IG is calculated successfully', () => {
+      it('should add igCalculada to obstetric incoherencies when IG is calculated successfully', () => {
         /**
          * Test case: USG from 2024 with 12 weeks results in IG > 42 weeks by Nov 2025
          * This should trigger both usg_muito_antigo AND ig_impossivel
@@ -197,7 +197,7 @@ describe('dateCoherenceValidator', () => {
         
         expect(incoerencias.length).toBeGreaterThan(0);
         
-        // ALL incoherencies should have igCalculada when IG was calculated
+        // Obstetric incoherencies should have igCalculada when IG was calculated
         const usgAntigoInco = incoerencias.find(i => i.tipo === 'usg_muito_antigo');
         const igImpossivel = incoerencias.find(i => i.tipo === 'ig_impossivel');
         
@@ -210,6 +210,41 @@ describe('dateCoherenceValidator', () => {
         expect(usgAntigoInco?.detalhes.igCalculada).toMatch(/\d+s\d+d/);
         expect(igImpossivel?.detalhes.igCalculada).toBeDefined();
         expect(igImpossivel?.detalhes.igCalculada).toMatch(/\d+s\d+d/);
+      });
+
+      it('should NOT add igCalculada to maternal age incoherencies (idade_implausivel)', () => {
+        /**
+         * CRITICAL: IG (Idade Gestacional) is for the FETUS, not the mother.
+         * Maternal age errors (idade_implausivel) should NOT have igCalculada.
+         * This prevents conceptual confusion between fetal and maternal data.
+         */
+        const incoerencias = validarCoerenciaDatas({
+          data_nascimento: '01/03/2025', // Would make patient ~0 years old
+          data_primeiro_usg: '15/11/2024', // Old USG
+          semanas_usg: '31',
+          dias_usg: '0',
+          dum_status: 'Incerta',
+        }, dataReferencia);
+        
+        expect(incoerencias.length).toBeGreaterThan(0);
+        
+        // Find the maternal age incoherence
+        const idadeImplausivel = incoerencias.find(i => i.tipo === 'idade_implausivel');
+        expect(idadeImplausivel).toBeDefined();
+        
+        // Maternal age errors should NOT have igCalculada (IG is fetal, not maternal)
+        expect(idadeImplausivel?.detalhes.igCalculada).toBeUndefined();
+        
+        // But the obstetric errors should still have igCalculada if they exist
+        const obstetricErrors = incoerencias.filter(i => 
+          i.tipo === 'usg_muito_antigo' || i.tipo === 'ig_impossivel' || i.tipo === 'data_futura'
+        );
+        obstetricErrors.forEach(err => {
+          // If obstetric error exists and campo is not data_nascimento, should have igCalculada
+          if (err.campo !== 'data_nascimento') {
+            expect(err.detalhes.igCalculada).toBeDefined();
+          }
+        });
       });
     });
 
