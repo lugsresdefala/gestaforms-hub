@@ -30,19 +30,16 @@ import AnalisarForm1 from "./pages/AnalisarForm1";
 import ListaAgendamentos from "./pages/ListaAgendamentos";
 import Onboarding from "./pages/Onboarding";
 import CorrigirParidade from "./pages/CorrigirParidade";
-import ImportarSQL from "./pages/ImportarSQL";
-import ProcessarCSVUpload from "./pages/ProcessarCSVUpload";
-import ProcessarFormsParto from "./pages/ProcessarFormsParto";
+
 import RecalcularDatas2025 from "./pages/RecalcularDatas2025";
 import FAQ from "./pages/FAQ";
 import Sobre from "./pages/Sobre";
 import LogsAuditoria from "./pages/LogsAuditoria";
-import ImportarPacientesPendentes from "./pages/ImportarPacientesPendentes";
+
 import Protocolos from "./pages/Protocolos";
 import Contato from "./pages/Contato";
 import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
-import ImportarAgendamentosHTML from "./pages/ImportarAgendamentosHTML";
-import ImportarPacientes from "./pages/ImportarPacientes";
+
 import ImportarPorTabela from "./pages/ImportarPorTabela";
 import AuditoriaImportacoes from "./pages/AuditoriaImportacoes";
 import AuditoriaAgendamentos from "./pages/admin/AuditoriaAgendamentos";
@@ -268,36 +265,9 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/importar-sql" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ImportarSQL />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/processar-csv-upload" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ProcessarCSVUpload />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/processar-forms-parto" 
-              element={
-                <ProtectedRoute requireAdmin>
-                  <AppLayout>
-                    <ProcessarFormsParto />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
+
+
+
             <Route 
               path="/recalcular-datas-2025" 
               element={
@@ -308,16 +278,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/importar-pacientes-pendentes" 
-              element={
-                <ProtectedRoute requireAdminMed>
-                  <AppLayout>
-                    <ImportarPacientesPendentes />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
+
             <Route 
               path="/faq" 
               element={
@@ -388,26 +349,8 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            <Route 
-              path="/importar-agendamentos-html" 
-              element={
-                <ProtectedRoute requireAdminMed>
-                  <AppLayout>
-                    <ImportarAgendamentosHTML />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/importar-pacientes" 
-              element={
-                <ProtectedRoute requireAdminMed>
-                  <AppLayout>
-                    <ImportarPacientes />
-                  </AppLayout>
-                </ProtectedRoute>
-              } 
-            />
+
+
             <Route 
               path="/importar-tabela" 
               element={
