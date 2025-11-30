@@ -208,6 +208,15 @@ export const normalizarDiagnosticos = (valor: string | string[] | undefined): st
  * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
  * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
  */
+/**
+ * Identifica patologias e protocolos aplicáveis baseado nos dados do formulário
+ * Processa tanto IDs estruturados quanto texto livre usando mapDiagnosisToProtocol
+ * 
+ * IMPORTANTE: Real pathologies always take precedence over "desejo_materno"
+ * A case is only classified as "desejo_materno" when:
+ * 1. It's a "Cesárea Eletiva" procedure AND
+ * 2. No real pathologies were identified from any text field
+ */
 export const identificarPatologias = (dados: {
   procedimentos: string[];
   diagnosticosMaternos?: string | string[];
@@ -227,15 +236,18 @@ export const identificarPatologias = (dados: {
   const todosDiagnosticos: string[] = [];
   
   // Adicionar indicação de procedimento
+  // Sempre adicionar para mapeamento, pois pode conter pathologies misturadas com "desejo materno"
   if (dados.indicacaoProcedimento) {
     todosDiagnosticos.push(dados.indicacaoProcedimento);
   }
   
   // Adicionar diagnósticos maternos (normalizar para array)
-  todosDiagnosticos.push(...normalizarDiagnosticos(dados.diagnosticosMaternos));
+  const diagnosticosMaternos = normalizarDiagnosticos(dados.diagnosticosMaternos);
+  todosDiagnosticos.push(...diagnosticosMaternos);
   
   // Adicionar diagnósticos fetais (normalizar para array)
-  todosDiagnosticos.push(...normalizarDiagnosticos(dados.diagnosticosFetais));
+  const diagnosticosFetais = normalizarDiagnosticos(dados.diagnosticosFetais);
+  todosDiagnosticos.push(...diagnosticosFetais);
   
   // Usar mapDiagnosisToProtocol para busca textual inteligente
   // Isso processa tanto IDs estruturados quanto texto livre
@@ -251,15 +263,26 @@ export const identificarPatologias = (dados: {
     }
   }
   
+  // Remover duplicatas primeiro para poder analisar patologias reais
+  const patologiasUnicas = [...new Set(patologias)];
+  
+  // Verificar se há patologias reais (excluindo laqueadura que é procedimento eletivo)
+  const patologiasReais = patologiasUnicas.filter(p => p !== 'laqueadura');
+  
   // Lógica de cesárea eletiva sem diagnósticos identificados
-  // Nota: 'laqueadura' é adicionado somente para 'Cesárea + Laqueadura' (procedimento diferente),
-  // então se 'Cesárea Eletiva' for selecionado sem nenhum diagnóstico mapeado, adiciona desejo_materno
-  if (dados.procedimentos.includes('Cesárea Eletiva') && patologias.length === 0) {
-    patologias.push('desejo_materno');
+  // "desejo_materno" só é adicionado se:
+  // 1. É um procedimento de cesárea eletiva OU não há procedimentos definidos
+  // 2. Nenhuma patologia real foi identificada
+  const ehCesareaEletiva = dados.procedimentos.includes('Cesárea Eletiva') ||
+                           dados.procedimentos.includes('Cesariana Eletiva') ||
+                           dados.procedimentos.includes('Cesárea') ||
+                           dados.procedimentos.length === 0;
+  
+  if (ehCesareaEletiva && patologiasReais.length === 0) {
+    patologiasUnicas.push('desejo_materno');
   }
   
-  // Remover duplicatas
-  return [...new Set(patologias)];
+  return patologiasUnicas;
 };
 
 /**

@@ -491,6 +491,191 @@ describe('obstetricProtocols module', () => {
         expect(patologias).toContain('dmg_sem_insulina_bom_controle');
         expect(patologias).toContain('rcf_pig_sem_comorbidade');
       });
+      
+      // NEW TESTS: Real pathologies should take precedence over desejo_materno
+      describe('Real pathologies take precedence over desejo_materno', () => {
+        it('should NOT classify as desejo_materno when HAC is present', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: 'HAC',
+          });
+          
+          expect(patologias).toContain('hac');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should NOT classify as desejo_materno when HAS crônica is present', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: 'HAS crônica',
+          });
+          
+          expect(patologias).toContain('hac');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should identify sífilis tratada correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: 'sífilis tratada',
+          });
+          
+          expect(patologias).toContain('sifilis_tratada');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should identify toxoplasmose correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: 'Toxoplasmose',
+          });
+          
+          expect(patologias).toContain('toxoplasmose');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should identify trombofilia/SAF correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'Trombofilia - SAF',
+          });
+          
+          expect(patologias).toContain('trombofilia');
+        });
+        
+        it('should identify macrossomia correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosFetais: 'Macrossomia fetal',
+          });
+          
+          expect(patologias).toContain('macrossomia');
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should identify IIC/cerclagem correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'IIC - Incompetência istmo cervical',
+          });
+          
+          expect(patologias).toContain('cerclagem');
+        });
+        
+        it('should identify cardiopatia materna correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'Cardiopatia',
+          });
+          
+          expect(patologias).toContain('cardiopatia_materna');
+        });
+        
+        it('should identify eclâmpsia correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'Eclâmpsia',
+          });
+          
+          expect(patologias).toContain('eclampsia');
+        });
+        
+        it('should identify epilepsia correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'Epilepsia',
+          });
+          
+          expect(patologias).toContain('epilepsia');
+        });
+        
+        it('should identify miomatose correctly', () => {
+          const patologias = identificarPatologias({
+            procedimentos: [],
+            diagnosticosMaternos: 'Miomatose uterina',
+          });
+          
+          expect(patologias).toContain('miomatose');
+        });
+        
+        it('should handle text with mixed pathologies and desejo materno', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            indicacaoProcedimento: 'HAC + desejo materno',
+          });
+          
+          expect(patologias).toContain('hac');
+          // desejo_materno is not added because HAC is present
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should handle multiple pathologies without adding desejo_materno', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: 'DMG, HAC, Oligoâmnio',
+          });
+          
+          expect(patologias.length).toBeGreaterThanOrEqual(3);
+          expect(patologias).not.toContain('desejo_materno');
+        });
+        
+        it('should only return desejo_materno when no pathologies are identified', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            indicacaoProcedimento: 'Cesárea a pedido',
+          });
+          
+          expect(patologias).toContain('desejo_materno');
+        });
+        
+        it('should only return desejo_materno for empty diagnostics', () => {
+          const patologias = identificarPatologias({
+            procedimentos: ['Cesárea Eletiva'],
+            diagnosticosMaternos: '',
+            diagnosticosFetais: '',
+          });
+          
+          expect(patologias).toContain('desejo_materno');
+        });
+      });
+      
+      describe('mapDiagnosisToProtocol with comprehensive terms', () => {
+        it('should map HAS to hac', () => {
+          const result = mapDiagnosisToProtocol(['HAS']);
+          expect(result).toContain('hac');
+        });
+        
+        it('should map VDRL to sifilis_tratada', () => {
+          const result = mapDiagnosisToProtocol(['VDRL tratado']);
+          expect(result).toContain('sifilis_tratada');
+        });
+        
+        it('should map SAF to trombofilia', () => {
+          const result = mapDiagnosisToProtocol(['SAF']);
+          expect(result).toContain('trombofilia');
+        });
+        
+        it('should normalize accents for matching', () => {
+          const result = mapDiagnosisToProtocol(['Hipertensão gestacional']);
+          expect(result).toContain('hipertensao_gestacional');
+        });
+        
+        it('should identify CIUR as RCF', () => {
+          const result = mapDiagnosisToProtocol(['CIUR']);
+          expect(result).toContain('rcf');
+        });
+        
+        it('should identify feto GIG as macrossomia', () => {
+          const result = mapDiagnosisToProtocol(['Feto GIG']);
+          expect(result).toContain('macrossomia');
+        });
+        
+        it('should not add desejo_materno from mapDiagnosisToProtocol', () => {
+          // mapDiagnosisToProtocol should NOT add desejo_materno - that's handled by identificarPatologias
+          const result = mapDiagnosisToProtocol(['Cesárea eletiva']);
+          expect(result).not.toContain('desejo_materno');
+        });
+      });
     });
   });
 });

@@ -309,6 +309,17 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): {
   };
 }
 
+/**
+ * Normaliza texto removendo acentos para comparação case-insensitive
+ */
+const normalizeText = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+};
+
 export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
   const mapped: string[] = [];
   
@@ -319,43 +330,60 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
       return;
     }
     
-    const diag = d.toLowerCase().trim();
+    const diag = normalizeText(d);
     
     // PRIORIDADE CRÍTICA: CERCLAGEM / IIC (verificar primeiro)
     if (diag.includes('cerclagem') || diag.includes('iic') || 
-        diag.includes('incompetencia') || diag.includes('incompetência') || 
-        diag.includes('istmo')) {
+        diag.includes('incompetencia') || diag.includes('istmo') ||
+        diag.includes('circlagem')) {
       mapped.push('cerclagem');
       return; // Retornar imediatamente - protocolo crítico
     }
     
-    // HIPERTENSÃO
-    if (diag.includes('eclampsia') && !diag.includes('pré')) {
+    // HIPERTENSÃO - verificar em ordem de especificidade (mais específico primeiro)
+    if (diag.includes('eclampsia') && !diag.includes('pre')) {
       mapped.push('eclampsia');
     } else if (diag.includes('hellp')) {
       mapped.push('sindrome_hellp');
-    } else if (diag.includes('pré-eclâmpsia grave') || diag.includes('pre-eclampsia grave') || diag.includes('dheg')) {
+    } else if (diag.includes('pre-eclampsia grave') || diag.includes('pre eclampsia grave') || 
+               diag.includes('preeclampsia grave') || diag.includes('dheg grave') ||
+               diag.includes('pe grave')) {
       mapped.push('pre_eclampsia_grave');
-    } else if (diag.includes('pré-eclâmpsia') || diag.includes('pre-eclampsia')) {
+    } else if (diag.includes('pre-eclampsia') || diag.includes('pre eclampsia') || 
+               diag.includes('preeclampsia') || diag.includes('dheg')) {
       mapped.push('pre_eclampsia_sem_deterioracao');
-    } else if (diag.includes('hipertensão gestacional') || diag.includes('hipertensao gestacional')) {
+    } else if (diag.includes('hipertensao gestacional') || diag.includes('hg ')) {
       mapped.push('hipertensao_gestacional');
-    } else if (diag.includes('hac') && (diag.includes('difícil') || diag.includes('dificil') || diag.includes('3 drogas'))) {
+    } else if ((diag.includes('hac') || diag.includes('has cronica') || diag.includes('hipertensao cronica') ||
+                diag.includes('hipertensao arterial cronica') || diag.includes('hipertensao arterial sistemica')) && 
+               (diag.includes('dificil') || diag.includes('3 drogas') || diag.includes('refrataria'))) {
       mapped.push('hac_dificil');
-    } else if (diag.includes('hac') || diag.includes('hipertensão arterial crônica') || diag.includes('hipertensao arterial cronica')) {
+    } else if (diag.includes('hac') || diag.includes('has cronica') || diag.includes('hipertensao cronica') ||
+               diag.includes('hipertensao arterial cronica') || diag.includes('hipertensao arterial sistemica') ||
+               (diag === 'has' || diag.startsWith('has ') || diag.endsWith(' has'))) {
       mapped.push('hac');
     }
     
-    // DIABETES
-    if (diag.includes('dm2') || diag.includes('dm 2') || diag.includes('dm pregestacional') || diag.includes('dm pré-gestacional')) {
-      if (diag.includes('descomp') || diag.includes('descontrole') || diag.includes('complicação') || diag.includes('complicacao')) {
+    // DIABETES - verificar em ordem de especificidade
+    if (diag.includes('dm1') || diag.includes('dm 1') || diag.includes('dm tipo 1') ||
+        diag.includes('dm2') || diag.includes('dm 2') || diag.includes('dm tipo 2') ||
+        diag.includes('dm pregestacional') || diag.includes('dm pre-gestacional') ||
+        diag.includes('diabetes tipo 1') || diag.includes('diabetes tipo 2') ||
+        diag.includes('diabetes pre-gestacional') || diag.includes('diabetes pregestacional') ||
+        diag.includes('mody')) {
+      if (diag.includes('descomp') || diag.includes('descontrole') || 
+          diag.includes('complicacao') || diag.includes('vasculopatia') ||
+          diag.includes('nefropatia') || diag.includes('retinopatia')) {
         mapped.push('dm_pregestacional_descomp');
       } else {
         mapped.push('dm_pregestacional');
       }
-    } else if (diag.includes('dmg') || diag.includes('diabetes gestacional')) {
+    } else if (diag.includes('dmg') || diag.includes('diabetes gestacional') || 
+               diag.includes('diabetes mellitus gestacional')) {
       const temInsulina = diag.includes('insulina');
-      const temDescontrole = diag.includes('descomp') || diag.includes('descontrole') || diag.includes('feto gig') || diag.includes('macrossomia');
+      const temDescontrole = diag.includes('descomp') || diag.includes('descontrole') || 
+                             diag.includes('feto gig') || diag.includes('macrossomia') ||
+                             diag.includes('mal controle') || diag.includes('mau controle');
       
       if (temInsulina && temDescontrole) {
         mapped.push('dmg_insulina_descomp');
@@ -369,41 +397,54 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
     }
     
     // PLACENTA
-    if (diag.includes('placenta percreta')) {
+    if (diag.includes('placenta percreta') || diag.includes('percreta')) {
       mapped.push('placenta_percreta');
-    } else if (diag.includes('placenta acreta') || diag.includes('acretismo')) {
+    } else if (diag.includes('placenta acreta') || diag.includes('acretismo') || diag.includes('acreta')) {
       mapped.push('placenta_acreta');
-    } else if (diag.includes('placenta prévia total') || diag.includes('placenta previa total') || diag.includes('pp centro total')) {
+    } else if (diag.includes('placenta previa total') || diag.includes('pp centro total') ||
+               diag.includes('pp total') || diag.includes('pp central')) {
       mapped.push('placenta_previa_total');
-    } else if (diag.includes('placenta prévia parcial') || diag.includes('placenta previa parcial')) {
+    } else if (diag.includes('placenta previa parcial') || diag.includes('pp parcial') ||
+               diag.includes('pp marginal')) {
       mapped.push('placenta_previa_parcial');
-    } else if (diag.includes('placenta prévia') || diag.includes('placenta previa') || diag.includes('placenta baixa')) {
+    } else if (diag.includes('placenta previa') || diag.includes('placenta baixa') ||
+               diag.includes('pp ') || diag === 'pp' || diag.includes('insercao baixa')) {
       mapped.push('placenta_baixa');
-    } else if (diag.includes('dpp') || diag.includes('descolamento prematuro')) {
+    } else if (diag.includes('dpp') || diag.includes('descolamento prematuro') ||
+               diag.includes('descolamento de placenta') || diag.includes('abruptio')) {
       mapped.push('dpp');
     }
     
     // GEMELARIDADE
-    if (diag.includes('gemelar') || diag.includes('gêmeos')) {
-      if (diag.includes('monoamniótico') || diag.includes('monoamniotico')) {
+    if (diag.includes('gemelar') || diag.includes('gemeos') || diag.includes('gestacao dupla')) {
+      if (diag.includes('monoamniotico') || diag.includes('mono mono') || diag.includes('mono/mono')) {
         mapped.push('gemelar_monoamniotico');
-      } else if (diag.includes('monocoriônic') || diag.includes('monocorionic') || diag.includes('mono')) {
+      } else if (diag.includes('monocorionic') || diag.includes('mono di') || diag.includes('mono/di') ||
+                 (diag.includes('mono') && !diag.includes('bi'))) {
         mapped.push('gemelar_monocorionico');
-      } else if (diag.includes('bicoriônic') || diag.includes('bicorionic') || diag.includes('bi')) {
+      } else if (diag.includes('bicorionic') || diag.includes('di di') || diag.includes('di/di') ||
+                 diag.includes('dicorionic')) {
+        mapped.push('gemelar_bicorionico');
+      } else {
+        // Default para gemelar sem especificação = dicoriônica (mais comum e menos restritiva)
         mapped.push('gemelar_bicorionico');
       }
     }
     
     // APRESENTAÇÃO
-    if (diag.includes('pélvic') || diag.includes('pelvic') || diag.includes('sentado')) {
+    if (diag.includes('pelvic') || diag.includes('sentado') || diag.includes('podic') ||
+        diag.includes('apresentacao pelvica') || diag.includes('feto pelvico')) {
       mapped.push('pelvico');
-    } else if (diag.includes('córmica') || diag.includes('cormica') || diag.includes('transversa')) {
+    } else if (diag.includes('cormica') || diag.includes('transversa') || diag.includes('obliqua') ||
+               diag.includes('situacao transversa')) {
       mapped.push('cormica');
     }
     
     // ROTURA MEMBRANAS
-    if (diag.includes('rpmo') || diag.includes('rotura prematura') || diag.includes('bolsa rota')) {
-      if (diag.includes('pretermo') || diag.includes('pré-termo') || diag.includes('prematuro')) {
+    if (diag.includes('rpmo') || diag.includes('rotura prematura') || diag.includes('bolsa rota') ||
+        diag.includes('amniorrexe') || diag.includes('roprema')) {
+      if (diag.includes('pretermo') || diag.includes('pre-termo') || diag.includes('prematuro') ||
+          diag.includes('< 37') || diag.includes('<37')) {
         mapped.push('rpmo_pretermo');
       } else {
         mapped.push('rpmo_termo');
@@ -411,15 +452,23 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
     }
     
     // CRESCIMENTO FETAL
-    if (diag.includes('rcf') || diag.includes('restrição de crescimento') || diag.includes('restricao de crescimento') || diag.includes('pig')) {
-      if (diag.includes('grave') || diag.includes('doppler crítico') || diag.includes('diastole') || diag.includes('centralização')) {
+    if (diag.includes('rcf') || diag.includes('restricao de crescimento') || 
+        diag.includes('restricao crescimento') || diag.includes('pig') || 
+        diag.includes('ciur') || diag.includes('rciu') ||
+        diag.includes('crescimento intrauterino restrito')) {
+      if (diag.includes('grave') || diag.includes('doppler critico') || 
+          diag.includes('diastole zero') || diag.includes('diastole reversa') ||
+          diag.includes('centralizacao') || diag.includes('< p3') || diag.includes('<p3')) {
         mapped.push('rcf_grave');
       } else {
         mapped.push('rcf');
       }
-    } else if (diag.includes('macrossomia') || diag.includes('feto gig') || diag.includes('gig')) {
+    } else if (diag.includes('macrossomia') || diag.includes('feto gig') || 
+               diag.includes('feto grande') || diag.includes('peso estimado') ||
+               (diag.includes('gig') && !diag.includes('mioma'))) {
       const peso = diag.match(/(\d{4,5})\s*g/);
-      if (peso && parseInt(peso[1]) > 4500) {
+      if ((peso && parseInt(peso[1]) > 4500) || diag.includes('> 4500') || diag.includes('>4500') ||
+          diag.includes('severa') || diag.includes('grave')) {
         mapped.push('macrossomia_severa');
       } else {
         mapped.push('macrossomia');
@@ -427,90 +476,136 @@ export const mapDiagnosisToProtocol = (diagnosticos: string[]): string[] => {
     }
     
     // LÍQUIDO AMNIÓTICO
-    if (diag.includes('oligoâmnio') || diag.includes('oligoamnio') || diag.includes('oligodrâmnio') || diag.includes('oligodramnia')) {
-      if (diag.includes('severo') || diag.includes('anidrâmnio') || diag.includes('anidramnia')) {
+    if (diag.includes('oligoamnio') || diag.includes('oligodramnia') || diag.includes('oligoidramnio') ||
+        diag.includes('la diminuido') || diag.includes('ila baixo') || diag.includes('mbv baixo')) {
+      if (diag.includes('severo') || diag.includes('grave') || diag.includes('anidramnio') ||
+          diag.includes('anidramnia') || diag.includes('ila < 2') || diag.includes('ila <2') ||
+          diag.includes('mbv < 1') || diag.includes('mbv <1')) {
         mapped.push('oligodramnia_severa');
       } else {
         mapped.push('oligodramnia');
       }
-    } else if (diag.includes('polidrâmnio') || diag.includes('polidramnia') || diag.includes('poliâmnio')) {
+    } else if (diag.includes('polidramnio') || diag.includes('polidramnia') || diag.includes('poliamnio') ||
+               diag.includes('polihidramnio') || diag.includes('la aumentado') || diag.includes('ila alto')) {
       mapped.push('polidramnia');
     }
     
     // ITERATIVIDADE
-    if (diag.includes('iteratividade') || diag.includes('cesárea prévia') || diag.includes('cesarea previa')) {
-      if (diag.includes('corporal')) {
+    if (diag.includes('iteratividade') || diag.includes('cesarea previa') || 
+        diag.includes('cesariana previa') || diag.includes('cesarea anterior') ||
+        diag.match(/\d+\s*(c|cesarea)s?\s*previa/)) {
+      if (diag.includes('corporal') || diag.includes('classica')) {
         mapped.push('cesarea_corporal');
-      } else if (diag.includes('2 cesárea') || diag.includes('duas cesarea') || diag.includes('múltiplas')) {
+      } else if (diag.includes('2') || diag.includes('duas') || diag.includes('multiplas') ||
+                 diag.includes('3') || diag.includes('tres') || diag.includes('4')) {
         mapped.push('iteratividade_2cesarea');
-      } else if (diag.includes('1 cesárea') || diag.includes('uma cesarea')) {
+      } else if (diag.includes('1') || diag.includes('uma')) {
         mapped.push('iteratividade_1cesarea');
       }
     }
     
     // MALFORMAÇÕES FETAIS
-    if (diag.includes('hidrocefalia')) {
+    if (diag.includes('hidrocefalia') || diag.includes('ventriculomegalia')) {
       mapped.push('hidrocefalia');
-    } else if (diag.includes('cardiopatia fetal')) {
+    } else if (diag.includes('cardiopatia fetal') || diag.includes('cardiopatia congenita') ||
+               diag.includes('malformacao cardiaca fetal')) {
       mapped.push('cardiopatia_fetal');
-    } else if (diag.includes('malformação') || diag.includes('malformacao')) {
+    } else if (diag.includes('gastrosquise') || diag.includes('gastrosquize')) {
+      mapped.push('malformacao_grave');
+    } else if (diag.includes('onfalocele')) {
+      mapped.push('malformacao_grave');
+    } else if (diag.includes('hernia diafragmatica')) {
+      mapped.push('malformacao_grave');
+    } else if (diag.includes('malformacao') || diag.includes('ma formacao') || 
+               diag.includes('anomalia fetal') || diag.includes('sindrome genetica')) {
       mapped.push('malformacao_grave');
     }
     
     // DOENÇAS MATERNAS
-    if (diag.includes('cardiopatia materna') || diag.includes('cardiopatia') && !diag.includes('fetal')) {
-      if (diag.includes('grave') || diag.includes('cf iii') || diag.includes('cf iv')) {
+    if ((diag.includes('cardiopatia') && !diag.includes('fetal')) || 
+        diag.includes('cardiopatia materna') || diag.includes('valvopatia') ||
+        diag.includes('doenca cardiaca')) {
+      if (diag.includes('grave') || diag.includes('cf iii') || diag.includes('cf iv') ||
+          diag.includes('classe iii') || diag.includes('classe iv') ||
+          diag.includes('insuficiencia cardiaca') || diag.includes('ic descompensada')) {
         mapped.push('cardiopatia_grave');
       } else {
         mapped.push('cardiopatia_materna');
       }
-    } else if (diag.includes('doença renal') || diag.includes('doenca renal') || diag.includes('insuficiência renal')) {
+    } else if (diag.includes('doenca renal') || diag.includes('insuficiencia renal') ||
+               diag.includes('drc') || diag.includes('nefropatia') || 
+               diag.includes('creatinina alta') || diag.includes('irc')) {
       mapped.push('doenca_renal');
-    } else if (diag.includes('lúpus') || diag.includes('lupus') || diag.includes('les')) {
+    } else if (diag.includes('lupus') || diag.includes('les ') || diag === 'les' ||
+               diag.includes('lupus eritematoso')) {
       mapped.push('lupus');
-    } else if (diag.includes('epilepsia')) {
+    } else if (diag.includes('epilepsia') || diag.includes('convulsao') || 
+               diag.includes('sindrome epileptica') || diag.includes('epileptica')) {
       mapped.push('epilepsia');
-    } else if (diag.includes('trombofilia')) {
+    } else if (diag.includes('trombofilia') || diag.includes('saf') || diag.includes('saaf') ||
+               diag.includes('anticoagulacao') || diag.includes('tvp') ||
+               diag.includes('sindrome antifosfolipide') || diag.includes('antifosfolipidio') ||
+               diag.includes('trombofilica')) {
       mapped.push('trombofilia');
     }
     
     // INFECÇÕES
-    if (diag.includes('hiv') || diag.includes('aids')) {
+    if (diag.includes('hiv') || diag.includes('aids') || diag.includes('soropositivo') ||
+        diag.includes('hiv positivo') || diag.includes('hiv+')) {
       mapped.push('hiv');
-    } else if (diag.includes('hepatite b')) {
+    } else if (diag.includes('hepatite b') || diag.includes('hbv') || diag.includes('vhb') ||
+               diag.includes('hbsag')) {
       mapped.push('hepatite_b');
-    } else if (diag.includes('hepatite c')) {
+    } else if (diag.includes('hepatite c') || diag.includes('hcv') || diag.includes('vhc')) {
       mapped.push('hepatite_c');
-    } else if (diag.includes('herpes') && diag.includes('ativo')) {
+    } else if ((diag.includes('herpes') && diag.includes('ativo')) || 
+               diag.includes('lesao herpetica') || diag.includes('herpes genital ativo')) {
       mapped.push('herpes_ativo');
+    } else if (diag.includes('sifilis') || diag.includes('vdrl') || diag.includes('lues')) {
+      mapped.push('sifilis_tratada');
+    } else if (diag.includes('toxoplasmose') || diag.includes('toxoplasma')) {
+      mapped.push('toxoplasmose');
     }
     
     // CIRURGIAS UTERINAS
-    if (diag.includes('miomectomia')) {
+    if (diag.includes('miomectomia') || diag.includes('resseccao mioma') ||
+        diag.includes('cirurgia mioma')) {
       mapped.push('miomectomia_previa');
-    } else if (diag.includes('mioma') || diag.includes('miomatose')) {
+    } else if (diag.includes('mioma') || diag.includes('miomatose') || 
+               diag.includes('leiomioma') || diag.includes('fibroma uterino')) {
       mapped.push('miomatose');
     }
     
     // ESPECIAIS
-    if (diag.includes('tpp') || diag.includes('trabalho de parto prematuro')) {
+    if (diag.includes('tpp') || diag.includes('trabalho de parto prematuro') ||
+        diag.includes('ameaca parto prematuro') || diag.includes('app') ||
+        diag.includes('contracoes prematuras')) {
       mapped.push('tpp_atual');
-    } else if (diag.includes('óbito fetal anterior') || diag.includes('obito fetal anterior') || diag.includes('ofu')) {
+    } else if (diag.includes('obito fetal anterior') || diag.includes('of anterior') ||
+               diag.includes('oiu anterior') || diag.includes('morte fetal anterior') ||
+               diag.includes('natimorto anterior')) {
       mapped.push('obito_fetal_anterior');
-    } else if (diag.includes('gestação prolongada') || diag.includes('gestacao prolongada') || diag.includes('41 semanas')) {
+    } else if (diag.includes('gestacao prolongada') || diag.includes('41 semanas') ||
+               diag.includes('pos-termo') || diag.includes('pos termo') ||
+               diag.includes('> 41') || diag.includes('>41')) {
       mapped.push('gestacao_prolongada');
-    } else if (diag.includes('idade materna avançada') || diag.includes('idade materna avancada') || diag.includes('ima')) {
+    } else if (diag.includes('idade materna avancada') || diag.includes('ima') ||
+               diag.includes('> 35 anos') || diag.includes('>35 anos') ||
+               diag.includes('idade avancada') || diag.includes('gestante idosa')) {
       mapped.push('idade_materna_avancada');
-    } else if (diag.includes('obesidade mórbida') || diag.includes('obesidade morbida') || diag.includes('imc > 40') || diag.includes('imc >40')) {
+    } else if (diag.includes('obesidade morbida') || diag.includes('imc > 40') || 
+               diag.includes('imc >40') || diag.includes('obesidade grau iii') ||
+               diag.includes('obesidade grau 3')) {
       mapped.push('obesidade_morbida');
-    } else if (diag.includes('aloimunização') || diag.includes('aloimunizacao') || diag.includes('incompatibilidade rh')) {
+    } else if (diag.includes('aloimunizacao') || diag.includes('incompatibilidade rh') ||
+               diag.includes('isoimunizacao') || diag.includes('rh negativo sensibilizada')) {
       mapped.push('aloimunizacao_rh');
     }
     
-    // ELETIVOS
-    if (diag.includes('desejo materno') || diag.includes('a pedido')) {
-      mapped.push('desejo_materno');
-    } else if (diag.includes('laqueadura')) {
+    // ELETIVOS - verificar POR ÚLTIMO pois só deve ser aplicado se nenhuma patologia foi encontrada
+    // Isso evita que "desejo materno" sobrescreva patologias reais
+    if (diag.includes('laqueadura') || diag.includes('ligadura tubaria') ||
+        diag.includes('esterilizacao') || diag.includes('ltb')) {
       mapped.push('laqueadura');
     }
   });
