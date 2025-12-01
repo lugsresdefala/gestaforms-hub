@@ -12,13 +12,31 @@ import { addDays, differenceInDays, getDay, format } from 'date-fns';
 /**
  * Daily capacity configuration per maternity
  * Format: [weekday capacity, saturday capacity, sunday capacity]
+ * NOTA: Valores padrão - usar capacidades do banco via capacidadeService.ts
  */
-export const CAPACIDADE_MATERNIDADES: Record<string, [number, number, number]> = {
+export const CAPACIDADE_MATERNIDADES_DEFAULT: Record<string, [number, number, number]> = {
   'Guarulhos': [2, 1, 0],
   'NotreCare': [6, 2, 0],
   'Salvalus': [9, 7, 0],
   'Cruzeiro': [3, 1, 0],
 };
+
+// Capacidades dinâmicas (atualizadas do banco)
+let CAPACIDADE_MATERNIDADES: Record<string, [number, number, number]> = { ...CAPACIDADE_MATERNIDADES_DEFAULT };
+
+/**
+ * Atualiza as capacidades das maternidades (chamado após buscar do banco)
+ */
+export function setCapacidadesMaternidades(capacidades: Record<string, [number, number, number]>): void {
+  CAPACIDADE_MATERNIDADES = { ...CAPACIDADE_MATERNIDADES_DEFAULT, ...capacidades };
+}
+
+/**
+ * Obtém as capacidades atuais
+ */
+export function getCapacidadesMaternidades(): Record<string, [number, number, number]> {
+  return CAPACIDADE_MATERNIDADES;
+}
 
 /** Minimum lead time in days between reference date and scheduled date */
 export const LEAD_TIME_MINIMO = 10;

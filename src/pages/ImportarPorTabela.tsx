@@ -27,6 +27,9 @@ import {
   validarIG,
   type StatusAgendamento,
   LEAD_TIME_MINIMO,
+  fetchCapacidadesMaternidades,
+  setCapacidadesMaternidades,
+  toCapacidadeRecord,
 } from "@/lib/scheduling";
 import { validarAgendamento } from "@/lib/validation";
 import { ModalCorrecaoDatas } from "@/components/ModalCorrecaoDatas";
@@ -528,6 +531,15 @@ export default function ImportarPorTabela() {
 
   // Normal processing (after incoherence resolution)
   const processarDadosNormalmente = async () => {
+    // Buscar capacidades das maternidades do banco de dados
+    try {
+      const capacidades = await fetchCapacidadesMaternidades();
+      const capacidadesRecord = toCapacidadeRecord(capacidades);
+      setCapacidadesMaternidades(capacidadesRecord);
+    } catch (err) {
+      console.warn('Usando capacidades padrão:', err);
+    }
+
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -673,6 +685,15 @@ export default function ImportarPorTabela() {
   const processarDados = async () => {
     setProcessing(true);
     setCorrigidos(0);
+
+    // Buscar capacidades das maternidades do banco de dados
+    try {
+      const capacidades = await fetchCapacidadesMaternidades();
+      const capacidadesRecord = toCapacidadeRecord(capacidades);
+      setCapacidadesMaternidades(capacidadesRecord);
+    } catch (err) {
+      console.warn('Usando capacidades padrão:', err);
+    }
 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
