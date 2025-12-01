@@ -610,7 +610,7 @@ export default function ImportarPorTabela() {
           intervaloRegistroAgendamento = differenceInDays(scheduleResult.dataAgendada, dataReferencia);
         }
 
-        // Validar IG
+        // Validar IG (apenas para gerar alertas informativos, não bloqueia)
         const validacao = validarIG({
           igIdealSemanas,
           igIdealDias,
@@ -620,14 +620,22 @@ export default function ImportarPorTabela() {
           dataAgendada: scheduleResult.dataAgendada,
         });
 
-        // Determinar status final
-        const requerRevisao = scheduleResult.status === 'needs_review' || validacao.requerRevisao;
-        const motivos: string[] = [];
-        if (scheduleResult.status === 'needs_review') {
-          motivos.push(scheduleResult.motivo);
+        // Determinar status final - apenas bloqueia se não encontrar data válida
+        // Diferença entre IG ideal e pretendida é apenas AVISO, não bloqueia
+        const bloqueiaAgendamento = scheduleResult.status === 'needs_review';
+        const avisos: string[] = [];
+        
+        // Avisos de IG (informativos, não bloqueiam)
+        if (igIdealSemanas !== igPretendidaSemanas) {
+          avisos.push(`⚠️ IG ideal (${igIdealSemanas}s) difere da IG pretendida (${igPretendidaSemanas}s)`);
         }
         if (validacao.alertas.length > 0) {
-          motivos.push(...validacao.alertas);
+          avisos.push(...validacao.alertas.map(a => `⚠️ ${a}`));
+        }
+        
+        // Motivos de bloqueio (quando não encontra data)
+        if (scheduleResult.status === 'needs_review') {
+          avisos.push(`❌ ${scheduleResult.motivo}`);
         }
 
         return {
@@ -636,15 +644,15 @@ export default function ImportarPorTabela() {
           data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
           ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
-          status_agendamento: requerRevisao ? 'needs_review' : scheduleResult.status,
+          status_agendamento: bloqueiaAgendamento ? 'needs_review' : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
           intervalo_dias: intervaloRegistroAgendamento,
           lead_time_dias: scheduleResult.leadTimeDias,
           margem_protocolo: margemDias,
           protocolo_aplicado: protocoloNome,
-          motivo_calculo: motivos.join(' | ') || scheduleResult.motivo,
-          status: requerRevisao ? "erro" as const : "valido" as const,
-          erro: requerRevisao ? 'Revisão necessária: ' + motivos.join(' | ') : undefined,
+          motivo_calculo: avisos.join(' | ') || scheduleResult.motivo,
+          status: bloqueiaAgendamento ? "erro" as const : "valido" as const,
+          erro: bloqueiaAgendamento ? 'Não foi possível encontrar data válida' : undefined,
         };
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no processamento" };
