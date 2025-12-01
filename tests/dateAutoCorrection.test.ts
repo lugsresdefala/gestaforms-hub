@@ -14,6 +14,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   tryAutoCorrectDate,
+  tryAutoCorrectUsgDate,
   invertMonthDay,
   isIgValid,
   formatCorrectionForAudit,
@@ -244,6 +245,48 @@ describe('Date Auto-Correction Module', () => {
       // Original IG = ~46 days before (since ref is Jan 1 and date is Feb 15)
       // Wait, Feb 15 is AFTER Jan 1, so IG would be negative
       // But 15 > 12 so no swap possible
+      expect(result.wasCorrected).toBe(false);
+    });
+  });
+
+  describe('tryAutoCorrectUsgDate', () => {
+    it('should correct USG date when inversion resolves impossible IG', () => {
+      // Reference: 2025-06-01
+      // USG with 8 weeks 0 days
+      // Original: 03/07/2025 in DD/MM/YYYY = July 3, 2025 → future date (32 days after ref)
+      //   → IG = 8*7 + (-32) = 56 - 32 = 24 days = ~3.4 weeks (invalid, < 5 weeks)
+      // Inverted: March 7, 2025 → past date (86 days before ref)
+      //   → IG = 8*7 + 86 = 56 + 86 = 142 days = ~20 weeks (valid)
+      const result = tryAutoCorrectUsgDate('03/07/2025', 8, 0, new Date('2025-06-01'));
+      
+      expect(result.wasCorrected).toBe(true);
+      expect(result.originalRaw).toBe('03/07/2025');
+      expect(result.correctedRaw).toBe('07/03/2025');
+    });
+
+    it('should NOT correct USG date when original IG is already valid', () => {
+      // Reference: 2024-12-01
+      // USG with 12 weeks 0 days on September 1, 2024
+      // IG = 12*7 + 91 = 84 + 91 = 175 days = 25 weeks (valid)
+      const result = tryAutoCorrectUsgDate('01/09/2024', 12, 0, new Date('2024-12-01'));
+      
+      expect(result.wasCorrected).toBe(false);
+      expect(result.reason).toContain('válida');
+    });
+
+    it('should handle empty/null input gracefully', () => {
+      expect(tryAutoCorrectUsgDate(null, 12, 0).wasCorrected).toBe(false);
+      expect(tryAutoCorrectUsgDate(undefined, 12, 0).wasCorrected).toBe(false);
+      expect(tryAutoCorrectUsgDate('', 12, 0).wasCorrected).toBe(false);
+    });
+
+    it('should NOT correct when day > 12 (unambiguous date)', () => {
+      // Reference: 2024-12-01
+      // Original: 15/03/2024 (Mar 15, 2024) with 12 weeks
+      // Day is 15, cannot be a month, so no inversion possible
+      const result = tryAutoCorrectUsgDate('15/03/2024', 12, 0, new Date('2024-12-01'));
+      
+      // Should not be corrected because 15 cannot be a month
       expect(result.wasCorrected).toBe(false);
     });
   });
