@@ -404,10 +404,10 @@ export function chooseAndComputeExtended(params: ExtendedComputeParams): Extende
 
   // Check DUM validity
   const dumReliable = isDumReliable(dumStatus);
-  let dumValid = dumDate !== null && dumReliable;
+  const dumValid = dumDate !== null && dumReliable;
 
   // Check USG validity (needs date and at least weeks to be meaningful)
-  let usgValid = usgDate !== null && (usgWeeksNum > 0 || usgDaysNum > 0);
+  const usgValid = usgDate !== null && (usgWeeksNum > 0 || usgDaysNum > 0);
 
   // Try auto-correction if dates produce invalid IG
   // For DUM: try correction if IG is invalid
@@ -420,7 +420,7 @@ export function chooseAndComputeExtended(params: ExtendedComputeParams): Extende
   }
 
   // For USG: try correction if IG is invalid
-  if (usgValid && usgDate && usgDateRaw && (usgWeeksNum > 0 || usgDaysNum > 0)) {
+  if (usgValid && usgDate && usgDateRaw) {
     const usgCorrection = tryAutoCorrectUsgDate(usgDateRaw, usgWeeksNum, usgDaysNum, referenceDate);
     if (usgCorrection.wasCorrected && usgCorrection.correctedDate) {
       usgDate = usgCorrection.correctedDate;
