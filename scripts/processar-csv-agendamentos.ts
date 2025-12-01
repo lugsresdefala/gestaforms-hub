@@ -160,9 +160,14 @@ export function parseUsgRecente(texto: string | null | undefined): UsgRecenteDat
   const textoNorm = texto.toLowerCase().trim();
   
   // Extract date (DD/MM/YYYY or DD/MM/YY) - look for standalone date patterns
+  // The negative lookahead (?!\s*[+/]\s*\d) prevents matching gestational age 
+  // patterns like '32+5' or '32/5' that could be misinterpreted as dates
   const dateMatch = textoNorm.match(/(\d{1,2})[/\-](\d{1,2})[/\-](\d{2,4})(?!\s*[+/]\s*\d)/);
   if (dateMatch) {
     const [, day, month, yearRaw] = dateMatch;
+    // 2-digit year conversion: years > 50 map to 1900s, years <= 50 map to 2000s
+    // This follows the common convention for medical records where older years 
+    // (e.g., birth dates) are more likely 19xx and recent dates are 20xx
     const year = yearRaw.length === 2 
       ? (parseInt(yearRaw) > 50 ? '19' + yearRaw : '20' + yearRaw) 
       : yearRaw;
@@ -363,7 +368,10 @@ function parseDateExtended(dateStr: string | null | undefined): Date | null {
     const month = parseInt(monthStr, 10);
     let year = parseInt(yearStr, 10);
     
-    // Convert 2-digit year: 00-50 = 2000s, 51-99 = 1900s
+    // 2-digit year conversion: years > 50 map to 1900s, years <= 50 map to 2000s
+    // This follows the common convention for medical records where older years 
+    // (e.g., birth dates from patients born in 1970s-1990s) are more likely 19xx 
+    // and recent/future dates (appointments, pregnancies) are 20xx
     year = year > 50 ? 1900 + year : 2000 + year;
     
     // Validate ranges
@@ -749,7 +757,8 @@ async function main() {
       outputDir = path.resolve(args[++i]);
     } else if (args[i] === '-h' || args[i] === '--help') {
       console.log(`
-Uso: npx ts-node scripts/processar-csv-agendamentos.ts [opções]
+Uso: npm run processar-csv
+      (ou diretamente: npx tsx scripts/processar-csv-agendamentos.ts [opções])
 
 Opções:
   -i, --input <arquivo>   Arquivo CSV de entrada (padrão: data/input/agendamentos.csv)
@@ -757,7 +766,8 @@ Opções:
   -h, --help              Exibe esta mensagem de ajuda
 
 Exemplo:
-  npx ts-node scripts/processar-csv-agendamentos.ts -i meus-dados.csv -o resultados/
+  npm run processar-csv
+  npx tsx scripts/processar-csv-agendamentos.ts -i meus-dados.csv -o resultados/
       `);
       process.exit(0);
     }
