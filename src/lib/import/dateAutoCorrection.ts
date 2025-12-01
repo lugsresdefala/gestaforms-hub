@@ -19,10 +19,21 @@ import { parseDateSafe } from './dateParser';
 import { differenceInDays, format } from 'date-fns';
 
 /** Minimum valid gestational age in days (5 weeks = 35 days) */
-const MIN_VALID_IG_DAYS = 35;
+export const MIN_VALID_IG_DAYS_CONST = 35;
 
 /** Maximum valid gestational age in days (42 weeks = 294 days) */
-const MAX_VALID_IG_DAYS = 294;
+export const MAX_VALID_IG_DAYS_CONST = 294;
+
+/**
+ * Format IG in days as a readable string "Xs Yd"
+ * @param igDays - Gestational age in total days
+ * @returns Formatted string like "39s 0d"
+ */
+function formatIgForDisplay(igDays: number): string {
+  const weeks = Math.floor(igDays / 7);
+  const days = igDays % 7;
+  return `${weeks}s${days}d`;
+}
 
 /**
  * Result of a date auto-correction attempt
@@ -53,7 +64,7 @@ export interface DateCorrectionResult {
  * @returns true if within valid range (5-42 weeks)
  */
 export function isIgValid(igDays: number): boolean {
-  return igDays >= MIN_VALID_IG_DAYS && igDays <= MAX_VALID_IG_DAYS;
+  return igDays >= MIN_VALID_IG_DAYS_CONST && igDays <= MAX_VALID_IG_DAYS_CONST;
 }
 
 /**
@@ -205,7 +216,7 @@ export function tryAutoCorrectDate(
         originalParsed: null,
         correctedDate: invertedDate,
         correctedRaw: invertedRaw,
-        reason: `Data original inválida, inversão mês/dia produziu IG válida (${Math.floor(invertedIgDays / 7)}s${invertedIgDays % 7}d)`,
+        reason: `Data original inválida, inversão mês/dia produziu IG válida (${formatIgForDisplay(invertedIgDays)})`,
         originalIgDays: null,
         correctedIgDays: invertedIgDays,
       };
@@ -228,7 +239,7 @@ export function tryAutoCorrectDate(
       originalParsed: originalDate,
       correctedDate: null,
       correctedRaw: null,
-      reason: `IG original válida (${Math.floor(originalIgDays / 7)}s${originalIgDays % 7}d), nenhuma correção necessária`,
+      reason: `IG original válida (${formatIgForDisplay(originalIgDays)}), nenhuma correção necessária`,
       originalIgDays,
       correctedIgDays: null,
     };
@@ -243,7 +254,7 @@ export function tryAutoCorrectDate(
       originalParsed: originalDate,
       correctedDate: null,
       correctedRaw: null,
-      reason: `IG impossível (${Math.floor(originalIgDays / 7)}s${originalIgDays % 7}d) e data não é invertível (mês ou dia > 12)`,
+      reason: `IG impossível (${formatIgForDisplay(originalIgDays)}) e data não é invertível (mês ou dia > 12)`,
       originalIgDays,
       correctedIgDays: null,
     };
@@ -274,8 +285,8 @@ export function tryAutoCorrectDate(
       correctedDate: invertedDate,
       correctedRaw: invertedRaw,
       reason: `Auto-correção aplicada: ${trimmed} → ${invertedRaw}. ` +
-        `IG original: ${Math.floor(originalIgDays / 7)}s${originalIgDays % 7}d (impossível) → ` +
-        `IG corrigida: ${Math.floor(invertedIgDays / 7)}s${invertedIgDays % 7}d (válida)`,
+        `IG original: ${formatIgForDisplay(originalIgDays)} (impossível) → ` +
+        `IG corrigida: ${formatIgForDisplay(invertedIgDays)} (válida)`,
       originalIgDays,
       correctedIgDays: invertedIgDays,
     };
@@ -288,7 +299,7 @@ export function tryAutoCorrectDate(
     originalParsed: originalDate,
     correctedDate: null,
     correctedRaw: null,
-    reason: `IG impossível (${Math.floor(originalIgDays / 7)}s${originalIgDays % 7}d) e inversão também produz IG inválida (${Math.floor(invertedIgDays / 7)}s${invertedIgDays % 7}d)`,
+    reason: `IG impossível (${formatIgForDisplay(originalIgDays)}) e inversão também produz IG inválida (${formatIgForDisplay(invertedIgDays)})`,
     originalIgDays,
     correctedIgDays: invertedIgDays,
   };
@@ -311,12 +322,6 @@ export function formatCorrectionForAudit(
 
   const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
   return `[${timestamp}] Auto-correção ${campo}: ${correction.originalRaw} → ${correction.correctedRaw}. ` +
-    `IG antes: ${correction.originalIgDays !== null ? `${Math.floor(correction.originalIgDays / 7)}s${correction.originalIgDays % 7}d` : 'N/A'}, ` +
-    `IG depois: ${correction.correctedIgDays !== null ? `${Math.floor(correction.correctedIgDays / 7)}s${correction.correctedIgDays % 7}d` : 'N/A'}`;
+    `IG antes: ${correction.originalIgDays !== null ? formatIgForDisplay(correction.originalIgDays) : 'N/A'}, ` +
+    `IG depois: ${correction.correctedIgDays !== null ? formatIgForDisplay(correction.correctedIgDays) : 'N/A'}`;
 }
-
-/**
- * Exported constants for testing
- */
-export const MIN_VALID_IG_DAYS_CONST = MIN_VALID_IG_DAYS;
-export const MAX_VALID_IG_DAYS_CONST = MAX_VALID_IG_DAYS;

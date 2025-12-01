@@ -78,8 +78,8 @@ describe('Date Auto-Correction Module', () => {
     // Test scenario: Date produces impossible IG, but inverted produces valid IG
     it('should correct date when inversion resolves impossible IG', () => {
       // Reference: 2024-12-01
-      // Original: 05/12/2024 (Dec 5, 2024) → future date, IG < 0 (impossible)
-      // Inverted: 12/05/2024 (May 12, 2024) → IG = ~200 days (valid)
+      // Original: 05/12/2024 in DD/MM/YYYY = December 5, 2024 → future date, IG < 0 (impossible)
+      // Inverted: Treated as if month and day were swapped → May 12, 2024 → IG = ~200 days (valid)
       const result = tryAutoCorrectDate('05/12/2024', new Date('2024-12-01'));
       
       expect(result.wasCorrected).toBe(true);
@@ -144,8 +144,8 @@ describe('Date Auto-Correction Module', () => {
     // Edge case: date that looks like it needs correction but both versions are close
     it('should handle ambiguous dates near reference date', () => {
       // Reference: 2024-12-01
-      // Original: 10/11/2024 (Nov 10, 2024) → IG = ~21 days (too early)
-      // Inverted: 11/10/2024 (Oct 11, 2024) → IG = ~51 days (valid)
+      // Original: 10/11/2024 in DD/MM/YYYY = November 10, 2024 → IG = ~21 days (too early, < 5 weeks)
+      // Inverted: Would be interpreted as October 11, 2024 → IG = ~51 days (valid, > 5 weeks)
       const result = tryAutoCorrectDate('10/11/2024', new Date('2024-12-01'));
       
       // Original gives IG = 21 days (invalid), inverted gives IG = 51 days (valid)
