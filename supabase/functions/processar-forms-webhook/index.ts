@@ -70,12 +70,11 @@ interface FormsOutput extends FormsInput {
 // ============================================================================
 // PROTOCOLS (simplified version for Edge Function)
 // NOTE: desejo_materno and laqueadura removed - not clinical pathologies (PT-AON-097)
+// NOTE: baixo_risco removed - all patients must have clinical diagnoses
 // ============================================================================
 
 const PROTOCOLS: Record<string, ProtocolConfig> = {
   cerclagem: { igIdeal: "15", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "PRIORIDADE CRÍTICA - Cerclagem / IIC" },
-  // NOTE: baixo_risco removed - não existe no protocolo clínico (PT-AON-097)
-  // Todas as pacientes devem ter diagnósticos clínicos explícitos
   hac: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada" },
   hac_dificil: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "3 drogas - difícil controle" },
   hipertensao_gestacional: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: ">36sem: Doppler+PBF semanal" },
@@ -469,24 +468,10 @@ function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()):
   // Calculate DPP
   const dpp = calcularDPP(igFinal, hoje);
   
-  // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos
-  // Não existe conceito de "baixo_risco" no protocolo clínico (PT-AON-097)
-  if (patologias.length === 0) {
-    return {
-      ...dados,
-      maternidade_resultado: 'ERRO: Nenhum diagnóstico clínico identificado. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.',
-      IG_Atual_Dias: igFinal.totalDays,
-      IG_Atual_Formatada: igFinal.displayText,
-      Metodo_IG: metodologia,
-      IG_Recomendada_Dias: 0,
-      IG_Recomendada_Formatada: '',
-      Data_Ideal_Calculada: '',
-      Data_Agendada: '',
-      IG_na_Data_Agendada_Formatada: '',
-      Intervalo: 0,
-      erro: 'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados. Revise os campos de diagnósticos.'
-    };
-  }
+  // Determine ideal IG based on protocols
+  // IMPORTANTE: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
+  let igRecomendadaSemanas: number | null = null;
+  let protocoloObservacao = 'ERRO: Nenhum diagnóstico clínico identificado. Revise os diagnósticos.';
   
   // Find most restrictive protocol
   let protocoloSelecionado: ProtocolConfig | null = null;
@@ -505,26 +490,23 @@ function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()):
     }
   }
   
-  // Se nenhum protocolo válido foi encontrado, retornar erro
-  if (!protocoloSelecionado) {
+  // Se não foi possível determinar protocolo, retornar erro
+  if (igRecomendadaSemanas === null) {
     return {
       ...dados,
-      maternidade_resultado: 'ERRO: Nenhum protocolo clínico válido foi identificado para os diagnósticos fornecidos.',
+      maternidade_resultado: protocoloObservacao,
       IG_Atual_Dias: igFinal.totalDays,
       IG_Atual_Formatada: igFinal.displayText,
       Metodo_IG: metodologia,
       IG_Recomendada_Dias: 0,
-      IG_Recomendada_Formatada: '',
+      IG_Recomendada_Formatada: 'N/A',
       Data_Ideal_Calculada: '',
       Data_Agendada: '',
       IG_na_Data_Agendada_Formatada: '',
       Intervalo: 0,
-      erro: 'ERRO: Os diagnósticos informados não correspondem a protocolos clínicos válidos. Verifique os diagnósticos.'
+      erro: 'Nenhum diagnóstico clínico identificado. Todas as pacientes devem ter pelo menos um diagnóstico registrado.'
     };
   }
-  
-  const igRecomendadaSemanas = parseIgIdeal(protocoloSelecionado.igIdeal);
-  const protocoloObservacao = `${protocoloSelecionado.observacoes}. IG ideal baseada em ${patologiaSelecionada.replace(/_/g, ' ')}.`;
   
   // Calculate ideal date
   const semanasAntesDpp = 40 - igRecomendadaSemanas;

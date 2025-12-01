@@ -239,16 +239,30 @@ export function getAllCategories(): { id: DiagnosticCategory; label: string }[] 
   ];
 }
 
-// Função para calcular IG pretendida automaticamente baseada nos diagnósticos selecionados
-export function calculateAutomaticIG(selectedDiagnostics: string[]): {
+/** 
+ * Return type for calculateAutomaticIG when a valid protocol is found
+ */
+export interface CalculateAutomaticIGResult {
   igPretendida: string;
   igPretendidaMax?: string;
   protocoloAplicado: string;
   observacoes: string;
   prioridade: number;
-} {
+}
+
+/**
+ * Calcula IG pretendida automaticamente baseada nos diagnósticos selecionados.
+ * 
+ * IMPORTANTE: Diagnósticos clínicos são obrigatórios. Não existe classificação de
+ * "baixo risco" como protocolo. Ausência de diagnósticos ou diagnósticos inválidos
+ * gera erro de validação.
+ * 
+ * @param selectedDiagnostics - Array de IDs de diagnósticos selecionados
+ * @returns Objeto com protocolo aplicado
+ * @throws Error se nenhum diagnóstico clínico válido for identificado
+ */
+export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAutomaticIGResult {
   // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos
-  // Não existe conceito de "baixo_risco" no protocolo clínico (PT-AON-097)
   if (selectedDiagnostics.length === 0) {
     throw new Error(
       'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
@@ -275,15 +289,18 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): {
       // "Imediato" - prioridade máxima
       return {
         igPretendida: protocol.igIdeal,
+        igPretendidaMax: protocol.igIdealMax,
         protocoloAplicado: diagId,
         observacoes: protocol.observacoes,
         prioridade: 1
       };
     }
     
-    if (!mostRestrictive ||
-        protocol.prioridade < mostRestrictive.prioridade ||
-        (protocol.prioridade === mostRestrictive.prioridade && igIdeal < mostRestrictive.igIdeal)) {
+    if (
+      !mostRestrictive ||
+      protocol.prioridade < mostRestrictive.prioridade ||
+      (protocol.prioridade === mostRestrictive.prioridade && igIdeal < mostRestrictive.igIdeal)
+    ) {
       mostRestrictive = {
         id: diagId,
         igIdeal,

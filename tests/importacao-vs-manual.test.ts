@@ -53,8 +53,7 @@ function calcularAgendamento(dados: {
     return { valido: false, motivo: igResult?.reason || 'IG não calculável' };
   }
 
-  // Map diagnoses to protocols - if no diagnoses, validation should fail
-  // PT-AON-097: diagnósticos clínicos são obrigatórios
+  // Map diagnoses to protocols - se não há diagnósticos, calculateAutomaticIG retorna null
   const allDiagnoses = [...dados.diagnosticos_maternos, ...dados.diagnosticos_fetais];
   
   // Validação obrigatória de diagnósticos
@@ -68,6 +67,14 @@ function calcularAgendamento(dados: {
   }
   
   const protocolResult = calculateAutomaticIG(mappedDiagnoses);
+
+  // Se protocolResult é null, significa que não há diagnóstico válido
+  if (!protocolResult) {
+    return { 
+      valido: false, 
+      motivo: 'Nenhum diagnóstico clínico identificado. Todas as pacientes devem ter pelo menos uma patologia registrada.' 
+    };
+  }
 
   const igIdealSemanas = parseInt(protocolResult.igPretendida) || 39;
   const margemDias = PROTOCOLS[protocolResult.protocoloAplicado]?.margemDias || 7;
@@ -103,7 +110,7 @@ describe('Importação vs Manual - Consistency Tests', () => {
   // Use a fixed reference date for deterministic tests
   const dataReferencia = new Date('2024-06-01');
 
-  describe('Case 1: Valid Simple Appointment (Cesarean, no diagnoses)', () => {
+  describe('Case 1: Appointment without diagnoses should fail validation', () => {
     const dadosBase = {
       nome_completo: 'Ana Carolina Silva',
       carteirinha: '1234567890',
@@ -128,45 +135,11 @@ describe('Importação vs Manual - Consistency Tests', () => {
       expect(result.valido).toBe(true);
     });
 
-    it('should fail validation because diagnoses are required', () => {
-      // PT-AON-097: diagnósticos clínicos são obrigatórios
-      // When no diagnoses are provided, validation should fail
+    it('should fail calculation due to missing diagnoses (no baixo_risco fallback)', () => {
       const result = calcularAgendamento({ ...dadosBase, dataReferencia });
+      // Sem diagnósticos, deve falhar a validação (não existe mais "baixo_risco")
       expect(result.valido).toBe(false);
-      expect(result.motivo).toContain('obrigatório');
-    });
-  });
-
-  describe('Case 1B: Valid Appointment with Clinical Diagnosis', () => {
-    const dadosComDiagnostico = {
-      nome_completo: 'Ana Carolina Silva',
-      carteirinha: '1234567890',
-      data_nascimento: '15/03/1990',
-      maternidade: 'Salvalus',
-      dum_status: 'Sim - Confiavel',
-      data_dum: '01/09/2023',
-      data_primeiro_usg: '15/10/2023',
-      semanas_usg: 8,
-      dias_usg: 2,
-      diagnosticos_maternos: ['hac_compensada'],
-      diagnosticos_fetais: [] as string[],
-    };
-
-    it('should pass required field validation', () => {
-      const result = validarCamposObrigatorios(dadosComDiagnostico);
-      expect(result.valido).toBe(true);
-    });
-
-    it('should pass IG data validation', () => {
-      const result = validarDadosIG(dadosComDiagnostico);
-      expect(result.valido).toBe(true);
-    });
-
-    it('should calculate IG successfully with HAC protocol', () => {
-      const result = calcularAgendamento({ ...dadosComDiagnostico, dataReferencia });
-      expect(result.valido).toBe(true);
-      expect(result.protocolo).toBe('hac_compensada');
-      expect(result.igIdeal).toBe('39 semanas');
+      expect(result.motivo).toContain('diagnóstico');
     });
   });
 

@@ -94,6 +94,9 @@ const MARGEM_MAXIMA_DIAS = 7;
 /** Lead time threshold for urgent cases (encaminhar para PS) */
 const LEAD_TIME_URGENTE = 7;
 
+/** Maximum gestational weeks for scheduling */
+const MAX_GESTATIONAL_WEEKS = 41;
+
 /**
  * Normalizes a string array or comma-separated string to array
  */
@@ -300,10 +303,16 @@ export async function validarAgendamento(
   }
 
   // 8. PROTOCOL COMPLIANCE CHECK
-  const diagnosticos = [
+  // IMPORTANTE: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
+  const diagnosticos: string[] = [
     ...normalizeToArray(dados.diagnosticos_maternos),
     ...normalizeToArray(dados.diagnosticos_fetais),
   ];
+
+  // incluir indicação do procedimento na análise de protocolo, como texto livre
+  if (dados.indicacao_procedimento?.trim()) {
+    diagnosticos.push(dados.indicacao_procedimento.trim());
+  }
   
   // Map diagnoses to protocols - se não houver diagnósticos, validação obrigatória falha
   const protocolKeys = mapDiagnosisToProtocol(diagnosticos);
@@ -311,17 +320,19 @@ export async function validarAgendamento(
   // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos (PT-AON-097)
   if (protocolKeys.length === 0 && diagnosticos.length === 0) {
     errosCriticos.push(
-      'Diagnósticos clínicos são obrigatórios. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.'
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.'
     );
   } else if (protocolKeys.length === 0 && diagnosticos.length > 0) {
     errosCriticos.push(
-      'Os diagnósticos informados não correspondem a protocolos clínicos válidos. Revise os diagnósticos ou use IDs de protocolo válidos.'
+      'ERRO DE VALIDAÇÃO: Os diagnósticos informados não correspondem a protocolos clínicos válidos. ' +
+      'Revise os diagnósticos ou utilize IDs de protocolo válidos.'
     );
   }
   
   if (protocolKeys.length > 0) {
     // Find most restrictive protocol
-    let mostRestrictiveIg = 40;
+    let mostRestrictiveIg = MAX_GESTATIONAL_WEEKS; // Start with max value
     let mostRestrictiveProtocol = '';
     let margemDias = 7;
     
@@ -337,13 +348,15 @@ export async function validarAgendamento(
       }
     }
     
-    // Check IG pretendida against protocol
-    const igPretendida = parseWeeks(dados.ig_pretendida) ?? 39;
-    
-    if (Math.abs(igPretendida - mostRestrictiveIg) > 0) {
-      avisos.push(
-        `IG pretendida (${igPretendida} semanas) difere da IG ideal do protocolo "${mostRestrictiveProtocol.replace(/_/g, ' ')}" (${mostRestrictiveIg} semanas)`
-      );
+    // Check IG pretendida against protocol (only if protocol was found)
+    if (mostRestrictiveProtocol) {
+      const igPretendida = parseWeeks(dados.ig_pretendida) ?? mostRestrictiveIg;
+      
+      if (Math.abs(igPretendida - mostRestrictiveIg) > 0) {
+        avisos.push(
+          `IG pretendida (${igPretendida} semanas) difere da IG ideal do protocolo "${mostRestrictiveProtocol.replace(/_/g, ' ')}" (${mostRestrictiveIg} semanas)`
+        );
+      }
     }
     
     // If we can calculate IG at scheduled date, verify it's within protocol range

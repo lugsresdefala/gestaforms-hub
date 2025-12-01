@@ -264,9 +264,30 @@ export const identificarPatologias = (dados: {
 };
 
 /**
+ * Erro lançado quando nenhum diagnóstico clínico é identificado.
+ * Todas as pacientes devem ter pelo menos uma patologia registrada.
+ */
+export class NoDiagnosisError extends Error {
+  constructor() {
+    super(
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter pelo menos uma patologia registrada. ' +
+      'Revise os diagnósticos maternos e fetais.'
+    );
+    this.name = 'NoDiagnosisError';
+  }
+}
+
+/**
  * Calcula data de agendamento baseada em protocolos obstétricos
  * Aplica regras: DPP, antecedência mínima 10 dias, excluir domingos
  * NOVO: Verifica disponibilidade de vagas e busca alternativa se necessário
+ * 
+ * IMPORTANTE: Não existe classificação de "baixo risco". Todas as pacientes
+ * devem ter diagnósticos clínicos específicos. Se não houver patologias,
+ * lança NoDiagnosisError.
+ * 
+ * @throws {NoDiagnosisError} Se nenhuma patologia for identificada
  */
 export const calcularDataAgendamento = async (
   igAtual: GestationalAge,
@@ -276,14 +297,9 @@ export const calcularDataAgendamento = async (
 ): Promise<{ data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date; vagaConfirmada: boolean }> => {
   const dpp = calcularDPP(igAtual, dataReferencia);
   
-  // VALIDAÇÃO OBRIGATÓRIA: Patologias clínicas são requeridas
-  // Não existe conceito de "baixo_risco" no protocolo clínico (PT-AON-097)
+  // VALIDAÇÃO: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
   if (patologias.length === 0) {
-    throw new Error(
-      'ERRO: Nenhuma patologia detectada. ' +
-      'Não é possível calcular data de agendamento sem diagnósticos clínicos. ' +
-      'Verifique se os diagnósticos maternos e fetais foram preenchidos corretamente.'
-    );
+    throw new NoDiagnosisError();
   }
   
   // Encontrar o protocolo mais restritivo (maior prioridade e menor IG)
@@ -294,10 +310,12 @@ export const calcularDataAgendamento = async (
     const protocolo = PROTOCOLS[patologia];
     if (!protocolo) continue;
     
-    if (!protocoloSelecionado || 
-        protocolo.prioridade < protocoloSelecionado.prioridade ||
-        (protocolo.prioridade === protocoloSelecionado.prioridade && 
-         parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))) {
+    if (
+      !protocoloSelecionado || 
+      protocolo.prioridade < protocoloSelecionado.prioridade ||
+      (protocolo.prioridade === protocoloSelecionado.prioridade && 
+       parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))
+    ) {
       protocoloSelecionado = protocolo;
       patologiaSelecionada = patologia;
     }
@@ -305,9 +323,10 @@ export const calcularDataAgendamento = async (
   
   // Se nenhum protocolo válido foi encontrado (IDs inválidos), lançar erro
   if (!protocoloSelecionado) {
+    // Patologias foram fornecidas mas não foram reconhecidas - erro de validação
     throw new Error(
-      'ERRO: Nenhum protocolo clínico válido foi identificado para as patologias fornecidas. ' +
-      'Verifique se os IDs de patologia são válidos e correspondem aos protocolos disponíveis.'
+      `ERRO DE VALIDAÇÃO: Os diagnósticos informados não foram reconhecidos: ${patologias.join(', ')}. ` +
+      'Verifique a grafia e consulte a lista de diagnósticos válidos.'
     );
   }
   
@@ -423,8 +442,14 @@ export const calcularAgendamentoCompleto = async (dados: {
   });
   
   // Calcular data de agendamento COM verificação de vagas
-  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp, vagaConfirmada } = 
-    await calcularDataAgendamento(igFinal, patologias, dados.maternidade, hoje);
+  const {
+    data: dataAgendamento,
+    igAgendamento,
+    observacoes: obsAgendamento,
+    protocoloAplicado,
+    dpp,
+    vagaConfirmada
+  } = await calcularDataAgendamento(igFinal, patologias, dados.maternidade, hoje);
   
   let observacoesFinais = `METODOLOGIA: ${obsMetodologia}\n\n`;
   

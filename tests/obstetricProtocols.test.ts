@@ -120,16 +120,17 @@ describe('obstetricProtocols module', () => {
   });
 
   describe('calculateAutomaticIG', () => {
-    it('should throw error for empty diagnostics (diagnósticos obrigatórios)', () => {
-      expect(() => {
-        calculateAutomaticIG([]);
-      }).toThrow('Nenhum diagnóstico clínico foi identificado');
+    it('should return null for empty diagnostics (no baixo_risco fallback)', () => {
+      const result = calculateAutomaticIG([]);
+      // Não existe "baixo risco" - deve retornar null quando não há diagnósticos
+      expect(result).toBeNull();
     });
     
     it('should return correct IG for single hypertension diagnosis', () => {
       const result = calculateAutomaticIG(['hac_compensada']);
-      expect(result.igPretendida).toBe('39');
-      expect(result.protocoloAplicado).toBe('hac_compensada');
+      expect(result).not.toBeNull();
+      expect(result!.igPretendida).toBe('39');
+      expect(result!.protocoloAplicado).toBe('hac_compensada');
     });
     
     it('should return correct IG for HAC dificil', () => {
@@ -399,9 +400,9 @@ describe('obstetricProtocols module', () => {
         expect(patologias).toContain('oligodramnia');
       });
 
-      // NOTE: desejo_materno and baixo_risco are no longer used - not clinical pathologies
-      // When no diagnoses are found, an error is thrown by calculateAutomaticIG/calcularDataAgendamento
-      it('should return empty array for cesarea eletiva without diagnoses (no fallback)', () => {
+      // NOTE: desejo_materno is no longer added as a fallback - it's not a clinical pathology
+      // When no diagnoses are found, the system requires validation (no baixo_risco fallback)
+      it('should return empty array for cesarea eletiva without diagnoses (no desejo_materno fallback)', () => {
         const patologias = identificarPatologias({
           procedimentos: ['Cesárea Eletiva'],
           diagnosticosMaternos: undefined,
@@ -636,9 +637,9 @@ describe('obstetricProtocols module', () => {
           expect(patologias).not.toContain('desejo_materno');
         });
         
-        // NOTE: desejo_materno and baixo_risco are no longer used as fallback - not clinical pathologies
-        // When no diagnoses are found, an error is thrown by calculateAutomaticIG/calcularDataAgendamento
-        it('should return empty array when no pathologies are identified (will fail at validation)', () => {
+        // NOTE: desejo_materno is no longer used as fallback - it's not a clinical pathology
+        // When no diagnoses are found, validation requires diagnosis (no baixo_risco fallback)
+        it('should return empty array when no pathologies are identified (no desejo_materno)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             indicacaoProcedimento: 'Cesárea a pedido',

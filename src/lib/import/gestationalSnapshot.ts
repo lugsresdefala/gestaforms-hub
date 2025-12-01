@@ -14,7 +14,7 @@ import { chooseAndCompute } from './gestationalCalculator';
 import { PROTOCOLS, mapDiagnosisToProtocol } from '../obstetricProtocols';
 import type { ComputeParams } from './types';
 
-/** Default gestational age in weeks for low-risk pregnancies */
+/** Default gestational age in weeks when no protocol/igPretendida is available (display only) */
 const DEFAULT_GESTATIONAL_WEEKS = 39;
 
 /** Minimum valid gestational weeks for scheduling */
@@ -115,10 +115,20 @@ function findApplicableProtocol(
   
   // Parse diagnoses from comma-separated strings
   if (diagnosticosMaternos) {
-    allDiagnoses.push(...diagnosticosMaternos.split(',').map(d => d.trim()).filter(Boolean));
+    allDiagnoses.push(
+      ...diagnosticosMaternos
+        .split(',')
+        .map(d => d.trim())
+        .filter(Boolean)
+    );
   }
   if (diagnosticosFetais) {
-    allDiagnoses.push(...diagnosticosFetais.split(',').map(d => d.trim()).filter(Boolean));
+    allDiagnoses.push(
+      ...diagnosticosFetais
+        .split(',')
+        .map(d => d.trim())
+        .filter(Boolean)
+    );
   }
   if (indicacaoProcedimento) {
     allDiagnoses.push(indicacaoProcedimento.trim());
@@ -240,10 +250,11 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
   );
   
   // Use igPretendida if provided, otherwise use protocol's igIdeal
+  // IMPORTANTE: Não existe "baixo_risco" como protocolo – ausência de protocolo indica ausência de diagnóstico clínico estruturado
   let igIdealWeeks: number;
   let igIdealDays = 0;
-  let protocolo = ''; // Protocolo vazio indica que nenhum foi identificado
-  let protocoloNome = 'Não identificado';
+  let protocolo = 'sem_diagnostico';
+  let protocoloNome = 'ERRO: Nenhum diagnóstico identificado';
   let margemDias = 7; // Default margin
 
   if (protocolResult) {
@@ -251,18 +262,26 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     igIdealWeeks = parsedIg.weeks;
     igIdealDays = parsedIg.days;
     protocolo = protocolResult.key;
-    protocoloNome = protocolResult.config.observacoes.split(' - ')[0] || protocolo.replace(/_/g, ' ');
+    protocoloNome =
+      protocolResult.config.observacoes.split(' - ')[0] ||
+      protocolo.replace(/_/g, ' ');
     margemDias = protocolResult.config.margemDias;
   } else {
-    // Sem protocolo identificado - usar igPretendida ou lançar aviso
-    // NOTA: O conceito de "baixo_risco" foi removido (PT-AON-097)
-    igIdealWeeks = parseInt(igPretendida || String(DEFAULT_GESTATIONAL_WEEKS), 10) || DEFAULT_GESTATIONAL_WEEKS;
+    // Sem protocolo identificado - usar igPretendida se fornecida, caso contrário usar default
+    // Mas marcar como "sem_diagnostico" para permitir validação clínica a montante
+    igIdealWeeks =
+      parseInt(igPretendida || String(DEFAULT_GESTATIONAL_WEEKS), 10) ||
+      DEFAULT_GESTATIONAL_WEEKS;
   }
   
   // Override with igPretendida if explicitly set and within valid range
   if (igPretendida) {
     const pretendidaWeeks = parseInt(igPretendida, 10);
-    if (!isNaN(pretendidaWeeks) && pretendidaWeeks >= MIN_GESTATIONAL_WEEKS && pretendidaWeeks <= MAX_GESTATIONAL_WEEKS) {
+    if (
+      !isNaN(pretendidaWeeks) &&
+      pretendidaWeeks >= MIN_GESTATIONAL_WEEKS &&
+      pretendidaWeeks <= MAX_GESTATIONAL_WEEKS
+    ) {
       igIdealWeeks = pretendidaWeeks;
     }
   }
@@ -270,12 +289,19 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
   // Calculate ideal date
   let dataIdeal: Date | null = null;
   if (gaResult.source !== 'INVALID') {
-    dataIdeal = calculateIdealDate(gaResult.gaDays, referenceDate, igIdealWeeks, igIdealDays);
+    dataIdeal = calculateIdealDate(
+      gaResult.gaDays,
+      referenceDate,
+      igIdealWeeks,
+      igIdealDays
+    );
   }
 
   // Determine scheduled date source
   const manualDate = dataAgendamentoManual ? parseDateSafe(dataAgendamentoManual) : null;
-  const calculatedDate = dataAgendamentoCalculada ? parseDateSafe(dataAgendamentoCalculada) : null;
+  const calculatedDate = dataAgendamentoCalculada
+    ? parseDateSafe(dataAgendamentoCalculada)
+    : null;
   
   const dataAgendada = manualDate || calculatedDate;
   const fonteAgendamento: 'manual' | 'calculada' = manualDate ? 'manual' : 'calculada';
@@ -284,7 +310,11 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
   let igNaDataAgendada = '-';
   let igNaDataAgendadaDias = 0;
   if (dataAgendada && gaResult.source !== 'INVALID') {
-    const gaAtDate = calculateGaAtDate(gaResult.gaDays, referenceDate, dataAgendada);
+    const gaAtDate = calculateGaAtDate(
+      gaResult.gaDays,
+      referenceDate,
+      dataAgendada
+    );
     igNaDataAgendada = formatGaCompact(gaAtDate.weeks, gaAtDate.days);
     igNaDataAgendadaDias = gaAtDate.totalDays;
   }

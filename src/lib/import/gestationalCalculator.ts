@@ -279,17 +279,16 @@ export const FULL_TERM_DAYS_CONSTANT = FULL_TERM_DAYS;
 
 /**
  * Protocol ideal gestational ages in days according to PT-AON-097
- * NOTE: 'eletivas' and 'baixo_risco' removed - not clinical protocols
- * All patients must have explicit clinical diagnoses
+ * NOTE: 'eletivas' and 'baixo_risco' are not clinical protocols and foram removidos.
+ * NOTE: 'nenhum_identificado' é usado quando nenhum protocolo específico é detectado
+ *       e deve ser tratado por validação clínica a montante.
  */
 const PROTOCOL_IG_IDEAL = {
-  cerclagem: 105,      // 15 weeks
-  hipertensao: 259,    // 37 weeks
-  dmg_insulina: 266,   // 38 weeks
-  dmg_sem_insulina: 280, // 40 weeks
-  // NOTE: 'default' mantido apenas para compatibilidade com imports legados
-  // Validação posterior irá rejeitar casos sem diagnósticos clínicos
-  default: 273         // 39 weeks - APENAS para imports legados, será rejeitado na validação
+  cerclagem: 105,          // 15 weeks
+  hipertensao: 259,        // 37 weeks
+  dmg_insulina: 266,       // 38 weeks
+  dmg_sem_insulina: 280,   // 40 weeks
+  nenhum_identificado: 273 // 39 weeks - placeholder, requer validação
 } as const;
 
 /**
@@ -317,11 +316,10 @@ export function formatGaCompact(weeks: number, days: number): string {
 
 /**
  * Detect the applicable protocol based on diagnosis and indication text.
- * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → default
+ * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → nenhum_identificado
  * 
- * NOTE: "desejo materno" / "cesarea eletiva" / "baixo_risco" removed - not clinical pathologies
- * All patients must have explicit clinical diagnoses.
- * If no clinical protocol is detected, returns 'default' which will be caught by validation.
+ * IMPORTANTE: Se retornar 'nenhum_identificado', isso indica que nenhum protocolo 
+ * específico foi detectado e a validação clínica deve exigir diagnósticos.
  * 
  * @param text - Combined diagnosis and indication text (lowercase)
  * @returns Protocol key
@@ -350,9 +348,8 @@ export function detectProtocol(text: string): keyof typeof PROTOCOL_IG_IDEAL {
     return 'dmg_sem_insulina';
   }
   
-  // 5. Default - será rejeitado pela validação obrigatória de diagnósticos
-  // NOTE: baixo_risco / desejo_materno / cesarea eletiva não são protocolos clínicos
-  return 'default';
+  // 5. Nenhum protocolo identificado - requer validação
+  return 'nenhum_identificado';
 }
 
 /**
