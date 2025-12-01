@@ -562,11 +562,11 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        // Determinar protocolo com base nos diagnósticos usando função especializada
+        // Determinar protocolo com base nos diagnósticos (3 colunas: maternos, fetais, história obstétrica)
         const diagnosticosTexto = [
           row.diagnosticos_maternos || "",
           row.diagnosticos_fetais || "",
-          row.indicacao_procedimento || ""
+          row.historia_obstetrica || ""
         ].filter(Boolean);
         
         // Mapear diagnósticos para IDs de protocolo usando função especializada
@@ -577,11 +577,13 @@ export default function ImportarPorTabela() {
         
         // IG pretendida manual do usuário (para comparação)
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        // IG ideal baseada no protocolo detectado
-        const igIdealSemanas = parseInt(resultadoProtocolo.igPretendida) || 39;
-        const igIdealDias = 0;
+        // IG ideal baseada no protocolo detectado (sem fallback para baixo_risco)
         const protocoloNome = resultadoProtocolo.protocoloAplicado;
-        const margemDias = PROTOCOLS[protocoloNome]?.margemDias || 7;
+        const protocoloDetectado = PROTOCOLS[protocoloNome];
+        // Usar IG do protocolo detectado, ou IG manual se não houver protocolo
+        const igIdealSemanas = protocoloDetectado ? parseInt(resultadoProtocolo.igPretendida) : igPretendidaSemanas;
+        const igIdealDias = 0;
+        const margemDias = protocoloDetectado?.margemDias || 7;
 
         // Calcular data ideal baseada na IG pretendida
         const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
