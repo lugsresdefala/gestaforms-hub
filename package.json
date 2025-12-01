@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "export:agendamentos-mensais": "node scripts/export-agendamentos-mensais.js"
+    "export:agendamentos-mensais": "node scripts/export-agendamentos-mensais.js",
+    "processar-csv": "npx tsx scripts/processar-csv-agendamentos.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
