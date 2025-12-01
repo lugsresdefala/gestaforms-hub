@@ -18,7 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
 import { addDays, differenceInDays } from "date-fns";
-import { PROTOCOLS } from "@/lib/obstetricProtocols";
+import { PROTOCOLS, mapDiagnosisToProtocol, calculateAutomaticIG } from "@/lib/obstetricProtocols";
 import {
   encontrarDataAgendada,
   formatIGCurta,
@@ -562,32 +562,26 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        // Determinar protocolo com base na IG pretendida ou diagnósticos
+        // Determinar protocolo com base nos diagnósticos usando função especializada
+        const diagnosticosTexto = [
+          row.diagnosticos_maternos || "",
+          row.diagnosticos_fetais || "",
+          row.indicacao_procedimento || ""
+        ].filter(Boolean);
+        
+        // Mapear diagnósticos para IDs de protocolo usando função especializada
+        const diagnosticosMapeados = mapDiagnosisToProtocol(diagnosticosTexto);
+        
+        // Calcular IG pretendida automaticamente baseada nos protocolos detectados
+        const resultadoProtocolo = calculateAutomaticIG(diagnosticosMapeados);
+        
+        // IG pretendida manual do usuário (para comparação)
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        const igIdealSemanas = igPretendidaSemanas;
+        // IG ideal baseada no protocolo detectado
+        const igIdealSemanas = parseInt(resultadoProtocolo.igPretendida) || 39;
         const igIdealDias = 0;
-        
-        // Default baixo_risco protocol config (39 weeks, 7 days margin)
-        const DEFAULT_PROTOCOL = { igIdeal: '39', margemDias: 7, prioridade: 3, viaPreferencial: 'Via obstétrica', observacoes: 'Gestação de baixo risco' };
-        let protocolo: typeof DEFAULT_PROTOCOL | undefined = DEFAULT_PROTOCOL;
-        let protocoloNome = 'baixo_risco';
-        
-        // Tentar encontrar protocolo baseado em diagnósticos
-        const diagnosticos = (row.diagnosticos_maternos || "").toLowerCase();
-        if (diagnosticos.trim()) {
-          const sortedProtocolKeys = Object.keys(PROTOCOLS).sort((a, b) => b.length - a.length);
-          for (const key of sortedProtocolKeys) {
-            const keyPattern = key.replace(/_/g, ' ');
-            const regex = new RegExp(`\\b${keyPattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-            if (regex.test(diagnosticos)) {
-              protocolo = PROTOCOLS[key];
-              protocoloNome = key;
-              break;
-            }
-          }
-        }
-        
-        const margemDias = protocolo?.margemDias || 7;
+        const protocoloNome = resultadoProtocolo.protocoloAplicado;
+        const margemDias = PROTOCOLS[protocoloNome]?.margemDias || 7;
 
         // Calcular data ideal baseada na IG pretendida
         const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
@@ -673,7 +667,7 @@ export default function ImportarPorTabela() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    // First pass: detect incoherencies
+    // First pass: detect incoherencies (IGNORAR data_nascimento - apenas incoerências de IG/USG/DUM)
     const rowsComIncoerencias: Array<{ rowId: string; incoerencias: IncoerenciaData[] }> = [];
 
     for (const row of rows) {
@@ -682,7 +676,7 @@ export default function ImportarPorTabela() {
       // Para dados históricos: usar data_registro como referência se disponível
       const dataReferencia = obterDataReferencia(row.data_registro, hoje);
 
-      const incoerencias = validarCoerenciaDatas({
+      const todasIncoerencias = validarCoerenciaDatas({
         data_nascimento: row.data_nascimento,
         data_dum: row.data_dum,
         dum_status: row.dum_status,
@@ -691,8 +685,13 @@ export default function ImportarPorTabela() {
         dias_usg: row.dias_usg,
       }, dataReferencia);
 
-      if (incoerencias.length > 0) {
-        rowsComIncoerencias.push({ rowId: row.id, incoerencias });
+      // Filtrar apenas incoerências obstétricas (ignorar data_nascimento/idade materna)
+      const incoerenciasObstetricas = todasIncoerencias.filter(
+        inco => inco.campo !== 'data_nascimento'
+      );
+
+      if (incoerenciasObstetricas.length > 0) {
+        rowsComIncoerencias.push({ rowId: row.id, incoerencias: incoerenciasObstetricas });
       }
     }
 
