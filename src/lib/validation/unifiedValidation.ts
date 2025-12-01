@@ -94,6 +94,9 @@ const MARGEM_MAXIMA_DIAS = 7;
 /** Lead time threshold for urgent cases (encaminhar para PS) */
 const LEAD_TIME_URGENTE = 7;
 
+/** Maximum gestational weeks for scheduling */
+const MAX_GESTATIONAL_WEEKS = 41;
+
 /**
  * Normalizes a string array or comma-separated string to array
  */
@@ -320,7 +323,7 @@ export async function validarAgendamento(
   
   if (protocolKeys.length > 0) {
     // Find most restrictive protocol
-    let mostRestrictiveIg = 41; // Start with max value
+    let mostRestrictiveIg = MAX_GESTATIONAL_WEEKS; // Start with max value
     let mostRestrictiveProtocol = '';
     let margemDias = 7;
     
