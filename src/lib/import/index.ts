@@ -5,6 +5,7 @@
  * separating concerns into specialized modules:
  * 
  * - dateParser: Robust date parsing with Brazilian format support
+ * - dateAutoCorrection: Automatic correction of inverted month/day dates
  * - gestationalCalculator: Gestational age and DPP calculations
  * - htmlFormParser: HTML form parsing for Forms Parto
  * - tsvProcessor: TSV file processing for validation
@@ -21,7 +22,8 @@ export type {
   TsvProcessingResult,
   ColumnMapping,
   ExtendedComputeParams,
-  ExtendedCalculationResult
+  ExtendedCalculationResult,
+  DateCorrectionInfo
 } from './types';
 
 // Date Parser
@@ -32,6 +34,17 @@ export {
   createValidDate,
   MIN_VALID_YEAR_THRESHOLD
 } from './dateParser';
+
+// Date Auto-Correction
+export {
+  tryAutoCorrectDate,
+  invertMonthDay,
+  isIgValid,
+  formatCorrectionForAudit,
+  MIN_VALID_IG_DAYS_CONST,
+  MAX_VALID_IG_DAYS_CONST,
+  type DateCorrectionResult
+} from './dateAutoCorrection';
 
 // Gestational Calculator
 export {

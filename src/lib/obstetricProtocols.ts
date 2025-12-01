@@ -165,7 +165,17 @@ PROTOCOLS.gemelar_monoamniotico = PROTOCOLS.gemelar_monocorionico_monoamniotico;
 PROTOCOLS.lupus = PROTOCOLS.les_atividade;
 PROTOCOLS.obito_fetal_anterior = PROTOCOLS.natimorto_anterior;
 PROTOCOLS.obesidade_morbida = PROTOCOLS.obesidade_imc35;
-PROTOCOLS.cerclagem = PROTOCOLS.iic;
+// Cerclagem (procedimento cirúrgico) - janela 12-16 semanas
+// NOTA: DIFERENTE de IIC (condição) que tem parto em 37 semanas
+PROTOCOLS.cerclagem = { 
+  igIdeal: "14", 
+  igIdealMax: "16", 
+  margemDias: 14,  // ±2 semanas permite 12-16
+  prioridade: 1,   // Prioridade crítica - procedimento com janela restrita
+  viaPreferencial: "Procedimento cirúrgico", 
+  observacoes: "PRIORIDADE CRÍTICA - Cerclagem / IIC - realizar entre 12-16 semanas. Após 16 semanas requer revisão médica urgente.", 
+  categoria: "outras_maternas" 
+};
 PROTOCOLS.hiv = PROTOCOLS.hiv_cv_indetectavel;
 PROTOCOLS.cormica = PROTOCOLS.transversa;
 PROTOCOLS.cesarea_corporal = PROTOCOLS.cesarea_classica;

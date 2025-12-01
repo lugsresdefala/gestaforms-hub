@@ -117,4 +117,24 @@ export interface ExtendedCalculationResult extends CalculationResult {
   deltaAteIdeal: number;
   /** Protocol applied (cerclagem, hipertensao, dmg_insulina, dmg_sem_insulina, eletivas, default) */
   protocoloAplicado: string;
+  /** Whether date auto-correction was applied to DUM */
+  dumCorrected?: boolean;
+  /** Whether date auto-correction was applied to USG date */
+  usgCorrected?: boolean;
+  /** Audit trail message for corrections applied */
+  correctionAuditLog?: string;
+}
+
+/**
+ * Result of a date auto-correction attempt (imported from dateAutoCorrection module)
+ */
+export interface DateCorrectionInfo {
+  /** Whether the date was corrected */
+  wasCorrected: boolean;
+  /** Original raw date string */
+  originalRaw: string;
+  /** Corrected raw string (inverted format) */
+  correctedRaw: string | null;
+  /** Reason for the correction */
+  reason: string;
 }

@@ -282,9 +282,11 @@ export const FULL_TERM_DAYS_CONSTANT = FULL_TERM_DAYS;
  * NOTE: 'eletivas' and 'baixo_risco' are not clinical protocols and foram removidos.
  * NOTE: 'nenhum_identificado' é usado quando nenhum protocolo específico é detectado
  *       e deve ser tratado por validação clínica a montante.
+ * NOTE: 'cerclagem' é um PROCEDIMENTO com janela específica (12-16 semanas),
+ *       diferente de IIC (condição) que tem parto em 37 semanas.
  */
 const PROTOCOL_IG_IDEAL = {
-  cerclagem: 105,          // 15 weeks
+  cerclagem: 98,            // 14 weeks (meio da janela 12-16 semanas)
   hipertensao: 259,        // 37 weeks
   dmg_insulina: 266,       // 38 weeks
   dmg_sem_insulina: 280,   // 40 weeks
