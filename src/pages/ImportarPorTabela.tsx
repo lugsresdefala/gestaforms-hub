@@ -8,9 +8,21 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter, FileSpreadsheet } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  ClipboardPaste,
+  Calculator,
+  Save,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  Info,
+  Filter,
+  FileSpreadsheet,
+} from "lucide-react";
 import type { GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const MS_PER_DAY = 86400000;
 import { supabase } from "@/integrations/supabase/client";
@@ -37,7 +49,6 @@ import { validarCoerenciaDatas, type IncoerenciaData } from "@/lib/validation/da
 
 // Tipos
 interface PacienteRow {
-  id: string;
   data_registro: string; // Data original da solicitação de agendamento
   nome_completo: string;
   data_nascimento: string;
@@ -66,7 +77,6 @@ interface PacienteRow {
   maternidade: string;
   medico_responsavel: string;
   email_paciente: string;
-  centro_clinico: string;
   // Campos calculados
   ig_no_registro?: string; // IG calculada na data do registro
   data_ideal?: string;
@@ -88,8 +98,8 @@ interface PacienteRow {
   motivo_calculo?: string;
 }
 
-type SortField = 'data_agendada' | 'ig_ideal' | 'intervalo' | null;
-type SortDirection = 'asc' | 'desc';
+type SortField = "data_agendada" | "ig_ideal" | "intervalo" | null;
+type SortDirection = "asc" | "desc";
 
 const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   data_registro: "", // Data original da solicitação
@@ -120,7 +130,6 @@ const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   maternidade: "Salvalus",
   medico_responsavel: "",
   email_paciente: "",
-  centro_clinico: "Centro Clínico Hapvida",
   status: "pendente",
 };
 
@@ -156,7 +165,7 @@ const normalizarNumero = (valor: string): number => {
  * Obtém a data de referência para cálculos de IG em dados históricos.
  * Para dados históricos: usa data_registro como referência (quando disponível)
  * Para importação em tempo real: usa a data atual
- * 
+ *
  * @param dataRegistro - String da data de registro do formulário
  * @param fallback - Data de fallback caso data_registro seja inválida/ausente
  * @returns Data de referência normalizada (00:00:00)
@@ -184,9 +193,9 @@ export default function ImportarPorTabela() {
   const [saving, setSaving] = useState(false);
   const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; field: keyof PacienteRow } | null>(null);
   const [sortField, setSortField] = useState<SortField>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [filterForaMargem, setFilterForaMargem] = useState(false);
-  
+
   // State for date correction modal
   const [modalCorrecao, setModalCorrecao] = useState<{
     isOpen: boolean;
@@ -203,71 +212,71 @@ export default function ImportarPorTabela() {
     };
     incoerencias: IncoerenciaData[];
   } | null>(null);
-  
+
   // Review queue for rows with incoherencies
-  const [filaRevisao, setFilaRevisao] = useState<Array<{
-    rowId: string;
-    incoerencias: IncoerenciaData[];
-  }>>([]);
-  
+  const [filaRevisao, setFilaRevisao] = useState<
+    Array<{
+      rowId: string;
+      incoerencias: IncoerenciaData[];
+    }>
+  >([]);
+
   // Counter for corrected rows
   const [corrigidos, setCorrigidos] = useState(0);
 
   // Computed/sorted/filtered rows
   const displayRows = useMemo(() => {
     let result = [...rows];
-    
+
     // Filter: somente fora da margem
     if (filterForaMargem) {
-      result = result.filter(row => row.snapshot && !row.snapshot.dentroMargem);
+      result = result.filter((row) => row.snapshot && !row.snapshot.dentroMargem);
     }
-    
+
     // Sort
     if (sortField) {
       result.sort((a, b) => {
         let aVal: number | Date | null = null;
         let bVal: number | Date | null = null;
-        
+
         switch (sortField) {
-          case 'data_agendada':
+          case "data_agendada":
             aVal = a.snapshot?.dataAgendada || null;
             bVal = b.snapshot?.dataAgendada || null;
             break;
-          case 'ig_ideal':
+          case "ig_ideal":
             aVal = a.snapshot?.igIdealDias || 0;
             bVal = b.snapshot?.igIdealDias || 0;
             break;
-          case 'intervalo':
+          case "intervalo":
             aVal = a.snapshot?.intervaloDias || 0;
             bVal = b.snapshot?.intervaloDias || 0;
             break;
         }
-        
+
         if (aVal === null && bVal === null) return 0;
-        if (aVal === null) return sortDirection === 'asc' ? 1 : -1;
-        if (bVal === null) return sortDirection === 'asc' ? -1 : 1;
-        
+        if (aVal === null) return sortDirection === "asc" ? 1 : -1;
+        if (bVal === null) return sortDirection === "asc" ? -1 : 1;
+
         if (aVal instanceof Date && bVal instanceof Date) {
-          return sortDirection === 'asc' 
-            ? aVal.getTime() - bVal.getTime() 
-            : bVal.getTime() - aVal.getTime();
+          return sortDirection === "asc" ? aVal.getTime() - bVal.getTime() : bVal.getTime() - aVal.getTime();
         }
-        
-        const numA = typeof aVal === 'number' ? aVal : 0;
-        const numB = typeof bVal === 'number' ? bVal : 0;
-        return sortDirection === 'asc' ? numA - numB : numB - numA;
+
+        const numA = typeof aVal === "number" ? aVal : 0;
+        const numB = typeof bVal === "number" ? bVal : 0;
+        return sortDirection === "asc" ? numA - numB : numB - numA;
       });
     }
-    
+
     return result;
   }, [rows, sortField, sortDirection, filterForaMargem]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection("asc");
     }
   };
 
@@ -348,7 +357,7 @@ export default function ImportarPorTabela() {
 
             grid.forEach((cols, rowOffset) => {
               const targetRowIndex = rowIndex + rowOffset;
-              
+
               // Auto-create additional rows if needed
               while (targetRowIndex >= updated.length) {
                 updated.push({ ...EMPTY_ROW, id: crypto.randomUUID() });
@@ -384,12 +393,12 @@ export default function ImportarPorTabela() {
           const updated = [...prev];
           lines.forEach((line, idx) => {
             const targetIdx = rowIndex + idx;
-            
+
             // Auto-create additional rows if needed
             while (targetIdx >= updated.length) {
               updated.push({ ...EMPTY_ROW, id: crypto.randomUUID() });
             }
-            
+
             updated[targetIdx] = {
               ...updated[targetIdx],
               [field]: line.trim(),
@@ -415,7 +424,6 @@ export default function ImportarPorTabela() {
       const newRows: PacienteRow[] = dataLines.map((line) => {
         const cols = line.split("\t");
         return {
-          id: crypto.randomUUID(),
           data_registro: cols[0]?.trim() || "", // Data original da solicitação
           nome_completo: cols[1]?.trim() || cols[0]?.trim() || "",
           data_nascimento: cols[2]?.trim() || cols[1]?.trim() || "",
@@ -444,7 +452,6 @@ export default function ImportarPorTabela() {
           maternidade: cols[26]?.trim() || "Salvalus",
           medico_responsavel: cols[27]?.trim() || "",
           email_paciente: (cols[28]?.trim() || "").toLowerCase(),
-          centro_clinico: "Centro Clínico Hapvida",
           status: "pendente",
         };
       });
@@ -458,11 +465,11 @@ export default function ImportarPorTabela() {
   // Open modal for the first item in the review queue
   const abrirModalParaPrimeira = (fila: Array<{ rowId: string; incoerencias: IncoerenciaData[] }>) => {
     if (fila.length === 0) return;
-    
+
     const primeiro = fila[0];
-    const row = rows.find(r => r.id === primeiro.rowId);
+    const row = rows.find((r) => r.id === primeiro.rowId);
     if (!row) return;
-    
+
     setModalCorrecao({
       isOpen: true,
       paciente: {
@@ -484,18 +491,20 @@ export default function ImportarPorTabela() {
   // Handle corrections from modal
   const handleCorrigirDatas = (correcoes: Record<string, string>) => {
     if (!modalCorrecao) return;
-    
+
     // Apply corrections to the row
     if (Object.keys(correcoes).length > 0) {
-      setRows(prev => prev.map(row => {
-        if (row.id === modalCorrecao.paciente.rowId) {
-          return { ...row, ...correcoes, status: 'pendente' as const };
-        }
-        return row;
-      }));
-      setCorrigidos(prev => prev + 1);
+      setRows((prev) =>
+        prev.map((row) => {
+          if (row.id === modalCorrecao.paciente.rowId) {
+            return { ...row, ...correcoes, status: "pendente" as const };
+          }
+          return row;
+        }),
+      );
+      setCorrigidos((prev) => prev + 1);
     }
-    
+
     processarProximaIncoerencia();
   };
 
@@ -507,10 +516,10 @@ export default function ImportarPorTabela() {
   // Handle skipping a patient
   const handlePularPaciente = () => {
     if (!modalCorrecao) return;
-    
+
     // Remove row from the list
-    setRows(prev => prev.filter(r => r.id !== modalCorrecao.paciente.rowId));
-    
+    setRows((prev) => prev.filter((r) => r.id !== modalCorrecao.paciente.rowId));
+
     processarProximaIncoerencia();
   };
 
@@ -518,7 +527,7 @@ export default function ImportarPorTabela() {
   const processarProximaIncoerencia = async () => {
     const novaFila = filaRevisao.slice(1);
     setFilaRevisao(novaFila);
-    
+
     if (novaFila.length > 0) {
       // Open modal for next row
       abrirModalParaPrimeira(novaFila);
@@ -537,7 +546,7 @@ export default function ImportarPorTabela() {
       const capacidadesRecord = toCapacidadeRecord(capacidades);
       setCapacidadesMaternidades(capacidadesRecord);
     } catch (err) {
-      console.warn('Usando capacidades padrão:', err);
+      console.warn("Usando capacidades padrão:", err);
     }
 
     const hoje = new Date();
@@ -545,31 +554,31 @@ export default function ImportarPorTabela() {
 
     // Calcular intervalo de datas para buscar agendamentos existentes
     // (hoje até 6 meses no futuro para cobrir a maioria dos agendamentos)
-    const dataInicio = format(hoje, 'yyyy-MM-dd');
-    const dataFim = format(addMonths(hoje, 6), 'yyyy-MM-dd');
+    const dataInicio = format(hoje, "yyyy-MM-dd");
+    const dataFim = format(addMonths(hoje, 6), "yyyy-MM-dd");
 
     // Buscar agendamentos existentes no período para construir mapa de ocupação inicial
     const ocupacaoAtual = new Map<string, number>();
-    
+
     try {
       const { data: agendamentosExistentes } = await supabase
-        .from('agendamentos_obst')
-        .select('maternidade, data_agendamento_calculada')
-        .gte('data_agendamento_calculada', dataInicio)
-        .lte('data_agendamento_calculada', dataFim)
-        .neq('status', 'rejeitado');
+        .from("agendamentos_obst")
+        .select("maternidade, data_agendamento_calculada")
+        .gte("data_agendamento_calculada", dataInicio)
+        .lte("data_agendamento_calculada", dataFim)
+        .neq("status", "rejeitado");
 
       // Popular mapa inicial com agendamentos existentes
-      agendamentosExistentes?.forEach(ag => {
+      agendamentosExistentes?.forEach((ag) => {
         if (ag.data_agendamento_calculada) {
           const key = ag.data_agendamento_calculada;
           ocupacaoAtual.set(key, (ocupacaoAtual.get(key) || 0) + 1);
         }
       });
-      
+
       console.log(`Carregados ${agendamentosExistentes?.length || 0} agendamentos existentes para controle de vagas`);
     } catch (err) {
-      console.warn('Não foi possível carregar agendamentos existentes para controle de vagas:', err);
+      console.warn("Não foi possível carregar agendamentos existentes para controle de vagas:", err);
     }
 
     // Primeiro passo: calcular IG e protocolo para cada linha (sem agendar)
@@ -579,7 +588,7 @@ export default function ImportarPorTabela() {
       dataIdealCalculada?: Date;
       margemCalculada?: number;
     }
-    
+
     const preProcessedRows: PreProcessedRow[] = rows.map((row) => {
       try {
         if (!row.nome_completo || !row.carteirinha) {
@@ -615,12 +624,12 @@ export default function ImportarPorTabela() {
         const diagnosticosTexto = [
           row.diagnosticos_maternos || "",
           row.diagnosticos_fetais || "",
-          row.historia_obstetrica || ""
+          row.historia_obstetrica || "",
         ].filter(Boolean);
-        
+
         const diagnosticosMapeados = mapDiagnosisToProtocol(diagnosticosTexto);
         const resultadoProtocolo = calculateAutomaticIG(diagnosticosMapeados);
-        
+
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
         const protocoloNome = resultadoProtocolo.protocoloAplicado;
         const protocoloDetectado = PROTOCOLS[protocoloNome];
@@ -665,7 +674,7 @@ export default function ImportarPorTabela() {
     // Segundo passo: agendar em ordem de prioridade, atualizando ocupação
     const finalRows: PacienteRow[] = sortedRows.map((row) => {
       // Se já tem erro, manter
-      if (row.status === 'erro' || !row.igResult || !row.dataIdealCalculada) {
+      if (row.status === "erro" || !row.igResult || !row.dataIdealCalculada) {
         return row as PacienteRow;
       }
 
@@ -683,19 +692,19 @@ export default function ImportarPorTabela() {
         const result = row.igResult;
         const dataIdeal = row.dataIdealCalculada;
         const margemDias = row.margemCalculada || 7;
-        
+
         // Usar a função de agendamento COM o mapa de ocupação
         const scheduleResult = encontrarDataAgendada({
           dataIdeal,
-          maternidade: row.maternidade || 'Salvalus',
+          maternidade: row.maternidade || "Salvalus",
           dataReferencia,
           margemDias,
-          ocupacaoAtual,  // ← PASSANDO O MAPA DE OCUPAÇÃO
+          ocupacaoAtual, // ← PASSANDO O MAPA DE OCUPAÇÃO
         });
 
         // Atualizar ocupação se encontrou data válida
         if (scheduleResult.dataAgendada) {
-          const dataKey = format(scheduleResult.dataAgendada, 'yyyy-MM-dd');
+          const dataKey = format(scheduleResult.dataAgendada, "yyyy-MM-dd");
           ocupacaoAtual.set(dataKey, (ocupacaoAtual.get(dataKey) || 0) + 1);
         }
 
@@ -712,7 +721,7 @@ export default function ImportarPorTabela() {
           intervaloRegistroAgendamento = differenceInDays(scheduleResult.dataAgendada, dataReferencia);
         }
 
-        const igIdealSemanas = parseInt(row.ig_ideal?.replace(/[^\d]/g, '') || '39');
+        const igIdealSemanas = parseInt(row.ig_ideal?.replace(/[^\d]/g, "") || "39");
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
 
         // Validar IG
@@ -726,35 +735,35 @@ export default function ImportarPorTabela() {
         });
 
         // Determinar status final
-        const bloqueiaAgendamento = scheduleResult.status === 'needs_review';
+        const bloqueiaAgendamento = scheduleResult.status === "needs_review";
         const avisos: string[] = [];
-        
+
         if (igIdealSemanas !== igPretendidaSemanas) {
           avisos.push(`⚠️ IG ideal (${igIdealSemanas}s) difere da IG pretendida (${igPretendidaSemanas}s)`);
         }
         if (validacao.alertas.length > 0) {
-          avisos.push(...validacao.alertas.map(a => `⚠️ ${a}`));
+          avisos.push(...validacao.alertas.map((a) => `⚠️ ${a}`));
         }
-        
-        if (scheduleResult.status === 'needs_review') {
+
+        if (scheduleResult.status === "needs_review") {
           avisos.push(`❌ ${scheduleResult.motivo}`);
         }
-        
+
         // Adicionar info sobre ajuste de capacidade
         if (scheduleResult.ajustadoPorCapacidade) {
-          avisos.push('ℹ️ Data ajustada por limite de vagas');
+          avisos.push("ℹ️ Data ajustada por limite de vagas");
         }
 
         return {
           ...row,
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
-          status_agendamento: bloqueiaAgendamento ? 'needs_review' : scheduleResult.status,
+          status_agendamento: bloqueiaAgendamento ? "needs_review" : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
           intervalo_dias: intervaloRegistroAgendamento,
           lead_time_dias: scheduleResult.leadTimeDias,
-          motivo_calculo: avisos.join(' | ') || scheduleResult.motivo,
-          status: bloqueiaAgendamento ? "erro" as const : "valido" as const,
-          erro: bloqueiaAgendamento ? 'Não foi possível encontrar data válida' : undefined,
+          motivo_calculo: avisos.join(" | ") || scheduleResult.motivo,
+          status: bloqueiaAgendamento ? ("erro" as const) : ("valido" as const),
+          erro: bloqueiaAgendamento ? "Não foi possível encontrar data válida" : undefined,
         } as PacienteRow;
       } catch {
         return { ...row, status: "erro" as const, erro: "Erro no agendamento" } as PacienteRow;
@@ -762,9 +771,9 @@ export default function ImportarPorTabela() {
     });
 
     // Restaurar ordem original (por ID)
-    const rowIdOrder = rows.map(r => r.id);
-    const orderedFinalRows = rowIdOrder.map(id => 
-      finalRows.find(r => r.id === id) || rows.find(r => r.id === id)!
+    const rowIdOrder = rows.map((r) => r.id);
+    const orderedFinalRows = rowIdOrder.map(
+      (id) => finalRows.find((r) => r.id === id) || rows.find((r) => r.id === id)!,
     );
 
     setRows(orderedFinalRows);
@@ -773,8 +782,10 @@ export default function ImportarPorTabela() {
     const validos = orderedFinalRows.filter((r) => r.status === "valido").length;
     const erros = orderedFinalRows.filter((r) => r.status === "erro").length;
     const needsReview = orderedFinalRows.filter((r) => r.status_agendamento === "needs_review").length;
-    const msgCorrigidos = corrigidos > 0 ? `, ${corrigidos} corrigidos` : '';
-    toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}${msgCorrigidos}`);
+    const msgCorrigidos = corrigidos > 0 ? `, ${corrigidos} corrigidos` : "";
+    toast.info(
+      `Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ""}${msgCorrigidos}`,
+    );
     setCorrigidos(0); // Reset counter
   };
 
@@ -788,7 +799,7 @@ export default function ImportarPorTabela() {
       const capacidadesRecord = toCapacidadeRecord(capacidades);
       setCapacidadesMaternidades(capacidadesRecord);
     } catch (err) {
-      console.warn('Usando capacidades padrão:', err);
+      console.warn("Usando capacidades padrão:", err);
     }
 
     const hoje = new Date();
@@ -803,19 +814,20 @@ export default function ImportarPorTabela() {
       // Para dados históricos: usar data_registro como referência se disponível
       const dataReferencia = obterDataReferencia(row.data_registro, hoje);
 
-      const todasIncoerencias = validarCoerenciaDatas({
-        data_nascimento: row.data_nascimento,
-        data_dum: row.data_dum,
-        dum_status: row.dum_status,
-        data_primeiro_usg: row.data_primeiro_usg,
-        semanas_usg: row.semanas_usg,
-        dias_usg: row.dias_usg,
-      }, dataReferencia);
+      const todasIncoerencias = validarCoerenciaDatas(
+        {
+          data_nascimento: row.data_nascimento,
+          data_dum: row.data_dum,
+          dum_status: row.dum_status,
+          data_primeiro_usg: row.data_primeiro_usg,
+          semanas_usg: row.semanas_usg,
+          dias_usg: row.dias_usg,
+        },
+        dataReferencia,
+      );
 
       // Filtrar apenas incoerências obstétricas (ignorar data_nascimento/idade materna)
-      const incoerenciasObstetricas = todasIncoerencias.filter(
-        inco => inco.campo !== 'data_nascimento'
-      );
+      const incoerenciasObstetricas = todasIncoerencias.filter((inco) => inco.campo !== "data_nascimento");
 
       if (incoerenciasObstetricas.length > 0) {
         rowsComIncoerencias.push({ rowId: row.id, incoerencias: incoerenciasObstetricas });
@@ -856,30 +868,37 @@ export default function ImportarPorTabela() {
     for (const row of validRows) {
       try {
         // Use unified validation for consistent checks
-        const validacao = await validarAgendamento({
-          nome_completo: row.nome_completo,
-          carteirinha: row.carteirinha,
-          data_nascimento: row.data_nascimento,
-          maternidade: row.maternidade || "Salvalus",
-          dum_status: row.dum_status,
-          data_dum: row.data_dum,
-          data_primeiro_usg: row.data_primeiro_usg,
-          semanas_usg: normalizarSemanasUsg(row.semanas_usg),
-          dias_usg: normalizarDiasUsg(row.dias_usg),
-          ig_pretendida: row.ig_pretendida,
-          indicacao_procedimento: row.indicacao_procedimento,
-          diagnosticos_maternos: row.diagnosticos_maternos,
-          diagnosticos_fetais: row.diagnosticos_fetais,
-          data_agendamento_calculada: row.data_agendada,
-        }, { supabase, userId: user.id });
+        const validacao = await validarAgendamento(
+          {
+            nome_completo: row.nome_completo,
+            carteirinha: row.carteirinha,
+            data_nascimento: row.data_nascimento,
+            maternidade: row.maternidade || "Salvalus",
+            dum_status: row.dum_status,
+            data_dum: row.data_dum,
+            data_primeiro_usg: row.data_primeiro_usg,
+            semanas_usg: normalizarSemanasUsg(row.semanas_usg),
+            dias_usg: normalizarDiasUsg(row.dias_usg),
+            ig_pretendida: row.ig_pretendida,
+            indicacao_procedimento: row.indicacao_procedimento,
+            diagnosticos_maternos: row.diagnosticos_maternos,
+            diagnosticos_fetais: row.diagnosticos_fetais,
+            data_agendamento_calculada: row.data_agendada,
+          },
+          { supabase, userId: user.id },
+        );
 
         if (!validacao.valido) {
           setRows((prev) =>
-            prev.map((r) => (r.id === row.id ? { 
-              ...r, 
-              status: "erro" as const, 
-              erro: validacao.errosCriticos.join('; ') 
-            } : r)),
+            prev.map((r) =>
+              r.id === row.id
+                ? {
+                    ...r,
+                    status: "erro" as const,
+                    erro: validacao.errosCriticos.join("; "),
+                  }
+                : r,
+            ),
           );
           erros++;
           continue;
@@ -906,7 +925,7 @@ export default function ImportarPorTabela() {
 
         // Use protocol-based ideal date
         const dataAgendamento = result?.dataIdeal || new Date();
-        
+
         // Only persist IG if scheduled date is in future
         const isFutureDate = dataAgendamento > hoje;
         const igCalculadaParaSalvar = isFutureDate ? result?.gaFormatted : null;
@@ -971,60 +990,65 @@ export default function ImportarPorTabela() {
   };
 
   const exportarResultados = () => {
-    const linhasParaExportar = rows.filter(r => r.status === 'valido' || r.status === 'salvo');
-    
+    const linhasParaExportar = rows.filter((r) => r.status === "valido" || r.status === "salvo");
+
     if (linhasParaExportar.length === 0) {
-      toast.error('Nenhum resultado válido para exportar');
+      toast.error("Nenhum resultado válido para exportar");
       return;
     }
 
     // Criar workbook
     const workbook = XLSX.utils.book_new();
-    
+
     // Preparar dados para worksheet
-    const data = linhasParaExportar.map(row => ({
-      'Data Registro': row.data_registro || '',
-      'Nome Completo': row.nome_completo,
-      'Data Nascimento': row.data_nascimento,
-      'Carteirinha': row.carteirinha,
-      'Gestações': row.numero_gestacoes,
-      'Partos Cesárea': row.numero_partos_cesareas,
-      'Partos Normal': row.numero_partos_normais,
-      'Abortos': row.numero_abortos,
-      'Telefones': row.telefones,
-      'Procedimentos': row.procedimentos,
-      'Status DUM': row.dum_status,
-      'Data DUM': row.data_dum,
-      'Data 1º USG': row.data_primeiro_usg,
-      'Semanas USG': row.semanas_usg,
-      'Dias USG': row.dias_usg,
-      'USG Recente': row.usg_recente,
-      'IG Pretendida': row.ig_pretendida,
-      'Indicação': row.indicacao_procedimento,
-      'Medicação': row.medicacao,
-      'Diag Maternos': row.diagnosticos_maternos,
-      'Placenta Prévia': row.placenta_previa,
-      'Diag Fetais': row.diagnosticos_fetais,
-      'História Obstétrica': row.historia_obstetrica,
-      'UTI': row.necessidade_uti_materna,
-      'Sangue': row.necessidade_reserva_sangue,
-      'Maternidade': row.maternidade,
-      'Médico': row.medico_responsavel,
-      'Email': row.email_paciente,
-      'Centro Clínico': row.centro_clinico || '',
-      'IG no Registro': row.ig_no_registro || '',
-      'IG Ideal': row.ig_ideal || '',
-      'Protocolo': row.protocolo_aplicado || '',
-      'Data Agendada': row.data_agendada || '',
-      'IG na Data Agendada': row.ig_na_data_agendada || '',
-      'Intervalo (dias)': row.intervalo_dias !== undefined ? (row.intervalo_dias >= 0 ? `+${row.intervalo_dias}` : `${row.intervalo_dias}`) : '',
-      'Status': row.status || '',
-      'Observações': row.erro || ''
+    const data = linhasParaExportar.map((row) => ({
+      "Data Registro": row.data_registro || "",
+      "Nome Completo": row.nome_completo,
+      "Data Nascimento": row.data_nascimento,
+      Carteirinha: row.carteirinha,
+      Gestações: row.numero_gestacoes,
+      "Partos Cesárea": row.numero_partos_cesareas,
+      "Partos Normal": row.numero_partos_normais,
+      Abortos: row.numero_abortos,
+      Telefones: row.telefones,
+      Procedimentos: row.procedimentos,
+      "Status DUM": row.dum_status,
+      "Data DUM": row.data_dum,
+      "Data 1º USG": row.data_primeiro_usg,
+      "Semanas USG": row.semanas_usg,
+      "Dias USG": row.dias_usg,
+      "USG Recente": row.usg_recente,
+      "IG Pretendida": row.ig_pretendida,
+      Indicação: row.indicacao_procedimento,
+      Medicação: row.medicacao,
+      "Diag Maternos": row.diagnosticos_maternos,
+      "Placenta Prévia": row.placenta_previa,
+      "Diag Fetais": row.diagnosticos_fetais,
+      "História Obstétrica": row.historia_obstetrica,
+      UTI: row.necessidade_uti_materna,
+      Sangue: row.necessidade_reserva_sangue,
+      Maternidade: row.maternidade,
+      Médico: row.medico_responsavel,
+      Email: row.email_paciente,
+      "Centro Clínico": row.centro_clinico || "",
+      "IG no Registro": row.ig_no_registro || "",
+      "IG Ideal": row.ig_ideal || "",
+      Protocolo: row.protocolo_aplicado || "",
+      "Data Agendada": row.data_agendada || "",
+      "IG na Data Agendada": row.ig_na_data_agendada || "",
+      "Intervalo (dias)":
+        row.intervalo_dias !== undefined
+          ? row.intervalo_dias >= 0
+            ? `+${row.intervalo_dias}`
+            : `${row.intervalo_dias}`
+          : "",
+      Status: row.status || "",
+      Observações: row.erro || "",
     }));
 
     // Criar worksheet
     const worksheet = XLSX.utils.json_to_sheet(data);
-    
+
     // Ajustar largura das colunas
     const colWidths = [
       { wch: 12 }, // Data Registro
@@ -1041,7 +1065,7 @@ export default function ImportarPorTabela() {
       { wch: 12 }, // Data DUM
       { wch: 12 }, // Data USG
       { wch: 10 }, // Semanas
-      { wch: 8 },  // Dias
+      { wch: 8 }, // Dias
       { wch: 25 }, // USG Recente
       { wch: 12 }, // IG Pret
       { wch: 25 }, // Indicação
@@ -1050,7 +1074,7 @@ export default function ImportarPorTabela() {
       { wch: 15 }, // Placenta
       { wch: 30 }, // Diag Fetais
       { wch: 30 }, // Hist Obst
-      { wch: 8 },  // UTI
+      { wch: 8 }, // UTI
       { wch: 10 }, // Sangue
       { wch: 15 }, // Maternidade
       { wch: 25 }, // Médico
@@ -1063,14 +1087,14 @@ export default function ImportarPorTabela() {
       { wch: 18 }, // IG na Data
       { wch: 14 }, // Intervalo
       { wch: 12 }, // Status
-      { wch: 40 }  // Observações
+      { wch: 40 }, // Observações
     ];
-    worksheet['!cols'] = colWidths;
+    worksheet["!cols"] = colWidths;
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Agendamentos');
-    
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Agendamentos");
+
     // Salvar arquivo
-    const timestamp = new Date().toISOString().split('T')[0];
+    const timestamp = new Date().toISOString().split("T")[0];
     XLSX.writeFile(workbook, `agendamentos-processados-${timestamp}.xlsx`);
 
     toast.success(`${linhasParaExportar.length} registros exportados!`);
@@ -1125,24 +1149,24 @@ export default function ImportarPorTabela() {
               {processing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Calculator className="w-4 h-4 mr-1" />}
               Processar Dados
             </Button>
-            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}> 
+            <Button onClick={salvarNoBanco} size="sm" disabled={saving || rows.every((r) => r.status !== "valido")}>
               {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
               Salvar no Banco ({rows.filter((r) => r.status === "valido").length})
             </Button>
-            <Button 
-              onClick={exportarResultados} 
-              size="sm" 
+            <Button
+              onClick={exportarResultados}
+              size="sm"
               variant="outline"
-              disabled={rows.filter(r => r.status === 'valido' || r.status === 'salvo').length === 0}
+              disabled={rows.filter((r) => r.status === "valido" || r.status === "salvo").length === 0}
               className="flex items-center gap-2"
             >
               <FileSpreadsheet className="w-4 h-4" />
-              Exportar Excel ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
+              Exportar Excel ({rows.filter((r) => r.status === "valido" || r.status === "salvo").length})
             </Button>
             <div className="flex items-center gap-2 ml-4 border-l pl-4">
               <Filter className="w-4 h-4 text-muted-foreground" />
-              <Checkbox 
-                id="filter-fora-margem" 
+              <Checkbox
+                id="filter-fora-margem"
                 checked={filterForaMargem}
                 onCheckedChange={(checked) => setFilterForaMargem(checked === true)}
               />
@@ -1155,392 +1179,408 @@ export default function ImportarPorTabela() {
           {/* Rolagem vertical + rolagem lateral */}
           {/* Table min-width accommodates ~35 columns with varying widths */}
           <TooltipProvider>
-          <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
-            <div style={{ minWidth: TABLE_MIN_WIDTH }}>
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead className="w-10">#</TableHead>
-                    <TableHead className="w-12">Ações</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                    <TableHead className="w-32">Registro</TableHead>
-                    <TableHead className="min-w-[200px]">Nome Completo*</TableHead>
-                    <TableHead className="w-32">Nascimento</TableHead>
-                    <TableHead className="min-w-[150px]">Carteirinha*</TableHead>
-                    <TableHead className="w-16">G</TableHead>
-                    <TableHead className="w-16">PC</TableHead>
-                    <TableHead className="w-16">PN</TableHead>
-                    <TableHead className="w-16">A</TableHead>
-                    <TableHead className="min-w-[150px]">Telefones</TableHead>
-                    <TableHead className="min-w-[180px]">Procedimentos</TableHead>
-                    <TableHead className="min-w-[180px]">Status DUM</TableHead>
-                    <TableHead className="min-w-[120px]">Data DUM</TableHead>
-                    <TableHead className="min-w-[120px]">Data 1º USG</TableHead>
-                    <TableHead className="w-20">Sem</TableHead>
-                    <TableHead className="w-20">Dias</TableHead>
-                    <TableHead className="min-w-[200px]">USG Recente</TableHead>
-                    <TableHead className="w-24">IG Pret.</TableHead>
-                    <TableHead className="min-w-[150px]">Indicação</TableHead>
-                    <TableHead className="min-w-[150px]">Medicação</TableHead>
-                    <TableHead className="min-w-[200px]">Diag. Maternos</TableHead>
-                    <TableHead className="w-32">Placenta</TableHead>
-                    <TableHead className="min-w-[200px]">Diag. Fetais</TableHead>
-                    <TableHead className="min-w-[200px]">Hist. Obstétrica</TableHead>
-                    <TableHead className="w-24">UTI</TableHead>
-                    <TableHead className="w-24">Sangue</TableHead>
-                    <TableHead className="w-32">Maternidade</TableHead>
-                    <TableHead className="min-w-[150px]">Médico</TableHead>
-                    <TableHead className="min-w-[200px]">Email</TableHead>
-                    <TableHead className="min-w-[100px]">IG no Registro</TableHead>
-                    <TableHead className="w-28">IG Ideal</TableHead>
-                    <TableHead className="w-32">Data Ideal</TableHead>
-                    <TableHead className="w-40">Data Agendada</TableHead>
-                    <TableHead className="w-28">IG na Data</TableHead>
-                    <TableHead className="w-24">Intervalo</TableHead>
-                    <TableHead className="w-24">Lead Time</TableHead>
-                    <TableHead className="w-16">Info</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayRows.map((row, idx) => (
-                    <TableRow
-                      key={row.id}
-                      className={
-                        row.status === "erro" ? "bg-destructive/5" : row.status === "salvo" ? "bg-green-500/5" : ""
-                      }
-                    >
-                      <TableCell className="font-mono text-xs">{idx + 1}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeRow(row.id)}
-                          disabled={rows.length <= 1}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {getStatusBadge(row.status)}
-                          {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_registro}
-                          onChange={(e) => updateRow(row.id, "data_registro", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_registro")}
-                          placeholder="DD/MM/YYYY"
-                          className="w-28"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.nome_completo}
-                          onChange={(e) => updateRow(row.id, "nome_completo", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "nome_completo")}
-                          className="min-w-[180px]"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_nascimento}
-                          onChange={(e) => updateRow(row.id, "data_nascimento", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_nascimento")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.carteirinha}
-                          onChange={(e) => updateRow(row.id, "carteirinha", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "carteirinha")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_gestacoes}
-                          onChange={(e) => updateRow(row.id, "numero_gestacoes", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_gestacoes")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_partos_cesareas}
-                          onChange={(e) => updateRow(row.id, "numero_partos_cesareas", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_partos_cesareas")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_partos_normais}
-                          onChange={(e) => updateRow(row.id, "numero_partos_normais", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_partos_normais")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={row.numero_abortos}
-                          onChange={(e) => updateRow(row.id, "numero_abortos", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "numero_abortos")}
-                          className="w-16"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.telefones}
-                          onChange={(e) => updateRow(row.id, "telefones", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "telefones")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.procedimentos}
-                          onChange={(e) => updateRow(row.id, "procedimentos", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "procedimentos")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.dum_status}
-                          onChange={(e) => updateRow(row.id, "dum_status", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "dum_status")}
-                          placeholder="Sim - Confiavel / Incerta / Não sabe"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_dum}
-                          onChange={(e) => updateRow(row.id, "data_dum", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_dum")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="text"
-                          value={row.data_primeiro_usg}
-                          onChange={(e) => updateRow(row.id, "data_primeiro_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "data_primeiro_usg")}
-                          placeholder="DD/MM/YYYY"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="42"
-                          value={row.semanas_usg}
-                          onChange={(e) => updateRow(row.id, "semanas_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "semanas_usg")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="6"
-                          value={row.dias_usg}
-                          onChange={(e) => updateRow(row.id, "dias_usg", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "dias_usg")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.usg_recente}
-                          onChange={(e) => updateRow(row.id, "usg_recente", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "usg_recente")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.ig_pretendida}
-                          onChange={(e) => updateRow(row.id, "ig_pretendida", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "ig_pretendida")}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.indicacao_procedimento}
-                          onChange={(e) => updateRow(row.id, "indicacao_procedimento", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "indicacao_procedimento")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.medicacao}
-                          onChange={(e) => updateRow(row.id, "medicacao", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "medicacao")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.diagnosticos_maternos}
-                          onChange={(e) => updateRow(row.id, "diagnosticos_maternos", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "diagnosticos_maternos")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.placenta_previa}
-                          onChange={(e) => updateRow(row.id, "placenta_previa", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "placenta_previa")}
-                          placeholder="Sim / Não"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.diagnosticos_fetais}
-                          onChange={(e) => updateRow(row.id, "diagnosticos_fetais", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "diagnosticos_fetais")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.historia_obstetrica}
-                          onChange={(e) => updateRow(row.id, "historia_obstetrica", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "historia_obstetrica")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.necessidade_uti_materna}
-                          onChange={(e) => updateRow(row.id, "necessidade_uti_materna", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "necessidade_uti_materna")}
-                          placeholder="Sim / Não"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.necessidade_reserva_sangue}
-                          onChange={(e) => updateRow(row.id, "necessidade_reserva_sangue", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "necessidade_reserva_sangue")}
-                          placeholder="Sim / Não"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.maternidade}
-                          onChange={(e) => updateRow(row.id, "maternidade", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "maternidade")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          value={row.medico_responsavel}
-                          onChange={(e) => updateRow(row.id, "medico_responsavel", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "medico_responsavel")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          type="email"
-                          value={row.email_paciente}
-                          onChange={(e) => updateRow(row.id, "email_paciente", e.target.value)}
-                          onFocus={() => handleCellFocus(idx, "email_paciente")}
-                        />
-                      </TableCell>
-                      {/* IG na data do registro */}
-                      <TableCell className="font-mono text-sm text-primary">{row.ig_no_registro || "-"}</TableCell>
-                      <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
-                      <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
-                      <TableCell>
-                        {row.data_agendada && row.data_agendada !== "-" ? (
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono text-sm">{row.data_agendada}</span>
-                            <Badge variant={row.status_agendamento === 'calculado' ? 'outline' : 'destructive'} className="text-xs">
-                              {row.status_agendamento === 'calculado' ? 'Calc' : row.status_agendamento === 'needs_review' ? 'Rev' : 'Man'}
-                            </Badge>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{row.ig_na_data_agendada || "-"}</TableCell>
-                      <TableCell>
-                        {row.intervalo_dias !== undefined && row.margem_protocolo !== undefined ? (
-                          <Badge 
-                            variant="outline" 
-                            className={
-                              getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'green' 
-                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
-                                : getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === 'yellow'
-                                ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30'
-                                : 'bg-red-500/10 text-red-600 border-red-500/30'
-                            }
-                          >
-                            {row.intervalo_dias > 0 ? '+' : ''}{row.intervalo_dias}d
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {row.lead_time_dias !== undefined ? (
-                          <Badge 
-                            variant="outline" 
-                            className={
-                              row.lead_time_dias >= LEAD_TIME_MINIMO 
-                                ? 'bg-green-500/10 text-green-600 border-green-500/30' 
-                                : 'bg-red-500/10 text-red-600 border-red-500/30'
-                            }
-                          >
-                            {row.lead_time_dias}d
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {row.motivo_calculo && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6">
-                                  <Info className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-sm">
-                                <div className="space-y-1 text-sm">
-                                  <p><strong>Protocolo:</strong> {row.protocolo_aplicado || 'N/A'}</p>
-                                  <p><strong>Margem:</strong> {row.margem_protocolo} dias</p>
-                                  <p><strong>Cálculo:</strong> {row.motivo_calculo}</p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </TableCell>
+            <ScrollArea className="h-[600px] border rounded-lg" onPaste={handlePaste}>
+              <div style={{ minWidth: TABLE_MIN_WIDTH }}>
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
+                      <TableHead className="w-10">#</TableHead>
+                      <TableHead className="w-12">Ações</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="w-32">Registro</TableHead>
+                      <TableHead className="min-w-[200px]">Nome Completo*</TableHead>
+                      <TableHead className="w-32">Nascimento</TableHead>
+                      <TableHead className="min-w-[150px]">Carteirinha*</TableHead>
+                      <TableHead className="w-16">G</TableHead>
+                      <TableHead className="w-16">PC</TableHead>
+                      <TableHead className="w-16">PN</TableHead>
+                      <TableHead className="w-16">A</TableHead>
+                      <TableHead className="min-w-[150px]">Telefones</TableHead>
+                      <TableHead className="min-w-[180px]">Procedimentos</TableHead>
+                      <TableHead className="min-w-[180px]">Status DUM</TableHead>
+                      <TableHead className="min-w-[120px]">Data DUM</TableHead>
+                      <TableHead className="min-w-[120px]">Data 1º USG</TableHead>
+                      <TableHead className="w-20">Sem</TableHead>
+                      <TableHead className="w-20">Dias</TableHead>
+                      <TableHead className="min-w-[200px]">USG Recente</TableHead>
+                      <TableHead className="w-24">IG Pret.</TableHead>
+                      <TableHead className="min-w-[150px]">Indicação</TableHead>
+                      <TableHead className="min-w-[150px]">Medicação</TableHead>
+                      <TableHead className="min-w-[200px]">Diag. Maternos</TableHead>
+                      <TableHead className="w-32">Placenta</TableHead>
+                      <TableHead className="min-w-[200px]">Diag. Fetais</TableHead>
+                      <TableHead className="min-w-[200px]">Hist. Obstétrica</TableHead>
+                      <TableHead className="w-24">UTI</TableHead>
+                      <TableHead className="w-24">Sangue</TableHead>
+                      <TableHead className="w-32">Maternidade</TableHead>
+                      <TableHead className="min-w-[150px]">Médico</TableHead>
+                      <TableHead className="min-w-[200px]">Email</TableHead>
+                      <TableHead className="min-w-[100px]">IG no Registro</TableHead>
+                      <TableHead className="w-28">IG Ideal</TableHead>
+                      <TableHead className="w-32">Data Ideal</TableHead>
+                      <TableHead className="w-40">Data Agendada</TableHead>
+                      <TableHead className="w-28">IG na Data</TableHead>
+                      <TableHead className="w-24">Intervalo</TableHead>
+                      <TableHead className="w-24">Lead Time</TableHead>
+                      <TableHead className="w-16">Info</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <ScrollBar orientation="vertical" />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {displayRows.map((row, idx) => (
+                      <TableRow
+                        key={row.id}
+                        className={
+                          row.status === "erro" ? "bg-destructive/5" : row.status === "salvo" ? "bg-green-500/5" : ""
+                        }
+                      >
+                        <TableCell className="font-mono text-xs">{idx + 1}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeRow(row.id)}
+                            disabled={rows.length <= 1}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {getStatusBadge(row.status)}
+                            {row.erro && <span className="text-xs text-destructive">{row.erro}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_registro}
+                            onChange={(e) => updateRow(row.id, "data_registro", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_registro")}
+                            placeholder="DD/MM/YYYY"
+                            className="w-28"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.nome_completo}
+                            onChange={(e) => updateRow(row.id, "nome_completo", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "nome_completo")}
+                            className="min-w-[180px]"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_nascimento}
+                            onChange={(e) => updateRow(row.id, "data_nascimento", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_nascimento")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.carteirinha}
+                            onChange={(e) => updateRow(row.id, "carteirinha", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "carteirinha")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_gestacoes}
+                            onChange={(e) => updateRow(row.id, "numero_gestacoes", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_gestacoes")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_partos_cesareas}
+                            onChange={(e) => updateRow(row.id, "numero_partos_cesareas", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_partos_cesareas")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_partos_normais}
+                            onChange={(e) => updateRow(row.id, "numero_partos_normais", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_partos_normais")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={row.numero_abortos}
+                            onChange={(e) => updateRow(row.id, "numero_abortos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "numero_abortos")}
+                            className="w-16"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.telefones}
+                            onChange={(e) => updateRow(row.id, "telefones", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "telefones")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.procedimentos}
+                            onChange={(e) => updateRow(row.id, "procedimentos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "procedimentos")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.dum_status}
+                            onChange={(e) => updateRow(row.id, "dum_status", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "dum_status")}
+                            placeholder="Sim - Confiavel / Incerta / Não sabe"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_dum}
+                            onChange={(e) => updateRow(row.id, "data_dum", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_dum")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="text"
+                            value={row.data_primeiro_usg}
+                            onChange={(e) => updateRow(row.id, "data_primeiro_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "data_primeiro_usg")}
+                            placeholder="DD/MM/YYYY"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="42"
+                            value={row.semanas_usg}
+                            onChange={(e) => updateRow(row.id, "semanas_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "semanas_usg")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="6"
+                            value={row.dias_usg}
+                            onChange={(e) => updateRow(row.id, "dias_usg", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "dias_usg")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.usg_recente}
+                            onChange={(e) => updateRow(row.id, "usg_recente", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "usg_recente")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.ig_pretendida}
+                            onChange={(e) => updateRow(row.id, "ig_pretendida", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "ig_pretendida")}
+                            className="w-24"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.indicacao_procedimento}
+                            onChange={(e) => updateRow(row.id, "indicacao_procedimento", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "indicacao_procedimento")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.medicacao}
+                            onChange={(e) => updateRow(row.id, "medicacao", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "medicacao")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.diagnosticos_maternos}
+                            onChange={(e) => updateRow(row.id, "diagnosticos_maternos", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "diagnosticos_maternos")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.placenta_previa}
+                            onChange={(e) => updateRow(row.id, "placenta_previa", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "placenta_previa")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.diagnosticos_fetais}
+                            onChange={(e) => updateRow(row.id, "diagnosticos_fetais", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "diagnosticos_fetais")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.historia_obstetrica}
+                            onChange={(e) => updateRow(row.id, "historia_obstetrica", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "historia_obstetrica")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.necessidade_uti_materna}
+                            onChange={(e) => updateRow(row.id, "necessidade_uti_materna", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "necessidade_uti_materna")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.necessidade_reserva_sangue}
+                            onChange={(e) => updateRow(row.id, "necessidade_reserva_sangue", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "necessidade_reserva_sangue")}
+                            placeholder="Sim / Não"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.maternidade}
+                            onChange={(e) => updateRow(row.id, "maternidade", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "maternidade")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            value={row.medico_responsavel}
+                            onChange={(e) => updateRow(row.id, "medico_responsavel", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "medico_responsavel")}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="email"
+                            value={row.email_paciente}
+                            onChange={(e) => updateRow(row.id, "email_paciente", e.target.value)}
+                            onFocus={() => handleCellFocus(idx, "email_paciente")}
+                          />
+                        </TableCell>
+                        {/* IG na data do registro */}
+                        <TableCell className="font-mono text-sm text-primary">{row.ig_no_registro || "-"}</TableCell>
+                        <TableCell className="font-mono text-sm text-primary">{row.ig_ideal || "-"}</TableCell>
+                        <TableCell className="font-mono text-sm">{row.data_ideal || "-"}</TableCell>
+                        <TableCell>
+                          {row.data_agendada && row.data_agendada !== "-" ? (
+                            <div className="flex items-center gap-1">
+                              <span className="font-mono text-sm">{row.data_agendada}</span>
+                              <Badge
+                                variant={row.status_agendamento === "calculado" ? "outline" : "destructive"}
+                                className="text-xs"
+                              >
+                                {row.status_agendamento === "calculado"
+                                  ? "Calc"
+                                  : row.status_agendamento === "needs_review"
+                                    ? "Rev"
+                                    : "Man"}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm">{row.ig_na_data_agendada || "-"}</TableCell>
+                        <TableCell>
+                          {row.intervalo_dias !== undefined && row.margem_protocolo !== undefined ? (
+                            <Badge
+                              variant="outline"
+                              className={
+                                getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === "green"
+                                  ? "bg-green-500/10 text-green-600 border-green-500/30"
+                                  : getIntervaloColor(row.intervalo_dias, row.margem_protocolo) === "yellow"
+                                    ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/30"
+                                    : "bg-red-500/10 text-red-600 border-red-500/30"
+                              }
+                            >
+                              {row.intervalo_dias > 0 ? "+" : ""}
+                              {row.intervalo_dias}d
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.lead_time_dias !== undefined ? (
+                            <Badge
+                              variant="outline"
+                              className={
+                                row.lead_time_dias >= LEAD_TIME_MINIMO
+                                  ? "bg-green-500/10 text-green-600 border-green-500/30"
+                                  : "bg-red-500/10 text-red-600 border-red-500/30"
+                              }
+                            >
+                              {row.lead_time_dias}d
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {row.motivo_calculo && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6">
+                                    <Info className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm">
+                                  <div className="space-y-1 text-sm">
+                                    <p>
+                                      <strong>Protocolo:</strong> {row.protocolo_aplicado || "N/A"}
+                                    </p>
+                                    <p>
+                                      <strong>Margem:</strong> {row.margem_protocolo} dias
+                                    </p>
+                                    <p>
+                                      <strong>Cálculo:</strong> {row.motivo_calculo}
+                                    </p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <ScrollBar orientation="vertical" />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </TooltipProvider>
 
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ''}</span>
+            <span>
+              Total: {rows.length} linhas{filterForaMargem ? ` (Exibindo ${displayRows.length} fora da margem)` : ""}
+            </span>
             <span>
               Válidos: {rows.filter((r) => r.status === "valido").length} | Erros:{" "}
               {rows.filter((r) => r.status === "erro").length} | Revisão:{" "}
@@ -1550,7 +1590,7 @@ export default function ImportarPorTabela() {
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Modal de Correção de Datas */}
       {modalCorrecao && (
         <ModalCorrecaoDatas
