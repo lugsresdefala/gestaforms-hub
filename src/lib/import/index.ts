@@ -29,10 +29,12 @@ export type {
 // Date Parser
 export {
   parseDateSafe,
+  parseDateSafeWithSwapInfo,
   isPlaceholderDate,
   sanitizeDateToISO,
   createValidDate,
-  MIN_VALID_YEAR_THRESHOLD
+  MIN_VALID_YEAR_THRESHOLD,
+  type DateParseResult
 } from './dateParser';
 
 // Date Auto-Correction

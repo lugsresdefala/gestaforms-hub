@@ -117,3 +117,67 @@ Na tela de processamento, é possível editar manualmente a data agendada de cad
 4. A data original permanece preservada na coluna "Data Agendada Original"
 
 **Validação:** A data informada deve estar em formato válido (DD/MM/YYYY ou selecionada via calendário).
+
+## Correção Automática de Datas (Auto-Swap Dia/Mês)
+
+O sistema implementa correção automática de datas quando há inversão entre dia e mês. Esta funcionalidade reduz erros de importação causados por formatos de data inconsistentes.
+
+### Comportamento
+
+1. **Prioridade ao formato brasileiro (DD/MM/YYYY)**: O sistema sempre tenta interpretar a data como DD/MM/YYYY primeiro
+2. **Inversão automática**: Se DD/MM/YYYY for inválido (ex: mês > 12), o sistema tenta MM/DD/YYYY
+3. **Registro de auditoria**: Quando uma inversão é aplicada, o sistema registra no log
+
+### Exemplos
+
+| Entrada | Interpretação DD/MM | Resultado | Ação |
+|---------|---------------------|-----------|------|
+| `15/03/2025` | Dia 15, mês 3 | 15 de março de 2025 ✓ | Nenhuma inversão |
+| `03/15/2025` | Dia 3, mês 15 (inválido) | Inverte para mês 3, dia 15 = 15 de março de 2025 ✓ | **Inversão aplicada** |
+| `10/05/2025` | Dia 10, mês 5 | 10 de maio de 2025 ✓ | Nenhuma inversão (ambíguo, usa brasileiro) |
+| `32/13/2025` | Inválido em ambos | ERRO | Nenhuma correção possível |
+
+### Campos de Auditoria
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `dumDateCorrection` | Object | Informações sobre correção da DUM (se houve inversão) |
+| `usgDateCorrection` | Object | Informações sobre correção da data do USG (se houve inversão) |
+| `dataAgendadaCorrection` | Object | Informações sobre correção da data agendada (se houve inversão) |
+| `dateCorrectionsAuditLog` | String | Log consolidado de todas as correções aplicadas |
+
+### Estrutura do Objeto de Correção
+
+```typescript
+interface DateParseResult {
+  date: Date | null;           // Data resultante
+  dayMonthSwapped: boolean;    // Se houve inversão dia/mês
+  originalRaw: string;         // Valor original bruto
+  formatUsed: 'ISO' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'date-fns' | null;
+  reason: string;              // Explicação detalhada
+}
+```
+
+### Funções Disponíveis
+
+- `parseDateSafe(raw)`: Retorna apenas a data parseada (compatibilidade)
+- `parseDateSafeWithSwapInfo(raw)`: Retorna objeto completo com informações de correção
+
+### Uso no Código
+
+```typescript
+import { parseDateSafeWithSwapInfo } from '@/lib/import';
+
+const result = parseDateSafeWithSwapInfo('03/15/2025');
+if (result.dayMonthSwapped) {
+  console.log('⚠️ Data corrigida:', result.reason);
+}
+```
+
+### Aplicação
+
+Esta funcionalidade é aplicada em:
+
+- **Frontend**: Importação de arquivos TSV/CSV (`gestationalSnapshot.ts`)
+- **Backend**: Webhook do Power Automate (`processar-forms-webhook/index.ts`)
+- **Cálculos de IG**: Todos os cálculos usam a data já corrigida

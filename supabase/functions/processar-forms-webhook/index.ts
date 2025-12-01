@@ -138,6 +138,135 @@ const PROTOCOLS: Record<string, ProtocolConfig> = {
 // GESTATIONAL CALCULATION FUNCTIONS
 // ============================================================================
 
+/** Minimum valid year threshold - dates before this are considered placeholders */
+const MIN_VALID_YEAR = 1920;
+
+/**
+ * Result from parseDateSafeWithSwapInfo function.
+ * 
+ * NOTE: This interface is intentionally duplicated from src/lib/import/dateParser.ts
+ * because Supabase Edge Functions run in a Deno environment and cannot import
+ * from the frontend Vite/React codebase. This is a known limitation of the architecture.
+ */
+interface DateParseResult {
+  date: Date | null;
+  dayMonthSwapped: boolean;
+  originalRaw: string;
+  formatUsed: 'ISO' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | null;
+  reason: string;
+}
+
+/**
+ * Parse a date string with swap info for audit trail.
+ * Tries DD/MM/YYYY first (Brazilian format), then MM/DD/YYYY (American).
+ * 
+ * NOTE: This function is intentionally duplicated from src/lib/import/dateParser.ts
+ * because Supabase Edge Functions run in a Deno environment and cannot import
+ * from the frontend Vite/React codebase. Keep implementations in sync.
+ */
+function parseDateSafeWithSwapInfo(raw: string | null | undefined): DateParseResult {
+  const defaultResult: DateParseResult = {
+    date: null,
+    dayMonthSwapped: false,
+    originalRaw: raw || '',
+    formatUsed: null,
+    reason: 'Data de entrada inválida ou ausente'
+  };
+
+  if (!raw || typeof raw !== 'string') {
+    return defaultResult;
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === '-' || trimmed === 'null' || trimmed === 'undefined') {
+    return { ...defaultResult, originalRaw: trimmed };
+  }
+
+  // Try ISO format first (YYYY-MM-DD or ISO 8601)
+  if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime()) && parsed.getFullYear() >= MIN_VALID_YEAR) {
+      return {
+        date: parsed,
+        dayMonthSwapped: false,
+        originalRaw: trimmed,
+        formatUsed: 'ISO',
+        reason: 'Data interpretada como formato ISO (YYYY-MM-DD)'
+      };
+    }
+  }
+
+  // Try formats with slashes or dashes
+  const parts = trimmed.split(/[/-]/);
+  if (parts.length === 3) {
+    const p0 = parseInt(parts[0], 10);
+    const p1 = parseInt(parts[1], 10);
+    let p2 = parseInt(parts[2], 10);
+
+    if (isNaN(p0) || isNaN(p1) || isNaN(p2)) {
+      return { ...defaultResult, originalRaw: trimmed, reason: 'Data contém valores não numéricos' };
+    }
+
+    // Handle 2-digit years
+    if (p2 < 100) {
+      p2 = p2 > 50 ? 1900 + p2 : 2000 + p2;
+    }
+
+    // Reject placeholder years
+    if (p2 < MIN_VALID_YEAR) {
+      return { ...defaultResult, originalRaw: trimmed, reason: `Ano ${p2} anterior ao mínimo válido (${MIN_VALID_YEAR})` };
+    }
+
+    // Try DD/MM/YYYY first (Brazilian format - priority)
+    if (p0 >= 1 && p0 <= 31 && p1 >= 1 && p1 <= 12) {
+      const parsed = new Date(p2, p1 - 1, p0);
+      if (!isNaN(parsed.getTime()) && parsed.getDate() === p0 && parsed.getMonth() === p1 - 1) {
+        return {
+          date: parsed,
+          dayMonthSwapped: false,
+          originalRaw: trimmed,
+          formatUsed: 'DD/MM/YYYY',
+          reason: `Data interpretada como DD/MM/YYYY: dia ${p0}, mês ${p1}, ano ${p2}`
+        };
+      }
+    }
+
+    // Fallback: Try MM/DD/YYYY (American format) - this is a "swap"
+    if (p0 >= 1 && p0 <= 12 && p1 >= 1 && p1 <= 31) {
+      const parsed = new Date(p2, p0 - 1, p1);
+      if (!isNaN(parsed.getTime()) && parsed.getDate() === p1 && parsed.getMonth() === p0 - 1) {
+        return {
+          date: parsed,
+          dayMonthSwapped: true,
+          originalRaw: trimmed,
+          formatUsed: 'MM/DD/YYYY',
+          reason: `⚠️ Data corrigida: invertido dia/mês. ` +
+            `Interpretado como MM/DD/YYYY (mês ${p0}, dia ${p1}, ano ${p2}) ` +
+            `pois DD/MM/YYYY seria inválido (mês ${p1} > 12)`
+        };
+      }
+    }
+  }
+
+  // As a final fallback, try native Date parsing
+  const nativeParsed = new Date(trimmed);
+  if (!isNaN(nativeParsed.getTime()) && nativeParsed.getFullYear() >= MIN_VALID_YEAR) {
+    return {
+      date: nativeParsed,
+      dayMonthSwapped: false,
+      originalRaw: trimmed,
+      formatUsed: null,
+      reason: 'Data interpretada via parser nativo'
+    };
+  }
+
+  return {
+    ...defaultResult,
+    originalRaw: trimmed,
+    reason: 'Data não pode ser interpretada em nenhum formato suportado'
+  };
+}
+
 function calcularIgPorDum(dataDum: Date, dataReferencia: Date = new Date()): GestationalAge {
   const totalDias = differenceInDays(dataReferencia, dataDum);
   const semanas = Math.floor(totalDias / 7);
@@ -395,10 +524,29 @@ function parseIgIdeal(igIdeal: string): number {
 // ============================================================================
 
 function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()): FormsOutput {
-  // Parse dates
-  const dataDum = dados.dum ? new Date(dados.dum) : null;
-  const dataUsg = dados.data_usg ? new Date(dados.data_usg) : null;
-  const dataAgendada = dados.data_agendada ? new Date(dados.data_agendada) : null;
+  // Parse dates with swap info for audit trail
+  const dumParseResult = dados.dum ? parseDateSafeWithSwapInfo(dados.dum) : null;
+  const usgParseResult = dados.data_usg ? parseDateSafeWithSwapInfo(dados.data_usg) : null;
+  const agendadaParseResult = dados.data_agendada ? parseDateSafeWithSwapInfo(dados.data_agendada) : null;
+  
+  const dataDum = dumParseResult?.date ?? null;
+  const dataUsg = usgParseResult?.date ?? null;
+  const dataAgendada = agendadaParseResult?.date ?? null;
+  
+  // Build audit log for date corrections
+  const corrections: string[] = [];
+  if (dumParseResult?.dayMonthSwapped) {
+    corrections.push(`DUM: ${dumParseResult.reason}`);
+    console.log(`⚠️ Auto-correção DUM: ${dumParseResult.originalRaw} → ${dumParseResult.date?.toISOString()}`);
+  }
+  if (usgParseResult?.dayMonthSwapped) {
+    corrections.push(`USG: ${usgParseResult.reason}`);
+    console.log(`⚠️ Auto-correção USG: ${usgParseResult.originalRaw} → ${usgParseResult.date?.toISOString()}`);
+  }
+  if (agendadaParseResult?.dayMonthSwapped) {
+    corrections.push(`Data Agendada: ${agendadaParseResult.reason}`);
+    console.log(`⚠️ Auto-correção Data Agendada: ${agendadaParseResult.originalRaw} → ${agendadaParseResult.date?.toISOString()}`);
+  }
   
   // Parse USG weeks/days
   const semanasUsg = typeof dados.semanas_usg === 'string' ? parseInt(dados.semanas_usg) || 0 : (dados.semanas_usg || 0);
