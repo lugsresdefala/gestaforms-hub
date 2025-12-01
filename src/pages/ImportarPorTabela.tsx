@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter, Download } from "lucide-react";
+import { Plus, Trash2, ClipboardPaste, Calculator, Save, AlertCircle, CheckCircle2, Loader2, Info, Filter, FileSpreadsheet } from "lucide-react";
 import type { GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
 import * as XLSX from 'xlsx';
 
@@ -1010,8 +1010,8 @@ export default function ImportarPorTabela() {
               disabled={rows.filter(r => r.status === 'valido' || r.status === 'salvo').length === 0}
               className="flex items-center gap-2"
             >
-              <Download className="w-4 h-4" />
-              Exportar Resultados ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
+              <FileSpreadsheet className="w-4 h-4" />
+              Exportar Excel ({rows.filter(r => r.status === 'valido' || r.status === 'salvo').length})
             </Button>
             <div className="flex items-center gap-2 ml-4 border-l pl-4">
               <Filter className="w-4 h-4 text-muted-foreground" />

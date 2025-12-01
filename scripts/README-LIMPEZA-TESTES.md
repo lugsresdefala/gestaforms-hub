@@ -119,7 +119,7 @@ SELECT
 │  4. VERIFICAR RESULTADOS                │
 │     - Contar registros                  │
 │     - Verificar cálculos                │
-│     - Verificar campo data_pedido       │
+│     - Verificar campo data_registro       │
 │     - Testar aprovações                 │
 └─────────────────────────────────────────┘
 ```
@@ -138,7 +138,7 @@ SELECT
 ### **Via Importação (`/importar-tabela`)**
 - ✅ Validar importação em lote
 - ✅ Testar processamento de múltiplos registros
-- ✅ Verificar campo **data_pedido** (NOVO!)
+- ✅ Verificar campo **data_registro** (NOVO!)
 - ✅ Testar cálculo de IG na data do pedido
 - ✅ Validar exportação Excel profissional
 - ✅ Verificar filtros e ordenação
@@ -150,7 +150,7 @@ SELECT
 ### **`agendamentos_obst`**
 - Tabela principal de agendamentos
 - Contém todos os dados da paciente
-- Inclui campo **data_pedido** (novo)
+- Inclui campo **data_registro** (novo)
 - Status: pendente, aprovado, rejeitado
 
 ### **`agendamentos_historico`**
@@ -191,7 +191,7 @@ SELECT
   nome_completo,
   carteirinha,
   maternidade,
-  data_pedido,  -- NOVO CAMPO
+  data_registro,  -- NOVO CAMPO
   data_agendamento_calculada,
   idade_gestacional_calculada,
   status,
@@ -201,14 +201,14 @@ ORDER BY created_at DESC
 LIMIT 10;
 ```
 
-### **Verificar Campo data_pedido:**
+### **Verificar Campo data_registro:**
 ```sql
 SELECT 
   nome_completo,
-  data_pedido,
+  data_registro,
   idade_gestacional_calculada,
   CASE 
-    WHEN data_pedido IS NOT NULL THEN 'IG calculada na data do pedido'
+    WHEN data_registro IS NOT NULL THEN 'IG calculada na data do pedido'
     ELSE 'IG calculada hoje'
   END as tipo_calculo
 FROM agendamentos_obst 
@@ -220,7 +220,7 @@ ORDER BY created_at DESC;
 SELECT 
   status,
   COUNT(*) as total,
-  COUNT(CASE WHEN data_pedido IS NOT NULL THEN 1 END) as com_data_pedido
+  COUNT(CASE WHEN data_registro IS NOT NULL THEN 1 END) as com_data_registro
 FROM agendamentos_obst 
 GROUP BY status;
 ```
@@ -260,7 +260,7 @@ GROUP BY status;
 
 ### **Verificações:**
 - [ ] Contar total de registros
-- [ ] Verificar campo data_pedido
+- [ ] Verificar campo data_registro
 - [ ] Verificar cálculos de IG
 - [ ] Verificar datas agendadas
 - [ ] Testar aprovações
@@ -276,11 +276,11 @@ DELETE FROM agendamentos_historico;  -- Primeiro
 DELETE FROM agendamentos_obst;       -- Depois
 ```
 
-### **Campo data_pedido não existe**
+### **Campo data_registro não existe**
 ```sql
 -- Aplicar migration primeiro
 ALTER TABLE agendamentos_obst 
-ADD COLUMN IF NOT EXISTS data_pedido DATE;
+ADD COLUMN IF NOT EXISTS data_registro DATE;
 ```
 
 ### **Exportação Excel não funciona**
@@ -310,7 +310,7 @@ Após completar todos os testes:
 
 ✅ Banco de dados limpo
 ✅ 4+ agendamentos criados (1 via formulário, 3+ via importação)
-✅ Campo data_pedido funcionando
+✅ Campo data_registro funcionando
 ✅ Cálculos de IG corretos
 ✅ Exportação Excel profissional
 ✅ Validações funcionando

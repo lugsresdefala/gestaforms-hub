@@ -307,7 +307,7 @@ Após inserir cada paciente, verificar:
 ### **Via Importação:**
 - ✅ Múltiplos agendamentos processados
 - ✅ Cálculos em lote
-- ✅ Campo data_pedido funcionando
+- ✅ Campo data_registro funcionando
 - ✅ Exportação Excel com todos os dados
 
 ---

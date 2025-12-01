@@ -1,3 +1,18 @@
+/**
+ * @deprecated Este arquivo será substituído por diagnosticNormalizer.ts
+ * 
+ * O novo sistema (diagnosticNormalizer.ts) oferece:
+ * - 100+ padrões de detecção vs ~50 aqui
+ * - Normalização de texto mais robusta
+ * - Sistema de priorização melhorado
+ * - Suporte a múltiplos diagnósticos simultâneos
+ * 
+ * Migração pendente em:
+ * - src/pages/NovoAgendamento.tsx
+ * 
+ * Após migração, este arquivo pode ser removido.
+ */
+
 // Auto-classification utility for free-text diagnoses
 // Attempts to map free-text diagnoses to standardized protocol diagnoses
 

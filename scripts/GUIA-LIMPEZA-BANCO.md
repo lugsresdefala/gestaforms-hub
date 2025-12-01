@@ -202,7 +202,7 @@ SELECT
   data_agendamento_calculada,
   status,
   created_at,
-  data_pedido  -- Nova coluna!
+  data_registro  -- Nova coluna!
 FROM agendamentos_obst 
 ORDER BY created_at DESC 
 LIMIT 10;
@@ -252,7 +252,7 @@ Após limpar o banco, teste:
   - [ ] Criar novo agendamento
   - [ ] Verificar cálculo de IG
   - [ ] Verificar data agendada
-  - [ ] Verificar campo data_pedido (se preenchido)
+  - [ ] Verificar campo data_registro (se preenchido)
   - [ ] Verificar status "pendente"
 
 - [ ] **Via Importação**
@@ -261,7 +261,7 @@ Após limpar o banco, teste:
   - [ ] Verificar cálculos
   - [ ] Salvar no banco
   - [ ] Exportar Excel
-  - [ ] Verificar campo data_pedido
+  - [ ] Verificar campo data_registro
 
 - [ ] **Aprovações**
   - [ ] Ver agendamentos pendentes
@@ -278,7 +278,7 @@ Após executar a limpeza e os testes:
 ✅ Banco de dados limpo
 ✅ Novos agendamentos criados via formulário
 ✅ Novos agendamentos importados via tabela
-✅ Campo `data_pedido` funcionando
+✅ Campo `data_registro` funcionando
 ✅ Cálculos de IG corretos
 ✅ Exportação Excel funcionando
 
@@ -289,7 +289,7 @@ Após executar a limpeza e os testes:
 Se encontrar problemas:
 1. Verifique os logs do Supabase
 2. Verifique o console do navegador (F12)
-3. Verifique se a migration `data_pedido` foi aplicada
+3. Verifique se a migration `data_registro` foi aplicada
 
 ---
 
