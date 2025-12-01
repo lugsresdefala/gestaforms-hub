@@ -224,7 +224,7 @@ describe('gestationalSnapshot module', () => {
       expect(result.igIdealDias).toBe(39 * 7); // 273 days
     });
 
-    it('should use baixo_risco fallback when no diagnoses are provided', () => {
+    it('should use empty protocol when no diagnoses are provided', () => {
       const params: SnapshotParams = {
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -242,13 +242,14 @@ describe('gestationalSnapshot module', () => {
 
       const result = getGestationalSnapshot(params);
 
-      // With no diagnoses, should use baixo_risco fallback (not desejo_materno)
-      expect(result.protocolo).toBe('baixo_risco');
-      expect(result.protocoloNome).toBe('Baixo Risco');
+      // With no diagnoses, protocol should be empty (not baixo_risco)
+      // PT-AON-097: diagnósticos clínicos são obrigatórios
+      expect(result.protocolo).toBe('');
+      expect(result.protocoloNome).toBe('Não identificado');
       expect(result.igIdeal).toBe('39s0d');
     });
 
-    it('should use baixo_risco fallback when diagnoses are not recognized', () => {
+    it('should use empty protocol when diagnoses are not recognized', () => {
       const params: SnapshotParams = {
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -266,9 +267,10 @@ describe('gestationalSnapshot module', () => {
 
       const result = getGestationalSnapshot(params);
 
-      // Unrecognized diagnoses should fallback to baixo_risco (not desejo_materno)
-      expect(result.protocolo).toBe('baixo_risco');
-      expect(result.protocoloNome).toBe('Baixo Risco');
+      // Unrecognized diagnoses should not fallback to baixo_risco
+      // PT-AON-097: apenas diagnósticos clínicos válidos são aceitos
+      expect(result.protocolo).toBe('');
+      expect(result.protocoloNome).toBe('Não identificado');
     });
 
     it('should correctly identify HAC protocol', () => {

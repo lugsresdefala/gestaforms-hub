@@ -53,11 +53,21 @@ function calcularAgendamento(dados: {
     return { valido: false, motivo: igResult?.reason || 'IG não calculável' };
   }
 
-  // Map diagnoses to protocols - if no diagnoses, use empty array (baixo_risco applies)
+  // Map diagnoses to protocols - if no diagnoses, validation should fail
+  // PT-AON-097: diagnósticos clínicos são obrigatórios
   const allDiagnoses = [...dados.diagnosticos_maternos, ...dados.diagnosticos_fetais];
-  const protocolResult = calculateAutomaticIG(
-    allDiagnoses.length > 0 ? mapDiagnosisToProtocol(allDiagnoses) : []
-  );
+  
+  // Validação obrigatória de diagnósticos
+  if (allDiagnoses.length === 0) {
+    return { valido: false, motivo: 'Diagnósticos clínicos são obrigatórios. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.' };
+  }
+  
+  const mappedDiagnoses = mapDiagnosisToProtocol(allDiagnoses);
+  if (mappedDiagnoses.length === 0) {
+    return { valido: false, motivo: 'Os diagnósticos informados não correspondem a protocolos clínicos válidos.' };
+  }
+  
+  const protocolResult = calculateAutomaticIG(mappedDiagnoses);
 
   const igIdealSemanas = parseInt(protocolResult.igPretendida) || 39;
   const margemDias = PROTOCOLS[protocolResult.protocoloAplicado]?.margemDias || 7;
@@ -118,12 +128,44 @@ describe('Importação vs Manual - Consistency Tests', () => {
       expect(result.valido).toBe(true);
     });
 
-    it('should calculate IG successfully', () => {
+    it('should fail validation because diagnoses are required', () => {
+      // PT-AON-097: diagnósticos clínicos são obrigatórios
+      // When no diagnoses are provided, validation should fail
       const result = calcularAgendamento({ ...dadosBase, dataReferencia });
+      expect(result.valido).toBe(false);
+      expect(result.motivo).toContain('obrigatório');
+    });
+  });
+
+  describe('Case 1B: Valid Appointment with Clinical Diagnosis', () => {
+    const dadosComDiagnostico = {
+      nome_completo: 'Ana Carolina Silva',
+      carteirinha: '1234567890',
+      data_nascimento: '15/03/1990',
+      maternidade: 'Salvalus',
+      dum_status: 'Sim - Confiavel',
+      data_dum: '01/09/2023',
+      data_primeiro_usg: '15/10/2023',
+      semanas_usg: 8,
+      dias_usg: 2,
+      diagnosticos_maternos: ['hac_compensada'],
+      diagnosticos_fetais: [] as string[],
+    };
+
+    it('should pass required field validation', () => {
+      const result = validarCamposObrigatorios(dadosComDiagnostico);
       expect(result.valido).toBe(true);
-      // For low-risk pregnancies with no diagnoses, uses 'baixo_risco' protocol (39 weeks)
-      // NOTE: desejo_materno is no longer used - it's not a clinical pathology
-      expect(result.protocolo).toBe('baixo_risco');
+    });
+
+    it('should pass IG data validation', () => {
+      const result = validarDadosIG(dadosComDiagnostico);
+      expect(result.valido).toBe(true);
+    });
+
+    it('should calculate IG successfully with HAC protocol', () => {
+      const result = calcularAgendamento({ ...dadosComDiagnostico, dataReferencia });
+      expect(result.valido).toBe(true);
+      expect(result.protocolo).toBe('hac_compensada');
       expect(result.igIdeal).toBe('39 semanas');
     });
   });
