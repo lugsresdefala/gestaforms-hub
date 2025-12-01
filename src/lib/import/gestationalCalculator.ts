@@ -16,6 +16,7 @@
 import { differenceInDays, addDays } from 'date-fns';
 import { parseDateSafe } from './dateParser';
 import { adjustForSunday } from '../capacityRules';
+import { tryAutoCorrectDate, tryAutoCorrectUsgDate, isIgValid } from './dateAutoCorrection';
 import type { 
   CalculationResult, 
   ComputeParams, 
@@ -390,12 +391,16 @@ export function chooseAndComputeExtended(params: ExtendedComputeParams): Extende
   } = params;
 
   // Parse dates
-  const dumDate = parseDateSafe(dumRaw);
-  const usgDate = parseDateSafe(usgDateRaw);
+  let dumDate = parseDateSafe(dumRaw);
+  let usgDate = parseDateSafe(usgDateRaw);
   
   // Parse USG weeks/days
   const usgWeeksNum = parseNumeric(usgWeeks);
   const usgDaysNum = parseNumeric(usgDays);
+
+  // Track corrections for audit trail
+  let dumCorrectionNote = '';
+  let usgCorrectionNote = '';
 
   // Check DUM validity
   const dumReliable = isDumReliable(dumStatus);
@@ -403,6 +408,25 @@ export function chooseAndComputeExtended(params: ExtendedComputeParams): Extende
 
   // Check USG validity (needs date and at least weeks to be meaningful)
   const usgValid = usgDate !== null && (usgWeeksNum > 0 || usgDaysNum > 0);
+
+  // Try auto-correction if dates produce invalid IG
+  // For DUM: try correction if IG is invalid
+  if (dumValid && dumDate && dumRaw) {
+    const dumCorrection = tryAutoCorrectDate(dumRaw, referenceDate);
+    if (dumCorrection.wasCorrected && dumCorrection.correctedDate) {
+      dumDate = dumCorrection.correctedDate;
+      dumCorrectionNote = `⚠️ Auto-correção DUM: ${dumCorrection.originalRaw} → ${dumCorrection.correctedRaw}. `;
+    }
+  }
+
+  // For USG: try correction if IG is invalid
+  if (usgValid && usgDate && usgDateRaw) {
+    const usgCorrection = tryAutoCorrectUsgDate(usgDateRaw, usgWeeksNum, usgDaysNum, referenceDate);
+    if (usgCorrection.wasCorrected && usgCorrection.correctedDate) {
+      usgDate = usgCorrection.correctedDate;
+      usgCorrectionNote = `⚠️ Auto-correção USG: ${usgCorrection.originalRaw} → ${usgCorrection.correctedRaw}. `;
+    }
+  }
 
   // Combine diagnosis and indication for protocol detection
   const combinedText = [diagnostico || '', indicacao || ''].join(' ').trim();
@@ -527,13 +551,17 @@ export function chooseAndComputeExtended(params: ExtendedComputeParams): Extende
   const igAtIdealGa = daysToGa(igAtIdealDays);
   const igAtDataIdeal = formatGaCompact(igAtIdealGa.weeks, igAtIdealGa.days);
 
+  // Include correction notes in reason if any corrections were applied
+  const correctionNotes = (dumCorrectionNote + usgCorrectionNote).trim();
+  const reasonWithCorrections = correctionNotes ? `${correctionNotes}${reason}` : reason;
+
   return {
     source: finalSource,
     gaDays,
     gaWeeks: ga.weeks,
     gaDaysRemainder: ga.days,
     dpp,
-    reason,
+    reason: reasonWithCorrections,
     gaFormatted: formatGa(ga.weeks, ga.days),
     dataIdeal,
     igIdealText,

@@ -325,3 +325,183 @@ export function formatCorrectionForAudit(
     `IG antes: ${correction.originalIgDays !== null ? formatIgForDisplay(correction.originalIgDays) : 'N/A'}, ` +
     `IG depois: ${correction.correctedIgDays !== null ? formatIgForDisplay(correction.correctedIgDays) : 'N/A'}`;
 }
+
+/**
+ * Calculate gestational age from USG data.
+ * IG = (usgWeeks * 7 + usgDays) + daysSince(usgDate, referenceDate)
+ * 
+ * @param usgDate - Date when USG was performed
+ * @param usgWeeks - Weeks of gestation at USG time
+ * @param usgDays - Days of gestation at USG time (0-6)
+ * @param referenceDate - Reference date for calculation
+ * @returns Gestational age in days
+ */
+function calculateIgFromUsg(usgDate: Date, usgWeeks: number, usgDays: number, referenceDate: Date): number {
+  const daysSinceUsg = differenceInDays(referenceDate, usgDate);
+  const usgTotalDays = usgWeeks * 7 + usgDays;
+  return usgTotalDays + daysSinceUsg;
+}
+
+/**
+ * Try to auto-correct a USG date by inverting month/day if it produces an impossible IG
+ * but the inverted version produces a valid IG.
+ * 
+ * This function is specific to USG dates because the IG calculation includes
+ * the USG weeks/days at the time of the exam.
+ * 
+ * @param usgDateRaw - Raw USG date string
+ * @param usgWeeks - Weeks of gestation at USG time
+ * @param usgDays - Days of gestation at USG time (0-6)
+ * @param referenceDate - Reference date for IG calculation (defaults to today)
+ * @returns Correction result with details
+ */
+export function tryAutoCorrectUsgDate(
+  usgDateRaw: string | null | undefined,
+  usgWeeks: number,
+  usgDays: number,
+  referenceDate: Date = new Date()
+): DateCorrectionResult {
+  // Normalize reference date
+  const refDate = new Date(referenceDate);
+  refDate.setHours(0, 0, 0, 0);
+
+  // Default result for invalid input
+  const defaultResult: DateCorrectionResult = {
+    wasCorrected: false,
+    originalRaw: usgDateRaw || '',
+    originalParsed: null,
+    correctedDate: null,
+    correctedRaw: null,
+    reason: 'Data de USG de entrada inválida ou ausente',
+    originalIgDays: null,
+    correctedIgDays: null,
+  };
+
+  if (!usgDateRaw || typeof usgDateRaw !== 'string') {
+    return defaultResult;
+  }
+
+  const trimmed = usgDateRaw.trim();
+  if (!trimmed) {
+    return defaultResult;
+  }
+
+  // Parse original date
+  const originalDate = parseDateSafe(trimmed);
+  
+  if (!originalDate) {
+    // Original couldn't be parsed at all
+    // Try inverted version
+    const invertedRaw = invertMonthDay(trimmed);
+    if (!invertedRaw) {
+      return {
+        ...defaultResult,
+        reason: 'Data USG não pode ser interpretada e não é invertível',
+      };
+    }
+
+    const invertedDate = parseDateSafe(invertedRaw);
+    if (!invertedDate) {
+      return {
+        ...defaultResult,
+        reason: 'Data USG não pode ser interpretada mesmo com inversão',
+      };
+    }
+
+    // Inverted version parses, check if it gives valid IG
+    const invertedIgDays = calculateIgFromUsg(invertedDate, usgWeeks, usgDays, refDate);
+    if (isIgValid(invertedIgDays)) {
+      return {
+        wasCorrected: true,
+        originalRaw: trimmed,
+        originalParsed: null,
+        correctedDate: invertedDate,
+        correctedRaw: invertedRaw,
+        reason: `Data USG original inválida, inversão mês/dia produziu IG válida (${formatIgForDisplay(invertedIgDays)})`,
+        originalIgDays: null,
+        correctedIgDays: invertedIgDays,
+      };
+    }
+
+    return {
+      ...defaultResult,
+      reason: 'Data USG não pode ser corrigida automaticamente',
+    };
+  }
+
+  // Original parses, calculate IG
+  const originalIgDays = calculateIgFromUsg(originalDate, usgWeeks, usgDays, refDate);
+
+  // If original IG is valid, no correction needed
+  if (isIgValid(originalIgDays)) {
+    return {
+      wasCorrected: false,
+      originalRaw: trimmed,
+      originalParsed: originalDate,
+      correctedDate: null,
+      correctedRaw: null,
+      reason: `IG USG original válida (${formatIgForDisplay(originalIgDays)}), nenhuma correção necessária`,
+      originalIgDays,
+      correctedIgDays: null,
+    };
+  }
+
+  // Original IG is invalid, try inversion
+  const invertedRaw = invertMonthDay(trimmed);
+  if (!invertedRaw) {
+    return {
+      wasCorrected: false,
+      originalRaw: trimmed,
+      originalParsed: originalDate,
+      correctedDate: null,
+      correctedRaw: null,
+      reason: `IG USG impossível (${formatIgForDisplay(originalIgDays)}) e data não é invertível (mês ou dia > 12)`,
+      originalIgDays,
+      correctedIgDays: null,
+    };
+  }
+
+  const invertedDate = parseDateSafe(invertedRaw);
+  if (!invertedDate) {
+    return {
+      wasCorrected: false,
+      originalRaw: trimmed,
+      originalParsed: originalDate,
+      correctedDate: null,
+      correctedRaw: null,
+      reason: `IG USG impossível e inversão produziu data inválida`,
+      originalIgDays,
+      correctedIgDays: null,
+    };
+  }
+
+  const invertedIgDays = calculateIgFromUsg(invertedDate, usgWeeks, usgDays, refDate);
+
+  // Check if inverted version gives valid IG
+  if (isIgValid(invertedIgDays)) {
+    return {
+      wasCorrected: true,
+      originalRaw: trimmed,
+      originalParsed: originalDate,
+      correctedDate: invertedDate,
+      correctedRaw: invertedRaw,
+      reason: `Auto-correção USG aplicada: ${trimmed} → ${invertedRaw}. ` +
+        `IG original: ${formatIgForDisplay(originalIgDays)} (impossível) → ` +
+        `IG corrigida: ${formatIgForDisplay(invertedIgDays)} (válida)`,
+      originalIgDays,
+      correctedIgDays: invertedIgDays,
+    };
+  }
+
+  // Inverted version also gives invalid IG
+  return {
+    wasCorrected: false,
+    originalRaw: trimmed,
+    originalParsed: originalDate,
+    correctedDate: null,
+    correctedRaw: null,
+    reason: `IG USG impossível (${formatIgForDisplay(originalIgDays)}) e inversão também produz IG inválida (${formatIgForDisplay(invertedIgDays)})`,
+    originalIgDays,
+    correctedIgDays: invertedIgDays,
+  };
+}

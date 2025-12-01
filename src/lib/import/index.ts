@@ -40,6 +40,7 @@ export {
 // Date Auto-Correction
 export {
   tryAutoCorrectDate,
+  tryAutoCorrectUsgDate,
   invertMonthDay,
   isIgValid,
   formatCorrectionForAudit,
