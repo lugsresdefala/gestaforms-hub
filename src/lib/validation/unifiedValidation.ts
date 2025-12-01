@@ -300,18 +300,28 @@ export async function validarAgendamento(
   }
 
   // 8. PROTOCOL COMPLIANCE CHECK
+  // IMPORTANTE: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
   const diagnosticos = [
     ...normalizeToArray(dados.diagnosticos_maternos),
     ...normalizeToArray(dados.diagnosticos_fetais),
   ];
   
-  // Map diagnoses to protocols, fallback to empty (baixo_risco applies)
+  // Map diagnoses to protocols
   const protocolKeys = mapDiagnosisToProtocol(diagnosticos);
+  
+  // Validar que há pelo menos um diagnóstico identificado
+  if (protocolKeys.length === 0 && !dados.indicacao_procedimento?.trim()) {
+    errosCriticos.push(
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter pelo menos uma patologia registrada. ' +
+      'Revise os diagnósticos maternos e fetais.'
+    );
+  }
   
   if (protocolKeys.length > 0) {
     // Find most restrictive protocol
-    let mostRestrictiveIg = 39;
-    let mostRestrictiveProtocol = 'baixo_risco';
+    let mostRestrictiveIg = 41; // Start with max value
+    let mostRestrictiveProtocol = '';
     let margemDias = 7;
     
     for (const key of protocolKeys) {
@@ -326,13 +336,15 @@ export async function validarAgendamento(
       }
     }
     
-    // Check IG pretendida against protocol
-    const igPretendida = parseWeeks(dados.ig_pretendida) ?? 39;
-    
-    if (Math.abs(igPretendida - mostRestrictiveIg) > 0) {
-      avisos.push(
-        `IG pretendida (${igPretendida} semanas) difere da IG ideal do protocolo "${mostRestrictiveProtocol.replace(/_/g, ' ')}" (${mostRestrictiveIg} semanas)`
-      );
+    // Check IG pretendida against protocol (only if protocol was found)
+    if (mostRestrictiveProtocol) {
+      const igPretendida = parseWeeks(dados.ig_pretendida) ?? mostRestrictiveIg;
+      
+      if (Math.abs(igPretendida - mostRestrictiveIg) > 0) {
+        avisos.push(
+          `IG pretendida (${igPretendida} semanas) difere da IG ideal do protocolo "${mostRestrictiveProtocol.replace(/_/g, ' ')}" (${mostRestrictiveIg} semanas)`
+        );
+      }
     }
     
     // If we can calculate IG at scheduled date, verify it's within protocol range

@@ -264,9 +264,30 @@ export const identificarPatologias = (dados: {
 };
 
 /**
+ * Erro lançado quando nenhum diagnóstico clínico é identificado.
+ * Todas as pacientes devem ter pelo menos uma patologia registrada.
+ */
+export class NoDiagnosisError extends Error {
+  constructor() {
+    super(
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter pelo menos uma patologia registrada. ' +
+      'Revise os diagnósticos maternos e fetais.'
+    );
+    this.name = 'NoDiagnosisError';
+  }
+}
+
+/**
  * Calcula data de agendamento baseada em protocolos obstétricos
  * Aplica regras: DPP, antecedência mínima 10 dias, excluir domingos
  * NOVO: Verifica disponibilidade de vagas e busca alternativa se necessário
+ * 
+ * IMPORTANTE: Não existe classificação de "baixo risco". Todas as pacientes
+ * devem ter diagnósticos clínicos específicos. Se não houver patologias,
+ * lança NoDiagnosisError.
+ * 
+ * @throws {NoDiagnosisError} Se nenhuma patologia for identificada
  */
 export const calcularDataAgendamento = async (
   igAtual: GestationalAge,
@@ -276,31 +297,9 @@ export const calcularDataAgendamento = async (
 ): Promise<{ data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date; vagaConfirmada: boolean }> => {
   const dpp = calcularDPP(igAtual, dataReferencia);
   
-  // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
+  // VALIDAÇÃO: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
   if (patologias.length === 0) {
-    const igAlvo = 39;
-    const semanasAntesDpp = 40 - igAlvo;
-    const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
-    const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
-    
-    // Verificar disponibilidade de vagas
-    const { verificarDisponibilidade } = await import('./vagasValidation');
-    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
-    const isUrgente = diasAteDataFinal <= 7;
-    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
-    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
-    const vagaConfirmada = disponibilidade.disponivel;
-    
-    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
-    
-    return {
-      data: dataComVaga,
-      igAgendamento: igNaData.displayText,
-      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
-      protocoloAplicado: 'baixo_risco',
-      dpp,
-      vagaConfirmada
-    };
+    throw new NoDiagnosisError();
   }
   
   // Encontrar o protocolo mais restritivo (maior prioridade e menor IG)
@@ -321,26 +320,11 @@ export const calcularDataAgendamento = async (
   }
   
   if (!protocoloSelecionado) {
-    const dataFinal = encontrarProximaDataDisponivel(dataReferencia);
-    
-    // Verificar disponibilidade de vagas
-    const { verificarDisponibilidade } = await import('./vagasValidation');
-    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
-    const isUrgente = diasAteDataFinal <= 7;
-    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
-    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
-    const vagaConfirmada = disponibilidade.disponivel;
-    
-    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
-    
-    return {
-      data: dataComVaga,
-      igAgendamento: igNaData.displayText,
-      observacoes: `Não foi possível determinar protocolo específico${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
-      protocoloAplicado: 'indefinido',
-      dpp,
-      vagaConfirmada
-    };
+    // Patologias foram fornecidas mas não foram reconhecidas - erro de validação
+    throw new Error(
+      `ERRO DE VALIDAÇÃO: Os diagnósticos informados não foram reconhecidos: ${patologias.join(', ')}. ` +
+      'Verifique a grafia e consulte a lista de diagnósticos válidos.'
+    );
   }
   
   // Calcular IG alvo (usar valor fixo do protocolo)

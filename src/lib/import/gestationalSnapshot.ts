@@ -240,10 +240,11 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
   );
   
   // Use igPretendida if provided, otherwise use protocol's igIdeal
+  // IMPORTANTE: Não existe "baixo risco" - indicar que nenhum diagnóstico foi identificado
   let igIdealWeeks: number;
   let igIdealDays = 0;
-  let protocolo = 'baixo_risco';
-  let protocoloNome = 'Baixo Risco';
+  let protocolo = 'sem_diagnostico';
+  let protocoloNome = 'ERRO: Nenhum diagnóstico identificado';
   let margemDias = 7; // Default margin
 
   if (protocolResult) {
@@ -254,7 +255,8 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     protocoloNome = protocolResult.config.observacoes.split(' - ')[0] || protocolo.replace(/_/g, ' ');
     margemDias = protocolResult.config.margemDias;
   } else {
-    // Fallback to igPretendida or default weeks for low-risk pregnancies
+    // Sem protocolo identificado - usar igPretendida se fornecida, caso contrário usar default
+    // Mas marcar como sem diagnóstico para que o sistema possa validar
     igIdealWeeks = parseInt(igPretendida || String(DEFAULT_GESTATIONAL_WEEKS), 10) || DEFAULT_GESTATIONAL_WEEKS;
   }
   

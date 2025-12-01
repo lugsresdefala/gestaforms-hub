@@ -138,17 +138,17 @@ describe('Extended Gestational Calculator', () => {
     });
 
     // NOTE: 'eletivas' protocol removed - desejo_materno/cesarea eletiva are not clinical pathologies
-    // These cases now fall through to 'default' (39 weeks low-risk protocol)
-    it('should return default for elective procedures (not clinical pathologies)', () => {
-      expect(detectProtocol('cesárea eletiva')).toBe('default');
-      expect(detectProtocol('desejo materno')).toBe('default');
-      expect(detectProtocol('a pedido da paciente')).toBe('default');
+    // These cases now return 'nenhum_identificado' (requires validation)
+    it('should return nenhum_identificado for elective procedures (not clinical pathologies)', () => {
+      expect(detectProtocol('cesárea eletiva')).toBe('nenhum_identificado');
+      expect(detectProtocol('desejo materno')).toBe('nenhum_identificado');
+      expect(detectProtocol('a pedido da paciente')).toBe('nenhum_identificado');
     });
 
-    it('should return default for unrecognized conditions', () => {
-      expect(detectProtocol('gestação normal')).toBe('default');
-      expect(detectProtocol('')).toBe('default');
-      expect(detectProtocol('acompanhamento pré-natal')).toBe('default');
+    it('should return nenhum_identificado for unrecognized conditions', () => {
+      expect(detectProtocol('gestação normal')).toBe('nenhum_identificado');
+      expect(detectProtocol('')).toBe('nenhum_identificado');
+      expect(detectProtocol('acompanhamento pré-natal')).toBe('nenhum_identificado');
     });
 
     it('should prioritize cerclagem over other conditions', () => {
@@ -226,8 +226,8 @@ describe('Extended Gestational Calculator', () => {
       expect(result.igIdealText).toBe('40s 0d');
     });
 
-    // NOTE: 'eletivas' protocol removed - now falls to 'default' with same 39 weeks IG
-    it('should set IG ideal to 39 weeks (273 days) for low-risk and default', () => {
+    // NOTE: 'eletivas' protocol removed - now uses 'nenhum_identificado' (requires validation)
+    it('should set IG ideal to 39 weeks (273 days) for nenhum_identificado', () => {
       const result = chooseAndComputeExtended({
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -239,8 +239,8 @@ describe('Extended Gestational Calculator', () => {
         referenceDate: new Date('2024-04-01')
       });
 
-      // desejo materno is no longer a protocol - defaults to low-risk (39 weeks)
-      expect(result.protocoloAplicado).toBe('default');
+      // desejo materno não é protocolo clínico - retorna nenhum_identificado (39 semanas como placeholder)
+      expect(result.protocoloAplicado).toBe('nenhum_identificado');
       expect(result.igIdealDays).toBe(273);
       expect(result.igIdealText).toBe('39s 0d');
     });

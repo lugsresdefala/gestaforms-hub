@@ -70,12 +70,11 @@ interface FormsOutput extends FormsInput {
 // ============================================================================
 // PROTOCOLS (simplified version for Edge Function)
 // NOTE: desejo_materno and laqueadura removed - not clinical pathologies (PT-AON-097)
+// NOTE: baixo_risco removed - all patients must have clinical diagnoses
 // ============================================================================
 
 const PROTOCOLS: Record<string, ProtocolConfig> = {
   cerclagem: { igIdeal: "15", margemDias: 0, prioridade: 1, viaPreferencial: "Cesárea", observacoes: "PRIORIDADE CRÍTICA - Cerclagem / IIC" },
-  // baixo_risco fallback for no diagnoses (39 weeks)
-  baixo_risco: { igIdeal: "39", margemDias: 7, prioridade: 3, viaPreferencial: "Via obstétrica", observacoes: "Gestação de baixo risco" },
   hac: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "HAC compensada" },
   hac_dificil: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: "3 drogas - difícil controle" },
   hipertensao_gestacional: { igIdeal: "37", margemDias: 7, prioridade: 2, viaPreferencial: "Via obstétrica", observacoes: ">36sem: Doppler+PBF semanal" },
@@ -470,8 +469,9 @@ function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()):
   const dpp = calcularDPP(igFinal, hoje);
   
   // Determine ideal IG based on protocols
-  let igRecomendadaSemanas = 39; // Default: low risk
-  let protocoloObservacao = 'Gestação de baixo risco - resolução às 39 semanas';
+  // IMPORTANTE: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
+  let igRecomendadaSemanas: number | null = null;
+  let protocoloObservacao = 'ERRO: Nenhum diagnóstico clínico identificado. Revise os diagnósticos.';
   
   if (patologias.length > 0) {
     // Find most restrictive protocol
@@ -495,6 +495,24 @@ function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()):
       igRecomendadaSemanas = parseIgIdeal(protocoloSelecionado.igIdeal);
       protocoloObservacao = `${protocoloSelecionado.observacoes}. IG ideal baseada em ${patologiaSelecionada.replace(/_/g, ' ')}.`;
     }
+  }
+  
+  // Se não foi possível determinar protocolo, retornar erro
+  if (igRecomendadaSemanas === null) {
+    return {
+      ...dados,
+      maternidade_resultado: protocoloObservacao,
+      IG_Atual_Dias: igFinal.totalDays,
+      IG_Atual_Formatada: igFinal.displayText,
+      Metodo_IG: metodologia,
+      IG_Recomendada_Dias: 0,
+      IG_Recomendada_Formatada: 'N/A',
+      Data_Ideal_Calculada: '',
+      Data_Agendada: '',
+      IG_na_Data_Agendada_Formatada: '',
+      Intervalo: 0,
+      erro: 'Nenhum diagnóstico clínico identificado. Todas as pacientes devem ter pelo menos um diagnóstico registrado.'
+    };
   }
   
   // Calculate ideal date

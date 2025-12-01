@@ -239,21 +239,31 @@ export function getAllCategories(): { id: DiagnosticCategory; label: string }[] 
   ];
 }
 
-// Função para calcular IG pretendida automaticamente baseada nos diagnósticos selecionados
-export function calculateAutomaticIG(selectedDiagnostics: string[]): {
+/** 
+ * Return type for calculateAutomaticIG when a valid protocol is found
+ */
+export interface CalculateAutomaticIGResult {
   igPretendida: string;
   igPretendidaMax?: string;
   protocoloAplicado: string;
   observacoes: string;
   prioridade: number;
-} {
+}
+
+/**
+ * Calcula IG pretendida automaticamente baseada nos diagnósticos selecionados.
+ * 
+ * IMPORTANTE: Não existe classificação de "baixo risco" no sistema. Todas as pacientes
+ * devem ter diagnósticos clínicos específicos registrados. Se não houver diagnósticos,
+ * retorna null para indicar que a validação falhou.
+ * 
+ * @param selectedDiagnostics - Array de IDs de diagnósticos selecionados
+ * @returns Objeto com protocolo aplicado ou null se nenhum diagnóstico válido
+ */
+export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAutomaticIGResult | null {
   if (selectedDiagnostics.length === 0) {
-    return {
-      igPretendida: "39",
-      protocoloAplicado: "baixo_risco",
-      observacoes: "Gestação de baixo risco - resolução às 39 semanas",
-      prioridade: 3
-    };
+    // Nenhum diagnóstico informado - retornar null para forçar validação
+    return null;
   }
   
   // Encontrar o protocolo mais restritivo (menor IG e maior prioridade)
@@ -294,12 +304,8 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): {
   }
   
   if (!mostRestrictive) {
-    return {
-      igPretendida: "39",
-      protocoloAplicado: "baixo_risco",
-      observacoes: "Gestação de baixo risco",
-      prioridade: 3
-    };
+    // Diagnósticos fornecidos não foram reconhecidos - retornar null para forçar validação
+    return null;
   }
   
   return {

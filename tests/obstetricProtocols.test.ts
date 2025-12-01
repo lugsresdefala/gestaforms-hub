@@ -120,17 +120,17 @@ describe('obstetricProtocols module', () => {
   });
 
   describe('calculateAutomaticIG', () => {
-    it('should return 39 weeks for low-risk (empty diagnostics)', () => {
+    it('should return null for empty diagnostics (no baixo_risco fallback)', () => {
       const result = calculateAutomaticIG([]);
-      expect(result.igPretendida).toBe('39');
-      expect(result.protocoloAplicado).toBe('baixo_risco');
-      expect(result.prioridade).toBe(3);
+      // Não existe "baixo risco" - deve retornar null quando não há diagnósticos
+      expect(result).toBeNull();
     });
     
     it('should return correct IG for single hypertension diagnosis', () => {
       const result = calculateAutomaticIG(['hac_compensada']);
-      expect(result.igPretendida).toBe('39');
-      expect(result.protocoloAplicado).toBe('hac_compensada');
+      expect(result).not.toBeNull();
+      expect(result!.igPretendida).toBe('39');
+      expect(result!.protocoloAplicado).toBe('hac_compensada');
     });
     
     it('should return correct IG for HAC dificil', () => {
@@ -401,7 +401,7 @@ describe('obstetricProtocols module', () => {
       });
 
       // NOTE: desejo_materno is no longer added as a fallback - it's not a clinical pathology
-      // When no diagnoses are found, baixo_risco protocol is used (39 weeks)
+      // When no diagnoses are found, the system requires validation (no baixo_risco fallback)
       it('should return empty array for cesarea eletiva without diagnoses (no desejo_materno fallback)', () => {
         const patologias = identificarPatologias({
           procedimentos: ['Cesárea Eletiva'],
@@ -638,7 +638,7 @@ describe('obstetricProtocols module', () => {
         });
         
         // NOTE: desejo_materno is no longer used as fallback - it's not a clinical pathology
-        // When no diagnoses are found, baixo_risco protocol applies
+        // When no diagnoses are found, validation requires diagnosis (no baixo_risco fallback)
         it('should return empty array when no pathologies are identified (no desejo_materno)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],

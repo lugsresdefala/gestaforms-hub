@@ -224,7 +224,7 @@ describe('gestationalSnapshot module', () => {
       expect(result.igIdealDias).toBe(39 * 7); // 273 days
     });
 
-    it('should use baixo_risco fallback when no diagnoses are provided', () => {
+    it('should return sem_diagnostico when no diagnoses are provided', () => {
       const params: SnapshotParams = {
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -242,13 +242,13 @@ describe('gestationalSnapshot module', () => {
 
       const result = getGestationalSnapshot(params);
 
-      // With no diagnoses, should use baixo_risco fallback (not desejo_materno)
-      expect(result.protocolo).toBe('baixo_risco');
-      expect(result.protocoloNome).toBe('Baixo Risco');
+      // Sem diagnósticos, deve indicar que nenhum foi identificado (não "baixo_risco")
+      expect(result.protocolo).toBe('sem_diagnostico');
+      expect(result.protocoloNome).toContain('Nenhum');
       expect(result.igIdeal).toBe('39s0d');
     });
 
-    it('should use baixo_risco fallback when diagnoses are not recognized', () => {
+    it('should return sem_diagnostico when diagnoses are not recognized', () => {
       const params: SnapshotParams = {
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -266,9 +266,9 @@ describe('gestationalSnapshot module', () => {
 
       const result = getGestationalSnapshot(params);
 
-      // Unrecognized diagnoses should fallback to baixo_risco (not desejo_materno)
-      expect(result.protocolo).toBe('baixo_risco');
-      expect(result.protocoloNome).toBe('Baixo Risco');
+      // Diagnósticos não reconhecidos devem indicar que nenhum foi identificado (não "baixo_risco")
+      expect(result.protocolo).toBe('sem_diagnostico');
+      expect(result.protocoloNome).toContain('Nenhum');
     });
 
     it('should correctly identify HAC protocol', () => {

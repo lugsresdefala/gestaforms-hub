@@ -280,13 +280,14 @@ export const FULL_TERM_DAYS_CONSTANT = FULL_TERM_DAYS;
 /**
  * Protocol ideal gestational ages in days according to PT-AON-097
  * NOTE: 'eletivas' removed - desejo_materno/cesarea eletiva are not clinical protocols
+ * NOTE: 'nenhum_identificado' used when no specific protocol is detected - requires validation
  */
 const PROTOCOL_IG_IDEAL = {
   cerclagem: 105,      // 15 weeks
   hipertensao: 259,    // 37 weeks
   dmg_insulina: 266,   // 38 weeks
   dmg_sem_insulina: 280, // 40 weeks
-  default: 273         // 39 weeks - used for low-risk pregnancies
+  nenhum_identificado: 273  // 39 weeks - usado apenas como placeholder, requer validação
 } as const;
 
 /**
@@ -314,10 +315,10 @@ export function formatGaCompact(weeks: number, days: number): string {
 
 /**
  * Detect the applicable protocol based on diagnosis and indication text.
- * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → default
+ * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → nenhum_identificado
  * 
- * NOTE: "desejo materno" / "cesarea eletiva" removed - not clinical pathologies
- * Low-risk pregnancies without clinical indication use default (39 weeks)
+ * IMPORTANTE: Se retornar 'nenhum_identificado', isso indica que nenhum protocolo 
+ * específico foi detectado e a validação deve exigir diagnósticos.
  * 
  * @param text - Combined diagnosis and indication text (lowercase)
  * @returns Protocol key
@@ -346,9 +347,8 @@ export function detectProtocol(text: string): keyof typeof PROTOCOL_IG_IDEAL {
     return 'dmg_sem_insulina';
   }
   
-  // 5. Default (39 weeks) - used for low-risk pregnancies
-  // NOTE: "eletivas" case removed - desejo_materno / cesarea eletiva are not protocols
-  return 'default';
+  // 5. Nenhum protocolo identificado - requer validação
+  return 'nenhum_identificado';
 }
 
 /**

@@ -53,11 +53,19 @@ function calcularAgendamento(dados: {
     return { valido: false, motivo: igResult?.reason || 'IG não calculável' };
   }
 
-  // Map diagnoses to protocols - if no diagnoses, use empty array (baixo_risco applies)
+  // Map diagnoses to protocols - se não há diagnósticos, calculateAutomaticIG retorna null
   const allDiagnoses = [...dados.diagnosticos_maternos, ...dados.diagnosticos_fetais];
   const protocolResult = calculateAutomaticIG(
     allDiagnoses.length > 0 ? mapDiagnosisToProtocol(allDiagnoses) : []
   );
+
+  // Se protocolResult é null, significa que não há diagnóstico válido
+  if (!protocolResult) {
+    return { 
+      valido: false, 
+      motivo: 'Nenhum diagnóstico clínico identificado. Todas as pacientes devem ter pelo menos uma patologia registrada.' 
+    };
+  }
 
   const igIdealSemanas = parseInt(protocolResult.igPretendida) || 39;
   const margemDias = PROTOCOLS[protocolResult.protocoloAplicado]?.margemDias || 7;
@@ -93,7 +101,7 @@ describe('Importação vs Manual - Consistency Tests', () => {
   // Use a fixed reference date for deterministic tests
   const dataReferencia = new Date('2024-06-01');
 
-  describe('Case 1: Valid Simple Appointment (Cesarean, no diagnoses)', () => {
+  describe('Case 1: Appointment without diagnoses should fail validation', () => {
     const dadosBase = {
       nome_completo: 'Ana Carolina Silva',
       carteirinha: '1234567890',
@@ -118,13 +126,11 @@ describe('Importação vs Manual - Consistency Tests', () => {
       expect(result.valido).toBe(true);
     });
 
-    it('should calculate IG successfully', () => {
+    it('should fail calculation due to missing diagnoses (no baixo_risco fallback)', () => {
       const result = calcularAgendamento({ ...dadosBase, dataReferencia });
-      expect(result.valido).toBe(true);
-      // For low-risk pregnancies with no diagnoses, uses 'baixo_risco' protocol (39 weeks)
-      // NOTE: desejo_materno is no longer used - it's not a clinical pathology
-      expect(result.protocolo).toBe('baixo_risco');
-      expect(result.igIdeal).toBe('39 semanas');
+      // Sem diagnósticos, deve falhar a validação (não existe mais "baixo_risco")
+      expect(result.valido).toBe(false);
+      expect(result.motivo).toContain('diagnóstico');
     });
   });
 
