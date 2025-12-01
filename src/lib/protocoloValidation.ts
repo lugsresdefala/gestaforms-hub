@@ -177,15 +177,25 @@ export const validarProtocolo = (dados: {
     }
   }
 
-  // Validação para Cerclagem
+  // Validação para Cerclagem - janela ideal 12-16 semanas
   if (dados.procedimentos.includes('Cerclagem')) {
-    if (igTotal > 24) {
-      alertas.push('⚠️ PROTOCOLO: Cerclagem geralmente realizada entre 12-24 semanas');
-      recomendacoes.push('Verificar indicação para cerclagem tardia');
-    }
-    
-    if (igTotal < 12) {
-      alertas.push('⚠️ ATENÇÃO: IG muito precoce para cerclagem - avaliar riscos');
+    if (igTotal > 16) {
+      alertas.push('🚨 CRÍTICO: Cerclagem após 16 semanas - fora da janela ideal (12-16 semanas)');
+      alertas.push(`⚠️ IG atual: ${dados.igSemanas}s${dados.igDias}d - Paciente já passou da janela ideal para cerclagem`);
+      recomendacoes.push('Requer avaliação médica urgente para decidir conduta');
+      compativel = false;
+    } else if (igTotal > 14 && igTotal <= 16) {
+      alertas.push('⚠️ ATENÇÃO: Cerclagem no limite superior da janela (14-16 semanas)');
+      recomendacoes.push('Priorizar agendamento imediato - janela fechando');
+    } else if (igTotal >= 12 && igTotal <= 14) {
+      recomendacoes.push('✓ Cerclagem: IG dentro da janela ideal (12-14 semanas)');
+    } else if (igTotal < 10) {
+      // Paciente muito precoce - calcular quando entrará na janela
+      const semanasAteJanela = 12 - igTotal;
+      alertas.push(`ℹ️ IG atual: ${dados.igSemanas}s${dados.igDias}d - Paciente entrará na janela de cerclagem em ${semanasAteJanela.toFixed(1)} semanas`);
+      recomendacoes.push('Agendar cerclagem para 12-14 semanas');
+    } else if (igTotal >= 10 && igTotal < 12) {
+      recomendacoes.push(`ℹ️ IG atual: ${dados.igSemanas}s${dados.igDias}d - Próxima à janela de cerclagem (12-16 semanas)`);
     }
   }
 

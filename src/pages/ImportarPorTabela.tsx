@@ -17,7 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { chooseAndComputeExtended } from "@/lib/import/gestationalCalculator";
 import { parseDateSafe } from "@/lib/import/dateParser";
-import { addDays, differenceInDays } from "date-fns";
+import { addDays, differenceInDays, format, addMonths } from "date-fns";
 import { PROTOCOLS, mapDiagnosisToProtocol, calculateAutomaticIG } from "@/lib/obstetricProtocols";
 import {
   encontrarDataAgendada,
@@ -543,7 +543,44 @@ export default function ImportarPorTabela() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
-    const processedRows = rows.map((row) => {
+    // Calcular intervalo de datas para buscar agendamentos existentes
+    // (hoje até 6 meses no futuro para cobrir a maioria dos agendamentos)
+    const dataInicio = format(hoje, 'yyyy-MM-dd');
+    const dataFim = format(addMonths(hoje, 6), 'yyyy-MM-dd');
+
+    // Buscar agendamentos existentes no período para construir mapa de ocupação inicial
+    const ocupacaoAtual = new Map<string, number>();
+    
+    try {
+      const { data: agendamentosExistentes } = await supabase
+        .from('agendamentos_obst')
+        .select('maternidade, data_agendamento_calculada')
+        .gte('data_agendamento_calculada', dataInicio)
+        .lte('data_agendamento_calculada', dataFim)
+        .neq('status', 'rejeitado');
+
+      // Popular mapa inicial com agendamentos existentes
+      agendamentosExistentes?.forEach(ag => {
+        if (ag.data_agendamento_calculada) {
+          const key = ag.data_agendamento_calculada;
+          ocupacaoAtual.set(key, (ocupacaoAtual.get(key) || 0) + 1);
+        }
+      });
+      
+      console.log(`Carregados ${agendamentosExistentes?.length || 0} agendamentos existentes para controle de vagas`);
+    } catch (err) {
+      console.warn('Não foi possível carregar agendamentos existentes para controle de vagas:', err);
+    }
+
+    // Primeiro passo: calcular IG e protocolo para cada linha (sem agendar)
+    interface PreProcessedRow extends PacienteRow {
+      igResult?: ReturnType<typeof chooseAndComputeExtended>;
+      protocoloPrioridade?: number;
+      dataIdealCalculada?: Date;
+      margemCalculada?: number;
+    }
+    
+    const preProcessedRows: PreProcessedRow[] = rows.map((row) => {
       try {
         if (!row.nome_completo || !row.carteirinha) {
           return { ...row, status: "erro" as const, erro: "Nome e carteirinha são obrigatórios" };
@@ -574,40 +611,93 @@ export default function ImportarPorTabela() {
           return { ...row, status: "erro" as const, erro: result?.reason || "Não foi possível calcular IG" };
         }
 
-        // Determinar protocolo com base nos diagnósticos (3 colunas: maternos, fetais, história obstétrica)
+        // Determinar protocolo com base nos diagnósticos
         const diagnosticosTexto = [
           row.diagnosticos_maternos || "",
           row.diagnosticos_fetais || "",
           row.historia_obstetrica || ""
         ].filter(Boolean);
         
-        // Mapear diagnósticos para IDs de protocolo usando função especializada
         const diagnosticosMapeados = mapDiagnosisToProtocol(diagnosticosTexto);
-        
-        // Calcular IG pretendida automaticamente baseada nos protocolos detectados
         const resultadoProtocolo = calculateAutomaticIG(diagnosticosMapeados);
         
-        // IG pretendida manual do usuário (para comparação)
         const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
-        // IG ideal baseada no protocolo detectado (sem fallback para baixo_risco)
         const protocoloNome = resultadoProtocolo.protocoloAplicado;
         const protocoloDetectado = PROTOCOLS[protocoloNome];
-        // Usar IG do protocolo detectado, ou IG manual se não houver protocolo
         const igIdealSemanas = protocoloDetectado ? parseInt(resultadoProtocolo.igPretendida) : igPretendidaSemanas;
         const igIdealDias = 0;
         const margemDias = protocoloDetectado?.margemDias || 7;
+        const prioridade = protocoloDetectado?.prioridade || 3;
 
-        // Calcular data ideal baseada na IG pretendida
+        // Calcular data ideal
         const diasRestantes = igIdealSemanas * 7 + igIdealDias - result.gaDays;
         const dataIdeal = addDays(dataReferencia, diasRestantes);
+
+        return {
+          ...row,
+          igResult: result,
+          protocoloPrioridade: prioridade,
+          dataIdealCalculada: dataIdeal,
+          margemCalculada: margemDias,
+          ig_no_registro: result.gaFormatted,
+          ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
+          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
+          protocolo_aplicado: protocoloNome,
+          margem_protocolo: margemDias,
+        };
+      } catch {
+        return { ...row, status: "erro" as const, erro: "Erro no processamento" };
+      }
+    });
+
+    // Ordenar por prioridade (1 = mais urgente) para que cerclagem e outros casos críticos
+    // tenham prioridade na alocação de vagas
+    const sortedRows = [...preProcessedRows].sort((a, b) => {
+      const prioA = a.protocoloPrioridade ?? 99;
+      const prioB = b.protocoloPrioridade ?? 99;
+      if (prioA !== prioB) return prioA - prioB;
+      // Dentro da mesma prioridade, ordenar por data ideal mais próxima
+      const dateA = a.dataIdealCalculada?.getTime() ?? Infinity;
+      const dateB = b.dataIdealCalculada?.getTime() ?? Infinity;
+      return dateA - dateB;
+    });
+
+    // Segundo passo: agendar em ordem de prioridade, atualizando ocupação
+    const finalRows: PacienteRow[] = sortedRows.map((row) => {
+      // Se já tem erro, manter
+      if (row.status === 'erro' || !row.igResult || !row.dataIdealCalculada) {
+        return row as PacienteRow;
+      }
+
+      try {
+        // Usar data_registro como referência
+        let dataReferencia = hoje;
+        if (row.data_registro) {
+          const parsedDataRegistro = parseDateSafe(row.data_registro);
+          if (parsedDataRegistro) {
+            dataReferencia = parsedDataRegistro;
+            dataReferencia.setHours(0, 0, 0, 0);
+          }
+        }
+
+        const result = row.igResult;
+        const dataIdeal = row.dataIdealCalculada;
+        const margemDias = row.margemCalculada || 7;
         
-        // Usar a função de agendamento para encontrar data válida
+        // Usar a função de agendamento COM o mapa de ocupação
         const scheduleResult = encontrarDataAgendada({
           dataIdeal,
           maternidade: row.maternidade || 'Salvalus',
           dataReferencia,
           margemDias,
+          ocupacaoAtual,  // ← PASSANDO O MAPA DE OCUPAÇÃO
         });
+
+        // Atualizar ocupação se encontrou data válida
+        if (scheduleResult.dataAgendada) {
+          const dataKey = format(scheduleResult.dataAgendada, 'yyyy-MM-dd');
+          ocupacaoAtual.set(dataKey, (ocupacaoAtual.get(dataKey) || 0) + 1);
+        }
 
         // Calcular IG na data agendada
         let igNaDataAgendada = "";
@@ -616,28 +706,29 @@ export default function ImportarPorTabela() {
           igNaDataAgendada = formatIGCurta(igNaData.semanas, igNaData.dias);
         }
 
-        // Calcular intervalo entre data de registro e data agendada
+        // Calcular intervalo
         let intervaloRegistroAgendamento: number | undefined;
         if (scheduleResult.dataAgendada) {
           intervaloRegistroAgendamento = differenceInDays(scheduleResult.dataAgendada, dataReferencia);
         }
 
-        // Validar IG (apenas para gerar alertas informativos, não bloqueia)
+        const igIdealSemanas = parseInt(row.ig_ideal?.replace(/[^\d]/g, '') || '39');
+        const igPretendidaSemanas = parseInt(row.ig_pretendida) || 39;
+
+        // Validar IG
         const validacao = validarIG({
           igIdealSemanas,
-          igIdealDias,
+          igIdealDias: 0,
           igPretendidaSemanas,
           igAtualDias: result.gaDays,
           dataReferencia,
           dataAgendada: scheduleResult.dataAgendada,
         });
 
-        // Determinar status final - apenas bloqueia se não encontrar data válida
-        // Diferença entre IG ideal e pretendida é apenas AVISO, não bloqueia
+        // Determinar status final
         const bloqueiaAgendamento = scheduleResult.status === 'needs_review';
         const avisos: string[] = [];
         
-        // Avisos de IG (informativos, não bloqueiam)
         if (igIdealSemanas !== igPretendidaSemanas) {
           avisos.push(`⚠️ IG ideal (${igIdealSemanas}s) difere da IG pretendida (${igPretendidaSemanas}s)`);
         }
@@ -645,38 +736,43 @@ export default function ImportarPorTabela() {
           avisos.push(...validacao.alertas.map(a => `⚠️ ${a}`));
         }
         
-        // Motivos de bloqueio (quando não encontra data)
         if (scheduleResult.status === 'needs_review') {
           avisos.push(`❌ ${scheduleResult.motivo}`);
+        }
+        
+        // Adicionar info sobre ajuste de capacidade
+        if (scheduleResult.ajustadoPorCapacidade) {
+          avisos.push('ℹ️ Data ajustada por limite de vagas');
         }
 
         return {
           ...row,
-          ig_no_registro: result.gaFormatted,
-          data_ideal: dataIdeal.toLocaleDateString("pt-BR"),
-          ig_ideal: formatIGCurta(igIdealSemanas, igIdealDias),
           data_agendada: scheduleResult.dataAgendada?.toLocaleDateString("pt-BR") || "-",
           status_agendamento: bloqueiaAgendamento ? 'needs_review' : scheduleResult.status,
           ig_na_data_agendada: igNaDataAgendada || "-",
           intervalo_dias: intervaloRegistroAgendamento,
           lead_time_dias: scheduleResult.leadTimeDias,
-          margem_protocolo: margemDias,
-          protocolo_aplicado: protocoloNome,
           motivo_calculo: avisos.join(' | ') || scheduleResult.motivo,
           status: bloqueiaAgendamento ? "erro" as const : "valido" as const,
           erro: bloqueiaAgendamento ? 'Não foi possível encontrar data válida' : undefined,
-        };
+        } as PacienteRow;
       } catch {
-        return { ...row, status: "erro" as const, erro: "Erro no processamento" };
+        return { ...row, status: "erro" as const, erro: "Erro no agendamento" } as PacienteRow;
       }
     });
 
-    setRows(processedRows);
+    // Restaurar ordem original (por ID)
+    const rowIdOrder = rows.map(r => r.id);
+    const orderedFinalRows = rowIdOrder.map(id => 
+      finalRows.find(r => r.id === id) || rows.find(r => r.id === id)!
+    );
+
+    setRows(orderedFinalRows);
     setProcessing(false);
 
-    const validos = processedRows.filter((r) => r.status === "valido").length;
-    const erros = processedRows.filter((r) => r.status === "erro").length;
-    const needsReview = processedRows.filter((r) => r.status_agendamento === "needs_review").length;
+    const validos = orderedFinalRows.filter((r) => r.status === "valido").length;
+    const erros = orderedFinalRows.filter((r) => r.status === "erro").length;
+    const needsReview = orderedFinalRows.filter((r) => r.status_agendamento === "needs_review").length;
     const msgCorrigidos = corrigidos > 0 ? `, ${corrigidos} corrigidos` : '';
     toast.info(`Processados: ${validos} válidos, ${erros} com erros${needsReview > 0 ? `, ${needsReview} necessitam revisão` : ''}${msgCorrigidos}`);
     setCorrigidos(0); // Reset counter

@@ -158,7 +158,7 @@ describe('Extended Gestational Calculator', () => {
   });
 
   describe('Protocol-based Ideal GA', () => {
-    it('should set IG ideal to 15 weeks (105 days) for cerclagem', () => {
+    it('should set IG ideal to 14 weeks (98 days) for cerclagem (procedure window 12-16 weeks)', () => {
       const result = chooseAndComputeExtended({
         dumRaw: '01/01/2024',
         dumStatus: 'Sim - Confiavel',
@@ -171,8 +171,8 @@ describe('Extended Gestational Calculator', () => {
       });
 
       expect(result.protocoloAplicado).toBe('cerclagem');
-      expect(result.igIdealDays).toBe(105);
-      expect(result.igIdealText).toBe('15s 0d');
+      expect(result.igIdealDays).toBe(98);  // 14 weeks (middle of 12-16 window)
+      expect(result.igIdealText).toBe('14s 0d');
     });
 
     it('should set IG ideal to 37 weeks (259 days) for hypertension', () => {
