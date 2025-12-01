@@ -143,6 +143,10 @@ const MIN_VALID_YEAR = 1920;
 
 /**
  * Result from parseDateSafeWithSwapInfo function.
+ * 
+ * NOTE: This interface is intentionally duplicated from src/lib/import/dateParser.ts
+ * because Supabase Edge Functions run in a Deno environment and cannot import
+ * from the frontend Vite/React codebase. This is a known limitation of the architecture.
  */
 interface DateParseResult {
   date: Date | null;
@@ -155,6 +159,10 @@ interface DateParseResult {
 /**
  * Parse a date string with swap info for audit trail.
  * Tries DD/MM/YYYY first (Brazilian format), then MM/DD/YYYY (American).
+ * 
+ * NOTE: This function is intentionally duplicated from src/lib/import/dateParser.ts
+ * because Supabase Edge Functions run in a Deno environment and cannot import
+ * from the frontend Vite/React codebase. Keep implementations in sync.
  */
 function parseDateSafeWithSwapInfo(raw: string | null | undefined): DateParseResult {
   const defaultResult: DateParseResult = {
