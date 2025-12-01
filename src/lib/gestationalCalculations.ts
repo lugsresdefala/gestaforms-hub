@@ -276,31 +276,14 @@ export const calcularDataAgendamento = async (
 ): Promise<{ data: Date; igAgendamento: string; observacoes: string; protocoloAplicado: string; dpp: Date; vagaConfirmada: boolean }> => {
   const dpp = calcularDPP(igAtual, dataReferencia);
   
-  // Se não houver patologias identificadas, usar protocolo de baixo risco (39 semanas)
+  // VALIDAÇÃO OBRIGATÓRIA: Patologias clínicas são requeridas
+  // Não existe conceito de "baixo_risco" no protocolo clínico (PT-AON-097)
   if (patologias.length === 0) {
-    const igAlvo = 39;
-    const semanasAntesDpp = 40 - igAlvo;
-    const dataIdeal = addWeeks(dpp, -semanasAntesDpp);
-    const dataFinal = encontrarProximaDataDisponivel(dataIdeal);
-    
-    // Verificar disponibilidade de vagas
-    const { verificarDisponibilidade } = await import('./vagasValidation');
-    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
-    const isUrgente = diasAteDataFinal <= 7;
-    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
-    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
-    const vagaConfirmada = disponibilidade.disponivel;
-    
-    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
-    
-    return {
-      data: dataComVaga,
-      igAgendamento: igNaData.displayText,
-      observacoes: `Gestação de baixo risco - resolução às 39 semanas\nDPP: ${dpp.toLocaleDateString('pt-BR')}\nIG no dia do agendamento: ${igNaData.displayText}${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
-      protocoloAplicado: 'baixo_risco',
-      dpp,
-      vagaConfirmada
-    };
+    throw new Error(
+      'ERRO: Nenhuma patologia detectada. ' +
+      'Não é possível calcular data de agendamento sem diagnósticos clínicos. ' +
+      'Verifique se os diagnósticos maternos e fetais foram preenchidos corretamente.'
+    );
   }
   
   // Encontrar o protocolo mais restritivo (maior prioridade e menor IG)
@@ -320,27 +303,12 @@ export const calcularDataAgendamento = async (
     }
   }
   
+  // Se nenhum protocolo válido foi encontrado (IDs inválidos), lançar erro
   if (!protocoloSelecionado) {
-    const dataFinal = encontrarProximaDataDisponivel(dataReferencia);
-    
-    // Verificar disponibilidade de vagas
-    const { verificarDisponibilidade } = await import('./vagasValidation');
-    const diasAteDataFinal = differenceInDays(dataFinal, dataReferencia);
-    const isUrgente = diasAteDataFinal <= 7;
-    const disponibilidade = await verificarDisponibilidade(maternidade, dataFinal, isUrgente);
-    const dataComVaga = disponibilidade.dataAlternativa || dataFinal;
-    const vagaConfirmada = disponibilidade.disponivel;
-    
-    const igNaData = calcularIgNaData(igAtual, dataComVaga, dataReferencia);
-    
-    return {
-      data: dataComVaga,
-      igAgendamento: igNaData.displayText,
-      observacoes: `Não foi possível determinar protocolo específico${disponibilidade.dataAlternativa ? `\n⚠️ Data ajustada: ${disponibilidade.mensagem}` : ''}`,
-      protocoloAplicado: 'indefinido',
-      dpp,
-      vagaConfirmada
-    };
+    throw new Error(
+      'ERRO: Nenhum protocolo clínico válido foi identificado para as patologias fornecidas. ' +
+      'Verifique se os IDs de patologia são válidos e correspondem aos protocolos disponíveis.'
+    );
   }
   
   // Calcular IG alvo (usar valor fixo do protocolo)

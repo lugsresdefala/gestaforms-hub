@@ -305,13 +305,24 @@ export async function validarAgendamento(
     ...normalizeToArray(dados.diagnosticos_fetais),
   ];
   
-  // Map diagnoses to protocols, fallback to empty (baixo_risco applies)
+  // Map diagnoses to protocols - se não houver diagnósticos, validação obrigatória falha
   const protocolKeys = mapDiagnosisToProtocol(diagnosticos);
+  
+  // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos (PT-AON-097)
+  if (protocolKeys.length === 0 && diagnosticos.length === 0) {
+    errosCriticos.push(
+      'Diagnósticos clínicos são obrigatórios. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.'
+    );
+  } else if (protocolKeys.length === 0 && diagnosticos.length > 0) {
+    errosCriticos.push(
+      'Os diagnósticos informados não correspondem a protocolos clínicos válidos. Revise os diagnósticos ou use IDs de protocolo válidos.'
+    );
+  }
   
   if (protocolKeys.length > 0) {
     // Find most restrictive protocol
-    let mostRestrictiveIg = 39;
-    let mostRestrictiveProtocol = 'baixo_risco';
+    let mostRestrictiveIg = 40;
+    let mostRestrictiveProtocol = '';
     let margemDias = 7;
     
     for (const key of protocolKeys) {

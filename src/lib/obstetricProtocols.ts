@@ -247,13 +247,14 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): {
   observacoes: string;
   prioridade: number;
 } {
+  // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos
+  // Não existe conceito de "baixo_risco" no protocolo clínico (PT-AON-097)
   if (selectedDiagnostics.length === 0) {
-    return {
-      igPretendida: "39",
-      protocoloAplicado: "baixo_risco",
-      observacoes: "Gestação de baixo risco - resolução às 39 semanas",
-      prioridade: 3
-    };
+    throw new Error(
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter diagnósticos maternos ou fetais registrados. ' +
+      'Revise os campos de diagnósticos ou adicione as condições clínicas da paciente.'
+    );
   }
   
   // Encontrar o protocolo mais restritivo (menor IG e maior prioridade)
@@ -293,13 +294,12 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): {
     }
   }
   
+  // Se nenhum protocolo foi encontrado (todos os IDs inválidos), lançar erro
   if (!mostRestrictive) {
-    return {
-      igPretendida: "39",
-      protocoloAplicado: "baixo_risco",
-      observacoes: "Gestação de baixo risco",
-      prioridade: 3
-    };
+    throw new Error(
+      'ERRO DE VALIDAÇÃO: Nenhum protocolo clínico válido foi identificado para os diagnósticos fornecidos. ' +
+      'Verifique se os IDs de diagnóstico são válidos e correspondem aos protocolos disponíveis.'
+    );
   }
   
   return {

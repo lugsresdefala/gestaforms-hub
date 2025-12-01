@@ -279,14 +279,17 @@ export const FULL_TERM_DAYS_CONSTANT = FULL_TERM_DAYS;
 
 /**
  * Protocol ideal gestational ages in days according to PT-AON-097
- * NOTE: 'eletivas' removed - desejo_materno/cesarea eletiva are not clinical protocols
+ * NOTE: 'eletivas' and 'baixo_risco' removed - not clinical protocols
+ * All patients must have explicit clinical diagnoses
  */
 const PROTOCOL_IG_IDEAL = {
   cerclagem: 105,      // 15 weeks
   hipertensao: 259,    // 37 weeks
   dmg_insulina: 266,   // 38 weeks
   dmg_sem_insulina: 280, // 40 weeks
-  default: 273         // 39 weeks - used for low-risk pregnancies
+  // NOTE: 'default' mantido apenas para compatibilidade com imports legados
+  // Validação posterior irá rejeitar casos sem diagnósticos clínicos
+  default: 273         // 39 weeks - APENAS para imports legados, será rejeitado na validação
 } as const;
 
 /**
@@ -316,8 +319,9 @@ export function formatGaCompact(weeks: number, days: number): string {
  * Detect the applicable protocol based on diagnosis and indication text.
  * Order of verification: cerclagem → hipertensão → DMG+insulina → DMG sem → default
  * 
- * NOTE: "desejo materno" / "cesarea eletiva" removed - not clinical pathologies
- * Low-risk pregnancies without clinical indication use default (39 weeks)
+ * NOTE: "desejo materno" / "cesarea eletiva" / "baixo_risco" removed - not clinical pathologies
+ * All patients must have explicit clinical diagnoses.
+ * If no clinical protocol is detected, returns 'default' which will be caught by validation.
  * 
  * @param text - Combined diagnosis and indication text (lowercase)
  * @returns Protocol key
@@ -346,8 +350,8 @@ export function detectProtocol(text: string): keyof typeof PROTOCOL_IG_IDEAL {
     return 'dmg_sem_insulina';
   }
   
-  // 5. Default (39 weeks) - used for low-risk pregnancies
-  // NOTE: "eletivas" case removed - desejo_materno / cesarea eletiva are not protocols
+  // 5. Default - será rejeitado pela validação obrigatória de diagnósticos
+  // NOTE: baixo_risco / desejo_materno / cesarea eletiva não são protocolos clínicos
   return 'default';
 }
 

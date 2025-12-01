@@ -120,11 +120,10 @@ describe('obstetricProtocols module', () => {
   });
 
   describe('calculateAutomaticIG', () => {
-    it('should return 39 weeks for low-risk (empty diagnostics)', () => {
-      const result = calculateAutomaticIG([]);
-      expect(result.igPretendida).toBe('39');
-      expect(result.protocoloAplicado).toBe('baixo_risco');
-      expect(result.prioridade).toBe(3);
+    it('should throw error for empty diagnostics (diagnósticos obrigatórios)', () => {
+      expect(() => {
+        calculateAutomaticIG([]);
+      }).toThrow('Nenhum diagnóstico clínico foi identificado');
     });
     
     it('should return correct IG for single hypertension diagnosis', () => {
@@ -400,9 +399,9 @@ describe('obstetricProtocols module', () => {
         expect(patologias).toContain('oligodramnia');
       });
 
-      // NOTE: desejo_materno is no longer added as a fallback - it's not a clinical pathology
-      // When no diagnoses are found, baixo_risco protocol is used (39 weeks)
-      it('should return empty array for cesarea eletiva without diagnoses (no desejo_materno fallback)', () => {
+      // NOTE: desejo_materno and baixo_risco are no longer used - not clinical pathologies
+      // When no diagnoses are found, an error is thrown by calculateAutomaticIG/calcularDataAgendamento
+      it('should return empty array for cesarea eletiva without diagnoses (no fallback)', () => {
         const patologias = identificarPatologias({
           procedimentos: ['Cesárea Eletiva'],
           diagnosticosMaternos: undefined,
@@ -637,9 +636,9 @@ describe('obstetricProtocols module', () => {
           expect(patologias).not.toContain('desejo_materno');
         });
         
-        // NOTE: desejo_materno is no longer used as fallback - it's not a clinical pathology
-        // When no diagnoses are found, baixo_risco protocol applies
-        it('should return empty array when no pathologies are identified (no desejo_materno)', () => {
+        // NOTE: desejo_materno and baixo_risco are no longer used as fallback - not clinical pathologies
+        // When no diagnoses are found, an error is thrown by calculateAutomaticIG/calcularDataAgendamento
+        it('should return empty array when no pathologies are identified (will fail at validation)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             indicacaoProcedimento: 'Cesárea a pedido',
@@ -650,7 +649,7 @@ describe('obstetricProtocols module', () => {
           expect(patologias).toEqual([]);
         });
         
-        it('should return empty array for empty diagnostics (no desejo_materno fallback)', () => {
+        it('should return empty array for empty diagnostics (will fail at validation)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             diagnosticosMaternos: '',
