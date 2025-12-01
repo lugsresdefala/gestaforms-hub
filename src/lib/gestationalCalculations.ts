@@ -310,15 +310,18 @@ export const calcularDataAgendamento = async (
     const protocolo = PROTOCOLS[patologia];
     if (!protocolo) continue;
     
-    if (!protocoloSelecionado || 
-        protocolo.prioridade < protocoloSelecionado.prioridade ||
-        (protocolo.prioridade === protocoloSelecionado.prioridade && 
-         parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))) {
+    if (
+      !protocoloSelecionado || 
+      protocolo.prioridade < protocoloSelecionado.prioridade ||
+      (protocolo.prioridade === protocoloSelecionado.prioridade && 
+       parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))
+    ) {
       protocoloSelecionado = protocolo;
       patologiaSelecionada = patologia;
     }
   }
   
+  // Se nenhum protocolo válido foi encontrado (IDs inválidos), lançar erro
   if (!protocoloSelecionado) {
     // Patologias foram fornecidas mas não foram reconhecidas - erro de validação
     throw new Error(
@@ -439,8 +442,14 @@ export const calcularAgendamentoCompleto = async (dados: {
   });
   
   // Calcular data de agendamento COM verificação de vagas
-  const { data: dataAgendamento, igAgendamento, observacoes: obsAgendamento, protocoloAplicado, dpp, vagaConfirmada } = 
-    await calcularDataAgendamento(igFinal, patologias, dados.maternidade, hoje);
+  const {
+    data: dataAgendamento,
+    igAgendamento,
+    observacoes: obsAgendamento,
+    protocoloAplicado,
+    dpp,
+    vagaConfirmada
+  } = await calcularDataAgendamento(igFinal, patologias, dados.maternidade, hoje);
   
   let observacoesFinais = `METODOLOGIA: ${obsMetodologia}\n\n`;
   

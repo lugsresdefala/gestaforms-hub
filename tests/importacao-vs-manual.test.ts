@@ -55,9 +55,18 @@ function calcularAgendamento(dados: {
 
   // Map diagnoses to protocols - se não há diagnósticos, calculateAutomaticIG retorna null
   const allDiagnoses = [...dados.diagnosticos_maternos, ...dados.diagnosticos_fetais];
-  const protocolResult = calculateAutomaticIG(
-    allDiagnoses.length > 0 ? mapDiagnosisToProtocol(allDiagnoses) : []
-  );
+  
+  // Validação obrigatória de diagnósticos
+  if (allDiagnoses.length === 0) {
+    return { valido: false, motivo: 'Diagnósticos clínicos são obrigatórios. Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.' };
+  }
+  
+  const mappedDiagnoses = mapDiagnosisToProtocol(allDiagnoses);
+  if (mappedDiagnoses.length === 0) {
+    return { valido: false, motivo: 'Os diagnósticos informados não correspondem a protocolos clínicos válidos.' };
+  }
+  
+  const protocolResult = calculateAutomaticIG(mappedDiagnoses);
 
   // Se protocolResult é null, significa que não há diagnóstico válido
   if (!protocolResult) {

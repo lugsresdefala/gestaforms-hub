@@ -181,11 +181,13 @@ const { isAdmin, isMedicoUnidade } = useAuth();
 - ❌ `desejo_materno` - Não é indicação clínica, não define IG
 - ❌ `cesarea_eletiva` - Não é protocolo médico
 - ❌ `laqueadura` - É procedimento adicional, não protocolo
+- ❌ `baixo_risco` - Não existe no protocolo clínico, foi removido do código
 
 ### Regra de ouro:
 - ✅ IG ideal é definida **exclusivamente** por patologias clínicas (tabela PT-AON-097)
-- ✅ Cesárea eletiva sem indicação médica = protocolo de baixo risco (39 semanas)
-- ✅ Se não houver diagnóstico, retornar array vazio ou `null` (não criar protocolo fictício)
+- ✅ Cesárea eletiva sem indicação médica = ERRO (diagnósticos clínicos são obrigatórios)
+- ✅ Se não houver diagnóstico, lançar erro de validação (não criar protocolo fictício)
+- ✅ Todas as pacientes devem ter diagnósticos maternos ou fetais registrados
 
 ### Arquivos de importação ativos:
 - ✅ `src/pages/ImportarPorTabela.tsx` - Interface web principal

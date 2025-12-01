@@ -253,17 +253,22 @@ export interface CalculateAutomaticIGResult {
 /**
  * Calcula IG pretendida automaticamente baseada nos diagnósticos selecionados.
  * 
- * IMPORTANTE: Não existe classificação de "baixo risco" no sistema. Todas as pacientes
- * devem ter diagnósticos clínicos específicos registrados. Se não houver diagnósticos,
- * retorna null para indicar que a validação falhou.
+ * IMPORTANTE: Diagnósticos clínicos são obrigatórios. Não existe classificação de
+ * "baixo risco" como protocolo. Ausência de diagnósticos ou diagnósticos inválidos
+ * gera erro de validação.
  * 
  * @param selectedDiagnostics - Array de IDs de diagnósticos selecionados
- * @returns Objeto com protocolo aplicado ou null se nenhum diagnóstico válido
+ * @returns Objeto com protocolo aplicado
+ * @throws Error se nenhum diagnóstico clínico válido for identificado
  */
-export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAutomaticIGResult | null {
+export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAutomaticIGResult {
+  // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos
   if (selectedDiagnostics.length === 0) {
-    // Nenhum diagnóstico informado - retornar null para forçar validação
-    return null;
+    throw new Error(
+      'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
+      'Todas as pacientes devem ter diagnósticos maternos ou fetais registrados. ' +
+      'Revise os campos de diagnósticos ou adicione as condições clínicas da paciente.'
+    );
   }
   
   // Encontrar o protocolo mais restritivo (menor IG e maior prioridade)
@@ -284,15 +289,18 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAu
       // "Imediato" - prioridade máxima
       return {
         igPretendida: protocol.igIdeal,
+        igPretendidaMax: protocol.igIdealMax,
         protocoloAplicado: diagId,
         observacoes: protocol.observacoes,
         prioridade: 1
       };
     }
     
-    if (!mostRestrictive ||
-        protocol.prioridade < mostRestrictive.prioridade ||
-        (protocol.prioridade === mostRestrictive.prioridade && igIdeal < mostRestrictive.igIdeal)) {
+    if (
+      !mostRestrictive ||
+      protocol.prioridade < mostRestrictive.prioridade ||
+      (protocol.prioridade === mostRestrictive.prioridade && igIdeal < mostRestrictive.igIdeal)
+    ) {
       mostRestrictive = {
         id: diagId,
         igIdeal,
@@ -303,9 +311,12 @@ export function calculateAutomaticIG(selectedDiagnostics: string[]): CalculateAu
     }
   }
   
+  // Se nenhum protocolo foi encontrado (todos os IDs inválidos), lançar erro
   if (!mostRestrictive) {
-    // Diagnósticos fornecidos não foram reconhecidos - retornar null para forçar validação
-    return null;
+    throw new Error(
+      'ERRO DE VALIDAÇÃO: Nenhum protocolo clínico válido foi identificado para os diagnósticos fornecidos. ' +
+      'Verifique se os IDs de diagnóstico são válidos e correspondem aos protocolos disponíveis.'
+    );
   }
   
   return {

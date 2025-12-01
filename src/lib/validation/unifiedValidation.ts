@@ -304,20 +304,29 @@ export async function validarAgendamento(
 
   // 8. PROTOCOL COMPLIANCE CHECK
   // IMPORTANTE: Não existe "baixo risco" - todas as pacientes devem ter diagnóstico
-  const diagnosticos = [
+  const diagnosticos: string[] = [
     ...normalizeToArray(dados.diagnosticos_maternos),
     ...normalizeToArray(dados.diagnosticos_fetais),
   ];
+
+  // incluir indicação do procedimento na análise de protocolo, como texto livre
+  if (dados.indicacao_procedimento?.trim()) {
+    diagnosticos.push(dados.indicacao_procedimento.trim());
+  }
   
-  // Map diagnoses to protocols
+  // Map diagnoses to protocols - se não houver diagnósticos, validação obrigatória falha
   const protocolKeys = mapDiagnosisToProtocol(diagnosticos);
   
-  // Validar que há pelo menos um diagnóstico identificado
-  if (protocolKeys.length === 0 && !dados.indicacao_procedimento?.trim()) {
+  // VALIDAÇÃO OBRIGATÓRIA: Diagnósticos clínicos são requeridos (PT-AON-097)
+  if (protocolKeys.length === 0 && diagnosticos.length === 0) {
     errosCriticos.push(
       'ERRO DE VALIDAÇÃO: Nenhum diagnóstico clínico foi identificado. ' +
-      'Todas as pacientes devem ter pelo menos uma patologia registrada. ' +
-      'Revise os diagnósticos maternos e fetais.'
+      'Todas as pacientes devem ter diagnósticos maternos ou fetais registrados.'
+    );
+  } else if (protocolKeys.length === 0 && diagnosticos.length > 0) {
+    errosCriticos.push(
+      'ERRO DE VALIDAÇÃO: Os diagnósticos informados não correspondem a protocolos clínicos válidos. ' +
+      'Revise os diagnósticos ou utilize IDs de protocolo válidos.'
     );
   }
   

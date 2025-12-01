@@ -650,7 +650,7 @@ describe('obstetricProtocols module', () => {
           expect(patologias).toEqual([]);
         });
         
-        it('should return empty array for empty diagnostics (no desejo_materno fallback)', () => {
+        it('should return empty array for empty diagnostics (will fail at validation)', () => {
           const patologias = identificarPatologias({
             procedimentos: ['Cesárea Eletiva'],
             diagnosticosMaternos: '',

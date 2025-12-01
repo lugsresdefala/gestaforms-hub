@@ -473,27 +473,20 @@ function calcularAgendamentoWebhook(dados: FormsInput, hoje: Date = new Date()):
   let igRecomendadaSemanas: number | null = null;
   let protocoloObservacao = 'ERRO: Nenhum diagnóstico clínico identificado. Revise os diagnósticos.';
   
-  if (patologias.length > 0) {
-    // Find most restrictive protocol
-    let protocoloSelecionado: ProtocolConfig | null = null;
-    let patologiaSelecionada = '';
+  // Find most restrictive protocol
+  let protocoloSelecionado: ProtocolConfig | null = null;
+  let patologiaSelecionada = '';
+  
+  for (const patologia of patologias) {
+    const protocolo = PROTOCOLS[patologia];
+    if (!protocolo) continue;
     
-    for (const patologia of patologias) {
-      const protocolo = PROTOCOLS[patologia];
-      if (!protocolo) continue;
-      
-      if (!protocoloSelecionado || 
-          protocolo.prioridade < protocoloSelecionado.prioridade ||
-          (protocolo.prioridade === protocoloSelecionado.prioridade && 
-           parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))) {
-        protocoloSelecionado = protocolo;
-        patologiaSelecionada = patologia;
-      }
-    }
-    
-    if (protocoloSelecionado) {
-      igRecomendadaSemanas = parseIgIdeal(protocoloSelecionado.igIdeal);
-      protocoloObservacao = `${protocoloSelecionado.observacoes}. IG ideal baseada em ${patologiaSelecionada.replace(/_/g, ' ')}.`;
+    if (!protocoloSelecionado || 
+        protocolo.prioridade < protocoloSelecionado.prioridade ||
+        (protocolo.prioridade === protocoloSelecionado.prioridade && 
+         parseIgIdeal(protocolo.igIdeal) < parseIgIdeal(protocoloSelecionado.igIdeal))) {
+      protocoloSelecionado = protocolo;
+      patologiaSelecionada = patologia;
     }
   }
   
