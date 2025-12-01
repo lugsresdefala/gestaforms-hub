@@ -15,6 +15,7 @@ import { describe, it, expect } from 'vitest';
 // Import from the new modular structure
 import {
   parseDateSafe,
+  parseDateSafeWithSwapInfo,
   isPlaceholderDate,
   sanitizeDateToISO,
   createValidDate,
@@ -113,6 +114,137 @@ describe('dateParser module', () => {
   describe('constants', () => {
     it('should export MIN_VALID_YEAR_THRESHOLD', () => {
       expect(MIN_VALID_YEAR_THRESHOLD).toBe(1920);
+    });
+  });
+
+  describe('parseDateSafeWithSwapInfo', () => {
+    describe('Valid DD/MM/YYYY - No swap needed', () => {
+      it('should parse unambiguous DD/MM date without swap', () => {
+        // Day 15 > 12, so it's clearly DD/MM format
+        const result = parseDateSafeWithSwapInfo('15/03/2025');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(false);
+        expect(result.formatUsed).toBe('DD/MM/YYYY');
+        expect(result.date?.getFullYear()).toBe(2025);
+        expect(result.date?.getMonth()).toBe(2); // March = 2 (0-indexed)
+        expect(result.date?.getDate()).toBe(15);
+      });
+
+      it('should parse ambiguous date as DD/MM (Brazilian format priority)', () => {
+        // Both 10 and 5 are <= 12, but Brazilian format (DD/MM) is prioritized
+        const result = parseDateSafeWithSwapInfo('10/05/2025');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(false);
+        expect(result.formatUsed).toBe('DD/MM/YYYY');
+        expect(result.date?.getMonth()).toBe(4); // May = 4 (0-indexed)
+        expect(result.date?.getDate()).toBe(10);
+      });
+    });
+
+    describe('Invalid DD/MM, valid MM/DD - Swap applied', () => {
+      it('should swap day/month when DD/MM is invalid but MM/DD is valid', () => {
+        // "03/15/2025" - If DD/MM, month=15 is invalid
+        // Fallback to MM/DD: month=3, day=15 = March 15
+        const result = parseDateSafeWithSwapInfo('03/15/2025');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(true);
+        expect(result.formatUsed).toBe('MM/DD/YYYY');
+        expect(result.date?.getFullYear()).toBe(2025);
+        expect(result.date?.getMonth()).toBe(2); // March = 2 (0-indexed)
+        expect(result.date?.getDate()).toBe(15);
+        expect(result.reason).toContain('invertido dia/mês');
+      });
+
+      it('should swap when month value exceeds 12', () => {
+        // "05/25/2025" - If DD/MM, month=25 is invalid
+        // Fallback to MM/DD: month=5, day=25 = May 25
+        const result = parseDateSafeWithSwapInfo('05/25/2025');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(true);
+        expect(result.formatUsed).toBe('MM/DD/YYYY');
+        expect(result.date?.getMonth()).toBe(4); // May = 4
+        expect(result.date?.getDate()).toBe(25);
+      });
+    });
+
+    describe('Invalid in both formats - Error', () => {
+      it('should return null when both DD/MM and MM/DD are invalid', () => {
+        // "32/13/2025" - Day 32 is invalid for any month, month 13 is invalid
+        const result = parseDateSafeWithSwapInfo('32/13/2025');
+        
+        expect(result.date).toBeNull();
+        expect(result.dayMonthSwapped).toBe(false);
+        expect(result.formatUsed).toBeNull();
+      });
+
+      it('should return null for completely invalid date string', () => {
+        const result = parseDateSafeWithSwapInfo('not-a-date');
+        
+        expect(result.date).toBeNull();
+        expect(result.dayMonthSwapped).toBe(false);
+      });
+    });
+
+    describe('Edge cases', () => {
+      it('should handle ISO format without swap', () => {
+        const result = parseDateSafeWithSwapInfo('2025-03-15');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(false);
+        expect(result.formatUsed).toBe('ISO');
+        expect(result.date?.getFullYear()).toBe(2025);
+        expect(result.date?.getMonth()).toBe(2);
+        expect(result.date?.getDate()).toBe(15);
+      });
+
+      it('should return null for empty input', () => {
+        expect(parseDateSafeWithSwapInfo('').date).toBeNull();
+        expect(parseDateSafeWithSwapInfo(null).date).toBeNull();
+        expect(parseDateSafeWithSwapInfo(undefined).date).toBeNull();
+      });
+
+      it('should preserve original raw value in result', () => {
+        const result = parseDateSafeWithSwapInfo('03/15/2025');
+        expect(result.originalRaw).toBe('03/15/2025');
+      });
+
+      it('should handle placeholder years (< 1920)', () => {
+        const result = parseDateSafeWithSwapInfo('15/03/1900');
+        
+        expect(result.date).toBeNull();
+        expect(result.reason).toContain('mínimo válido');
+      });
+
+      it('should handle dash separators', () => {
+        const result = parseDateSafeWithSwapInfo('03-15-2025');
+        
+        expect(result.date).not.toBeNull();
+        expect(result.dayMonthSwapped).toBe(true);
+        expect(result.date?.getMonth()).toBe(2); // March
+        expect(result.date?.getDate()).toBe(15);
+      });
+    });
+
+    describe('Audit trail', () => {
+      it('should provide detailed reason when swap is applied', () => {
+        const result = parseDateSafeWithSwapInfo('03/15/2025');
+        
+        expect(result.reason).toContain('corrigida');
+        expect(result.reason).toContain('invertido');
+        expect(result.reason).toContain('MM/DD/YYYY');
+      });
+
+      it('should provide reason for normal DD/MM parsing', () => {
+        const result = parseDateSafeWithSwapInfo('15/03/2025');
+        
+        expect(result.reason).toContain('DD/MM/YYYY');
+        expect(result.reason).toContain('dia 15');
+        expect(result.reason).toContain('mês 3');
+      });
     });
   });
 });

@@ -18,6 +18,162 @@ import { isValid, parse, parseISO } from 'date-fns';
 const MIN_VALID_YEAR = 1920;
 
 /**
+ * Result from parseDateSafeWithSwapInfo function.
+ * Includes the parsed date and information about whether day/month swap was applied.
+ */
+export interface DateParseResult {
+  /** Parsed Date or null if invalid */
+  date: Date | null;
+  /** Whether day/month swap was applied (DD/MM → MM/DD interpretation) */
+  dayMonthSwapped: boolean;
+  /** Original raw date string */
+  originalRaw: string;
+  /** The format interpretation used: 'ISO', 'DD/MM/YYYY', 'MM/DD/YYYY', 'date-fns', or null if failed */
+  formatUsed: 'ISO' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'date-fns' | null;
+  /** Human-readable reason for the parse result */
+  reason: string;
+}
+
+/**
+ * Parse a date string with detailed information about the interpretation used.
+ * This function provides an audit trail for date parsing, especially when
+ * day/month swap is applied (DD/MM/YYYY → MM/DD/YYYY fallback).
+ * 
+ * When the first value (p0) cannot be a valid month (> 12), it's treated as
+ * a day in DD/MM/YYYY format. When it fails to parse as DD/MM/YYYY, it falls
+ * back to MM/DD/YYYY, and this is recorded as a "swap".
+ * 
+ * @param raw - Raw date string to parse
+ * @returns DateParseResult with date, swap info, and audit trail
+ * 
+ * @example
+ * // Case 1: Valid DD/MM/YYYY (no swap needed)
+ * parseDateSafeWithSwapInfo("15/03/2025")
+ * // → { date: 2025-03-15, dayMonthSwapped: false, formatUsed: 'DD/MM/YYYY' }
+ * 
+ * // Case 2: Invalid DD/MM, valid MM/DD (swap applied)
+ * parseDateSafeWithSwapInfo("03/15/2025") 
+ * // → { date: 2025-03-15, dayMonthSwapped: true, formatUsed: 'MM/DD/YYYY' }
+ * 
+ * // Case 3: Invalid in both formats
+ * parseDateSafeWithSwapInfo("32/13/2025")
+ * // → { date: null, dayMonthSwapped: false, formatUsed: null }
+ */
+export function parseDateSafeWithSwapInfo(raw: string | null | undefined): DateParseResult {
+  const defaultResult: DateParseResult = {
+    date: null,
+    dayMonthSwapped: false,
+    originalRaw: raw || '',
+    formatUsed: null,
+    reason: 'Data de entrada inválida ou ausente'
+  };
+
+  if (!raw || typeof raw !== 'string') {
+    return defaultResult;
+  }
+
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === '-' || trimmed === 'null' || trimmed === 'undefined') {
+    return { ...defaultResult, originalRaw: trimmed };
+  }
+
+  // Try ISO format first (YYYY-MM-DD)
+  if (/^\d{4}-\d{1,2}-\d{1,2}/.test(trimmed)) {
+    const datePart = trimmed.split(' ')[0].split('T')[0];
+    const parsed = parseISO(datePart);
+    if (isValid(parsed) && parsed.getFullYear() >= MIN_VALID_YEAR) {
+      return {
+        date: parsed,
+        dayMonthSwapped: false,
+        originalRaw: trimmed,
+        formatUsed: 'ISO',
+        reason: 'Data interpretada como formato ISO (YYYY-MM-DD)'
+      };
+    }
+  }
+
+  // Try formats with slashes or dashes
+  const parts = trimmed.split(/[/-]/);
+  if (parts.length === 3) {
+    const p0 = parseInt(parts[0], 10);
+    const p1 = parseInt(parts[1], 10);
+    let p2 = parseInt(parts[2], 10);
+
+    if (isNaN(p0) || isNaN(p1) || isNaN(p2)) {
+      return { ...defaultResult, originalRaw: trimmed, reason: 'Data contém valores não numéricos' };
+    }
+
+    // Handle 2-digit years
+    if (p2 < 100) {
+      p2 = p2 > 50 ? 1900 + p2 : 2000 + p2;
+    }
+
+    // Reject placeholder years
+    if (p2 < MIN_VALID_YEAR) {
+      return { ...defaultResult, originalRaw: trimmed, reason: `Ano ${p2} anterior ao mínimo válido (${MIN_VALID_YEAR})` };
+    }
+
+    // Try DD/MM/YYYY first (Brazilian format - priority)
+    if (p0 >= 1 && p0 <= 31 && p1 >= 1 && p1 <= 12) {
+      const parsed = new Date(p2, p1 - 1, p0);
+      if (isValid(parsed) && parsed.getDate() === p0 && parsed.getMonth() === p1 - 1) {
+        return {
+          date: parsed,
+          dayMonthSwapped: false,
+          originalRaw: trimmed,
+          formatUsed: 'DD/MM/YYYY',
+          reason: `Data interpretada como DD/MM/YYYY: dia ${p0}, mês ${p1}, ano ${p2}`
+        };
+      }
+    }
+
+    // Fallback: Try MM/DD/YYYY (American format) - this is a "swap"
+    if (p0 >= 1 && p0 <= 12 && p1 >= 1 && p1 <= 31) {
+      const parsed = new Date(p2, p0 - 1, p1);
+      if (isValid(parsed) && parsed.getDate() === p1 && parsed.getMonth() === p0 - 1) {
+        return {
+          date: parsed,
+          dayMonthSwapped: true,
+          originalRaw: trimmed,
+          formatUsed: 'MM/DD/YYYY',
+          reason: `⚠️ Data corrigida: invertido dia/mês. ` +
+            `Interpretado como MM/DD/YYYY (mês ${p0}, dia ${p1}, ano ${p2}) ` +
+            `pois DD/MM/YYYY seria inválido (mês ${p1} > 12)`
+        };
+      }
+    }
+  }
+
+  // Try using date-fns parse as fallback
+  const formats = ['dd/MM/yyyy', 'MM/dd/yyyy', 'd/M/yyyy', 'M/d/yyyy'];
+  for (const fmt of formats) {
+    try {
+      const parsed = parse(trimmed, fmt, new Date());
+      if (isValid(parsed) && parsed.getFullYear() >= MIN_VALID_YEAR) {
+        // For date-fns parsed dates, we can't easily tell if swap occurred
+        // We consider MM/dd formats as potential swaps if they differ from dd/MM
+        const isSwapFormat = fmt.startsWith('M');
+        return {
+          date: parsed,
+          dayMonthSwapped: isSwapFormat,
+          originalRaw: trimmed,
+          formatUsed: 'date-fns',
+          reason: `Data interpretada via date-fns usando formato ${fmt}`
+        };
+      }
+    } catch {
+      // Continue to next format
+    }
+  }
+
+  return {
+    ...defaultResult,
+    originalRaw: trimmed,
+    reason: 'Data não pode ser interpretada em nenhum formato suportado'
+  };
+}
+
+/**
  * Parse a date string safely, handling multiple formats and detecting placeholders.
  * 
  * Supported formats:

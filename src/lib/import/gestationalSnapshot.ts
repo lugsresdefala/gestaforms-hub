@@ -9,7 +9,7 @@
  */
 
 import { differenceInDays, addDays } from 'date-fns';
-import { parseDateSafe } from './dateParser';
+import { parseDateSafe, parseDateSafeWithSwapInfo, type DateParseResult } from './dateParser';
 import { chooseAndCompute } from './gestationalCalculator';
 import { PROTOCOLS, mapDiagnosisToProtocol } from '../obstetricProtocols';
 import type { ComputeParams } from './types';
@@ -51,6 +51,14 @@ export interface GestationalSnapshotResult {
   margemEstendida: boolean;
   /** Gestational age in total days for sorting */
   igIdealDias: number;
+  /** Information about date correction for DUM (if day/month was swapped) */
+  dumDateCorrection?: DateParseResult;
+  /** Information about date correction for USG date (if day/month was swapped) */
+  usgDateCorrection?: DateParseResult;
+  /** Information about date correction for scheduled date (if day/month was swapped) */
+  dataAgendadaCorrection?: DateParseResult;
+  /** Combined audit log message for all date corrections applied */
+  dateCorrectionsAuditLog?: string;
 }
 
 /**
@@ -230,6 +238,10 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     referenceDate = new Date()
   } = params;
 
+  // Parse dates with swap information for audit trail
+  const dumParseResult = dumRaw ? parseDateSafeWithSwapInfo(dumRaw) : null;
+  const usgParseResult = usgDateRaw ? parseDateSafeWithSwapInfo(usgDateRaw) : null;
+
   // Calculate current gestational age
   const computeParams: ComputeParams = {
     dumRaw,
@@ -297,14 +309,16 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     );
   }
 
-  // Determine scheduled date source
-  const manualDate = dataAgendamentoManual ? parseDateSafe(dataAgendamentoManual) : null;
-  const calculatedDate = dataAgendamentoCalculada
-    ? parseDateSafe(dataAgendamentoCalculada)
-    : null;
+  // Determine scheduled date source - use swap-aware parsing
+  const manualParseResult = dataAgendamentoManual ? parseDateSafeWithSwapInfo(dataAgendamentoManual) : null;
+  const calculatedParseResult = dataAgendamentoCalculada ? parseDateSafeWithSwapInfo(dataAgendamentoCalculada) : null;
+  
+  const manualDate = manualParseResult?.date ?? null;
+  const calculatedDate = calculatedParseResult?.date ?? null;
   
   const dataAgendada = manualDate || calculatedDate;
   const fonteAgendamento: 'manual' | 'calculada' = manualDate ? 'manual' : 'calculada';
+  const dataAgendadaParseResult = manualDate ? manualParseResult : calculatedParseResult;
 
   // Calculate gestational age at scheduled date
   let igNaDataAgendada = '-';
@@ -333,6 +347,19 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
 
   const igIdealDias = igIdealWeeks * 7 + igIdealDays;
 
+  // Build audit log for date corrections
+  const corrections: string[] = [];
+  if (dumParseResult?.dayMonthSwapped) {
+    corrections.push(`⚠️ DUM: ${dumParseResult.reason}`);
+  }
+  if (usgParseResult?.dayMonthSwapped) {
+    corrections.push(`⚠️ USG: ${usgParseResult.reason}`);
+  }
+  if (dataAgendadaParseResult?.dayMonthSwapped) {
+    corrections.push(`⚠️ Data Agendada: ${dataAgendadaParseResult.reason}`);
+  }
+  const dateCorrectionsAuditLog = corrections.length > 0 ? corrections.join(' | ') : undefined;
+
   return {
     igIdeal: formatGaCompact(igIdealWeeks, igIdealDays),
     dataIdeal,
@@ -345,7 +372,11 @@ export function getGestationalSnapshot(params: SnapshotParams): GestationalSnaps
     protocoloNome,
     dentroMargem,
     margemEstendida,
-    igIdealDias
+    igIdealDias,
+    dumDateCorrection: dumParseResult ?? undefined,
+    usgDateCorrection: usgParseResult ?? undefined,
+    dataAgendadaCorrection: dataAgendadaParseResult ?? undefined,
+    dateCorrectionsAuditLog
   };
 }
 
