@@ -27,6 +27,10 @@ dist-ssr
 # Data output directory (generated files)
 data/output/
 
+# Data input files (should be provided by user, except template)
+data/input/*.csv
+!data/input/template.csv
+
 # Export directory (generated calendar files)
 exports/
 
