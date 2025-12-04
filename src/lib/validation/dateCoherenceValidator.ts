@@ -187,15 +187,16 @@ export function validarCoerenciaDatas(
           detalhes: {},
         });
       } else {
-        // Check if USG is too old (> 12 months) and contains 2024
+        // Check if USG is too old (> 12 months) - apenas aviso informativo, não erro
+        // Removido: verificação de ano 2024 que causava falsos positivos
         const mesesDecorridos = differenceInMonths(hoje, dataUsg);
-        if (mesesDecorridos > USG_MESES_MAXIMO && dados.data_primeiro_usg.includes('2024')) {
+        // Apenas alertar se USG for extremamente antigo (> 18 meses)
+        if (mesesDecorridos > 18) {
           incoerencias.push({
             tipo: 'usg_muito_antigo',
             campo: 'data_primeiro_usg',
             valorAtual: dados.data_primeiro_usg,
-            problema: `USG realizado há ${mesesDecorridos} meses (> ${USG_MESES_MAXIMO} meses) com ano 2024 - possível erro de digitação`,
-            sugestaoCorrecao: sugerirCorrecaoAno(dados.data_primeiro_usg),
+            problema: `USG realizado há ${mesesDecorridos} meses - verificar se data está correta`,
             detalhes: {
               mesesDecorridos,
             },

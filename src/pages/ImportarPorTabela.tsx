@@ -49,6 +49,7 @@ import { validarCoerenciaDatas, type IncoerenciaData } from "@/lib/validation/da
 
 // Tipos
 interface PacienteRow {
+  id: string; // ID único da linha
   data_registro: string; // Data original da solicitação de agendamento
   nome_completo: string;
   data_nascimento: string;
@@ -77,6 +78,7 @@ interface PacienteRow {
   maternidade: string;
   medico_responsavel: string;
   email_paciente: string;
+  centro_clinico: string; // Centro clínico
   // Campos calculados
   ig_no_registro?: string; // IG calculada na data do registro
   data_ideal?: string;
@@ -130,6 +132,7 @@ const EMPTY_ROW: Omit<PacienteRow, "id"> = {
   maternidade: "Salvalus",
   medico_responsavel: "",
   email_paciente: "",
+  centro_clinico: "",
   status: "pendente",
 };
 
@@ -424,6 +427,7 @@ export default function ImportarPorTabela() {
       const newRows: PacienteRow[] = dataLines.map((line) => {
         const cols = line.split("\t");
         return {
+          id: crypto.randomUUID(),
           data_registro: cols[0]?.trim() || "", // Data original da solicitação
           nome_completo: cols[1]?.trim() || cols[0]?.trim() || "",
           data_nascimento: cols[2]?.trim() || cols[1]?.trim() || "",
@@ -452,6 +456,7 @@ export default function ImportarPorTabela() {
           maternidade: cols[26]?.trim() || "Salvalus",
           medico_responsavel: cols[27]?.trim() || "",
           email_paciente: (cols[28]?.trim() || "").toLowerCase(),
+          centro_clinico: cols[29]?.trim() || "",
           status: "pendente",
         };
       });
