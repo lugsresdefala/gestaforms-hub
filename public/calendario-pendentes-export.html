@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendário de Pacientes Pendentes por Maternidade</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #e4e4e4;
+    }
+    
+    .header {
+      text-align: center;
+      padding: 30px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .header h1 {
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header .subtitle {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+    
+    .header .date {
+      color: #60a5fa;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+    
+    .stats-bar {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 15px 25px;
+      border-radius: 12px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #60a5fa;
+    }
+    
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 5px;
+    }
+    
+    .maternidade-section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .maternidade-header {
+      padding: 20px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .maternidade-header.salvalus { background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 100%); }
+    .maternidade-header.cruzeiro { background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%); }
+    .maternidade-header.notrecare { background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%); }
+    .maternidade-header.guarulhos { background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.05) 100%); }
+    
+    .maternidade-header h2 {
+      font-size: 1.4rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .maternidade-header .count {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+    
+    .calendar-vertical {
+      display: grid;
+      gap: 1px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .week-row {
+      display: grid;
+      grid-template-columns: 100px repeat(7, 1fr);
+      gap: 1px;
+    }
+    
+    .week-label {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      text-align: center;
+      font-weight: 600;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .day-header {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      text-align: center;
+      font-weight: 600;
+      color: #e4e4e4;
+      font-size: 0.9rem;
+    }
+    
+    .day-cell {
+      background: rgba(0, 0, 0, 0.2);
+      min-height: 80px;
+      padding: 8px;
+      position: relative;
+    }
+    
+    .day-cell.today {
+      background: rgba(59, 130, 246, 0.2);
+      border: 2px solid rgba(59, 130, 246, 0.5);
+    }
+    
+    .day-cell .date-number {
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    
+    .patient-card {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      font-size: 0.7rem;
+      border-left: 3px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .patient-card:hover {
+      transform: translateX(3px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .patient-card.urgencia-critica { border-color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+    .patient-card.urgencia-alta { border-color: #f97316; background: rgba(249, 115, 22, 0.15); }
+    .patient-card.urgencia-media { border-color: #eab308; background: rgba(234, 179, 8, 0.15); }
+    .patient-card.urgencia-normal { border-color: #22c55e; background: rgba(34, 197, 94, 0.15); }
+    
+    .patient-card .name {
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .patient-card .info {
+      color: #94a3b8;
+      font-size: 0.65rem;
+      margin-top: 2px;
+    }
+    
+    .patient-list {
+      padding: 20px;
+    }
+    
+    .patient-list-item {
+      display: grid;
+      grid-template-columns: 40px 1fr 120px 100px 120px;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+      border-left: 4px solid;
+      transition: background 0.2s;
+    }
+    
+    .patient-list-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .patient-list-item.urgencia-critica { border-color: #ef4444; }
+    .patient-list-item.urgencia-alta { border-color: #f97316; }
+    .patient-list-item.urgencia-media { border-color: #eab308; }
+    .patient-list-item.urgencia-normal { border-color: #22c55e; }
+    
+    .patient-list-item .id {
+      font-weight: bold;
+      color: #60a5fa;
+      font-size: 0.85rem;
+    }
+    
+    .patient-list-item .name-col {
+      color: #fff;
+      font-weight: 500;
+    }
+    
+    .patient-list-item .name-col .diagnostico {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 3px;
+    }
+    
+    .patient-list-item .ig {
+      text-align: center;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    
+    .patient-list-item .urgencia-badge {
+      text-align: center;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .urgencia-badge.critica { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+    .urgencia-badge.alta { background: rgba(249, 115, 22, 0.2); color: #fdba74; }
+    .urgencia-badge.media { background: rgba(234, 179, 8, 0.2); color: #fde047; }
+    .urgencia-badge.normal { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+    
+    .patient-list-item .observacao {
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-style: italic;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin: 30px 0;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    
+    .legend-color.critica { background: #ef4444; }
+    .legend-color.alta { background: #f97316; }
+    .legend-color.media { background: #eab308; }
+    .legend-color.normal { background: #22c55e; }
+    
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-top: 30px;
+    }
+    
+    @media print {
+      body {
+        background: white;
+        color: #1a1a2e;
+        padding: 10px;
+      }
+      
+      .header, .maternidade-section, .stat-card {
+        background: white;
+        border: 1px solid #e4e4e4;
+        box-shadow: none;
+      }
+      
+      .header h1 { color: #1a1a2e; text-shadow: none; }
+      .header .subtitle, .header .date { color: #64748b; }
+      .stat-card .number { color: #3b82f6; }
+      .stat-card .label { color: #64748b; }
+      .maternidade-header h2 { color: #1a1a2e; }
+      .patient-list-item { background: #f8fafc; border: 1px solid #e4e4e4; }
+      .patient-list-item .name-col { color: #1a1a2e; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📅 Calendário de Pacientes Pendentes</h1>
+    <p class="subtitle">Pacientes sem data de agendamento confirmada - Exportação Visual por Maternidade</p>
+    <p class="date">Gerado em: 05/12/2025</p>
+  </div>
+  
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="number">14</div>
+      <div class="label">Total Pendentes</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">4</div>
+      <div class="label">Maternidades</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">3</div>
+      <div class="label">Urgência Crítica</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">5</div>
+      <div class="label">Urgência Alta</div>
+    </div>
+  </div>
+  
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color critica"></div> Crítica (IG ≥ 37s)</div>
+    <div class="legend-item"><div class="legend-color alta"></div> Alta (IG 36-37s)</div>
+    <div class="legend-item"><div class="legend-color media"></div> Média (IG 34-36s)</div>
+    <div class="legend-item"><div class="legend-color normal"></div> Normal (IG < 34s)</div>
+  </div>
+  
+  <!-- SALVALUS -->
+  <div class="maternidade-section">
+    <div class="maternidade-header salvalus">
+      <h2>🏥 Salvalus</h2>
+      <span class="count">5 pacientes pendentes</span>
+    </div>
+    <div class="patient-list">
+      <div class="patient-list-item urgencia-critica">
+        <div class="id">#2445</div>
+        <div class="name-col">
+          <div>LAUDICEIA DE OLIVEIRA ABREU</div>
+          <div class="diagnostico">Enoxaparina - TVP 2022</div>
+        </div>
+        <div class="ig">IG: 38+3</div>
+        <div class="urgencia-badge critica">CRÍTICA</div>
+        <div class="observacao">corrigir 1 usg</div>
+      </div>
+      <div class="patient-list-item urgencia-critica">
+        <div class="id">#2416</div>
+        <div class="name-col">
+          <div>Mariana pamela de jesus figueredo</div>
+          <div class="diagnostico">Cerclagem - IIC</div>
+        </div>
+        <div class="ig">IG: 14+3</div>
+        <div class="urgencia-badge critica">CRÍTICA</div>
+        <div class="observacao">favor checar historia obstetrica</div>
+      </div>
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2551</div>
+        <div class="name-col">
+          <div>SIMONE ARAUJO DUARTE DA COSTA</div>
+          <div class="diagnostico">Cerclagem - FIV / IMA / Colo curto</div>
+        </div>
+        <div class="ig">IG: 15+5</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">26/11 15+5 (até 16 sem)</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- NOTRECARE -->
+  <div class="maternidade-section">
+    <div class="maternidade-header notrecare">
+      <h2>🏥 NotreCare</h2>
+      <span class="count">5 pacientes pendentes</span>
+    </div>
+    <div class="patient-list">
+      <div class="patient-list-item urgencia-critica">
+        <div class="id">#2455</div>
+        <div class="name-col">
+          <div>Ana Caroline Buzzi Domingues</div>
+          <div class="diagnostico">HAC + DMG + GIG</div>
+        </div>
+        <div class="ig">IG: 38/39</div>
+        <div class="urgencia-badge critica">CRÍTICA</div>
+        <div class="observacao">agendar via PS - DMG + GIG, meta já passou</div>
+      </div>
+      <div class="patient-list-item urgencia-critica">
+        <div class="id">#2483</div>
+        <div class="name-col">
+          <div>Gabriela Cândida Nogueira</div>
+          <div class="diagnostico">DMG + Sífilis tratada</div>
+        </div>
+        <div class="ig">IG: 39/40</div>
+        <div class="urgencia-badge critica">CRÍTICA</div>
+        <div class="observacao">menos de 10 dias úteis - agendar via PS</div>
+      </div>
+      <div class="patient-list-item urgencia-critica">
+        <div class="id">#2492</div>
+        <div class="name-col">
+          <div>Jessyca Hellen Barros da Silva</div>
+          <div class="diagnostico">DMG + RCF + Eclâmpsia prévia</div>
+        </div>
+        <div class="ig">IG: 37</div>
+        <div class="urgencia-badge critica">CRÍTICA</div>
+        <div class="observacao">37sem amanhã - agendar via PS</div>
+      </div>
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2451</div>
+        <div class="name-col">
+          <div>KAROLINY VICTORIA BARRETO BATISTA</div>
+          <div class="diagnostico">Cesárea eletiva</div>
+        </div>
+        <div class="ig">IG: 39</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">corrigir 1 usg - agendada 04/12</div>
+      </div>
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2459</div>
+        <div class="name-col">
+          <div>Bruna alves de souza</div>
+          <div class="diagnostico">HAS + Pré-eclâmpsia prévia</div>
+        </div>
+        <div class="ig">IG: 39</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">28/11 - divergência USG</div>
+      </div>
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2457</div>
+        <div class="name-col">
+          <div>Stefanny Karoline Santos Arruda</div>
+          <div class="diagnostico">DMG com insulina</div>
+        </div>
+        <div class="ig">IG: 37/38</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">02/12</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- GUARULHOS -->
+  <div class="maternidade-section">
+    <div class="maternidade-header guarulhos">
+      <h2>🏥 Guarulhos</h2>
+      <span class="count">2 pacientes pendentes</span>
+    </div>
+    <div class="patient-list">
+      <div class="patient-list-item urgencia-media">
+        <div class="id">#2481</div>
+        <div class="name-col">
+          <div>Mercia Silva da Conceição</div>
+          <div class="diagnostico">Cerclagem - IIC</div>
+        </div>
+        <div class="ig">IG: 14+2</div>
+        <div class="urgencia-badge media">MÉDIA</div>
+        <div class="observacao">hoje 14+2 - fazer via PS - ir hoje ou amanhã em jejum</div>
+      </div>
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2482</div>
+        <div class="name-col">
+          <div>Ingredy Sena Santos</div>
+          <div class="diagnostico">Anemia + RCF</div>
+        </div>
+        <div class="ig">IG: 36/38</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">24/11 preferencial 37</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- CRUZEIRO -->
+  <div class="maternidade-section">
+    <div class="maternidade-header cruzeiro">
+      <h2>🏥 Cruzeiro</h2>
+      <span class="count">2 pacientes pendentes</span>
+    </div>
+    <div class="patient-list">
+      <div class="patient-list-item urgencia-alta">
+        <div class="id">#2456</div>
+        <div class="name-col">
+          <div>ACSA CRISTINA SILVA DE AMORIM CASTRO</div>
+          <div class="diagnostico">DMG + LA no limite superior</div>
+        </div>
+        <div class="ig">IG: 39</div>
+        <div class="urgencia-badge alta">ALTA</div>
+        <div class="observacao">28/11</div>
+      </div>
+      <div class="patient-list-item urgencia-media">
+        <div class="id">#2489</div>
+        <div class="name-col">
+          <div>Girlene Maria Santos da Rocha</div>
+          <div class="diagnostico">HAC + Feto GIG</div>
+        </div>
+        <div class="ig">IG: 38</div>
+        <div class="urgencia-badge media">MÉDIA</div>
+        <div class="observacao">usg ta certo??? - Corrigido</div>
+      </div>
+      <div class="patient-list-item urgencia-media">
+        <div class="id">#2463</div>
+        <div class="name-col">
+          <div>RENATA MARIA MONTEIRO</div>
+          <div class="diagnostico">Hipotireoidismo + Pré-eclâmpsia prévia</div>
+        </div>
+        <div class="ig">IG: 39</div>
+        <div class="urgencia-badge media">MÉDIA</div>
+        <div class="observacao">corrigir 1 usg - Corrigido</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <p>PGS - PROCEDIMENTOS | Sistema de Agendamento Obstétrico</p>
+    <p>Documento gerado automaticamente - Verificar dados antes de agendar</p>
+  </div>
+</body>
+</html>
