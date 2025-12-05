@@ -20,79 +20,43 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     url: "/",
     icon: LayoutDashboard
   }, {
-    title: "Listagem de Agendamentos",
+    title: "Agendamentos",
     url: "/dashboard",
     icon: Calendar
   }, {
-    title: "Sistema de Ocupação",
+    title: "Ocupação",
     url: "/calendario-completo",
     icon: Building2
   }],
   agendamentos: [{
-    title: "Novo",
+    title: "Novo Agendamento",
     url: "/novo-agendamento",
     icon: PlusCircle
   }, {
-    title: "Meus",
+    title: "Meus Agendamentos",
     url: "/meus-agendamentos",
     icon: Calendar
   }],
   administracao: [{
-    title: "Aprovações Médicas",
+    title: "Aprovações",
     url: "/aprovacoes-agendamentos",
     icon: CheckCircle,
     show: isAdmin || isAdminMed,
-    badge: agendPend > 0 ? agendPend : undefined
+    badge: (agendPend + userPend) > 0 ? (agendPend + userPend) : undefined
   }, {
-    title: "Aprovações Usuários",
-    url: "/aprovacoes-usuarios",
-    icon: Users,
-    show: isAdmin || isAdminMed,
-    badge: userPend > 0 ? userPend : undefined
-  }, {
-    title: "Criar Usuários Padrão",
-    url: "/criar-usuarios-padrao",
-    icon: UserPlus,
-    show: isAdmin || isAdminMed
-  }, {
-    title: "Importar por Tabela",
+    title: "Importar Dados",
     url: "/importar-tabela",
     icon: Upload,
     show: isAdmin || isAdminMed
   }, {
-    title: "Calendário Pendentes",
-    url: "/calendario-pendentes",
-    icon: Calendar,
-    show: isAdmin || isAdminMed
-  }, {
-    title: "Atualizar IG",
-    url: "/atualizar-ig",
-    icon: Calendar,
-    show: isAdmin
-  }, {
-    title: "Corrigir Paridade",
-    url: "/corrigir-paridade",
-    icon: FileCheck,
-    show: isAdmin
-  }, {
-    title: "Gerenciar Usuários",
+    title: "Usuários",
     url: "/gerenciar-usuarios",
     icon: Users,
     show: isAdmin
   }, {
-    title: "Logs de Auditoria",
+    title: "Auditoria",
     url: "/logs-auditoria",
     icon: Shield,
-    show: isAdmin
-  }, {
-    title: "Auditoria Importações",
-    url: "/auditoria-importacoes",
-    icon: FileCheck,
-    show: isAdmin || isAdminMed
-  }, {
-    title: "Comparar Pacientes",
-    url: "/comparar-pacientes",
-    icon: FileCheck,
     show: isAdmin
   }].filter(item => item.show !== false),
   suporte: [{
@@ -100,17 +64,13 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     url: "/protocolos",
     icon: FileText
   }, {
-    title: "Guia do Sistema",
+    title: "Guia",
     url: "/guia",
     icon: BookOpen
   }, {
     title: "FAQ",
     url: "/faq",
     icon: HelpCircle
-  }, {
-    title: "Sobre",
-    url: "/sobre",
-    icon: BookOpen
   }]
 });
 const MenuGroup = ({
