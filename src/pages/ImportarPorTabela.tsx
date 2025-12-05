@@ -20,6 +20,7 @@ import {
   Info,
   Filter,
   FileSpreadsheet,
+  Upload,
 } from "lucide-react";
 import type { GestationalSnapshotResult } from "@/lib/import/gestationalSnapshot";
 import * as XLSX from "xlsx";
@@ -1147,6 +1148,143 @@ export default function ImportarPorTabela() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="file"
+              id="csv-upload"
+              accept=".csv,.txt"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  const text = event.target?.result as string;
+                  if (!text) return;
+                  
+                  // Detectar delimitador (ponto-e-vírgula ou vírgula)
+                  const firstLine = text.split('\n')[0];
+                  const delimiter = firstLine.includes(';') ? ';' : ',';
+                  
+                  const lines = text.split('\n').filter(line => line.trim());
+                  if (lines.length < 2) {
+                    toast.error('Arquivo CSV vazio ou sem dados');
+                    return;
+                  }
+                  
+                  const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                  
+                  // Mapeamento de colunas do CSV para campos do formulário
+                  const columnMap: Record<string, keyof PacienteRow> = {
+                    'carimbo de data/hora': 'data_registro',
+                    'data registro': 'data_registro',
+                    'nome completo': 'nome_completo',
+                    'data de nascimento': 'data_nascimento',
+                    'data nascimento': 'data_nascimento',
+                    'carteirinha': 'carteirinha',
+                    'n° de gestações': 'numero_gestacoes',
+                    'numero gestacoes': 'numero_gestacoes',
+                    'n° partos cesáreas': 'numero_partos_cesareas',
+                    'numero partos cesareas': 'numero_partos_cesareas',
+                    'n° partos normais': 'numero_partos_normais',
+                    'numero partos normais': 'numero_partos_normais',
+                    'n° de abortos': 'numero_abortos',
+                    'numero abortos': 'numero_abortos',
+                    'telefones': 'telefones',
+                    'procedimentos': 'procedimentos',
+                    'a dum é': 'dum_status',
+                    'dum status': 'dum_status',
+                    'data da dum': 'data_dum',
+                    'data dum': 'data_dum',
+                    'data do 1 usg': 'data_primeiro_usg',
+                    'data primeiro usg': 'data_primeiro_usg',
+                    'semanas no 1 usg': 'semanas_usg',
+                    'semanas usg': 'semanas_usg',
+                    'dias no 1 usg': 'dias_usg',
+                    'dias usg': 'dias_usg',
+                    'usg mais recente': 'usg_recente',
+                    'usg recente': 'usg_recente',
+                    'ig pretendida': 'ig_pretendida',
+                    'indicação do procedimento': 'indicacao_procedimento',
+                    'indicacao procedimento': 'indicacao_procedimento',
+                    'medicação de uso contínuo': 'medicacao',
+                    'medicacao': 'medicacao',
+                    'diagnósticos maternos': 'diagnosticos_maternos',
+                    'diagnosticos maternos': 'diagnosticos_maternos',
+                    'placenta prévia': 'placenta_previa',
+                    'placenta previa': 'placenta_previa',
+                    'diagnósticos fetais': 'diagnosticos_fetais',
+                    'diagnosticos fetais': 'diagnosticos_fetais',
+                    'história obstétrica relevante': 'historia_obstetrica',
+                    'historia obstetrica': 'historia_obstetrica',
+                    'necessidade de reserva de sangue': 'necessidade_reserva_sangue',
+                    'necessidade reserva sangue': 'necessidade_reserva_sangue',
+                    'necessidade de uti materna': 'necessidade_uti_materna',
+                    'necessidade uti materna': 'necessidade_uti_materna',
+                    'maternidade': 'maternidade',
+                    'médico responsável': 'medico_responsavel',
+                    'medico responsavel': 'medico_responsavel',
+                    'e-mail': 'email_paciente',
+                    'email': 'email_paciente',
+                    'email paciente': 'email_paciente',
+                    'centro clínico': 'centro_clinico',
+                    'centro clinico': 'centro_clinico',
+                    'data agendada': 'data_agendada',
+                  };
+                  
+                  // Encontrar índices das colunas
+                  const columnIndices: Record<keyof PacienteRow, number> = {} as any;
+                  headers.forEach((header, index) => {
+                    const field = columnMap[header];
+                    if (field) {
+                      columnIndices[field] = index;
+                    }
+                  });
+                  
+                  // Processar linhas de dados
+                  const newRows: PacienteRow[] = [];
+                  for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(delimiter).map(v => v.trim().replace(/^"|"$/g, ''));
+                    
+                    // Pular linhas vazias
+                    if (values.every(v => !v)) continue;
+                    
+                    const row: PacienteRow = {
+                      ...EMPTY_ROW,
+                      id: crypto.randomUUID(),
+                    };
+                    
+                    // Preencher campos do CSV
+                    Object.entries(columnIndices).forEach(([field, index]) => {
+                      if (values[index] !== undefined) {
+                        (row as any)[field] = values[index];
+                      }
+                    });
+                    
+                    newRows.push(row);
+                  }
+                  
+                  if (newRows.length === 0) {
+                    toast.error('Nenhum registro válido encontrado no CSV');
+                    return;
+                  }
+                  
+                  setRows(newRows);
+                  toast.success(`${newRows.length} registros carregados do CSV`);
+                };
+                
+                reader.readAsText(file, 'UTF-8');
+                e.target.value = ''; // Reset input
+              }}
+            />
+            <Button
+              onClick={() => document.getElementById('csv-upload')?.click()}
+              variant="default"
+              size="sm"
+              className="bg-primary"
+            >
+              <Upload className="w-4 h-4 mr-1" /> Carregar CSV
+            </Button>
             <Button onClick={addRow} variant="outline" size="sm">
               <Plus className="w-4 h-4 mr-1" /> Adicionar Linha
             </Button>
