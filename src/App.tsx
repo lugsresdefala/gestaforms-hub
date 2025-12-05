@@ -43,6 +43,7 @@ import AgendamentosRejeitados from "./pages/AgendamentosRejeitados";
 import ImportarPorTabela from "./pages/ImportarPorTabela";
 import AuditoriaImportacoes from "./pages/AuditoriaImportacoes";
 import AuditoriaAgendamentos from "./pages/admin/AuditoriaAgendamentos";
+import CalendarioPendentes from "./pages/CalendarioPendentes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -357,6 +358,16 @@ const App = () => (
                 <ProtectedRoute requireAdminMed>
                   <AppLayout>
                     <ImportarPorTabela />
+                  </AppLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calendario-pendentes" 
+              element={
+                <ProtectedRoute requireAdminMed>
+                  <AppLayout>
+                    <CalendarioPendentes />
                   </AppLayout>
                 </ProtectedRoute>
               } 

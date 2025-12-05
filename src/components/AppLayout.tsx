@@ -60,6 +60,11 @@ const menuItems = (isAdmin: boolean, isAdminMed: boolean, agendPend: number, use
     icon: Upload,
     show: isAdmin || isAdminMed
   }, {
+    title: "Calendário Pendentes",
+    url: "/calendario-pendentes",
+    icon: Calendar,
+    show: isAdmin || isAdminMed
+  }, {
     title: "Atualizar IG",
     url: "/atualizar-ig",
     icon: Calendar,
