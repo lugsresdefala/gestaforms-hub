@@ -56,6 +56,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Handle sign out event - clear everything
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setUserRoles([]);
+          setRolesLoaded(true);
+          setLoading(false);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -82,8 +92,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Check for existing session with error handling
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
+      // Handle refresh token errors by clearing invalid session
+      if (error) {
+        console.warn('Session error, clearing invalid session:', error.message);
+        // Clear any corrupted session data
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setUserRoles([]);
+        setRolesLoaded(true);
+        setLoading(false);
+        return;
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -93,6 +116,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setRolesLoaded(true);
       }
       
+      setLoading(false);
+    }).catch(async (err) => {
+      // Catch any unexpected errors during session check
+      console.error('Failed to get session:', err);
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setUserRoles([]);
+      setRolesLoaded(true);
       setLoading(false);
     });
 
