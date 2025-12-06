@@ -54,6 +54,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
     // Check if there are any users in the system
     const { data: usersData, error: countError } = await supabaseAdmin.auth.admin.listUsers({
@@ -72,16 +73,60 @@ serve(async (req) => {
     // If there are no users, allow initial setup without authentication
     const isInitialSetup = !usersData.users || usersData.users.length === 0;
 
-    // GET request - just return setup status (no auth required)
+    // GET request - just return setup status (requires auth unless initial setup)
     if (req.method === "GET") {
+      // For GET, allow checking setup status without auth (needed for initial setup page)
       return new Response(
         JSON.stringify({ isInitialSetup }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    // POST request - create users (no auth required per user's internal team requirement)
-    console.log(isInitialSetup ? "Initial system setup - creating first users" : "Creating default users");
+    // POST request - create users
+    // Only allow if: (1) initial setup (no users exist), OR (2) authenticated admin user
+    if (!isInitialSetup) {
+      // Validate JWT token from authorization header
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return new Response(
+          JSON.stringify({ error: "Autenticação necessária" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+      
+      // Create client with user's token to validate authentication
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        supabaseAnonKey,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      
+      const { data: { user }, error: authError } = await userClient.auth.getUser();
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: "Token inválido ou expirado" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+        );
+      }
+      
+      // Check if user is admin
+      const { data: roles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      
+      const isAdmin = roles?.some(r => r.role === "admin" || r.role === "admin_med");
+      if (!isAdmin) {
+        return new Response(
+          JSON.stringify({ error: "Permissão negada. Apenas administradores podem criar usuários padrão." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+        );
+      }
+      
+      console.log(`Admin user ${user.email} creating default users`);
+    } else {
+      console.log("Initial system setup - creating first users (no auth required)");
+    }
 
     const defaultUsers = [
       {
