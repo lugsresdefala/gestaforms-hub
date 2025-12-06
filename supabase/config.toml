@@ -8,3 +8,12 @@ verify_jwt = true
 
 [functions.corrigir-paridade]
 verify_jwt = true
+
+[functions.importar-excel-lote]
+verify_jwt = false
+
+[functions.processar-forms-webhook]
+verify_jwt = false
+
+[functions.importar-csv-lote]
+verify_jwt = false
