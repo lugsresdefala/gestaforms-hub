@@ -1,7 +1,7 @@
 project_id = "uoyzfzzjzhvcxfmpmufz"
 
 [functions.create-default-users]
-verify_jwt = false
+verify_jwt = true
 
 [functions.import-csv]
 verify_jwt = true
@@ -10,10 +10,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.importar-excel-lote]
-verify_jwt = false
+verify_jwt = true
 
 [functions.processar-forms-webhook]
-verify_jwt = false
+verify_jwt = true
 
 [functions.importar-csv-lote]
-verify_jwt = false
+verify_jwt = true
