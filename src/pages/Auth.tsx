@@ -78,8 +78,20 @@ const Auth = () => {
     }
   };
 
+  // Validate Hapvida email domain
+  const isHapvidaEmail = (email: string): boolean => {
+    const domain = email.toLowerCase().split('@')[1];
+    return domain === 'hapvida.com.br' || domain === 'notredameintermedica.com.br';
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate Hapvida email domain
+    if (!isHapvidaEmail(signupData.email)) {
+      toast.error('Apenas emails @hapvida.com.br ou @notredameintermedica.com.br são permitidos');
+      return;
+    }
     
     if (!validatePasswordStrength(signupData.password)) {
       toast.error('A senha não atende aos requisitos mínimos de segurança');
@@ -318,15 +330,18 @@ const Auth = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">Email Corporativo</Label>
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder="seu@email.com"
+                      placeholder="seu.nome@hapvida.com.br"
                       value={signupData.email}
                       onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Apenas emails @hapvida.com.br ou @notredameintermedica.com.br
+                    </p>
                   </div>
                   
                   <div className="space-y-2">

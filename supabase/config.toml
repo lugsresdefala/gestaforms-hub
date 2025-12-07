@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.importar-csv-lote]
 verify_jwt = true
+
+[functions.webhook-excel]
+verify_jwt = false
