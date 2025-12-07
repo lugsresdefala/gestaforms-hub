@@ -1,9 +1,44 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
+import { z } from 'https://esm.sh/zod@3.23.8'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Zod schema for input validation
+const AgendamentoRecordSchema = z.object({
+  nome: z.string().max(200, 'Nome muito longo').optional(),
+  dataNascimento: z.string().max(20).optional(),
+  carteirinha: z.string().max(50, 'Carteirinha muito longa').optional(),
+  gestacoes: z.union([z.number(), z.string()]).optional(),
+  cesareas: z.union([z.number(), z.string()]).optional(),
+  partosNormais: z.union([z.number(), z.string()]).optional(),
+  abortos: z.union([z.number(), z.string()]).optional(),
+  telefones: z.string().max(100).optional(),
+  procedimentos: z.union([z.string(), z.array(z.string())]).optional(),
+  dumStatus: z.string().max(50).optional(),
+  dataDum: z.string().max(20).nullable().optional(),
+  dataPrimeiroUsg: z.string().max(20).optional(),
+  semanasUsg: z.union([z.number(), z.string()]).optional(),
+  diasUsg: z.union([z.number(), z.string()]).optional(),
+  usgRecente: z.string().max(1000).optional(),
+  igPretendida: z.string().max(100).optional(),
+  medicacao: z.string().max(500).nullable().optional(),
+  diagnosticosMaternos: z.string().max(500).nullable().optional(),
+  placentaPrevia: z.string().max(50).optional(),
+  diagnosticosFetais: z.string().max(500).nullable().optional(),
+  historiaObstetrica: z.string().max(500).nullable().optional(),
+  utiMaterna: z.string().max(50).optional(),
+  reservaSangue: z.string().max(50).optional(),
+  maternidade: z.string().max(100).optional(),
+  dataAgendada: z.string().max(50).nullable().optional(),
+})
+
+const ImportRequestSchema = z.object({
+  records: z.array(AgendamentoRecordSchema).max(500, 'Limite de 500 registros por importação'),
+  userId: z.string().uuid('ID de usuário inválido').optional(),
+})
 
 interface AgendamentoRow {
   nome: string
@@ -33,7 +68,7 @@ interface AgendamentoRow {
   dataAgendada: string | null
 }
 
-function parseDate(dateStr: string): string | null {
+function parseDate(dateStr: string | undefined | null): string | null {
   if (!dateStr || dateStr === '' || dateStr === '-' || dateStr === 'N/A') return null
   
   // Try MM/DD/YY format (Excel export)
@@ -62,7 +97,7 @@ function parseDate(dateStr: string): string | null {
   return null
 }
 
-function parseDateAgendada(value: string): string | null {
+function parseDateAgendada(value: string | undefined | null): string | null {
   if (!value || value === '' || value === '-') return null
   
   // Handle formats like "24-Nov", "2-Dec", "8-Dec"
@@ -93,22 +128,23 @@ function parseDateAgendada(value: string): string | null {
   return null
 }
 
-function extractProcedimentos(procedimentosStr: string): string[] {
+function extractProcedimentos(procedimentosStr: string | string[] | undefined | null): string[] {
   if (!procedimentosStr) return []
   
+  const str = Array.isArray(procedimentosStr) ? procedimentosStr.join(' ') : procedimentosStr
+  const lower = str.toLowerCase()
   const procedimentos: string[] = []
-  const str = procedimentosStr.toLowerCase()
   
-  if (str.includes('cesárea') || str.includes('cesarea')) procedimentos.push('cesariana')
-  if (str.includes('laqueadura')) procedimentos.push('laqueadura')
-  if (str.includes('indução') || str.includes('inducao')) procedimentos.push('inducao')
-  if (str.includes('cerclagem')) procedimentos.push('cerclagem')
-  if (str.includes('diu')) procedimentos.push('diu')
+  if (lower.includes('cesárea') || lower.includes('cesarea')) procedimentos.push('cesariana')
+  if (lower.includes('laqueadura')) procedimentos.push('laqueadura')
+  if (lower.includes('indução') || lower.includes('inducao')) procedimentos.push('inducao')
+  if (lower.includes('cerclagem')) procedimentos.push('cerclagem')
+  if (lower.includes('diu')) procedimentos.push('diu')
   
   return procedimentos.length > 0 ? procedimentos : ['cesariana']
 }
 
-function normalizeDumStatus(dum: string): string {
+function normalizeDumStatus(dum: string | undefined | null): string {
   if (!dum) return 'incerta'
   const lower = dum.toLowerCase()
   if (lower.includes('sim') || lower.includes('confia')) return 'confiavel'
@@ -116,7 +152,7 @@ function normalizeDumStatus(dum: string): string {
   return 'incerta'
 }
 
-function normalizeMaternidade(mat: string): string {
+function normalizeMaternidade(mat: string | undefined | null): string {
   if (!mat) return 'Salvalus'
   const lower = mat.toLowerCase().trim()
   if (lower.includes('cruzeiro')) return 'Cruzeiro do Sul'
@@ -126,9 +162,10 @@ function normalizeMaternidade(mat: string): string {
   return 'Salvalus'
 }
 
-function parseNumber(value: string | number): number {
+function parseNumber(value: string | number | undefined | null): number {
+  if (value === undefined || value === null) return 0
   if (typeof value === 'number') return Math.floor(value)
-  if (!value || value === '' || value === '-') return 0
+  if (value === '' || value === '-') return 0
   const num = parseInt(String(value).replace(/[^\d]/g, ''), 10)
   return isNaN(num) ? 0 : num
 }
@@ -170,14 +207,23 @@ Deno.serve(async (req) => {
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { records, userId } = await req.json()
+    const rawBody = await req.json()
     
-    if (!records || !Array.isArray(records)) {
+    // Validate input with zod schema
+    const parseResult = ImportRequestSchema.safeParse(rawBody)
+    if (!parseResult.success) {
+      console.error('Validation error:', parseResult.error.errors)
       return new Response(
-        JSON.stringify({ success: false, error: 'Records array is required' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Dados de entrada inválidos',
+          details: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
+    
+    const { records, userId } = parseResult.data
 
     console.log(`Processing ${records.length} records...`)
 

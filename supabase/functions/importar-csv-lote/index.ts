@@ -1,10 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Zod schema for input validation
+const CSVImportSchema = z.object({
+  csvContent: z.string()
+    .min(1, 'Conteúdo CSV não pode estar vazio')
+    .max(5 * 1024 * 1024, 'Conteúdo CSV muito grande (máximo 5MB)'),
+  userId: z.string().uuid('ID de usuário inválido'),
+});
 
 function parseCSVLine(line: string, delimiter: string = ';'): string[] {
   const fields: string[] = [];
@@ -207,11 +216,22 @@ serve(async (req) => {
     // Use service role for database operations
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { csvContent, userId } = await req.json();
+    const rawBody = await req.json();
     
-    if (!csvContent || !userId) {
-      throw new Error('CSV content e userId são obrigatórios');
+    // Validate input with zod schema
+    const parseResult = CSVImportSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error('Validation error:', parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Dados de entrada inválidos',
+          details: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
     }
+    
+    const { csvContent, userId } = parseResult.data;
 
     const results = {
       success: 0,
