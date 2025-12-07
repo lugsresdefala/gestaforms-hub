@@ -63,6 +63,7 @@ export type Database = {
           aprovado_em: string | null
           aprovado_por: string | null
           carteirinha: string
+          categoria_diagnostico: string | null
           centro_clinico: string
           created_at: string
           created_by: string
@@ -70,12 +71,17 @@ export type Database = {
           data_dum: string | null
           data_nascimento: string
           data_primeiro_usg: string
+          diagnostico_encontrado: string | null
           diagnosticos_fetais: string | null
           diagnosticos_fetais_outros: string | null
           diagnosticos_maternos: string | null
+          dias_adiados: number | null
           dias_usg: number
+          dpp_calculado: string | null
           dum_status: string
           email_paciente: string
+          excel_row_id: string | null
+          forms_row_id: string | null
           historia_obstetrica: string | null
           id: string
           idade_gestacional_calculada: string | null
@@ -84,6 +90,7 @@ export type Database = {
           maternidade: string
           medicacao: string | null
           medico_responsavel: string
+          metodo_calculo: string | null
           necessidade_reserva_sangue: string | null
           necessidade_uti_materna: string | null
           nome_completo: string
@@ -96,6 +103,7 @@ export type Database = {
           placenta_previa: string | null
           procedimentos: string[]
           semanas_usg: number
+          source_type: string | null
           status: string
           telefones: string
           updated_at: string
@@ -105,6 +113,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           carteirinha: string
+          categoria_diagnostico?: string | null
           centro_clinico: string
           created_at?: string
           created_by?: string
@@ -112,12 +121,17 @@ export type Database = {
           data_dum?: string | null
           data_nascimento: string
           data_primeiro_usg: string
+          diagnostico_encontrado?: string | null
           diagnosticos_fetais?: string | null
           diagnosticos_fetais_outros?: string | null
           diagnosticos_maternos?: string | null
+          dias_adiados?: number | null
           dias_usg: number
+          dpp_calculado?: string | null
           dum_status: string
           email_paciente: string
+          excel_row_id?: string | null
+          forms_row_id?: string | null
           historia_obstetrica?: string | null
           id?: string
           idade_gestacional_calculada?: string | null
@@ -126,6 +140,7 @@ export type Database = {
           maternidade: string
           medicacao?: string | null
           medico_responsavel: string
+          metodo_calculo?: string | null
           necessidade_reserva_sangue?: string | null
           necessidade_uti_materna?: string | null
           nome_completo: string
@@ -138,6 +153,7 @@ export type Database = {
           placenta_previa?: string | null
           procedimentos: string[]
           semanas_usg: number
+          source_type?: string | null
           status?: string
           telefones: string
           updated_at?: string
@@ -147,6 +163,7 @@ export type Database = {
           aprovado_em?: string | null
           aprovado_por?: string | null
           carteirinha?: string
+          categoria_diagnostico?: string | null
           centro_clinico?: string
           created_at?: string
           created_by?: string
@@ -154,12 +171,17 @@ export type Database = {
           data_dum?: string | null
           data_nascimento?: string
           data_primeiro_usg?: string
+          diagnostico_encontrado?: string | null
           diagnosticos_fetais?: string | null
           diagnosticos_fetais_outros?: string | null
           diagnosticos_maternos?: string | null
+          dias_adiados?: number | null
           dias_usg?: number
+          dpp_calculado?: string | null
           dum_status?: string
           email_paciente?: string
+          excel_row_id?: string | null
+          forms_row_id?: string | null
           historia_obstetrica?: string | null
           id?: string
           idade_gestacional_calculada?: string | null
@@ -168,6 +190,7 @@ export type Database = {
           maternidade?: string
           medicacao?: string | null
           medico_responsavel?: string
+          metodo_calculo?: string | null
           necessidade_reserva_sangue?: string | null
           necessidade_uti_materna?: string | null
           nome_completo?: string
@@ -180,6 +203,7 @@ export type Database = {
           placenta_previa?: string | null
           procedimentos?: string[]
           semanas_usg?: number
+          source_type?: string | null
           status?: string
           telefones?: string
           updated_at?: string
@@ -292,6 +316,36 @@ export type Database = {
           pergunta?: string
           resposta?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      forms_config: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          onedrive_url: string | null
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          onedrive_url?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          onedrive_url?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
         }
         Relationships: []
       }
@@ -446,6 +500,42 @@ export type Database = {
           maternidade?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          excel_row_id: string | null
+          id: string
+          payload: Json
+          processed_at: string | null
+          response: Json | null
+          source_type: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          excel_row_id?: string | null
+          id?: string
+          payload: Json
+          processed_at?: string | null
+          response?: Json | null
+          source_type?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          excel_row_id?: string | null
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          response?: Json | null
+          source_type?: string
+          status?: string
         }
         Relationships: []
       }
