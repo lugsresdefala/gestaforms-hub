@@ -1,10 +1,30 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { differenceInDays, addDays, addWeeks, getDay, format } from 'https://esm.sh/date-fns@3';
+import { z } from 'https://esm.sh/zod@3.23.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Zod schema for webhook input validation
+const FormsWebhookSchema = z.object({
+  nome_paciente: z.string().max(200, 'Nome muito longo').optional(),
+  carteirinha: z.string().max(50, 'Carteirinha muito longa').optional(),
+  telefone: z.string().max(100, 'Telefone muito longo').optional(),
+  dum: z.string().max(20).optional(),
+  dum_confiavel: z.union([z.string(), z.boolean()]).optional(),
+  data_usg: z.string().max(20).optional(),
+  semanas_usg: z.union([z.number(), z.string()]).optional(),
+  dias_usg: z.union([z.number(), z.string()]).optional(),
+  diagnosticos: z.union([z.string().max(2000), z.array(z.string().max(200))]).optional(),
+  diagnosticos_maternos: z.union([z.string().max(2000), z.array(z.string().max(200))]).optional(),
+  diagnosticos_fetais: z.union([z.string().max(2000), z.array(z.string().max(200))]).optional(),
+  procedimento: z.string().max(200).optional(),
+  procedimentos: z.union([z.string().max(500), z.array(z.string().max(100))]).optional(),
+  maternidade: z.string().max(100).optional(),
+  data_agendada: z.string().max(20).optional(),
+}).passthrough(); // Allow additional fields that we don't validate
 
 // ============================================================================
 // INTERFACES
@@ -734,7 +754,22 @@ Deno.serve(async (req) => {
     console.log(`Authenticated user: ${user.email} (${user.id})`);
 
     // Parse request body
-    const body = await req.json() as FormsInput;
+    const rawBody = await req.json();
+    
+    // Validate input with zod schema
+    const parseResult = FormsWebhookSchema.safeParse(rawBody);
+    if (!parseResult.success) {
+      console.error('Validation error:', parseResult.error.errors);
+      return new Response(
+        JSON.stringify({ 
+          erro: 'Dados de entrada inválidos',
+          detalhes: parseResult.error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    const body = parseResult.data as FormsInput;
     
     console.log('📥 Dados recebidos do Power Automate:', JSON.stringify(body, null, 2));
     
