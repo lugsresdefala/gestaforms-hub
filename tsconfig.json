@@ -1,16 +1,30 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": false,
     "noImplicitAny": false,
     "noUnusedParameters": false,
+    "noUnusedLocals": false,
+    "strictNullChecks": false,
     "skipLibCheck": true,
     "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./client/src/*"],
+      "@shared/*": ["./shared/*"],
+      "@scripts/*": ["./scripts/*"]
+    },
+    "outDir": "dist"
+  },
+  "include": ["client/src/**/*", "server/**/*", "shared/**/*", "scripts/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

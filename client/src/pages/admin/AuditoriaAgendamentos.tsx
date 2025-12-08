@@ -48,7 +48,7 @@ import {
   type RegistroAgendamento,
   type ResultadoComparacao,
   type ResultadoProcessamento,
-} from "../../../scripts/processarAgendas";
+} from "@scripts/processarAgendas";
 
 interface ProcessingState {
   isProcessing: boolean;
