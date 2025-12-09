@@ -312,6 +312,20 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db.update(notificacoes).set(data).where(eq(notificacoes.id, id as any)).returning();
     return updated;
   }
+
+  async createWebhookLog(data: any): Promise<typeof webhookLogs.$inferSelect> {
+    const [log] = await db.insert(webhookLogs).values(data).returning();
+    return log;
+  }
+
+  async updateWebhookLog(id: string, data: any): Promise<typeof webhookLogs.$inferSelect | undefined> {
+    const [updated] = await db.update(webhookLogs).set(data).where(eq(webhookLogs.id, id)).returning();
+    return updated;
+  }
+
+  async getWebhookLogs(): Promise<typeof webhookLogs.$inferSelect[]> {
+    return db.select().from(webhookLogs).orderBy(desc(webhookLogs.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();

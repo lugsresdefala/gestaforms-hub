@@ -48,6 +48,28 @@ Migrated from Lovable/Supabase to Replit's fullstack architecture:
 - `/api/profiles` - User profiles
 - `/api/faq` - FAQ items
 - `/api/audit-logs` - Audit trail
+- `/api/webhook/excel` - POST - Webhook for Excel data import
+- `/api/webhook/logs` - GET - View webhook processing logs
+
+## Webhook Configuration
+The system accepts Excel data via webhook at:
+```
+POST https://agenda-hapvida.replit.app/api/webhook/excel
+Content-Type: application/json
+```
+
+Required fields:
+- `carteirinha` - Patient ID card number
+- `nome_completo` or `nomeCompleto` - Full name
+- `maternidade` - Maternity hospital name
+
+Optional fields (with defaults):
+- `telefone` / `telefones` - Phone number(s)
+- `email` / `emailPaciente` - Patient email
+- `data_nascimento` / `dataNascimento` - Birth date
+- `procedimentos` - Array of procedures (default: ["Cesárea"])
+- `data_agendamento` / `dataAgendamentoCalculada` - Scheduled date
+- And other clinical fields...
 
 ## Test Credentials
 - Email: admin@teste.com

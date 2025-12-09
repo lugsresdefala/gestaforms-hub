@@ -479,6 +479,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/webhook/excel", async (req, res) => {
+    try {
+      console.log("[Webhook] Received Excel webhook:", JSON.stringify(req.body).substring(0, 500));
+      
+      const webhookLog = await storage.createWebhookLog({
+        sourceType: "excel",
+        payload: req.body,
+        status: "received",
+      });
+      
+      const rows = Array.isArray(req.body) ? req.body : [req.body];
+      const results: any[] = [];
+      
+      for (const row of rows) {
+        try {
+          const carteirinha = row.carteirinha || row.Carteirinha || row.CARTEIRINHA;
+          const nomeCompleto = row.nome_completo || row.NomeCompleto || row.NOME || row.nome;
+          const maternidade = row.maternidade || row.Maternidade || row.MATERNIDADE;
+          
+          if (!carteirinha || !nomeCompleto || !maternidade) {
+            results.push({
+              row,
+              status: "error",
+              message: "Campos obrigatórios ausentes: carteirinha, nome_completo, maternidade"
+            });
+            continue;
+          }
+          
+          const existing = await storage.getAgendamentoByCarteirinha(carteirinha);
+          if (existing) {
+            results.push({
+              carteirinha,
+              status: "skipped",
+              message: "Paciente já possui agendamento",
+              existingId: existing.id
+            });
+            continue;
+          }
+          
+          const agendamentoData = {
+            carteirinha,
+            nomeCompleto,
+            maternidade,
+            dataNascimento: row.data_nascimento || row.dataNascimento || "",
+            telefones: row.telefone || row.telefones || row.Telefone || "",
+            emailPaciente: row.email || row.emailPaciente || "",
+            centroClinico: row.centro_clinico || row.centroClinico || "",
+            medicoResponsavel: row.medico_responsavel || row.medicoResponsavel || "",
+            numeroGestacoes: parseInt(row.numero_gestacoes || row.numeroGestacoes || "0") || 0,
+            numeroPartosNormais: parseInt(row.numero_partos_normais || row.numeroPartosNormais || "0") || 0,
+            numeroPartosCesareas: parseInt(row.numero_partos_cesareas || row.numeroPartosCesareas || "0") || 0,
+            numeroAbortos: parseInt(row.numero_abortos || row.numeroAbortos || "0") || 0,
+            procedimentos: row.procedimentos || ["Cesárea"],
+            diagnosticosMaternos: row.diagnosticos_maternos || row.diagnosticosMaternos || null,
+            diagnosticosFetais: row.diagnosticos_fetais || row.diagnosticosFetais || null,
+            indicacaoProcedimento: row.indicacao_procedimento || row.indicacaoProcedimento || "A definir",
+            dumStatus: row.dum_status || row.dumStatus || "confirmada",
+            dataDum: row.data_dum || row.dataDum || null,
+            dataPrimeiroUsg: row.data_primeiro_usg || row.dataPrimeiroUsg || "",
+            semanasUsg: parseInt(row.semanas_usg || row.semanasUsg || "0") || 0,
+            diasUsg: parseInt(row.dias_usg || row.diasUsg || "0") || 0,
+            usgRecente: row.usg_recente || row.usgRecente || "",
+            igPretendida: row.ig_pretendida || row.igPretendida || "39 semanas",
+            status: "pendente",
+            dataAgendamentoCalculada: row.data_agendamento || row.dataAgendamentoCalculada || null,
+            excelRowId: row.excel_row_id || row.excelRowId || null,
+            sourceType: "excel",
+          };
+          
+          const agendamento = await storage.createAgendamento(agendamentoData as any);
+          results.push({
+            carteirinha,
+            status: "created",
+            id: agendamento.id
+          });
+        } catch (rowError: any) {
+          results.push({
+            row,
+            status: "error",
+            message: rowError.message
+          });
+        }
+      }
+      
+      await storage.updateWebhookLog(webhookLog.id, {
+        status: "processed",
+        response: { results, totalRows: rows.length },
+        processedAt: new Date(),
+      });
+      
+      console.log("[Webhook] Processing complete:", results.length, "rows processed");
+      
+      res.json({
+        success: true,
+        webhookId: webhookLog.id,
+        processed: results.length,
+        results
+      });
+    } catch (error: any) {
+      console.error("[Webhook] Error processing webhook:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/webhook/logs", async (req, res) => {
+    try {
+      const logs = await storage.getWebhookLogs();
+      res.json(logs);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
