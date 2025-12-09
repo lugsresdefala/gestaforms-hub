@@ -1,0 +1,97 @@
+# Dependency Management
+
+> Replit supports a variety of languages and dependency management systems through the Dependencies tool. This section will cover the different types of dependencies and how to manage them in your Replit App.
+
+## Imported Packages
+
+Packages imported directly from your code are managed in the `Imports` tab. This tab allows you to view and manage the packages grouped by language. Links are also provided to the appropriate packager file, such as `package.json` for Node.js.
+
+<Frame>
+  <img src="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=fae3c4e2810384b01675b21f36405623" alt="Imports tab for a project using Node.js and Python" data-og-width="1282" width="1282" data-og-height="1362" height="1362" data-path="images/programming-ide/dependencies/import-tab.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=280&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=bde6862f5c8692492aa014176f5a9db7 280w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=560&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=89d7db9323b64108b974b649b329df28 560w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=840&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=ab3f3864b8ad6a2b6c0b96563ecbb4da 840w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=1100&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=65d786305406ef8d1a22cfd31ce5771a 1100w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=1650&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=e0910508ef133ab1c7d53fc11fc5d7c5 1650w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab.png?w=2500&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=86db5e4fd80b1e8afb410ba254e9e039 2500w" />
+</Frame>
+
+### Search and add packages
+
+Clicking on `Add new package` will allow you to search for and install new packages. The language dropdown provides quick access between packagers.
+
+<Frame>
+  <img src="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=d813599058d6315ce941d07a0ca1ebaa" alt="Node.js package search for 'React'" data-og-width="1230" width="1230" data-og-height="1142" height="1142" data-path="images/programming-ide/dependencies/import-tab-search.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=280&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=db9440184fd8dde4a314560a43b8069d 280w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=560&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=f0e70604d5e404d785ab6efb026ff58b 560w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=840&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=c6bff6aadb4edadb948c073d890717ed 840w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=1100&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=cb269563e2fdb6d481301e0c6790080d 1100w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=1650&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=2916b61c7d2f9e271cdb1ce61a265462 1650w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/import-tab-search.png?w=2500&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=5b2c552b3ab330feb215f0530418804e 2500w" />
+</Frame>
+
+You can view installation progress and relevant errors in the `Console` tab.
+
+<Frame>
+  <img src="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=67e7f971b43f54468a26137b6b24eb62" alt="Example console output for an uninstalled package" data-og-width="994" width="994" data-og-height="730" height="730" data-path="images/programming-ide/dependencies/console-output.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=280&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=7689342a70bd167749e5118e4d8f2cfd 280w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=560&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=98fe308ee0a194e68ff0517bf4356a54 560w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=840&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=ddf8739405727d13cfa9bd74c60fd9b9 840w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=1100&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=c1451f8cc820527d8a8e80fdb310e1df 1100w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=1650&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=74561ca68096c9e7a7ad2351c35ac4a1 1650w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/console-output.png?w=2500&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=57f02065c0a91760a921d9b32cb90a66 2500w" />
+</Frame>
+
+### The Universal Package Manager
+
+Replit will install most packages using [the universal package manager](https://blog.replit.com/packager). To see which languages and package managers are supported, please check out [UPM: Supported Languages](https://github.com/replit/upm/#supported-languages).
+
+If you prefer using the CLI, you can still use language-specific package managers such as `poetry` or `npm`. Any changes to the packager files will be reflected in the `Dependencies` tool, but require the respective CLI command or using the **Run** button to properly update.
+
+### Import guessing
+
+As your code evolves, we analyze your project for missing dependencies and automatically guess what needs to be installed to get your code to run. For example, if you add `import flask` to `main.py`, the next time you select **Run**, you'll see a section in the **Console** indicating that the latest version of **Flask** is being installed:
+
+<Frame>
+  <img src="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=bf47186dcf917482ba15b7dcaa5437d5" alt="upm output showing packages being installed" data-og-width="936" width="936" data-og-height="268" height="268" data-path="images/programming-ide/pip-install.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=280&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=b08c3a09f9a08f212b61ae1cb446ee24 280w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=560&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=ebeefa02d6f38456fece213eafa53f33 560w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=840&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=a00677edef4c8fd0df47875f5c28f70c 840w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=1100&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=41c80872f39a9d37205b76a8084ebd72 1100w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=1650&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=0fe18611349cc9e3e4c3d93516320733 1650w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/pip-install.png?w=2500&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=ed982930f41d9fe1a1335d12bc1bae9b 2500w" />
+</Frame>
+
+### Guessing failures
+
+This section helps you with the command to run a particular version of your package. If there's a particular version that you need, or we guessed the wrong package entirely, you can run `upm` in the shell to resolve the conflict:
+
+```bash  theme={null}
+upm add 'flask==2.3.3'
+```
+
+To install additional packages in your Workspace, open a new tab by selecting the **+** sign and searching for **Packages**. Select the packages of your choice and select **Install**. Additional options for package guessing can be configured in the [.replit](/replit-app/configuration#replit-file) file.
+
+### Python package managers
+
+When you create a Python Replit App, your package manager will be **poetry** by default. This means that you will not be able to use `pip install` to manage dependencies manually. Instead of running `pip install <package>`, you can instead run `poetry add <package>` or `upm add <package>`, which will do the same thing.
+
+`pip` is one of the earliest, and consequently most popular, package managers for Python. You can use `pip` as your Replit App's package manager instead of `poetry`.
+Follow the steps below:
+
+1. In the Tools pane, select the **Shell** tab to add the common `requirements.txt` file using the following command:
+
+```bash  theme={null}
+touch requirements.txt
+```
+
+2. Delete the `poetry.lock` file.
+
+3. Move your dependencies from `[tool.poetry.dependencies]` to `requirements.txt`. Note that the `flask = "^3.0.2"` in `pyproject.toml`'s `[tool.poetry.dependencies]` section would become `flask>=3.0.2,<4` in `requirements.txt`.
+
+4. Finally, delete the other `[tool.poetry...]` sections from `pyproject.toml`.
+
+After the above changes, the packaging infrastructure will use `pip` for all future operations.
+
+Now, as you add code to your `main.py` file, any time you select **Run**, [upm](https://github.com/replit/upm/) will determine whether there are any missing packages for your imports, find the latest versions of packages that provide those imports, and install them automatically.
+
+## Advanced Configuration
+
+Replit supports all programming languages through integration with [Nix](https://nixos.org/). Nix is a tool for managing software packages and system configurations. The **System (Advanced)** tab provides quick access to Nix support for your Replit App.
+
+<Frame>
+  <img src="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=4e2506dddefc213c45a185912aa1ba3c" alt="System (Advanced) tab for a project using Node.js and Python" data-og-width="1222" width="1222" data-og-height="1624" height="1624" data-path="images/programming-ide/dependencies/system-tab.png" data-optimize="true" data-opv="3" srcset="https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=280&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=f645c527ee75f4a201589bc74fb4f1b6 280w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=560&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=430edfbe5d2d6007f453750ac6ed25c2 560w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=840&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=a6e9d26671834a7bd8dafb6b9692c050 840w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=1100&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=fb0ed3c7abc756bfdf9e97d353c815a3 1100w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=1650&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=3b7f5da6b80c157621b4c6e56bca8af3 1650w, https://mintcdn.com/replit/AZ1L8RlIroSxuJDa/images/programming-ide/dependencies/system-tab.png?w=2500&fit=max&auto=format&n=AZ1L8RlIroSxuJDa&q=85&s=0bb6042804f4940a83a0c805b2298e0b 2500w" />
+</Frame>
+
+### System Modules
+
+Modules combine support for programming languages, formatters, and packagers. These provide the foundation for your Replit App. If you create a Replit App from a template or GitHub repository, we will automatically install the modules that are required for the languages used.
+
+If you want to start with a blank Replit App, you will need to install a module under **System Modules** before you can use the **Imports** tab. You can also add more modules to support additional languages.
+
+You can further customize modules and other Nix settings using the [.replit](replit-app/configuration#replit-file) file.
+
+### System Dependencies
+
+If you need more specific support for a language or other system-level dependencies, you can add [Nix packages](https://search.nixos.org/packages) under **System Dependencies**. These can also be managed in your [replit.nix](/replit-app/configuration#replit-nix-file) file.
+
+
+---
+
+> To find navigation and other pages in this documentation, fetch the llms.txt file at: https://docs.replit.com/llms.txt
