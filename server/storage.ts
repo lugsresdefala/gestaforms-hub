@@ -267,12 +267,12 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(userRoles);
   }
 
-  async updateUserRole(id: number, data: Partial<UserRole>): Promise<UserRole | undefined> {
+  async updateUserRole(id: string, data: Partial<UserRole>): Promise<UserRole | undefined> {
     const [updated] = await db.update(userRoles).set(data as any).where(eq(userRoles.id, id)).returning();
     return updated;
   }
 
-  async deleteUserRole(id: number): Promise<void> {
+  async deleteUserRole(id: string): Promise<void> {
     await db.delete(userRoles).where(eq(userRoles.id, id));
   }
 
@@ -285,7 +285,7 @@ export class DatabaseStorage implements IStorage {
     return newSol;
   }
 
-  async updateSolicitacaoAcesso(id: number, data: any): Promise<typeof solicitacoesAcesso.$inferSelect | undefined> {
+  async updateSolicitacaoAcesso(id: string, data: any): Promise<typeof solicitacoesAcesso.$inferSelect | undefined> {
     const [updated] = await db.update(solicitacoesAcesso).set(data).where(eq(solicitacoesAcesso.id, id)).returning();
     return updated;
   }

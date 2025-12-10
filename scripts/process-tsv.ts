@@ -36,7 +36,7 @@ import * as path from 'path';
 
 // Dynamic import for ES module compatibility when running with tsx/ts-node
 // Note: This file should be executed with: npx tsx scripts/process-tsv.ts <file>
-import { processTsvContent, parseDateSafe, isPlaceholderDate } from '../src/lib/importSanitizer.js';
+import { processTsvContent, parseDateSafe, isPlaceholderDate } from '../client/src/lib/importSanitizer';
 
 interface CliOptions {
   filePath: string;

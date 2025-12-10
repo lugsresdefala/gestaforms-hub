@@ -1,7 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAgendamentoSchema, insertCapacidadeSchema, insertUserSchema, insertUserRoleSchema, insertFaqItemSchema } from "@shared/schema";
+import { 
+  insertAgendamentoSchema, insertCapacidadeSchema, insertUserSchema, insertUserRoleSchema, insertFaqItemSchema,
+  InsertAgendamento, InsertCapacidade, InsertFaqItem
+} from "@shared/schema";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
@@ -48,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/agendamentos", async (req, res) => {
     try {
-      const data = insertAgendamentoSchema.parse(req.body);
+      const data = req.body as InsertAgendamento;
       
       const existing = await storage.getAgendamentoByCarteirinha(data.carteirinha);
       if (existing) {
@@ -158,7 +161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/capacidades", async (req, res) => {
     try {
-      const data = insertCapacidadeSchema.parse(req.body);
+      const data = req.body as InsertCapacidade;
       const capacidade = await storage.createCapacidade(data);
       res.status(201).json(capacidade);
     } catch (error: any) {
@@ -216,7 +219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/faq", async (req, res) => {
     try {
-      const data = insertFaqItemSchema.parse(req.body);
+      const data = req.body as InsertFaqItem;
       const item = await storage.createFaqItem(data);
       res.status(201).json(item);
     } catch (error: any) {
@@ -379,7 +382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/user-roles/:id", async (req, res) => {
     try {
-      const role = await storage.updateUserRole(Number(req.params.id), req.body);
+      const role = await storage.updateUserRole(req.params.id, req.body);
       res.json(role);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -388,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/user-roles/:id", async (req, res) => {
     try {
-      await storage.deleteUserRole(Number(req.params.id));
+      await storage.deleteUserRole(req.params.id);
       res.status(204).send();
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -415,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/solicitacoes-acesso/:id", async (req, res) => {
     try {
-      const solicitacao = await storage.updateSolicitacaoAcesso(Number(req.params.id), req.body);
+      const solicitacao = await storage.updateSolicitacaoAcesso(req.params.id, req.body);
       res.json(solicitacao);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
