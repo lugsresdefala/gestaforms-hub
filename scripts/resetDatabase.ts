@@ -132,9 +132,8 @@ async function main() {
     // This is a workaround since Supabase JS client doesn't have a direct "delete all" method
     const { error: deleteAgendamentosError, count: deletedAgendamentos } = await supabase
       .from('agendamentos_obst')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000') // Match all records
-      .select('id', { count: 'exact' });
+      .delete({ count: 'exact' })
+      .neq('id', '00000000-0000-0000-0000-000000000000');
 
     if (deleteAgendamentosError) {
       throw new Error(`Erro ao deletar agendamentos: ${deleteAgendamentosError.message}`);
@@ -147,9 +146,8 @@ async function main() {
     try {
       const { error, count } = await supabase
         .from('audit_logs')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000')
-        .select('id', { count: 'exact' });
+        .delete({ count: 'exact' })
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
       if (!error) {
         deletedLogs = count ?? auditLogsCount;

@@ -182,27 +182,27 @@ export const webhookLogs = pgTable("webhook_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
-export const insertAgendamentoSchema = createInsertSchema(agendamentosObst).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertCapacidadeSchema = createInsertSchema(capacidadeMaternidades).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertNotificacaoSchema = createInsertSchema(notificacoes).omit({ id: true, createdAt: true });
-export const insertFaqItemSchema = createInsertSchema(faqItems).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertUserRoleSchema = createInsertSchema(userRoles).omit({ id: true, createdAt: true });
-export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users);
+export const insertAgendamentoSchema = createInsertSchema(agendamentosObst);
+export const insertCapacidadeSchema = createInsertSchema(capacidadeMaternidades);
+export const insertNotificacaoSchema = createInsertSchema(notificacoes);
+export const insertFaqItemSchema = createInsertSchema(faqItems);
+export const insertUserRoleSchema = createInsertSchema(userRoles);
+export const insertAuditLogSchema = createInsertSchema(auditLogs);
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type InsertAgendamento = z.infer<typeof insertAgendamentoSchema>;
+export type InsertAgendamento = typeof agendamentosObst.$inferInsert;
 export type Agendamento = typeof agendamentosObst.$inferSelect;
-export type InsertCapacidade = z.infer<typeof insertCapacidadeSchema>;
+export type InsertCapacidade = typeof capacidadeMaternidades.$inferInsert;
 export type Capacidade = typeof capacidadeMaternidades.$inferSelect;
-export type InsertNotificacao = z.infer<typeof insertNotificacaoSchema>;
+export type InsertNotificacao = typeof notificacoes.$inferInsert;
 export type Notificacao = typeof notificacoes.$inferSelect;
-export type InsertFaqItem = z.infer<typeof insertFaqItemSchema>;
+export type InsertFaqItem = typeof faqItems.$inferInsert;
 export type FaqItem = typeof faqItems.$inferSelect;
-export type InsertUserRole = z.infer<typeof insertUserRoleSchema>;
+export type InsertUserRole = typeof userRoles.$inferInsert;
 export type UserRole = typeof userRoles.$inferSelect;
-export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type InsertAuditLog = typeof auditLogs.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type AgendamentoHistorico = typeof agendamentosHistorico.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
