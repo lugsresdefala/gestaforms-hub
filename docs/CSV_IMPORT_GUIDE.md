@@ -13,7 +13,33 @@ The system automatically detects and processes Google Forms exports with Portugu
 - Headers with or without accents
 - Headers with special characters and parentheses
 
-### 2. Custom CSV/TSV
+### 2. Microsoft Forms / Hapvida Excel Export
+**NEW:** Full support for the Microsoft Forms + Power Automate Excel layout used in the Hapvida workflow. This layout includes specific column headers like:
+
+- `Coluna1` - Row number (automatically handled)
+- `Hora de início` - Timestamp
+- `Nome completo da paciente` - Patient name
+- `CARTEIRINHA (tem na guia que sai do sistema - não inserir CPF)` - Insurance card
+- `Data da DUM` - Last menstrual period date
+- `DUM` - DUM status (text: "Sim - Confiavel", "Incerta", "Não sabe")
+- `Data do Primeiro USG` - First ultrasound date
+- `Numero de semanas no primeiro USG (inserir apenas o numero)...` - Weeks at first USG
+- `Numero de dias no primeiro USG (inserir apenas o numero)...` - Days at first USG
+- `USG mais recente (...)` - Most recent ultrasound description
+- `Maternidade que a paciente deseja` - Preferred maternity hospital
+- `Médico responsável pelo agendamento` - Responsible physician
+- `DATA_AGENDADA` - Scheduled date (calculated field)
+- `IG_IDEAL` - Ideal gestational age (calculated field)
+- `IG_NA_DATA` - Gestational age at scheduled date (calculated field)
+
+**Date Format Support:**
+- Brazilian format with 2-digit years: `11/12/25` → December 11, 2025
+- Automatic year interpretation: years 00-50 → 2000s, years 51-99 → 1900s
+- Mixed formats: Birth dates may come in American format (`3/25/1996`), automatically detected
+- Auto-swap: When DD/MM is invalid (e.g., month > 12), automatically tries MM/DD
+- All date corrections are logged for audit trail
+
+### 3. Custom CSV/TSV
 Standard delimiter-separated files with tab (`\t`) or comma (`,`) separation.
 
 ## Column Mapping
@@ -115,6 +141,12 @@ Maria Silva	ABC123456	01/01/1990	Sim - Confiavel	15/03/2024
 ```
 Hora de início	Nome completo da paciente	Data de nascimento da gestante	CARTEIRINHA	Número de Gestações	...
 12/5/2025 8:45:50	Maria Silva	01/01/1990	ABC123456	1	...
+```
+
+### Microsoft Forms / Hapvida Excel Export
+```
+Coluna1	Hora de início	Nome completo da paciente	Data de nascimento da gestante	CARTEIRINHA (tem na guia que sai do sistema - não inserir CPF)	Número de Gestações	Paridade (G, Pn, Pc, A, Ectopica)	Número de Partos Cesáreas	Número de Partos Normais	Número de Partos abortos	Informe dois telefones de contato com o paciente para que ele seja contato pelo hospital	Informe o procedimento(s) que será(ão) realizado(s)	DUM	Data da DUM	Data do Primeiro USG	Numero de semanas no primeiro USG (inserir apenas o numero) - considerar o exame entre 8 e 12 semanas, embrião com BCF	Numero de dias no primeiro USG (inserir apenas o numero)- considerar o exame entre 8 e 12 semanas, embrião com BCF	USG mais recente (Inserir data, apresentação, PFE com percentil, ILA/MBV e doppler)	Informe IG pretendida para o procedimento  * Não confirmar essa data para a paciente, dependendo da agenda hospitalar poderemos ter uma variação * Para laqueaduras favor colocar data que completa 60 d	Indicação do Procedimento:	Indique os Diagnósticos Obstétricos Maternos ATUAIS:	Indique qual medicação e dosagem que a paciente utiliza.	Necessidade de cuidados neonatais diferenciados	Indique os Diagnósticos Fetais :	Placenta previa centro total com acretismo confirmado ou suspeito	Informe História Obstétrica Prévia Relevante e Diagnósticos clínicos cirúrgicos (ex. Aborto tardio, parto prematuro,  óbito fetal, macrossomia, eclampsia, pré eclampsia precoce, cardiopatia - especifi	Necessidade de reserva de UTI materna	Necessidade de reserva de Sangue	Maternidade que a paciente deseja	Médico responsável pelo agendamento	E-mail da paciente	DPP DUM	DPP USG	Idade	Dra Juliana	PGS	DATA_AGENDADA	IG_IDEAL	IG_NA_DATA	Fluxo encerrado
+2752	11/12/25	Hellen Natália Silva Brito	6/17/2008	3010T000767000		2G 1A				(11) 95162-4179 (11) 8798-0443	Cesárea	Incerta		20/05/25	5	5	03/12/2025 - 33 3/7 semanas, PE 2123g, pctl 41, Ila e Doppler normais	39	Desejo materno	Sífilis tratada	SF + AF 	Não	Nenhum	Não	Sífilis tratada, 1 abortamento anterior 	Não	Não	Salvalus	Patricia Varella		06/10/00	15/01/26	17
 ```
 
 ## Troubleshooting

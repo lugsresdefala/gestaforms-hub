@@ -291,6 +291,7 @@ async function findNextAvailableDate(
 }
 
 interface WebhookPayload {
+  // Standard payload fields
   Nome?: string;
   Maternidade?: string;
   DUM?: string;
@@ -306,6 +307,172 @@ interface WebhookPayload {
   Medico?: string;
   Indicacao?: string;
   Procedimento?: string;
+  
+  // Microsoft Forms / Hapvida Excel layout fields
+  'Coluna1'?: string | number;
+  'Hora de início'?: string;
+  'Nome completo da paciente'?: string;
+  'Data de nascimento da gestante'?: string;
+  'CARTEIRINHA (tem na guia que sai do sistema - não inserir CPF)'?: string;
+  'Número de Gestações'?: string | number;
+  'Paridade (G, Pn, Pc, A, Ectopica)'?: string;
+  'Número de Partos Cesáreas'?: string | number;
+  'Número de Partos Normais'?: string | number;
+  'Número de Partos abortos'?: string | number;
+  'Informe dois telefones de contato com o paciente para que ele seja contato pelo hospital'?: string;
+  'Informe o procedimento(s) que será(ão) realizado(s)'?: string;
+  'Data da DUM'?: string;
+  'Data do Primeiro USG'?: string;
+  'Numero de semanas no primeiro USG (inserir apenas o numero) - considerar o exame entre 8 e 12 semanas, embrião com BCF'?: string | number;
+  'Numero de dias no primeiro USG (inserir apenas o numero)- considerar o exame entre 8 e 12 semanas, embrião com BCF'?: string | number;
+  'USG mais recente (Inserir data, apresentação, PFE com percentil, ILA/MBV e doppler)'?: string;
+  'Informe IG pretendida para o procedimento  * Não confirmar essa data para a paciente, dependendo da agenda hospitalar poderemos ter uma variação * Para laqueaduras favor colocar data que completa 60 d'?: string | number;
+  'Indicação do Procedimento:'?: string;
+  'Indique os Diagnósticos Obstétricos Maternos ATUAIS:'?: string;
+  'Indique qual medicação e dosagem que a paciente utiliza.'?: string;
+  'Necessidade de cuidados neonatais diferenciados'?: string;
+  'Indique os Diagnósticos Fetais :'?: string;
+  'Placenta previa centro total com acretismo confirmado ou suspeito'?: string;
+  'Informe História Obstétrica Prévia Relevante e Diagnósticos clínicos cirúrgicos (ex. Aborto tardio, parto prematuro,  óbito fetal, macrossomia, eclampsia, pré eclampsia precoce, cardiopatia - especifi'?: string;
+  'Necessidade de reserva de UTI materna'?: string;
+  'Necessidade de reserva de Sangue'?: string;
+  'Maternidade que a paciente deseja'?: string;
+  'Médico responsável pelo agendamento'?: string;
+  'E-mail da paciente'?: string;
+  'DATA_AGENDADA'?: string;
+  'IG_IDEAL'?: string;
+  'IG_NA_DATA'?: string;
+  // Allow any other field
+  [key: string]: any;
+}
+
+/**
+ * Normalize webhook payload to extract fields from multiple possible formats
+ * Supports both legacy format and Microsoft Forms/Hapvida Excel layout
+ */
+function normalizePayload(payload: WebhookPayload): {
+  nome: string;
+  carteirinha: string;
+  telefone: string;
+  maternidade: string;
+  dataDum: string | null;
+  dumStatus: string;
+  dataUsg: string | null;
+  semanasUsg: number;
+  diasUsg: number;
+  diagnosticoMaterno: string;
+  diagnosticoFetal: string;
+  medico: string;
+  indicacao: string;
+  procedimento: string;
+  dataNascimento: string | null;
+  emailPaciente: string;
+  usgRecente: string;
+  numeroGestacoes: number;
+  numeroPartosCesareas: number;
+  numeroPartosNormais: number;
+  numeroAbortos: number;
+  medicacao: string;
+  historiaObstetrica: string;
+  necessidadeUtiMaterna: string;
+  necessidadeReservaSangue: string;
+  placentaPrevia: string;
+  linhaId: string;
+} {
+  // Extract nome (name)
+  const nome = payload['Nome completo da paciente'] || payload.Nome || '';
+  
+  // Extract carteirinha (insurance card)
+  const carteirinha = payload['CARTEIRINHA (tem na guia que sai do sistema - não inserir CPF)'] || payload.Carteirinha || '';
+  
+  // Extract telefone (phone)
+  const telefone = payload['Informe dois telefones de contato com o paciente para que ele seja contato pelo hospital'] || payload.Telefone || '';
+  
+  // Extract maternidade (hospital)
+  const maternidade = payload['Maternidade que a paciente deseja'] || payload.Maternidade || 'Salvalus';
+  
+  // Extract DUM status (MS Forms has "DUM" field with text like "Sim - Confiavel", "Incerta", "Não sabe")
+  const dumStatusRaw = payload.DUM || payload['DUM Confiável'] || '';
+  const dumStatus = dumStatusRaw.toLowerCase().includes('confiavel') || dumStatusRaw.toLowerCase().includes('sim') ? 'Sim - Confiavel' : 
+                     dumStatusRaw.toLowerCase().includes('incerta') ? 'Incerta' : 'Não sabe';
+  
+  // Extract data DUM
+  const dataDum = payload['Data da DUM'] || payload.DUM || null;
+  
+  // Extract data USG
+  const dataUsg = payload['Data do Primeiro USG'] || payload['Data USG'] || null;
+  
+  // Extract semanas/dias USG
+  const semanasUsg = parseInt(String(payload['Numero de semanas no primeiro USG (inserir apenas o numero) - considerar o exame entre 8 e 12 semanas, embrião com BCF'] || payload['Semanas USG'] || '0'));
+  const diasUsg = parseInt(String(payload['Numero de dias no primeiro USG (inserir apenas o numero)- considerar o exame entre 8 e 12 semanas, embrião com BCF'] || payload['Dias USG'] || '0'));
+  
+  // Extract diagnósticos
+  const diagnosticoMaterno = payload['Indique os Diagnósticos Obstétricos Maternos ATUAIS:'] || payload['Diagnóstico Materno'] || '';
+  const diagnosticoFetal = payload['Indique os Diagnósticos Fetais :'] || payload['Diagnóstico Fetal'] || '';
+  
+  // Extract médico
+  const medico = payload['Médico responsável pelo agendamento'] || payload.Medico || 'A definir';
+  
+  // Extract indicação
+  const indicacao = payload['Indicação do Procedimento:'] || payload.Indicacao || 'Interrupção da gestação';
+  
+  // Extract procedimento
+  const procedimento = payload['Informe o procedimento(s) que será(ão) realizado(s)'] || payload.Procedimento || 'Cesariana';
+  
+  // Extract data nascimento
+  const dataNascimento = payload['Data de nascimento da gestante'] || null;
+  
+  // Extract email
+  const emailPaciente = payload['E-mail da paciente'] || payload.email || '';
+  
+  // Extract USG recente
+  const usgRecente = payload['USG mais recente (Inserir data, apresentação, PFE com percentil, ILA/MBV e doppler)'] || 'não informado';
+  
+  // Extract obstetric history
+  const numeroGestacoes = parseInt(String(payload['Número de Gestações'] || '1'));
+  const numeroPartosCesareas = parseInt(String(payload['Número de Partos Cesáreas'] || '0'));
+  const numeroPartosNormais = parseInt(String(payload['Número de Partos Normais'] || '0'));
+  const numeroAbortos = parseInt(String(payload['Número de Partos abortos'] || '0'));
+  
+  // Extract additional fields
+  const medicacao = payload['Indique qual medicação e dosagem que a paciente utiliza.'] || '';
+  const historiaObstetrica = payload['Informe História Obstétrica Prévia Relevante e Diagnósticos clínicos cirúrgicos (ex. Aborto tardio, parto prematuro,  óbito fetal, macrossomia, eclampsia, pré eclampsia precoce, cardiopatia - especifi'] || '';
+  const necessidadeUtiMaterna = payload['Necessidade de reserva de UTI materna'] || 'Não';
+  const necessidadeReservaSangue = payload['Necessidade de reserva de Sangue'] || 'Não';
+  const placentaPrevia = payload['Placenta previa centro total com acretismo confirmado ou suspeito'] || 'Não';
+  
+  // Extract linha ID (from Coluna1 or Linha)
+  const linhaId = String(payload.Coluna1 || payload.Linha || '');
+  
+  return {
+    nome,
+    carteirinha,
+    telefone,
+    maternidade,
+    dataDum,
+    dumStatus,
+    dataUsg,
+    semanasUsg,
+    diasUsg,
+    diagnosticoMaterno,
+    diagnosticoFetal,
+    medico,
+    indicacao,
+    procedimento,
+    dataNascimento,
+    emailPaciente,
+    usgRecente,
+    numeroGestacoes,
+    numeroPartosCesareas,
+    numeroPartosNormais,
+    numeroAbortos,
+    medicacao,
+    historiaObstetrica,
+    necessidadeUtiMaterna,
+    necessidadeReservaSangue,
+    placentaPrevia,
+    linhaId,
+  };
 }
 
 Deno.serve(async (req) => {
@@ -331,21 +498,25 @@ Deno.serve(async (req) => {
 
     const payload: WebhookPayload = await req.json();
     console.log('Webhook received:', JSON.stringify(payload, null, 2));
+    
+    // Normalize payload to handle multiple formats
+    const normalized = normalizePayload(payload);
+    console.log('Normalized payload:', JSON.stringify(normalized, null, 2));
 
     // Log the webhook call
     await supabase.from('webhook_logs').insert({
       source_type: 'excel',
-      excel_row_id: payload.Linha,
+      excel_row_id: normalized.linhaId,
       payload: payload,
       status: 'processing',
     });
 
     // Parse dates
-    const dataDum = parseDate(payload.DUM || null);
-    const dataUsg = parseDate(payload['Data USG'] || null);
-    const semanasUsg = parseInt(String(payload['Semanas USG'] || '0'));
-    const diasUsg = parseInt(String(payload['Dias USG'] || '0'));
-    const dumConfiavel = (payload['DUM Confiável'] || '').toLowerCase() === 'sim';
+    const dataDum = parseDate(normalized.dataDum);
+    const dataUsg = parseDate(normalized.dataUsg);
+    const semanasUsg = normalized.semanasUsg;
+    const diasUsg = normalized.diasUsg;
+    const dumConfiavel = normalized.dumStatus.toLowerCase().includes('confiavel');
 
     // Determine calculation method based on protocol PR-DIMEP-PGS-01
     let metodoIG: 'DUM' | 'USG' = 'USG';
@@ -394,8 +565,8 @@ Deno.serve(async (req) => {
 
     // Find ideal IG from diagnosis
     const diagResult = findIGFromDiagnosis(
-      payload['Diagnóstico Materno'] || '',
-      payload['Diagnóstico Fetal'] || ''
+      normalized.diagnosticoMaterno,
+      normalized.diagnosticoFetal
     );
 
     // Calculate ideal date
@@ -404,7 +575,7 @@ Deno.serve(async (req) => {
     dataIdeal.setDate(dataIdeal.getDate() + diasAteIGIdeal);
 
     // Find available date
-    const maternidade = payload.Maternidade || 'Salvalus';
+    const maternidade = normalized.maternidade;
     const { data: dataAgendada, diasAdiados } = await findNextAvailableDate(
       supabase,
       maternidade,
@@ -416,43 +587,50 @@ Deno.serve(async (req) => {
 
     // Calculate DPP
     const dpp = calcularDPP(dataReferencia);
+    
+    // Parse data nascimento if available
+    const dataNascimento = parseDate(normalized.dataNascimento);
 
     // Prepare agendamento data
     const agendamentoData = {
-      carteirinha: payload.Carteirinha || '',
-      nome_completo: payload.Nome || '',
-      data_nascimento: '1990-01-01', // Default - will need to be updated
-      telefones: payload.Telefone || '',
-      procedimentos: payload.Procedimento ? [payload.Procedimento] : ['Cesariana'],
-      dum_status: dumConfiavel ? 'confiavel' : 'incerta',
+      carteirinha: normalized.carteirinha,
+      nome_completo: normalized.nome,
+      data_nascimento: dataNascimento?.toISOString().split('T')[0] || '1990-01-01',
+      telefones: normalized.telefone || 'Não informado',
+      procedimentos: normalized.procedimento ? [normalized.procedimento] : ['Cesariana'],
+      dum_status: normalized.dumStatus,
       data_dum: dataDum?.toISOString().split('T')[0] || null,
       data_primeiro_usg: dataUsg?.toISOString().split('T')[0] || hoje.toISOString().split('T')[0],
       semanas_usg: semanasUsg,
       dias_usg: diasUsg,
-      usg_recente: 'nao',
+      usg_recente: normalized.usgRecente,
       ig_pretendida: `${diagResult.ig}s`,
-      indicacao_procedimento: payload.Indicacao || 'Interrupção da gestação',
-      medicacao: null,
-      diagnosticos_maternos: payload['Diagnóstico Materno'] || '',
-      diagnosticos_fetais: payload['Diagnóstico Fetal'] || '',
+      indicacao_procedimento: normalized.indicacao,
+      medicacao: normalized.medicacao || null,
+      diagnosticos_maternos: normalized.diagnosticoMaterno || null,
+      diagnosticos_fetais: normalized.diagnosticoFetal || null,
       maternidade: maternidade,
-      medico_responsavel: payload.Medico || 'A definir',
+      medico_responsavel: normalized.medico,
       centro_clinico: 'PGS',
-      email_paciente: '',
+      email_paciente: normalized.emailPaciente || 'nao-informado@sistema.local',
       data_agendamento_calculada: dataAgendada.toISOString().split('T')[0],
       idade_gestacional_calculada: formatarIG(igAtualDias),
       status: 'pendente',
       source_type: 'excel',
-      excel_row_id: payload.Linha || null,
+      excel_row_id: normalized.linhaId || null,
       dpp_calculado: dpp.toISOString().split('T')[0],
       metodo_calculo: metodoIG,
       categoria_diagnostico: diagResult.diagnostico,
       diagnostico_encontrado: diagResult.diagnostico,
       dias_adiados: diasAdiados,
-      numero_gestacoes: 1,
-      numero_partos_cesareas: 0,
-      numero_partos_normais: 0,
-      numero_abortos: 0,
+      numero_gestacoes: normalized.numeroGestacoes,
+      numero_partos_cesareas: normalized.numeroPartosCesareas,
+      numero_partos_normais: normalized.numeroPartosNormais,
+      numero_abortos: normalized.numeroAbortos,
+      historia_obstetrica: normalized.historiaObstetrica || null,
+      necessidade_uti_materna: normalized.necessidadeUtiMaterna,
+      necessidade_reserva_sangue: normalized.necessidadeReservaSangue,
+      placenta_previa: normalized.placentaPrevia,
       observacoes_agendamento: `Importado via webhook Excel\nMétodo IG: ${metodoIG}\nJustificativa: ${justificativa}\nIG Ideal: ${diagResult.ig}s (${diagResult.diagnostico})\nDias adiados: ${diasAdiados >= 0 ? diasAdiados : 'capacidade excedida'}`,
     };
 
@@ -471,7 +649,7 @@ Deno.serve(async (req) => {
         status: 'error',
         error_message: insertError.message,
         processed_at: new Date().toISOString(),
-      }).eq('excel_row_id', payload.Linha);
+      }).eq('excel_row_id', normalized.linhaId);
 
       throw insertError;
     }
@@ -481,15 +659,15 @@ Deno.serve(async (req) => {
       status: 'success',
       response: insertedData,
       processed_at: new Date().toISOString(),
-    }).eq('excel_row_id', payload.Linha);
+    }).eq('excel_row_id', normalized.linhaId);
 
     const response = {
       success: true,
       id: insertedData.id,
-      paciente: payload.Nome,
+      paciente: normalized.nome,
       maternidade: maternidade,
       source_type: 'excel',
-      excel_row_id: payload.Linha,
+      excel_row_id: normalized.linhaId,
       pipeline: {
         metodo_ig: metodoIG,
         justificativa: justificativa,
