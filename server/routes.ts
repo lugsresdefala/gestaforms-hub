@@ -7,8 +7,12 @@ import {
 } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { registerFormsWebhookRoute } from "./formsWebhookRoute";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Registrar rotas de webhook de Forms
+  registerFormsWebhookRoute(app);
   
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
