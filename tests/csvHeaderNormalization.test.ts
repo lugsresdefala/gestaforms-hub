@@ -12,17 +12,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-
-// Replica of the normalization function from ImportarPorTabela.tsx
-const normalizeHeader = (h: string): string => {
-  return h
-    .toLowerCase()
-    .trim()
-    .replace(/"/g, '')
-    .replace(/\s+/g, ' ')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-};
+import { normalizeHeader } from '../client/src/lib/csvUtils';
 
 describe('CSV Header Normalization', () => {
   describe('Accent Removal', () => {

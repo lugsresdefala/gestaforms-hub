@@ -47,6 +47,7 @@ import {
 import { validarAgendamento } from "@/lib/validation";
 import { ModalCorrecaoDatas } from "@/components/ModalCorrecaoDatas";
 import { validarCoerenciaDatas, type IncoerenciaData } from "@/lib/validation/dateCoherenceValidator";
+import { normalizeHeader } from "@/lib/csvUtils";
 
 // Tipos
 interface PacienteRow {
@@ -1173,16 +1174,6 @@ export default function ImportarPorTabela() {
                   }
                   
                   // Normalizar headers: lowercase, remover acentos e caracteres especiais extras
-                  const normalizeHeader = (h: string): string => {
-                    return h
-                      .toLowerCase()
-                      .trim()
-                      .replace(/"/g, '')
-                      .replace(/\s+/g, ' ')
-                      .normalize('NFD')
-                      .replace(/[\u0300-\u036f]/g, ''); // Remove acentos
-                  };
-                  
                   const headers = lines[0].split(delimiter).map(normalizeHeader);
                   
                   // Mapeamento de colunas do CSV para campos do formulário
