@@ -3,10 +3,11 @@ import { eq, and, or, ilike, desc, gte, lte, sql, ne } from "drizzle-orm";
 import {
   users, userRoles, profiles, agendamentosObst, agendamentosHistorico,
   capacidadeMaternidades, notificacoes, faqItems, formsConfig,
-  solicitacoesAcesso, auditLogs, webhookLogs,
+  solicitacoesAcesso, auditLogs, webhookLogs, agendamentosPendentes,
   InsertUser, User, InsertAgendamento, Agendamento,
   InsertCapacidade, Capacidade, InsertNotificacao, Notificacao,
-  InsertFaqItem, FaqItem, InsertUserRole, UserRole, InsertAuditLog
+  InsertFaqItem, FaqItem, InsertUserRole, UserRole, InsertAuditLog,
+  InsertAgendamentoPendente, AgendamentoPendente
 } from "@shared/schema";
 
 export interface IStorage {
@@ -44,6 +45,11 @@ export interface IStorage {
   
   createAuditLog(log: InsertAuditLog): Promise<void>;
   getAuditLogs(filters?: AuditLogFilters): Promise<typeof auditLogs.$inferSelect[]>;
+  
+  getAgendamentosPendentes(filters?: AgendamentoPendenteFilters): Promise<AgendamentoPendente[]>;
+  getAgendamentoPendente(id: string): Promise<AgendamentoPendente | undefined>;
+  createAgendamentoPendente(data: InsertAgendamentoPendente): Promise<AgendamentoPendente>;
+  updateAgendamentoPendente(id: string, data: Partial<AgendamentoPendente>): Promise<AgendamentoPendente | undefined>;
 }
 
 export interface AgendamentoFilters {
@@ -59,6 +65,13 @@ export interface AuditLogFilters {
   userId?: number;
   tableName?: string;
   action?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface AgendamentoPendenteFilters {
+  status?: string;
+  maternidade?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -325,6 +338,46 @@ export class DatabaseStorage implements IStorage {
 
   async getWebhookLogs(): Promise<typeof webhookLogs.$inferSelect[]> {
     return db.select().from(webhookLogs).orderBy(desc(webhookLogs.createdAt));
+  }
+
+  async getAgendamentosPendentes(filters?: AgendamentoPendenteFilters): Promise<AgendamentoPendente[]> {
+    const conditions = [];
+    
+    if (filters?.status) {
+      conditions.push(eq(agendamentosPendentes.status, filters.status));
+    }
+    if (filters?.maternidade) {
+      conditions.push(eq(agendamentosPendentes.maternidade, filters.maternidade));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(agendamentosPendentes.criadoEm, new Date(filters.startDate)));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(agendamentosPendentes.criadoEm, new Date(filters.endDate)));
+    }
+    
+    const query = db.select().from(agendamentosPendentes);
+    
+    if (conditions.length > 0) {
+      return query.where(and(...conditions)).orderBy(desc(agendamentosPendentes.criadoEm));
+    }
+    
+    return query.orderBy(desc(agendamentosPendentes.criadoEm));
+  }
+
+  async getAgendamentoPendente(id: string): Promise<AgendamentoPendente | undefined> {
+    const [pendente] = await db.select().from(agendamentosPendentes).where(eq(agendamentosPendentes.id, id));
+    return pendente;
+  }
+
+  async createAgendamentoPendente(data: InsertAgendamentoPendente): Promise<AgendamentoPendente> {
+    const [pendente] = await db.insert(agendamentosPendentes).values(data).returning();
+    return pendente;
+  }
+
+  async updateAgendamentoPendente(id: string, data: Partial<AgendamentoPendente>): Promise<AgendamentoPendente | undefined> {
+    const [updated] = await db.update(agendamentosPendentes).set(data).where(eq(agendamentosPendentes.id, id)).returning();
+    return updated;
   }
 }
 

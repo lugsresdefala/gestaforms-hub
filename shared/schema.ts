@@ -182,6 +182,50 @@ export const webhookLogs = pgTable("webhook_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const agendamentosPendentes = pgTable("agendamentos_pendentes", {
+  id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Dados brutos da paciente
+  paciente: text("paciente").notNull(),
+  maternidade: text("maternidade").notNull(),
+  procedimento: text("procedimento"),
+  telefones: text("telefones"),
+  carteirinha: text("carteirinha"),
+  medico: text("medico"),
+  
+  // Dados obstétricos de entrada
+  dataDum: text("data_dum"),
+  dumConfiavel: boolean("dum_confiavel").default(true),
+  dataUsg: text("data_usg"),
+  semanasUsg: integer("semanas_usg"),
+  diasUsg: integer("dias_usg"),
+  
+  // Diagnósticos
+  diagnosticoMaterno: text("diagnostico_materno"),
+  diagnosticoFetal: text("diagnostico_fetal"),
+  indicacao: text("indicacao"),
+  
+  // Campos calculados pelo pipeline
+  metodoIg: text("metodo_ig"),
+  justificativaMetodo: text("justificativa_metodo"),
+  igIdeal: text("ig_ideal"),
+  igIdealSemanas: integer("ig_ideal_semanas"),
+  categoriaDiagnostico: text("categoria_diagnostico"),
+  diagnosticoEncontrado: text("diagnostico_encontrado"),
+  dataAgendada: text("data_agendada"),
+  igNaData: text("ig_na_data"),
+  diasAdiados: integer("dias_adiados"),
+  statusVaga: text("status_vaga"),
+  dppCalculado: text("dpp_calculado"),
+  
+  // Metadados
+  status: text("status").notNull().default("pendente"),
+  formsRowId: text("forms_row_id"),
+  criadoEm: timestamp("criado_em").defaultNow(),
+  aprovadoEm: timestamp("aprovado_em"),
+  aprovadoPor: integer("aprovado_por").references(() => users.id),
+});
+
 export const insertUserSchema = createInsertSchema(users);
 export const insertAgendamentoSchema = createInsertSchema(agendamentosObst);
 export const insertCapacidadeSchema = createInsertSchema(capacidadeMaternidades);
@@ -189,6 +233,7 @@ export const insertNotificacaoSchema = createInsertSchema(notificacoes);
 export const insertFaqItemSchema = createInsertSchema(faqItems);
 export const insertUserRoleSchema = createInsertSchema(userRoles);
 export const insertAuditLogSchema = createInsertSchema(auditLogs);
+export const insertAgendamentoPendenteSchema = createInsertSchema(agendamentosPendentes);
 
 export type InsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -209,3 +254,5 @@ export type Profile = typeof profiles.$inferSelect;
 export type SolicitacaoAcesso = typeof solicitacoesAcesso.$inferSelect;
 export type FormsConfig = typeof formsConfig.$inferSelect;
 export type WebhookLog = typeof webhookLogs.$inferSelect;
+export type InsertAgendamentoPendente = typeof agendamentosPendentes.$inferInsert;
+export type AgendamentoPendente = typeof agendamentosPendentes.$inferSelect;

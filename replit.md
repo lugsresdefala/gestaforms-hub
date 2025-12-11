@@ -49,9 +49,14 @@ Migrated from Lovable/Supabase to Replit's fullstack architecture:
 - `/api/faq` - FAQ items
 - `/api/audit-logs` - Audit trail
 - `/api/webhook/excel` - POST - Webhook for Excel data import
+- `/api/webhook/forms` - POST - Webhook for Microsoft Forms (Power Automate)
 - `/api/webhook/logs` - GET - View webhook processing logs
+- `/api/pendentes` - GET - List pending appointments for approval
+- `/api/pendentes/:id` - GET/PATCH - View/update specific pending appointment
 
 ## Webhook Configuration
+
+### Excel Webhook
 The system accepts Excel data via webhook at:
 ```
 POST https://agenda-hapvida.replit.app/api/webhook/excel
@@ -70,6 +75,33 @@ Optional fields (with defaults):
 - `procedimentos` - Array of procedures (default: ["Cesárea"])
 - `data_agendamento` / `dataAgendamentoCalculada` - Scheduled date
 - And other clinical fields...
+
+### Forms Webhook (NEW)
+The system accepts Microsoft Forms data via Power Automate at:
+```
+POST https://agenda-hapvida.replit.app/api/webhook/forms
+Content-Type: application/json
+```
+
+This endpoint implements the complete PT-AON-097 clinical protocol pipeline:
+1. DUM vs USG comparison and dating method selection
+2. Diagnosis-based ideal gestational age (IG) calculation
+3. Maternity capacity verification
+4. Automatic scheduling date calculation
+
+Required fields:
+- `paciente` or `nome_paciente` - Patient full name
+- `maternidade` or `hospital` - Maternity hospital name
+
+Recommended fields for clinical pipeline:
+- `data_dum` / `dum` - Last menstrual period (DD/MM/YYYY or YYYY-MM-DD)
+- `data_primeiro_usg` / `data_usg` - First ultrasound date
+- `semanas_usg` - Gestational weeks at ultrasound
+- `dias_usg` - Additional days (0-6)
+- `diagnostico_materno` - Maternal diagnoses
+- `diagnostico_fetal` - Fetal diagnoses
+
+See [WEBHOOK_FORMS_CONTRATO.md](./WEBHOOK_FORMS_CONTRATO.md) for complete API documentation.
 
 ## Test Credentials
 - Email: admin@teste.com
