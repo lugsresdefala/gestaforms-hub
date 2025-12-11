@@ -47,6 +47,7 @@ import {
 import { validarAgendamento } from "@/lib/validation";
 import { ModalCorrecaoDatas } from "@/components/ModalCorrecaoDatas";
 import { validarCoerenciaDatas, type IncoerenciaData } from "@/lib/validation/dateCoherenceValidator";
+import { normalizeHeader } from "@/lib/csvUtils";
 
 // Tipos
 interface PacienteRow {
@@ -1172,64 +1173,166 @@ export default function ImportarPorTabela() {
                     return;
                   }
                   
-                  const headers = lines[0].split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                  // Normalizar headers: lowercase, remover acentos e caracteres especiais extras
+                  const headers = lines[0].split(delimiter).map(normalizeHeader);
                   
                   // Mapeamento de colunas do CSV para campos do formulário
+                  // Inclui variações do Google Forms e outros formatos
                   const columnMap: Record<string, keyof PacienteRow> = {
+                    // Data de registro / timestamp
                     'carimbo de data/hora': 'data_registro',
+                    'hora de inicio': 'data_registro',
                     'data registro': 'data_registro',
+                    'timestamp': 'data_registro',
+                    
+                    // Nome da paciente
                     'nome completo': 'nome_completo',
+                    'nome completo da paciente': 'nome_completo',
+                    'nome': 'nome_completo',
+                    
+                    // Data de nascimento
                     'data de nascimento': 'data_nascimento',
+                    'data de nascimento da gestante': 'data_nascimento',
                     'data nascimento': 'data_nascimento',
+                    'nascimento': 'data_nascimento',
+                    
+                    // Carteirinha
                     'carteirinha': 'carteirinha',
-                    'n° de gestações': 'numero_gestacoes',
+                    'carteirinha (tem na guia que sai do sistema - nao inserir cpf)': 'carteirinha',
+                    
+                    // Gestações
+                    'n° de gestacoes': 'numero_gestacoes',
+                    'numero de gestacoes': 'numero_gestacoes',
                     'numero gestacoes': 'numero_gestacoes',
-                    'n° partos cesáreas': 'numero_partos_cesareas',
+                    'gestacoes': 'numero_gestacoes',
+                    
+                    // Partos cesáreas
+                    'n° partos cesareas': 'numero_partos_cesareas',
+                    'numero de partos cesareas': 'numero_partos_cesareas',
                     'numero partos cesareas': 'numero_partos_cesareas',
+                    'partos cesareas': 'numero_partos_cesareas',
+                    
+                    // Partos normais
                     'n° partos normais': 'numero_partos_normais',
+                    'numero de partos normais': 'numero_partos_normais',
                     'numero partos normais': 'numero_partos_normais',
+                    'partos normais': 'numero_partos_normais',
+                    
+                    // Abortos
                     'n° de abortos': 'numero_abortos',
+                    'numero de partos abortos': 'numero_abortos',
                     'numero abortos': 'numero_abortos',
+                    'abortos': 'numero_abortos',
+                    
+                    // Telefones
                     'telefones': 'telefones',
+                    'informe dois telefones de contato com o paciente para que ele seja contato pelo hospital': 'telefones',
+                    'telefones de contato': 'telefones',
+                    'contato': 'telefones',
+                    
+                    // Procedimentos
                     'procedimentos': 'procedimentos',
-                    'a dum é': 'dum_status',
+                    'informe o procedimento(s) que sera(ao) realizado(s)': 'procedimentos',
+                    'procedimento': 'procedimentos',
+                    
+                    // DUM Status
+                    'a dum e': 'dum_status',
                     'dum status': 'dum_status',
+                    'dum': 'dum_status',
+                    
+                    // Data DUM
                     'data da dum': 'data_dum',
                     'data dum': 'data_dum',
+                    
+                    // USG
                     'data do 1 usg': 'data_primeiro_usg',
+                    'data do primeiro usg': 'data_primeiro_usg',
                     'data primeiro usg': 'data_primeiro_usg',
+                    '1 usg': 'data_primeiro_usg',
+                    
+                    // Semanas USG
                     'semanas no 1 usg': 'semanas_usg',
+                    'numero de semanas no primeiro usg (inserir apenas o numero) - considerar o exame entre 8 e 12 semanas, embriao com bcf': 'semanas_usg',
                     'semanas usg': 'semanas_usg',
+                    'semanas': 'semanas_usg',
+                    
+                    // Dias USG
                     'dias no 1 usg': 'dias_usg',
+                    'numero de dias no primeiro usg (inserir apenas o numero)- considerar o exame entre 8 e 12 semanas, embriao com bcf': 'dias_usg',
                     'dias usg': 'dias_usg',
+                    'dias': 'dias_usg',
+                    
+                    // USG Recente
                     'usg mais recente': 'usg_recente',
+                    'usg mais recente (inserir data, apresentacao, pfe com percentil, ila/mbv e doppler)': 'usg_recente',
                     'usg recente': 'usg_recente',
+                    
+                    // IG Pretendida
                     'ig pretendida': 'ig_pretendida',
-                    'indicação do procedimento': 'indicacao_procedimento',
+                    'informe ig pretendida para o procedimento * nao confirmar essa data para a paciente, dependendo da agenda hospitalar poderemos ter uma variacao * para laqueaduras favor colocar data que completa 60 d': 'ig_pretendida',
+                    
+                    // Indicação
+                    'indicacao do procedimento': 'indicacao_procedimento',
+                    'indicacao do procedimento:': 'indicacao_procedimento',
                     'indicacao procedimento': 'indicacao_procedimento',
-                    'medicação de uso contínuo': 'medicacao',
+                    'indicacao': 'indicacao_procedimento',
+                    
+                    // Medicação
+                    'medicacao de uso continuo': 'medicacao',
+                    'indique qual medicacao e dosagem que a paciente utiliza.': 'medicacao',
                     'medicacao': 'medicacao',
-                    'diagnósticos maternos': 'diagnosticos_maternos',
+                    
+                    // Diagnósticos Maternos
                     'diagnosticos maternos': 'diagnosticos_maternos',
-                    'placenta prévia': 'placenta_previa',
+                    'indique os diagnosticos obstetricos maternos atuais:': 'diagnosticos_maternos',
+                    'diagnosticos obstetricos maternos': 'diagnosticos_maternos',
+                    
+                    // Placenta Prévia
                     'placenta previa': 'placenta_previa',
-                    'diagnósticos fetais': 'diagnosticos_fetais',
+                    'placenta previa centro total com acretismo confirmado ou suspeito': 'placenta_previa',
+                    
+                    // Diagnósticos Fetais
                     'diagnosticos fetais': 'diagnosticos_fetais',
-                    'história obstétrica relevante': 'historia_obstetrica',
+                    'indique os diagnosticos fetais :': 'diagnosticos_fetais',
+                    'diagnosticos fetais :': 'diagnosticos_fetais',
+                    
+                    // História Obstétrica
+                    'historia obstetrica relevante': 'historia_obstetrica',
                     'historia obstetrica': 'historia_obstetrica',
-                    'necessidade de reserva de sangue': 'necessidade_reserva_sangue',
-                    'necessidade reserva sangue': 'necessidade_reserva_sangue',
+                    'informe historia obstetrica previa relevante e diagnosticos clinicos cirurgicos (ex. aborto tardio, parto prematuro, obito fetal, macrossomia, eclampsia, pre eclampsia precoce, cardiopatia - especifi': 'historia_obstetrica',
+                    
+                    // Necessidade UTI
+                    'necessidade de reserva de uti materna': 'necessidade_uti_materna',
                     'necessidade de uti materna': 'necessidade_uti_materna',
                     'necessidade uti materna': 'necessidade_uti_materna',
+                    'uti materna': 'necessidade_uti_materna',
+                    
+                    // Necessidade Sangue
+                    'necessidade de reserva de sangue': 'necessidade_reserva_sangue',
+                    'necessidade reserva sangue': 'necessidade_reserva_sangue',
+                    'reserva sangue': 'necessidade_reserva_sangue',
+                    
+                    // Maternidade
                     'maternidade': 'maternidade',
-                    'médico responsável': 'medico_responsavel',
+                    'maternidade que a paciente deseja': 'maternidade',
+                    
+                    // Médico
                     'medico responsavel': 'medico_responsavel',
+                    'medico responsavel pelo agendamento': 'medico_responsavel',
+                    'medico': 'medico_responsavel',
+                    
+                    // Email
                     'e-mail': 'email_paciente',
+                    'e-mail da paciente': 'email_paciente',
                     'email': 'email_paciente',
                     'email paciente': 'email_paciente',
-                    'centro clínico': 'centro_clinico',
+                    
+                    // Centro Clínico
                     'centro clinico': 'centro_clinico',
+                    
+                    // Data Agendada
                     'data agendada': 'data_agendada',
+                    'data_agendada': 'data_agendada',
                   };
                   
                   // Encontrar índices das colunas
