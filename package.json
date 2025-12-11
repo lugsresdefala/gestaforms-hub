@@ -12,7 +12,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test:webhook": "tsx scripts/test-webhook-pipeline.ts",
+    "test:webhook:curl": "bash scripts/test-webhook-curl.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
