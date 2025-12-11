@@ -1178,6 +1178,7 @@ export default function ImportarPorTabela() {
                   
                   // Mapeamento de colunas do CSV para campos do formulário
                   // Inclui variações do Google Forms e outros formatos
+                  // MICROSOFT FORMS / HAPVIDA: Suporte completo ao layout do Excel exportado
                   const columnMap: Record<string, keyof PacienteRow> = {
                     // Data de registro / timestamp
                     'carimbo de data/hora': 'data_registro',
@@ -1205,6 +1206,7 @@ export default function ImportarPorTabela() {
                     'numero de gestacoes': 'numero_gestacoes',
                     'numero gestacoes': 'numero_gestacoes',
                     'gestacoes': 'numero_gestacoes',
+                    'paridade (g, pn, pc, a, ectopica)': 'numero_gestacoes', // MS Forms Hapvida - extrair apenas G
                     
                     // Partos cesáreas
                     'n° partos cesareas': 'numero_partos_cesareas',
@@ -1229,6 +1231,7 @@ export default function ImportarPorTabela() {
                     'informe dois telefones de contato com o paciente para que ele seja contato pelo hospital': 'telefones',
                     'telefones de contato': 'telefones',
                     'contato': 'telefones',
+                    'informe dois telefones de contato com o paciente para que ele seja contatado pelo hospital': 'telefones', // MS Forms Hapvida exact match
                     
                     // Procedimentos
                     'procedimentos': 'procedimentos',
@@ -1238,7 +1241,7 @@ export default function ImportarPorTabela() {
                     // DUM Status
                     'a dum e': 'dum_status',
                     'dum status': 'dum_status',
-                    'dum': 'dum_status',
+                    'dum': 'dum_status', // MS Forms Hapvida - campo texto com "Sim - Confiavel", "Incerta", "Não sabe"
                     
                     // Data DUM
                     'data da dum': 'data_dum',
@@ -1276,10 +1279,12 @@ export default function ImportarPorTabela() {
                     'indicacao do procedimento:': 'indicacao_procedimento',
                     'indicacao procedimento': 'indicacao_procedimento',
                     'indicacao': 'indicacao_procedimento',
+                    'desejo materno': 'indicacao_procedimento', // MS Forms Hapvida - valor comum
                     
                     // Medicação
                     'medicacao de uso continuo': 'medicacao',
                     'indique qual medicacao e dosagem que a paciente utiliza.': 'medicacao',
+                    'indique qual medicacao e dosagem que a paciente utiliza': 'medicacao', // MS Forms Hapvida - sem ponto final
                     'medicacao': 'medicacao',
                     
                     // Diagnósticos Maternos
@@ -1306,6 +1311,7 @@ export default function ImportarPorTabela() {
                     'necessidade de uti materna': 'necessidade_uti_materna',
                     'necessidade uti materna': 'necessidade_uti_materna',
                     'uti materna': 'necessidade_uti_materna',
+                    'necessidade de cuidados neonatais diferenciados': 'necessidade_uti_materna', // MS Forms Hapvida - neonatal care
                     
                     // Necessidade Sangue
                     'necessidade de reserva de sangue': 'necessidade_reserva_sangue',
@@ -1330,9 +1336,21 @@ export default function ImportarPorTabela() {
                     // Centro Clínico
                     'centro clinico': 'centro_clinico',
                     
-                    // Data Agendada
+                    // Data Agendada (MS Forms Hapvida - campos calculados)
                     'data agendada': 'data_agendada',
                     'data_agendada': 'data_agendada',
+                    
+                    // Campos adicionais Microsoft Forms / Hapvida (colunas calculadas que podem vir no Excel)
+                    // Estes são campos read-only/calculados, mas incluídos para compatibilidade de importação
+                    // 'dpp dum': ignorado - será recalculado
+                    // 'dpp usg': ignorado - será recalculado  
+                    // 'idade': ignorado - será recalculado
+                    // 'pgs': ignorado - campo específico do fluxo
+                    // 'ig_ideal': ignorado - será recalculado pelo protocolo
+                    // 'ig_na_data': ignorado - será recalculado
+                    // 'fluxo encerrado': ignorado - campo de status do Forms
+                    // 'coluna1': ignorado - número da linha
+                    // 'dra juliana': ignorado - campo específico de anotação
                   };
                   
                   // Encontrar índices das colunas
