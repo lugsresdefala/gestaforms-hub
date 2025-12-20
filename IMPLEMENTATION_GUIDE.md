@@ -34,7 +34,7 @@ Este PR implementa o pipeline clínico obstétrico completo em TypeScript, subst
 
 ### ✅ 5. Documentação
 - ✅ `WEBHOOK_FORMS_CONTRATO.md` - Contrato completo da API
-- ✅ `replit.md` - Atualizado com novos endpoints
+- ✅ `PRODUCTION_ENDPOINTS.md` - Endpoints de produção (Supabase)
 - ✅ Exemplos de requisição/resposta
 - ✅ Notas de segurança
 
@@ -140,7 +140,7 @@ scripts/test-webhook-curl.sh          # Teste de integração HTTP
 
 ```
 WEBHOOK_FORMS_CONTRATO.md       # Contrato completo da API
-replit.md                       # Atualizado com novos endpoints
+PRODUCTION_ENDPOINTS.md         # Endpoints de produção (Supabase)
 ```
 
 ## 🚀 Como Implantar
@@ -400,10 +400,10 @@ Status: ✅ APROVADO
    - Códigos de erro
    - Guia de troubleshooting
 
-2. **`replit.md`**
+2. **`PRODUCTION_ENDPOINTS.md`**
    - Visão geral do sistema
-   - Lista de todos os endpoints
-   - Instruções de execução
+   - Endpoints publicados em produção
+   - Instruções de execução (local x produção)
 
 3. **Inline Documentation**
    - JSDoc em todas as funções públicas

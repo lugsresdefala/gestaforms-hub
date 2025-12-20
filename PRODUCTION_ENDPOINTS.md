@@ -5,9 +5,9 @@ A comprehensive obstetric scheduling system (Sistema de Agendamentos Obstétrico
 
 ## Architecture
 - **Frontend**: React + Vite + TypeScript + TailwindCSS + ShadCN UI
-- **Backend**: Express.js + TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Authentication**: Session-based auth with bcrypt password hashing
+- **Backend**: Supabase Edge Functions (Node/TypeScript) + Express local para desenvolvimento
+- **Database**: PostgreSQL (Supabase) com Drizzle ORM
+- **Authentication**: Supabase Auth
 
 ## Directory Structure
 ```
@@ -29,12 +29,11 @@ A comprehensive obstetric scheduling system (Sistema de Agendamentos Obstétrico
 └── scripts/              # Utility scripts for data processing
 ```
 
-## Migration Status
-Migrated from Lovable/Supabase to Replit's fullstack architecture:
-- Database schema: Complete (20+ tables)
-- Backend API routes: Complete
-- Frontend: Working with mock Supabase client adapter
-- Authentication: Express-based with bcrypt/sessions
+## Deployment Status (Produção)
+Publicado fora do Replit, utilizando pipeline padrão de produção:
+- Frontend estático (Vite) publicado em ambiente de produção (ex: Vercel)
+- API e webhooks expostos via Functions do Supabase
+- Autenticação/Sessão gerenciada via Supabase Auth
 
 ## API Endpoints
 - `/api/health` - Health check
@@ -56,10 +55,10 @@ Migrated from Lovable/Supabase to Replit's fullstack architecture:
 
 ## Webhook Configuration
 
-### Excel Webhook
-The system accepts Excel data via webhook at:
+### Excel Webhook (Produção)
+Edge Function publicada no Supabase:
 ```
-POST https://agenda-hapvida.replit.app/api/webhook/excel
+POST https://<SEU_PROJETO>.supabase.co/functions/v1/webhook-excel
 Content-Type: application/json
 ```
 
@@ -76,10 +75,10 @@ Optional fields (with defaults):
 - `data_agendamento` / `dataAgendamentoCalculada` - Scheduled date
 - And other clinical fields...
 
-### Forms Webhook (NEW)
-The system accepts Microsoft Forms data via Power Automate at:
+### Forms Webhook (Produção)
+Edge Function publicada no Supabase:
 ```
-POST https://agenda-hapvida.replit.app/api/webhook/forms
+POST https://<SEU_PROJETO>.supabase.co/functions/v1/processar-forms-webhook
 Content-Type: application/json
 ```
 
@@ -115,12 +114,12 @@ See [WEBHOOK_FORMS_CONTRATO.md](./WEBHOOK_FORMS_CONTRATO.md) for complete API do
 - 2025-12-08: Added script path aliases (@scripts)
 - 2025-12-08: Added missing API routes for all entities
 
-## Running the Project
+## Running the Project (local)
 ```bash
-npm run dev  # Starts Express + Vite dev server on port 5000
+npm run dev  # Inicia servidor Express + Vite em http://localhost:5000
 ```
 
 ## Database Management
 ```bash
-npm run db:push  # Push schema changes to database
+npm run db:push  # Push schema changes to database (desenvolvimento)
 ```
