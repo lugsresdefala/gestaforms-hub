@@ -93,11 +93,11 @@ This is the simplest deployment method for this project:
 ### Method 4: Render
 
 1. Deploy as a **Web Service** on Render using the provided `render.yaml` (auto-detected).
-2. Build command: `npm install && npm run build` (from `render.yaml`)
-3. Start command: `npm start` (serves built assets and APIs on `process.env.PORT`)
-4. Health check path: `/api/health`
-5. Required environment variables in Render dashboard:
-   - `DATABASE_URL` (Postgres connection string)
+2. The blueprint now provisions a Render Postgres database (`gestaforms-db`) and injects `DATABASE_URL` automatically.
+3. Build command: `npm install && npm run build` (from `render.yaml`)
+4. Start command: `npm start` (serves built assets and APIs on `process.env.PORT`)
+5. Health check path: `/api/health`
+6. Required environment variables in Render dashboard:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_PUBLISHABLE_KEY`
 

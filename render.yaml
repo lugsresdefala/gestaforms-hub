@@ -9,8 +9,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: gestaforms-db
+          property: connectionString
       - key: VITE_SUPABASE_URL
         sync: false
       - key: VITE_SUPABASE_PUBLISHABLE_KEY
         sync: false
+databases:
+  - name: gestaforms-db
+    plan: free
